@@ -1,0 +1,105 @@
+.center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.red-bg {
+  background-color: #660000;
+}
+
+.blue-bg {
+  background-color: #000066;
+}
+
+.scoreboard {
+    aspect-ratio: 2 / 1;
+    width: 100vw;
+    width: 100dvw;
+    flex-direction: column;
+}
+
+.scoreboard-header {
+    display: flex;
+    width: 100vw;
+    height: 9vw;
+}
+
+.name {
+    font-size: 3rem;
+    font-weight: bold;
+    height: 100%;
+}
+.red-name {
+    width: 50vw;
+}
+
+.blue-name {
+    width: 50vw;
+}
+
+.scoreboard-content {
+    display: flex;
+    width: 100vw;
+    height: 42vw;
+    flex-direction: row;
+    background-color: #111111;
+}
+
+.row {
+    display: flex;
+    height: 33vw;
+}
+
+.info {
+    display: flex;
+    width: 40vw;
+    flex-direction: column;
+}
+
+.red-info {
+  display: flex;
+}
+
+.blue-info {
+  display: flex;
+}
+
+.score {
+    font-size: 13rem;
+    font-weight: bold;
+    width: 26vw;
+}
+
+.red-score {
+  background-color: #DD0000;
+}
+
+.blue-score {
+  background-color: #0000DD;
+}
+
+.log {
+    width: 14vw;
+}
+
+
+.match-info {
+  display: flex;
+  width: 22vw;
+}
+
+.gamjeom {
+    display: flex;
+    width: 40vw;
+    height: 9vw;
+    flex-direction: column;
+}
+
+.red-gamjeom {
+    
+}
+
+.blue-gamjeom {
+}
+
