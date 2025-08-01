@@ -16,8 +16,9 @@ function ScoreBoard() {
                 </div>
                 <div className="red-gamjeom gamjeom center red-bg"></div>
             </div>
-            <div className="match-info center">
-                MATCH
+            <div className="match-info">
+                <p>MATCH</p>
+                <p>A1001</p>
             </div>
             <div className="blue-info info center">
                 <div className="row">
