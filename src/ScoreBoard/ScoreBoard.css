@@ -20,7 +20,7 @@
 }
 
 .scoreboard-menu {
-  background-color: #333333;
+  background-color: #220033;
   height: calc(100vh - 50vw);
   height: calc(100dvh - 50dvw);
 }
@@ -164,6 +164,17 @@
     flex: 2;
     width: 100%;
     align-items: center;
+}
+
+.gamjeom-font {
+    font-size: 1.75vw;
+    font-weight: bold;
+}
+
+.gamjeom-number {
+    font-size: 4.5vw;
+    font-weight: bold;
+    margin: 0.5vw;
 }
 
 .match-number {
