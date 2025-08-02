@@ -15,6 +15,17 @@
 }
 
 .scoreboard {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.scoreboard-menu {
+  background-color: #333333;
+  height: calc(100vh - 50vw);
+  height: calc(100dvh - 50dvw);
+}
+
+.scoreboard-display {
     aspect-ratio: 2 / 1;
     width: 100vw;
     width: 100dvw;
@@ -34,11 +45,20 @@
     display: flex;
     height: 100%;
     flex: 1;
+    justify-content: center;
+    align-items: center;
 }
 .blue-name {
     display: flex;
     height: 100%;
     flex: 1;
+    justify-content: center;
+    align-items: center;
+}
+
+.name-font {
+    font-size: 3vw;
+    font-weight: bold;
 }
 
 .midbottom {
@@ -48,21 +68,22 @@
 }
 
 .red-log {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  flex: 19;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex: 19;
 }
 
 .red-score {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  flex: 39;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex: 39;
 }
 
 .match-info {
   display: flex;
+  flex-direction: column;
   height: 100%;
   flex: 34;
   background-color: #000000;
@@ -83,49 +104,111 @@
 }
 
 .red-score-text {
-  display: flex;
-  flex: 7;
-  width: 100%;
+    display: flex;
+    flex: 7;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
 }
 
 .blue-score-text {
-  display: flex;
-  flex: 7;
-  width: 100%;
+    display: flex;
+    flex: 7;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.score-font {
+    font-size: 18vw;
+    font-weight: bold;
 }
 
 .red-score-info {
-  display: flex;
-  flex: 2;
-  width: 100%;
+    display: flex;
+    flex: 2;
+    width: 100%;
 }
 
 .blue-score-info {
-  display: flex;
-  flex: 2;
-  width: 100%;
+    display: flex;
+    flex: 2;
+    width: 100%;
 }
 
 .red-ref-log {
-  display: flex;
-  flex: 7;
-  width: 100%;
+    display: flex;
+    flex: 7;
+    width: 100%;
+    justify-content: center;
 }
 
 .blue-ref-log {
-  display: flex;
-  flex: 7;
-  width: 100%;
+    display: flex;
+    flex: 7;
+    width: 100%;
+    justify-content: center;
 }
 
 .red-gamjeom {
-  display: flex;
-  flex: 2;
-  width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 2;
+    width: 100%;
+    align-items: center;
 }
 
 .blue-gamjeom {
+    display: flex;
+    flex-direction: column;
+    flex: 2;
+    width: 100%;
+    align-items: center;
+}
+
+.match-number {
+    display: flex;
+    flex-direction: column;
+    flex: 2;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.match-font {
+    font-size: 4vw;
+    font-weight: bold;
+}
+
+.timer {
+    display: flex;
+    flex: 2;
+    width: 100%;
+    background-color: #FFFF00;
+    color: #000000;
+    justify-content: center;
+    align-items: center;
+}
+
+.timer-font {
+    font-size: 9vw;
+    font-weight: bold;
+}
+
+.time-out {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    background-color: #FFFF00;
+    color: #000000;
+    justify-content: center;
+    align-items: center;
+}
+
+.round {
   display: flex;
+  flex-direction: column;
   flex: 2;
   width: 100%;
+  align-items: center;
 }
