@@ -3,29 +3,32 @@ import './ScoreBoard.css'
 function ScoreBoard() {
 
   return (
-    <div className="scoreboard center">
-        <div className="scoreboard-header center">
-            <div className="red-name name center red-bg">Red Player</div>
-            <div className="blue-name name center blue-bg">Blue Player</div>
+    <div className="scoreboard">
+        <div className="top">
+            <div className="red-name red-bg"></div>
+            <div className="blue-name blue-bg"></div>
         </div>
-        <div className="scoreboard-content center">
-            <div className="red-info info center">
-                <div className="row">
-                    <div className="red-log log center red-bg"></div>
-                    <div className="red-score score center">0</div>
-                </div>
-                <div className="red-gamjeom gamjeom center red-bg"></div>
+        <div className="midbottom">
+            <div className="red-log red-bg">
+                <div className="red-ref-log red-bg"></div>
+                <div className="red-gamjeom red-bg"></div>
+            </div>
+            <div className="red-score red-bg">
+                <div className="red-score-text red-score-bg"></div>
+                <div className="red-score-info red-bg"></div>
             </div>
             <div className="match-info">
-                <p>MATCH</p>
-                <p>A1001</p>
+                <div></div>
+                <div></div>
+                <div></div>
             </div>
-            <div className="blue-info info center">
-                <div className="row">
-                    <div className="blue-score score center">0</div>
-                    <div className="blue-log log center blue-bg"></div>
-                </div>
-                <div className="blue-gamjeom gamjeom center blue-bg"></div>
+            <div className="blue-score blue-bg">
+                <div className="blue-score-text blue-score-bg"></div>
+                <div className="blue-score-info blue-bg"></div>
+            </div>
+            <div className="blue-log blue-bg">
+                <div className="blue-ref-log blue-bg"></div>
+                <div className="blue-gamjeom blue-bg"></div>
             </div>
         </div>
     </div>
