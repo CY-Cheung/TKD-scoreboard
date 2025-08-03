@@ -1,7 +1,7 @@
 import './App.css'
-import Home from './Home/Home'
-import Remote from './Remote/Remote'
-import ScoreBoard from './ScoreBoard/ScoreBoard'
+import Home from './Pages/Home/Home'
+import Remote from './Pages/Remote/Remote'
+import ScoreBoard from './Pages/ScoreBoard/ScoreBoard'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 function App() {
