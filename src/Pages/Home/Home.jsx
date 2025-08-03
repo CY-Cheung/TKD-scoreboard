@@ -1,3 +1,4 @@
+import Button from '../../Components/Button/Button'
 import './Home.css'
 
 function Home() {
@@ -5,6 +6,7 @@ function Home() {
   return (
     <>
       Home Page
+      <Button />
     </>
   ) 
 }
