@@ -1,225 +1,227 @@
 .red-bg {
-  background-color: #660000;
+	background-color: #660000;
 }
 
 .blue-bg {
-  background-color: #000066;
+	background-color: #000066;
 }
 
 .red-score-bg {
-  background-color: #AA0000;
+	background-color: #aa0000;
 }
 
 .blue-score-bg {
-  background-color: #0000AA;
+	background-color: #0000aa;
 }
 
 .scoreboard {
-  display: flex;
-  flex-direction: column-reverse;
+	display: flex;
+	flex-direction: column-reverse;
 }
 
 .scoreboard-menu {
-  background-color: #220033;
-  height: calc(100vh - 50vw);
-  height: calc(100dvh - 50dvw);
+	background-color: #220033;
+	height: calc(100vh - 50vw);
+	height: calc(100dvh - 50dvw);
 }
 
 .scoreboard-display {
-    aspect-ratio: 2 / 1;
-    width: 100vw;
-    width: 100dvw;
-    height: 50vw;
-    height: 50dvw;
-    background-color: #222222;
-    display: flex;
-    flex-direction: column;
+	aspect-ratio: 2 / 1;
+	width: 100vw;
+	width: 100dvw;
+	height: 50vw;
+	height: 50dvw;
+	background-color: #222222;
+	display: flex;
+	flex-direction: column;
 }
 
 .top {
-    display: flex;
-    width: 100%;
-    flex: 2;
+	display: flex;
+	width: 100%;
+	flex: 2;
 }
+
 .red-name {
-    display: flex;
-    height: 100%;
-    flex: 1;
-    justify-content: center;
-    align-items: center;
+	display: flex;
+	height: 100%;
+	flex: 1;
+	justify-content: center;
+	align-items: center;
 }
+
 .blue-name {
-    display: flex;
-    height: 100%;
-    flex: 1;
-    justify-content: center;
-    align-items: center;
+	display: flex;
+	height: 100%;
+	flex: 1;
+	justify-content: center;
+	align-items: center;
 }
 
 .name-font {
-    font-size: 3vw;
-    font-weight: bold;
+	font-size: 3vw;
+	font-weight: bold;
 }
 
 .midbottom {
-    display: flex;
-    width: 100%;
-    flex: 9;
+	display: flex;
+	width: 100%;
+	flex: 9;
 }
 
 .red-log {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    flex: 19;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	flex: 19;
 }
 
 .red-score {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    flex: 39;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	flex: 39;
 }
 
 .match-info {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  flex: 34;
-  background-color: #000000;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	flex: 34;
+	background-color: #000000;
 }
 
 .blue-score {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  flex: 39;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	flex: 39;
 }
 
 .blue-log {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  flex: 19;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	flex: 19;
 }
 
 .red-score-text {
-    display: flex;
-    flex: 7;
-    width: 100%;
-    justify-content: center;
-    align-items: center;
+	display: flex;
+	flex: 7;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
 }
 
 .blue-score-text {
-    display: flex;
-    flex: 7;
-    width: 100%;
-    justify-content: center;
-    align-items: center;
+	display: flex;
+	flex: 7;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
 }
 
 .score-font {
-    font-size: 18vw;
-    font-weight: bold;
+	font-size: 18vw;
+	font-weight: bold;
 }
 
 .red-score-info {
-    display: flex;
-    flex: 2;
-    width: 100%;
+	display: flex;
+	flex: 2;
+	width: 100%;
 }
 
 .blue-score-info {
-    display: flex;
-    flex: 2;
-    width: 100%;
+	display: flex;
+	flex: 2;
+	width: 100%;
 }
 
 .red-ref-log {
-    display: flex;
-    flex: 7;
-    width: 100%;
-    justify-content: center;
+	display: flex;
+	flex: 7;
+	width: 100%;
+	justify-content: center;
 }
 
 .blue-ref-log {
-    display: flex;
-    flex: 7;
-    width: 100%;
-    justify-content: center;
+	display: flex;
+	flex: 7;
+	width: 100%;
+	justify-content: center;
 }
 
 .red-gamjeom {
-    display: flex;
-    flex-direction: column;
-    flex: 2;
-    width: 100%;
-    align-items: center;
+	display: flex;
+	flex-direction: column;
+	flex: 2;
+	width: 100%;
+	align-items: center;
 }
 
 .blue-gamjeom {
-    display: flex;
-    flex-direction: column;
-    flex: 2;
-    width: 100%;
-    align-items: center;
+	display: flex;
+	flex-direction: column;
+	flex: 2;
+	width: 100%;
+	align-items: center;
 }
 
 .gamjeom-font {
-    font-size: 1.75vw;
-    font-weight: bold;
+	font-size: 1.75vw;
+	font-weight: bold;
 }
 
 .gamjeom-number {
-    font-size: 4.5vw;
-    font-weight: bold;
-    margin: 0.5vw;
+	font-size: 4.5vw;
+	font-weight: bold;
+	margin: 0.5vw;
 }
 
 .match-number {
-    display: flex;
-    flex-direction: column;
-    flex: 2;
-    width: 100%;
-    justify-content: center;
-    align-items: center;
+	display: flex;
+	flex-direction: column;
+	flex: 2;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
 }
 
 .match-font {
-    font-size: 4vw;
-    font-weight: bold;
+	font-size: 4vw;
+	font-weight: bold;
 }
 
 .timer {
-    display: flex;
-    flex: 2;
-    width: 100%;
-    background-color: #FFFF00;
-    color: #000000;
-    justify-content: center;
-    align-items: center;
+	display: flex;
+	flex: 2;
+	width: 100%;
+	background-color: #ffff00;
+	color: #000000;
+	justify-content: center;
+	align-items: center;
 }
 
 .timer-font {
-    font-size: 9vw;
-    font-weight: bold;
+	font-size: 9vw;
+	font-weight: bold;
 }
 
 .time-out {
-    display: flex;
-    flex: 1;
-    width: 100%;
-    background-color: #FFFF00;
-    color: #000000;
-    justify-content: center;
-    align-items: center;
+	display: flex;
+	flex: 1;
+	width: 100%;
+	background-color: #ffff00;
+	color: #000000;
+	justify-content: center;
+	align-items: center;
 }
 
 .round {
-  display: flex;
-  flex-direction: column;
-  flex: 2;
-  width: 100%;
-  align-items: center;
+	display: flex;
+	flex-direction: column;
+	flex: 2;
+	width: 100%;
+	align-items: center;
 }

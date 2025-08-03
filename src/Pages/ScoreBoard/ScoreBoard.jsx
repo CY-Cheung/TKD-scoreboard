@@ -20,7 +20,7 @@ function ScoreBoard() {
     }, []);
 
     return (
-        <div className="scoreboard">    
+        <div className="scoreboard">
             <div className="scoreboard-display">
                 <div className="top">
                     <div className="red-name red-bg name-font">Red Player</div>
@@ -50,14 +50,14 @@ function ScoreBoard() {
                         </div>
                         <div className="timer timer-font">2:00</div>
                         <div
-                          className={`time-out match-font${timeoutActive ? ' timeout-active' : ''}`}
-                          onClick={handleTimeoutClick}
-                          style={{
-                            backgroundColor: timeoutActive ? '#000000' : '#FFFF00',
-                            cursor: 'pointer'
-                          }}
+                            className={`time-out match-font${timeoutActive ? ' timeout-active' : ''}`}
+                            onClick={handleTimeoutClick}
+                            style={{
+                                backgroundColor: timeoutActive ? '#000000' : '#FFFF00',
+                                cursor: 'pointer'
+                            }}
                         >
-                          Time out
+                            Time out
                         </div>
                         <div className="round match-font">
                             <div>ROUND</div>
