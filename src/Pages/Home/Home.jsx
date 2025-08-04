@@ -4,10 +4,9 @@ import './Home.css'
 function Home() {
 
   return (
-    <>
-      Home Page
+    <div className="home">
       <Button />
-    </>
+    </div>
   ) 
 }
 
