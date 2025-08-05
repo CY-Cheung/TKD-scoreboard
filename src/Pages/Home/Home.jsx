@@ -10,11 +10,11 @@ function Home() {
 			<div className="menu">
 				<Button
 					text="Scoreboard"
-					fontSize="2rem"
+					fontSize="2vw"
 					angle={40}
 					onClick={() => navigate("/scoreboard")}
 				/>
-				<Button text="Remote" fontSize="2rem" angle={270} />
+				<Button text="Remote" fontSize="2vw" angle={270} />
 			</div>
 		</div>
 	);

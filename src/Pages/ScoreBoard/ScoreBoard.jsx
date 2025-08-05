@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './ScoreBoard.css'
 
 function ScoreBoard() {
-    const [timeoutActive, setTimeoutActive] = useState(false);
+    const [timeoutActive, setTimeoutActive] = useState(true);
     const [direction, setDirection] = useState("row");
 
     const handleTimeoutClick = () => {
@@ -53,9 +53,15 @@ function ScoreBoard() {
                             <div className="match-number">A1001</div>
                         </div>
                         <div className="timer">
-                            <div className="game-timer timer-font">2:00</div>
+                            <div 
+                                className={`game-timer timer-font ${timeoutActive ? ' timeout-active' : ''}`}
+                                onClick={handleTimeoutClick}
+                                style={{
+                                    color: timeoutActive ? '#FFFFFF' : '#FFFF00',
+                                    cursor: 'pointer'
+                                }}>2:00</div>
                             <div
-                                className={`time-out match-font${timeoutActive ? ' timeout-active' : ''}`}
+                                className={`time-out match-font ${timeoutActive ? ' timeout-active' : ''}`}
                                 onClick={handleTimeoutClick}
                                 style={{
                                     backgroundColor: timeoutActive ? '#000000' : '#FFFF00',

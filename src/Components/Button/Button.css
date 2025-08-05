@@ -12,7 +12,7 @@ button {
     padding-block: var(--padding-block);
     padding-inline: var(--radius);
     border-radius: var(--radius);
-    margin: 1rem;
+    margin: var(--font-size);
     cursor: pointer;
 }
 
@@ -31,6 +31,6 @@ button:after{
         hsl(calc(var(--angle) + var(--step)), 100%, 20%),
         hsl(calc(var(--angle) + var(--step)*2), 100%, 50%)
     );
-    box-shadow: calc(var(--padding) * 1) calc(var(--padding) * 0.5) calc(var(--padding) * 7.5) hsla(calc(var(--angle) + var(--step)*2), 100%, 30%, 0.75), 
-                calc(var(--padding) * -1) calc(var(--padding) * -0.5) calc(var(--padding) * 7.5) hsla(calc(var(--angle) + var(--step)), 100%, 30%, 0.75);
+    box-shadow: calc(var(--padding) * 1) calc(var(--padding) * 0.5) calc(var(--padding) * 5) hsla(calc(var(--angle) + var(--step)*2), 100%, 30%, 0.5), 
+                calc(var(--padding) * -1) calc(var(--padding) * -0.5) calc(var(--padding) * 5) hsla(calc(var(--angle) + var(--step)), 100%, 30%, 0.5);
 }

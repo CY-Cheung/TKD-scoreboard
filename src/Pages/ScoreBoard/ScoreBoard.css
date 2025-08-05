@@ -215,11 +215,11 @@
 .game-timer {
 	display: flex;
 	flex: 2;
-	width: 100%;
-	background-color: #ffff00;
-	color: #000000;
+	background-color: #000000;
+	color: #ffffff;
 	justify-content: center;
 	align-items: center;
+	border: 0.5vw solid #ffff00;
 }
 
 .timer-font {
