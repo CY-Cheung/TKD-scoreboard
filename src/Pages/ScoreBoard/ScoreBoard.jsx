@@ -94,6 +94,7 @@ function ScoreBoard() {
                     </div>
                 </div>
             </div>
+            <div className="edit"></div>
         </div>
     )
 }
