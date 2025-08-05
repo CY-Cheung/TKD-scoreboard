@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './ScoreBoard.css'
+import './Edit.css'
+import Button from "../../Components/Button/Button";
 
 function ScoreBoard() {
     const [timeoutActive, setTimeoutActive] = useState(true);
@@ -94,7 +96,14 @@ function ScoreBoard() {
                     </div>
                 </div>
             </div>
-            <div className="edit"></div>
+            <div className="edit">
+                Edit
+                <Button
+                    text="Edit" 
+                    fontSize="2vw"
+                    angle={270}
+                />
+            </div>
         </div>
     )
 }
