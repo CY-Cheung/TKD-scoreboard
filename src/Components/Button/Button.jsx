@@ -1,12 +1,18 @@
-import './Button.css'
+import React from "react";
+import "./Button.css";
 
-function Button() {
-
-  return (
-    <button className="custom-button">
-        Button Text
-    </button>
-  )
+function Button({ text = "Button Text", fontSize = "1rem", angle = 270, step = 10 }) {
+	return (
+		<button
+			style={{
+				"--font-size": fontSize,
+				"--angle": angle,
+        "--step": step,
+			}}
+		>
+			{text}
+		</button>
+	);
 }
 
-export default Button
+export default Button;
