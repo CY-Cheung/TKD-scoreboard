@@ -84,7 +84,6 @@ function ScoreBoard() {
                     </div>
                 </div>
             </div>
-            <div className="scoreboard-menu">Menu</div>
         </div>
     )
 }

@@ -1,6 +1,6 @@
 import "./Button.css";
 
-function Button({ text = "Button Text", fontSize = "1rem", angle = 270, step = 10 }) {
+function Button({ text = "Button Text", fontSize = "1rem", angle = 270, step = 10, onClick }) {
 	return (
 		<button
 			style={{
@@ -8,6 +8,7 @@ function Button({ text = "Button Text", fontSize = "1rem", angle = 270, step = 1
 				"--angle": angle,
         		"--step": step,
 			}}
+			onClick={onClick}
 		>
 			{text}
 		</button>
