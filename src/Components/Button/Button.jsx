@@ -1,4 +1,3 @@
-import React from "react";
 import "./Button.css";
 
 function Button({ text = "Button Text", fontSize = "1rem", angle = 270, step = 10 }) {
@@ -7,7 +6,7 @@ function Button({ text = "Button Text", fontSize = "1rem", angle = 270, step = 1
 			style={{
 				"--font-size": fontSize,
 				"--angle": angle,
-        "--step": step,
+        		"--step": step,
 			}}
 		>
 			{text}

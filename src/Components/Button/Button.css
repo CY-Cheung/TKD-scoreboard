@@ -13,6 +13,7 @@ button {
     padding-inline: var(--radius);
     border-radius: var(--radius);
     margin: 1rem;
+    cursor: pointer;
 }
 
 button:after{
@@ -27,9 +28,9 @@ button:after{
     background-image: linear-gradient(
         to bottom right, 
         hsl(var(--angle), 100%, 50%),
-        hsl(calc(var(--angle) + var(--step)), 100%, 10%),
-        hsl(calc(var(--angle) + var(--step)*2), 100%, 30%)
+        hsl(calc(var(--angle) + var(--step)), 100%, 20%),
+        hsl(calc(var(--angle) + var(--step)*2), 100%, 50%)
     );
-    box-shadow: calc(var(--padding) * 1) calc(var(--padding) * 0.5) calc(var(--padding) * 7.5) hsla(calc(var(--angle) + var(--step)*2), 100%, 15%, 0.625), 
-                calc(var(--padding) * -1) calc(var(--padding) * -0.5) calc(var(--padding) * 7.5) hsla(calc(var(--angle) + var(--step)), 100%, 30%, 0.625);
+    box-shadow: calc(var(--padding) * 1) calc(var(--padding) * 0.5) calc(var(--padding) * 7.5) hsla(calc(var(--angle) + var(--step)*2), 100%, 30%, 0.75), 
+                calc(var(--padding) * -1) calc(var(--padding) * -0.5) calc(var(--padding) * 7.5) hsla(calc(var(--angle) + var(--step)), 100%, 30%, 0.75);
 }
