@@ -44,24 +44,26 @@ function ScoreBoard() {
                         <div className="red-score-info red-bg"></div>
                     </div>
                     <div className="match-info">
-                        <div className="match-number match-font">
-                            <div>MATCH</div>
-                            <div>A1001</div>
+                        <div className="match">
+                            <div className="match-font">MATCH</div>
+                            <div className="match-number">A1001</div>
                         </div>
-                        <div className="timer timer-font">2:00</div>
-                        <div
-                            className={`time-out match-font${timeoutActive ? ' timeout-active' : ''}`}
-                            onClick={handleTimeoutClick}
-                            style={{
-                                backgroundColor: timeoutActive ? '#000000' : '#FFFF00',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Time out
+                        <div className="timer">
+                            <div className="game-timer timer-font">2:00</div>
+                            <div
+                                className={`time-out match-font${timeoutActive ? ' timeout-active' : ''}`}
+                                onClick={handleTimeoutClick}
+                                style={{
+                                    backgroundColor: timeoutActive ? '#000000' : '#FFFF00',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Time out
+                            </div>
                         </div>
-                        <div className="round match-font">
-                            <div>ROUND</div>
-                            <div>1</div>
+                        <div className="round-info">
+                            <div className="round-font">ROUND</div>
+                            <div className="round-number">1</div>
                         </div>
                     </div>
                     <div className="blue-score blue-bg">

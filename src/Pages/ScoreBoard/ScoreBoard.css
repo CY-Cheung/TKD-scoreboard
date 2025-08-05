@@ -20,18 +20,14 @@
 }
 
 .scoreboard-menu {
-	background-color: #220033;
-	height: calc(100vh - 50vw);
-	height: calc(100dvh - 50dvw);
+	width: min(100vw, 200vh);
+	width: min(100dvw, 200dvh);
 }
 
 .scoreboard-display {
 	aspect-ratio: 2 / 1;
-	width: 100vw;
-	width: 100dvw;
-	height: 50vw;
-	height: 50dvw;
-	background-color: #222222;
+	width: min(100vw, 200vh);
+	width: min(100dvw, 200dvh);
 	display: flex;
 	flex-direction: column;
 }
@@ -179,6 +175,10 @@
 	margin: 0.5vw;
 }
 
+.match {
+	padding: 0.5vw;
+}
+
 .match-number {
 	display: flex;
 	flex-direction: column;
@@ -186,14 +186,28 @@
 	width: 100%;
 	justify-content: center;
 	align-items: center;
+	font-size: 5vw;
+	font-weight: bold;
 }
 
 .match-font {
+	display: flex;
+	flex-direction: column;
+	flex: 2;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
 	font-size: 4vw;
 	font-weight: bold;
 }
 
 .timer {
+	display: flex;
+	flex-direction: column;
+	margin-block: 1vw;
+}
+
+.game-timer {
 	display: flex;
 	flex: 2;
 	width: 100%;
@@ -210,7 +224,6 @@
 
 .time-out {
 	display: flex;
-	flex: 1;
 	width: 100%;
 	background-color: #ffff00;
 	color: #000000;
@@ -218,10 +231,21 @@
 	align-items: center;
 }
 
-.round {
+.round-info {
 	display: flex;
 	flex-direction: column;
 	flex: 2;
 	width: 100%;
 	align-items: center;
+}
+
+.round-font {
+	font-size: 3vw;
+	font-weight: bold;
+	padding: 1vw;
+}
+
+.round-number {
+	font-size: 4vw;
+	font-weight: bold;
 }
