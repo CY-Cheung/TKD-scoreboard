@@ -3,30 +3,34 @@ import './ScoreBoard.css'
 
 function ScoreBoard() {
     const [timeoutActive, setTimeoutActive] = useState(false);
+    const [direction, setDirection] = useState("row");
 
     const handleTimeoutClick = () => {
         setTimeoutActive((prev) => !prev);
     };
 
-    // 按下空白鍵時觸發 handleTimeoutClick
+    // 空白鍵觸發 timeout，反斜線鍵切換方向
     useEffect(() => {
-        const handleSpacebar = (e) => {
+        const handleKeyDown = (e) => {
             if (e.code === 'Space') {
                 handleTimeoutClick();
             }
+            if (e.key === '\\') {
+                setDirection((prev) => prev === "row" ? "row-reverse" : "row");
+            }
         };
-        window.addEventListener('keydown', handleSpacebar);
-        return () => window.removeEventListener('keydown', handleSpacebar);
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
     return (
         <div className="scoreboard">
             <div className="scoreboard-display">
-                <div className="top">
+                <div className="top" style={{ flexDirection: direction }}>
                     <div className="red-name red-bg name-font">Red Player</div>
                     <div className="blue-name blue-bg name-font">Blue Player</div>
                 </div>
-                <div className="midbottom">
+                <div className="midbottom" style={{ flexDirection: direction, display: 'flex' }}>
                     <div className="red-log red-bg">
                         <div className="red-ref-log red-bg">
                             <div>X</div>
