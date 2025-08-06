@@ -6,12 +6,13 @@ import Button from "../../Components/Button/Button";
 function ScoreBoard() {
     const [timeoutActive, setTimeoutActive] = useState(true);
     const [direction, setDirection] = useState("row");
+    const [showEdit, setShowEdit] = useState(false); // 新增狀態
 
     const handleTimeoutClick = () => {
         setTimeoutActive((prev) => !prev);
     };
 
-    // 空白鍵觸發 timeout，反斜線鍵切換方向
+    // 空白鍵觸發 timeout，反斜線鍵切換方向，E鍵切換edit顯示
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.code === 'Space') {
@@ -19,6 +20,9 @@ function ScoreBoard() {
             }
             if (e.key === '\\') {
                 setDirection((prev) => prev === "row" ? "row-reverse" : "row");
+            }
+            if (e.key === 'e' || e.key === 'E') {
+                setShowEdit(prev => !prev);
             }
         };
         window.addEventListener('keydown', handleKeyDown);
@@ -96,28 +100,30 @@ function ScoreBoard() {
                     </div>
                 </div>
             </div>
-            <div className="edit">
-                Edit
-                <div>
-                    Blue
-                    <Button text="Gam-jeom" angle={190} />
-                    <Button text="Punch" angle={190} />
-                    <Button text="Body" angle={190} />
-                    <Button text="Head" angle={190} />
-                    <Button text="Spin Body" angle={190} />
-                    <Button text="Spin Head" angle={190} />               
+            {showEdit && (
+                <div className="edit">
+                    Edit
+                    <div>
+                        Blue
+                        <Button text="Gam-jeom" angle={190} />
+                        <Button text="Punch" angle={190} />
+                        <Button text="Body" angle={190} />
+                        <Button text="Head" angle={190} />
+                        <Button text="Spin Body" angle={190} />
+                        <Button text="Spin Head" angle={190} />               
+                    </div>
+                    <div>
+                        Red
+                        <Button text="Gam-jeom" angle={350} />
+                        <Button text="Punch" angle={350} />
+                        <Button text="Body" angle={350} />
+                        <Button text="Head" angle={350} />
+                        <Button text="Spin Body" angle={350} />
+                        <Button text="Spin Head" angle={350} />               
+                    </div>
+                    
                 </div>
-                <div>
-                    Red
-                    <Button text="Gam-jeom" angle={350} />
-                    <Button text="Punch" angle={350} />
-                    <Button text="Body" angle={350} />
-                    <Button text="Head" angle={350} />
-                    <Button text="Spin Body" angle={350} />
-                    <Button text="Spin Head" angle={350} />               
-                </div>
-                
-            </div>
+            )}
         </div>
     )
 }
