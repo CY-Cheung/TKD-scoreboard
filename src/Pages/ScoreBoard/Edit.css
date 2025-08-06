@@ -1,36 +1,40 @@
-.edit::after {
+.edit {
+    color: white;
+    font-size: 2vw;
+    content: "";
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.75);
+    width: 75vw;
+    border-radius: 2rem;
+    border: 0.1vw solid #ffffff;
     position: absolute;
+    padding: 2vw;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.edit::before {
+    content: "";
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 100vw;
     height: 100vh;
     width: 100dvw;
     height: 100dvh;
-    background: rgba(0,0,0,0.75);
-    z-index: 0;
-    font-size: 2rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    pointer-events: none; /* 讓彈窗可點擊 */
+    z-index: -1;
 }
 
-.edit {
-    color: white;
-    text-shadow: 0 0 0.5vw rgba(0, 0, 0, 0.75);
-    font-size: 2rem;
-    content: "";
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: rgba(0, 0, 0, 0.75);
-    border-radius: 2rem;
-    border: 0.1vw solid #ffffff;
-    width: 75vw;
-    height: 75vh;
-    width: 75dvw;
-    height: 75dvh;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 0;
+button {
+    font-size: 2vw;
 }

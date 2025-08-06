@@ -12,8 +12,9 @@ button {
     padding-block: var(--padding-block);
     padding-inline: var(--radius);
     border-radius: var(--radius);
-    margin: var(--font-size);
+    margin: calc(var(--font-size) / 4);
     cursor: pointer;
+    z-index: auto;
 }
 
 button:after{

@@ -98,11 +98,25 @@ function ScoreBoard() {
             </div>
             <div className="edit">
                 Edit
-                <Button
-                    text="Edit" 
-                    fontSize="2vw"
-                    angle={270}
-                />
+                <div>
+                    Blue
+                    <Button text="Gam-jeom" angle={190} />
+                    <Button text="Punch" angle={190} />
+                    <Button text="Body" angle={190} />
+                    <Button text="Head" angle={190} />
+                    <Button text="Spin Body" angle={190} />
+                    <Button text="Spin Head" angle={190} />               
+                </div>
+                <div>
+                    Red
+                    <Button text="Gam-jeom" angle={350} />
+                    <Button text="Punch" angle={350} />
+                    <Button text="Body" angle={350} />
+                    <Button text="Head" angle={350} />
+                    <Button text="Spin Body" angle={350} />
+                    <Button text="Spin Head" angle={350} />               
+                </div>
+                
             </div>
         </div>
     )
