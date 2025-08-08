@@ -1,13 +1,13 @@
 .edit {
     color: white;
-    font-size: 2vw;
+    font-size: 1.25vw;
     content: "";
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     background-color: rgba(0, 0, 0, 0.75);
-    width: 75vw;
+    width: auto;
     border-radius: 2rem;
     border: 0.1vw solid #ffffff;
     position: absolute;
@@ -35,6 +35,30 @@
     z-index: -1;
 }
 
-button {
-    font-size: 2vw;
+.edit-score {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    gap: 2vw;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1vw;
+    width: 100%;
+    flex: 1;
+}
+.edit-score-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 1vw;
+}
+
+.column>div {
+    white-space: nowrap;
 }

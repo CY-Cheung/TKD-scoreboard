@@ -1,6 +1,6 @@
 button {
     --padding-block: calc(var(--font-size) / 8);
-    --radius: calc((var(--font-size) + var(--padding-block) + 2rem) / 2);
+    --radius: calc((var(--font-size) + var(--padding-block) + 0.5rem) / 2);
     display: inline-flex;
     justify-content: center;
     align-items: center;
