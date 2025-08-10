@@ -14,7 +14,7 @@
 	background-color: #0000aa;
 }
 
-.scoreboard {
+.screen {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -23,12 +23,12 @@
 	height: 100dvh;
 }
 
-.scoreboard-menu {
+.screen-menu {
 	width: min(100vw, 200vh);
 	width: min(100dvw, 200dvh);
 }
 
-.scoreboard-display {
+.screen-display {
 	aspect-ratio: 2 / 1;
 	width: min(100vw, 200vh);
 	width: min(100dvw, 200dvh);

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import "./ScoreBoard.css";
+import "./Screen.css";
 import "./Edit.css";
-import Button from "../../Components/Button/Button";
 import Edit from "./Edit";
 
 function ScoreBoard() {
@@ -33,8 +32,8 @@ function ScoreBoard() {
 	}, []);
 
 	return (
-		<div className="scoreboard">
-			<div className="scoreboard-display">
+		<div className="screen">
+			<div className="screen-display">
 				<div className="top" style={{ flexDirection: direction }}>
 					<div className="red-name red-bg name-font">Red Player</div>
 					<div className="blue-name blue-bg name-font">
