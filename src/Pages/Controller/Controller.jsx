@@ -1,12 +1,12 @@
-import './Remote.css'
+import './Controller.css'
 
-function Remote() {
+function Controller() {
 
   return (
     <>
-      Remote
+      Controller
     </>
   ) 
 }
 
-export default Remote
+export default Controller

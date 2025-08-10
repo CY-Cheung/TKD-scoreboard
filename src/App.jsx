@@ -1,7 +1,7 @@
 import "./App.css";
 import Home from "./Pages/Home/Home";
-import Remote from "./Pages/Remote/Remote";
-import ScoreBoard from "./Pages/ScoreBoard/ScoreBoard";
+import Controller from "./Pages/Controller/Controller";
+import Screen from "./Pages/Screen/Screen";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
@@ -9,8 +9,8 @@ function App() {
 		<Router>
 			<Routes>
 				<Route path="/" element={<Home />} />
-				<Route path="/remote" element={<Remote />} />
-				<Route path="/scoreboard" element={<ScoreBoard />} />
+				<Route path="/controller" element={<Controller />} />
+				<Route path="/screen" element={<Screen />} />
 			</Routes>
 		</Router>
 	);

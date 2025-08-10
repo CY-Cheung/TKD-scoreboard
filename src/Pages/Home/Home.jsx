@@ -9,12 +9,12 @@ function Home() {
 		<div className="home">
 			<div className="menu">
 				<Button
-					text="Scoreboard"
+					text="Screen"
 					fontSize="2vw"
 					angle={40}
-					onClick={() => navigate("/scoreboard")}
+					onClick={() => navigate("/screen")}
 				/>
-				<Button text="Remote" fontSize="2vw" angle={270} />
+				<Button text="Controller" fontSize="2vw" angle={270} onClick={() => navigate("/controller")} />
 			</div>
 		</div>
 	);

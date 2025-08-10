@@ -8,4 +8,8 @@ body {
     height: 100vh;
     height: 100dvh;
     margin: 0;
-}
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+} 

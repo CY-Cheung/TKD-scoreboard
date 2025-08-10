@@ -1,6 +1,5 @@
 .edit {
     color: white;
-    font-size: 1.25vw;
     content: "";
     display: flex;
     flex-direction: column;
@@ -8,13 +7,15 @@
     align-items: center;
     background-color: rgba(0, 0, 0, 0.75);
     width: auto;
-    border-radius: 2rem;
-    border: 0.1vw solid #ffffff;
+    border-radius: 2vw;
+    border: 0.125vw solid #ffffff;
+    box-shadow: 0 0 10vw #ffffff7f;
     position: absolute;
-    padding: 2vw;
+    padding-inline: 5vw;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    aspect-ratio: 2 / 1;
 }
 
 .edit::before {
@@ -32,33 +33,68 @@
     height: 100vh;
     width: 100dvw;
     height: 100dvh;
-    z-index: -1;
+    z-index: -2;
 }
 
 .edit-score {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    gap: 2vw;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(3, auto);
+    column-gap: 1vw;
+    row-gap: 0.25vw;
 }
 
-.column {
+.cell {
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
     align-items: center;
-    gap: 1vw;
-    width: 100%;
-    flex: 1;
-}
-.edit-score-button {
-    display: flex;
     justify-content: center;
-    align-items: center;
-    width: 100%;
-    gap: 1vw;
 }
 
-.column>div {
-    white-space: nowrap;
+.header {
+    font-weight: bold;
+}
+
+.side {
+    font-weight: bold;
+}
+
+select {
+    background: transparent;
+    color: white;
+    --font-size: 1.25vw;
+    --padding-block: calc(var(--font-size) / 8);
+    --radius: calc((var(--font-size) + var(--padding-block) + 0.5rem) / 2);
+    font-size: var(--font-size);
+    padding-block: var(--padding-block);
+    padding-inline: var(--radius);
+    border-radius: var(--radius);
+    margin-inline: calc(var(--font-size) / 4);
+    cursor: pointer;
+    box-shadow: 0 0 5vw #ffffff7f;
+}
+
+option {
+    background-color: black;
+    color: white;
+}
+
+.edit-time {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: repeat(2, auto);
+    gap: 1vw 1.5vw;
+    align-items: center;
+    margin-bottom: 2vw;
+}
+
+.edit-time-label {
+    font-weight: bold;
+    
+    text-align: right;
+}
+
+.edit-time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
 }

@@ -17,6 +17,10 @@ button {
     z-index: auto;
 }
 
+button:active, button:hover {
+    background-color: rgba(0,0,0,0.125);
+}
+
 button:after{
     --padding: calc(var(--font-size) / 8);
     content: '';
