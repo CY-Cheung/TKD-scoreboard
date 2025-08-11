@@ -30,12 +30,5 @@ button:after{
     height: 100%;
     padding: var(--padding);
     border-radius: calc(var(--radius) + var(--padding));
-    background-image: linear-gradient(
-        to bottom right, 
-        hsl(var(--angle), 100%, 50%),
-        hsl(calc(var(--angle) + var(--step)), 100%, 20%),
-        hsl(calc(var(--angle) + var(--step)*2), 100%, 50%)
-    );
-    box-shadow: calc(var(--padding) * 1) calc(var(--padding) * 0.5) calc(var(--padding) * 5) hsla(calc(var(--angle) + var(--step)*2), 100%, 30%, 0.5), 
-                calc(var(--padding) * -1) calc(var(--padding) * -0.5) calc(var(--padding) * 5) hsla(calc(var(--angle) + var(--step)), 100%, 30%, 0.5);
+    background: var(--button-gradient, linear-gradient(135deg, #2196f3, #21cbf3, #ffffff));
 }
