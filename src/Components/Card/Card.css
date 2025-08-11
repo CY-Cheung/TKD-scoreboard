@@ -1,13 +1,47 @@
 .card {
-    background-color: #111111;
-    border: #000000 solid 0.1rem;
-    border-radius: 1rem;
-    margin: 1rem;
-    padding: 1rem;
-    width: 50vw;
-    height: 10vh;
+	aspect-ratio: 5/8;
+    height: calc(var(--card-height, 75) * 1vh);
+    height: calc(var(--card-height, 75) * 1dvh);
+    background: #000000;
+    border-radius: calc(var(--card-height, 75) / 20 * 1vh);
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
+}
+
+.card::after, .card:hover::before {
+    --inset: -0.2vw;
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: var(--inset);
+    border-radius: calc(var(--card-height, 75) / 20 * 1vh - var(--inset));
+    opacity: 0.5;
+    background: conic-gradient(from var(--angle), #000000, #000000, var(--card-color), #000000, #000000, var(--card-color), #000000);
+}
+
+.card:hover::before {
+    z-index: -2;
+    filter: blur(1vw);
+    opacity: 0.5;
+}
+
+.card:hover::after {
+    animation: glowing-border 3.14s linear infinite;
+}
+
+@property --angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@keyframes glowing-border {
+    from {
+        --angle: 0deg;
+    }
+    to {
+        --angle: 360deg;
+    }
 }

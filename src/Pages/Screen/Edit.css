@@ -1,83 +1,13 @@
 .edit {
-    color: white;
-    content: "";
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    justify-content: space-evenly;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.75);
-    width: auto;
-    border-radius: 2vw;
-    border: 0.125vw solid #ffffff7f;
-    box-shadow: 0 0 1vw #ffffff7f;
-    position: absolute;
-    padding-inline: 5vw;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    aspect-ratio: 2 / 1;
-    z-index: 10000;
-}
-
-
-.edit-score {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    grid-template-rows: repeat(3, auto);
-    column-gap: 1vw;
-    row-gap: 0.25vw;
-}
-
-.cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.header {
-    font-weight: bold;
-}
-
-.side {
-    font-weight: bold;
-}
-
-select {
-    background: transparent;
-    color: white;
-    --font-size: 1.25vw;
-    --padding-block: calc(var(--font-size) / 8);
-    --radius: calc((var(--font-size) + var(--padding-block) + 0.5rem) / 2);
-    font-size: var(--font-size);
-    padding-block: var(--padding-block);
-    padding-inline: var(--radius);
-    border-radius: var(--radius);
-    margin-inline: calc(var(--font-size) / 4);
-    cursor: pointer;
-}
-
-option {
-    background-color: black;
-    color: white;
-}
-
-.edit-time {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: repeat(2, auto);
-    gap: 1vw 1.5vw;
-    align-items: center;
-    margin-bottom: 2vw;
-}
-
-.edit-time-label {
-    font-weight: bold;
-    
-    text-align: right;
-}
-
-.edit-time-inputs {
-    display: flex;
-    align-items: center;
-    gap: 1vw;
+    width: 100vw;
+    width: 100dvw;
+    height: 100vh;
+    height: 100dvh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
 }
