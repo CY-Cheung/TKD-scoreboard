@@ -6,6 +6,7 @@ button {
     align-items: center;
     border: none;
     position: relative;
+    z-index: 100; /* 確保在 .card 偽元素之上 */
     background-color: rgba(0,0,0,0.75);
     color: white;
     font-size: var(--font-size);
@@ -14,7 +15,6 @@ button {
     border-radius: var(--radius);
     margin: calc(var(--font-size) / 4);
     cursor: pointer;
-    z-index: auto;
 }
 
 button:active, button:hover {
@@ -24,11 +24,11 @@ button:active, button:hover {
 button:after{
     --padding: calc(var(--font-size) / 8);
     content: '';
-    z-index: -1;
     position: absolute;
-    width: 100%;
-    height: 100%;
-    padding: var(--padding);
-    border-radius: calc(var(--radius) + var(--padding));
+    top: 0; left: 0;
+    inset: var(--padding);
+    border-radius: inherit;
+    z-index: -1; /* 在 button 內容下方，但跟著 button 一起浮在 .card 上 */
     background: var(--button-gradient, linear-gradient(135deg, #2196f3, #21cbf3, #ffffff));
+    pointer-events: none;
 }
