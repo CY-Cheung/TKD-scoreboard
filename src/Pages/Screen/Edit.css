@@ -8,33 +8,17 @@
     background-color: rgba(0, 0, 0, 0.75);
     width: auto;
     border-radius: 2vw;
-    border: 0.125vw solid #ffffff;
-    box-shadow: 0 0 10vw #ffffff7f;
+    border: 0.125vw solid #ffffff7f;
+    box-shadow: 0 0 1vw #ffffff7f;
     position: absolute;
     padding-inline: 5vw;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     aspect-ratio: 2 / 1;
+    z-index: 10001;
 }
 
-.edit::before {
-    content: "";
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background-color: rgba(0, 0, 0, 0.5);
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100vw;
-    height: 100vh;
-    width: 100dvw;
-    height: 100dvh;
-    z-index: -2;
-}
 
 .edit-score {
     display: grid;
@@ -70,7 +54,6 @@ select {
     border-radius: var(--radius);
     margin-inline: calc(var(--font-size) / 4);
     cursor: pointer;
-    box-shadow: 0 0 5vw #ffffff7f;
 }
 
 option {
