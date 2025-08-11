@@ -1,17 +1,17 @@
 .red-bg {
-	background-color: #660000;
+	background-color: var(--red-secondary);
 }
 
 .blue-bg {
-	background-color: #000066;
+	background-color: var(--blue-secondary);
 }
 
 .red-score-bg {
-	background-color: #aa0000;
+	background-color: var(--red-primary);
 }
 
 .blue-score-bg {
-	background-color: #0000aa;
+	background-color: var(--blue-primary);
 }
 
 .screen {
@@ -219,7 +219,7 @@
 	color: #ffffff;
 	justify-content: center;
 	align-items: center;
-	border: 0.5vw solid #ffff00;
+	border: 0.5vw solid var(--yellow-primary);
 }
 
 .timer-font {
@@ -230,7 +230,7 @@
 .time-out {
 	display: flex;
 	width: 100%;
-	background-color: #ffff00;
+	background-color: var(--yellow-primary);
 	color: #000000;
 	justify-content: center;
 	align-items: center;
