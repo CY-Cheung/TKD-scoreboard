@@ -119,6 +119,11 @@ function Edit({ visible, setVisible }) {
 						width={cardWidth}
 					>
 						<h1>Time 時間</h1>
+						<div className="rows">
+							<p>Match Time 比賽時間</p>
+							<p>Rest Time 休息時間</p>
+							<p>Kye-shi 計時</p>
+						</div>
 					</Card>
 					<Card
 						color1="var(--red-primary)"

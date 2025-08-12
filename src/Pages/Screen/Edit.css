@@ -31,10 +31,12 @@ h1 {
     font-size: 4cqh;
 }
 
-
 .rows {
     width: 87.5%;
     margin: 2cqh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .row {
@@ -44,4 +46,9 @@ h1 {
     width: 100%;
     gap: 7.5%;
     margin-block: 1cqh;
+}
+
+.row p,
+.row button {
+    font-size: 1vw;
 }
