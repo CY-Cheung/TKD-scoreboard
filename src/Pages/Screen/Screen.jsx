@@ -33,7 +33,7 @@ function ScoreBoard() {
 
 	return (
 		<>
-			<div className="screen">
+			<div className="screen" onClick={() => document.documentElement.requestFullscreen()}>
 				<div className="top" style={{ flexDirection: direction }}>
 					<div className="red-name red-bg name-font">Red Player</div>
 					<div className="blue-name blue-bg name-font">

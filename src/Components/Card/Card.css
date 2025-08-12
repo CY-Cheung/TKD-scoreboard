@@ -1,35 +1,28 @@
 .card {
-	aspect-ratio: 10/15;
-	height: calc(var(--card-height, 75) * 1vh);
-	height: calc(var(--card-height, 75) * 1dvh);
+	height: auto;
 	width: calc(var(--card-width, 75) * 1vw);
 	width: calc(var(--card-width, 75) * 1dvw);
 	background: #000000;
-	border-radius: calc(var(--card-height, 75) / 20 * 1vh);
+	border-radius: calc(var(--card-width, 75) / 10 * 1vw);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	position: relative;
-    
 }
 
 .card::after,
 .card:hover::before {
-	--inset: -0.375cqh;
+	--inset: -0.125vw;
 	content: "";
 	position: absolute;
 	z-index: -1;
 	inset: var(--inset);
-	border-radius: calc(var(--card-height, 75) / 20 * 1vh - var(--inset));
+	border-radius: calc(var(--card-width, 75) / 10 * 1vw - var(--inset));
 	background: conic-gradient(
 		from var(--angle),
 		#000000,
 		#000000,
-		#000000,
-		#000000,
 		var(--card-color-1),
-		#000000,
-		#000000,
 		#000000,
 		#000000,
 		var(--card-color-2),
