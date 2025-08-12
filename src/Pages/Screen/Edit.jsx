@@ -123,6 +123,7 @@ function Edit({ visible, setVisible }) {
 							<p>Match Time 比賽時間</p>
 							<p>Rest Time 休息時間</p>
 							<p>Kye-shi 計時</p>
+							<p>Change Round 變更回合</p>
 						</div>
 					</Card>
 					<Card
