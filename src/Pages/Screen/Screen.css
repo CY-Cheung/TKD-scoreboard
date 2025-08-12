@@ -19,10 +19,13 @@
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	height: 100vh;
-	height: 100dvh;
-	width: 100vw;
-	width: 100dvw;
+	aspect-ratio: 2 / 1;
+	height: min(100vh, 50vw);
+	height: min(100dvh, 50dvw);
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 }
 
 
@@ -59,7 +62,7 @@
 }
 
 .name-font {
-	font-size: 30cqh;
+	font-size: 3vw;
 	font-weight: bold;
 }
 
@@ -122,7 +125,7 @@
 }
 
 .score-font {
-	font-size: 35cqh;
+	font-size: 18vw;
 	font-weight: bold;
 }
 
@@ -169,12 +172,12 @@
 }
 
 .gamjeom-font {
-	font-size: 3cqh;
+	font-size: 1.75vw;
 	font-weight: bold;
 }
 
 .gamjeom-number {
-	font-size: 10cqh;
+	font-size: 4.5vw;
 	font-weight: bold;
 	margin: 0.5vw;
 }
@@ -201,7 +204,7 @@
 	width: 100%;
 	justify-content: center;
 	align-items: center;
-	font-size: 8cqh;
+	font-size: 4vw;
 	font-weight: bold;
 }
 
@@ -222,7 +225,7 @@
 }
 
 .timer-font {
-	font-size: 18cqh;
+	font-size: 9vw;
 	font-weight: bold;
 }
 

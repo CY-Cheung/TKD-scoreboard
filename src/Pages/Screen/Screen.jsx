@@ -32,8 +32,8 @@ function ScoreBoard() {
 	}, []);
 
 	return (
-		<div className="screen">
-			<div className="screen-display">
+		<>
+			<div className="screen">
 				<div className="top" style={{ flexDirection: direction }}>
 					<div className="red-name red-bg name-font">Red Player</div>
 					<div className="blue-name blue-bg name-font">
@@ -123,7 +123,7 @@ function ScoreBoard() {
 				</div>
 			</div>
 			<Edit visible={showEdit} setVisible={setShowEdit} />
-		</div>
+		</>
 	);
 }
 
