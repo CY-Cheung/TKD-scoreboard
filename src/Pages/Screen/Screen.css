@@ -39,6 +39,7 @@
 	flex-direction: row;
 	width: 100%;
 	flex: 2;
+	container-type: size;
 }
 
 .red-name {
@@ -58,7 +59,7 @@
 }
 
 .name-font {
-	font-size: 3vw;
+	font-size: 30cqh;
 	font-weight: bold;
 }
 
@@ -121,7 +122,7 @@
 }
 
 .score-font {
-	font-size: 18vw;
+	font-size: 35cqh;
 	font-weight: bold;
 }
 
@@ -168,12 +169,12 @@
 }
 
 .gamjeom-font {
-	font-size: 1.75vw;
+	font-size: 3cqh;
 	font-weight: bold;
 }
 
 .gamjeom-number {
-	font-size: 4.5vw;
+	font-size: 10cqh;
 	font-weight: bold;
 	margin: 0.5vw;
 }
@@ -189,7 +190,7 @@
 	width: 100%;
 	justify-content: center;
 	align-items: center;
-	font-size: 5vw;
+	font-size: 10cqh;
 	font-weight: bold;
 }
 
@@ -200,7 +201,7 @@
 	width: 100%;
 	justify-content: center;
 	align-items: center;
-	font-size: 4vw;
+	font-size: 8cqh;
 	font-weight: bold;
 }
 
@@ -221,7 +222,7 @@
 }
 
 .timer-font {
-	font-size: 9vw;
+	font-size: 18cqh;
 	font-weight: bold;
 }
 
@@ -243,12 +244,12 @@
 }
 
 .round-font {
-	font-size: 3vw;
+	font-size: 5cqh;
 	font-weight: bold;
 	padding: 1vw;
 }
 
 .round-number {
-	font-size: 4vw;
+	font-size: 8cqh;
 	font-weight: bold;
 }

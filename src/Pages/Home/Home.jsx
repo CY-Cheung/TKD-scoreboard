@@ -10,11 +10,16 @@ function Home() {
 			<div className="menu">
 				<Button
 					text="Screen"
-					fontSize="2vw"
+					fontSize="4cqh"
 					angle={40}
 					onClick={() => navigate("/screen")}
 				/>
-				<Button text="Controller" fontSize="2vw" angle={270} onClick={() => navigate("/controller")} />
+				<Button
+					text="Controller"
+					fontSize="4cqh"
+					angle={270}
+					onClick={() => navigate("/controller")}
+				/>
 			</div>
 		</div>
 	);
