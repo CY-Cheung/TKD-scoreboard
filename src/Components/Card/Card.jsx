@@ -1,33 +1,15 @@
 import './Card.css'
-import { useRef, useEffect } from "react";
 
-function Card({ color, height, children }) {
-  const cardRef = useRef(null);
-
-  useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
-
-    function handleMouseMove(e) {
-      const rect = card.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      card.style.setProperty('--x', `${x}%`);
-      card.style.setProperty('--y', `${y}%`);
-    }
-
-    card.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      card.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, []);
+function Card({ color1, color2, height, children }) {
+  const c1 = color1 || "#fff";
+  const c2 = color2 || color1 || "#fff";
 
   return (
     <div
       className="card"
-      ref={cardRef}
       style={{
-        "--card-color": color,
+        "--card-color-1": c1,
+        "--card-color-2": c2,
         "--card-height": height,
       }}
     >

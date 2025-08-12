@@ -1,34 +1,37 @@
 button {
-    --padding-block: calc(var(--font-size) / 8);
-    --radius: calc((var(--font-size) + var(--padding-block) + 0.5rem) / 2);
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    border: none;
-    position: relative;
-    z-index: 100; /* 確保在 .card 偽元素之上 */
-    background-color: rgba(0,0,0,0.75);
-    color: white;
-    font-size: var(--font-size);
-    padding-block: var(--padding-block);
-    padding-inline: var(--radius);
-    border-radius: var(--radius);
-    margin: calc(var(--font-size) / 4);
-    cursor: pointer;
+	--padding-block: calc(var(--font-size) / 8);
+	--radius: calc((var(--font-size) + var(--padding-block) + 0.5rem) / 2);
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
+	border: none;
+	position: relative;
+	z-index: 0; /* 確保在 .card 偽元素之上 */
+	background: var(
+		--button-gradient,
+		linear-gradient(135deg, #2196f3, #21cbf3, #ffffff)
+	);
+	color: white;
+	font-size: var(--font-size);
+	padding-block: var(--padding-block);
+	padding-inline: var(--radius);
+	border-radius: var(--radius);
+	margin: calc(var(--font-size) / 4);
+	cursor: pointer;
 }
 
-button:active, button:hover {
-    background-color: rgba(0,0,0,0.125);
+button:active:after,
+button:hover:after {
+	background-color: rgba(0, 0, 0, 0.25);
 }
 
-button:after{
-    --padding: calc(var(--font-size) / 8);
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    inset: var(--padding);
-    border-radius: inherit;
-    z-index: -1; /* 在 button 內容下方，但跟著 button 一起浮在 .card 上 */
-    background: var(--button-gradient, linear-gradient(135deg, #2196f3, #21cbf3, #ffffff));
-    pointer-events: none;
+button:after {
+	--padding: calc(var(--font-size) / 8);
+	content: "";
+	position: absolute;
+	inset: var(--padding);
+	border-radius: inherit;
+	z-index: -1;
+	background-color: rgba(0, 0, 0, 0.75);
+	pointer-events: none;
 }

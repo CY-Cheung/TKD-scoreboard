@@ -12,15 +12,15 @@ function Edit({ visible, setVisible }) {
 		<>
 			<Mask />
 			<div className="edit">
-				<Card color="var(--blue-primary)" height={cardHeight}>
+				<Card color1="var(--blue-primary)" height={cardHeight}>
 					<h1>Blue 藍</h1>
 					<Button text="+" angle={240} fontSize="2vw"/>
 					<Button text="−" angle={240} fontSize="2vw"/>	
 				</Card>
-				<Card color="var(--yellow-primary)" height={cardHeight}>
+				<Card color1="var(--yellow-primary)" height={cardHeight}>
 					<h1>Time 時間</h1>
 				</Card>
-				<Card color="var(--red-primary)" height={cardHeight}>
+				<Card color1="var(--red-primary)" height={cardHeight}>
 					<h1>Red 紅</h1>
 				</Card>
 			</div>

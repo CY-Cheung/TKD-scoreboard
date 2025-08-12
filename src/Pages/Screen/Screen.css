@@ -21,17 +21,15 @@
 	align-items: center;
 	height: 100vh;
 	height: 100dvh;
+	width: 100vw;
+	width: 100dvw;
 }
 
-.screen-menu {
-	width: min(100vw, 200vh);
-	width: min(100dvw, 200dvh);
-}
 
 .screen-display {
 	aspect-ratio: 2 / 1;
-	width: min(100vw, 200vh);
-	width: min(100dvw, 200dvh);
+	height: min(100vh, 50vw);
+	height: min(100dvh, 50dvw);
 	display: flex;
 	flex-direction: column;
 }
