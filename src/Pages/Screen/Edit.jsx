@@ -13,15 +13,97 @@ function Edit({ visible, setVisible }) {
 			<Mask />
 			<div className="edit">
 				<Card color1="var(--blue-primary)" height={cardHeight}>
-					<h1>Blue 藍</h1>
-					<Button text="+" angle={240} fontSize="2vw"/>
-					<Button text="−" angle={240} fontSize="2vw"/>	
+					<h1>Blue 藍方</h1>
+					<div className="row">
+						<h3>Gam-jeom 扣分</h3>
+						<div className="buttons">
+							<Button text="+" angle={210} fontSize="3cqh" />
+							<Button text="−" angle={210} fontSize="3cqh" />
+						</div>
+					</div>
+					<div className="row">
+						<h3>Punch 拳擊</h3>
+						<div className="buttons">
+							<Button text="+" angle={210} fontSize="3cqh" />
+							<Button text="−" angle={210} fontSize="3cqh" />
+						</div>
+					</div>
+					<div className="row">
+						<h3>Body 軀幹</h3>
+						<div className="buttons">
+							<Button text="+" angle={210} fontSize="3cqh" />
+							<Button text="−" angle={210} fontSize="3cqh" />
+						</div>
+					</div>
+					<div className="row">
+						<h3>Head 頭部</h3>
+						<div className="buttons">
+							<Button text="+" angle={210} fontSize="3cqh" />
+							<Button text="−" angle={210} fontSize="3cqh" />
+						</div>
+					</div>
+					<div className="row">
+						<h3>Body(Turn) 軀幹(轉身)</h3>
+						<div className="buttons">
+							<Button text="+" angle={210} fontSize="3cqh" />
+							<Button text="−" angle={210} fontSize="3cqh" />
+						</div>
+					</div>
+					<div className="row">
+						<h3>Head(Turn) 頭部(轉身)</h3>
+						<div className="buttons">
+							<Button text="+" angle={210} fontSize="3cqh" />
+							<Button text="−" angle={210} fontSize="3cqh" />
+						</div>
+					</div>
 				</Card>
 				<Card color1="var(--yellow-primary)" height={cardHeight}>
 					<h1>Time 時間</h1>
 				</Card>
 				<Card color1="var(--red-primary)" height={cardHeight}>
-					<h1>Red 紅</h1>
+					<h1>Red 紅方</h1>
+					<div className="row">
+						<h3>Gam-jeom 扣分</h3>
+						<div className="buttons">
+							<Button text="+" angle={350} fontSize="3cqh" />
+							<Button text="−" angle={350} fontSize="3cqh" />
+						</div>
+					</div>
+					<div className="row">
+						<h3>Punch 拳擊</h3>
+						<div className="buttons">
+							<Button text="+" angle={350} fontSize="3cqh" />
+							<Button text="−" angle={350} fontSize="3cqh" />
+						</div>
+					</div>
+					<div className="row">
+						<h3>Body 軀幹</h3>
+						<div className="buttons">
+							<Button text="+" angle={350} fontSize="3cqh" />
+							<Button text="−" angle={350} fontSize="3cqh" />
+						</div>
+					</div>
+					<div className="row">
+						<h3>Head 頭部</h3>
+						<div className="buttons">
+							<Button text="+" angle={350} fontSize="3cqh" />
+							<Button text="−" angle={350} fontSize="3cqh" />
+						</div>
+					</div>
+					<div className="row">
+						<h3>Body(Turn) 軀幹(轉身)</h3>
+						<div className="buttons">
+							<Button text="+" angle={350} fontSize="3cqh" />
+							<Button text="−" angle={350} fontSize="3cqh" />
+						</div>
+					</div>
+					<div className="row">
+						<h3>Head(Turn) 頭部(轉身)</h3>
+						<div className="buttons">
+							<Button text="+" angle={350} fontSize="3cqh" />
+							<Button text="−" angle={350} fontSize="3cqh" />
+						</div>
+					</div>
 				</Card>
 			</div>
 		</>

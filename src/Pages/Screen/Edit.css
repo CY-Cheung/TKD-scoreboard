@@ -1,8 +1,7 @@
 .edit {
     display: flex;
-    justify-content: center;
+    justify-content: space-evenly;
     align-items: center;
-    gap: 5vw;
     width: 100vw;
     width: 100dvw;
     height: 100vh;
@@ -14,4 +13,18 @@
 
 h1 {
     font-size: 3.5cqh;
+    margin: 6cqh;
+}
+
+h3 {
+    font-size: 2cqh;
+}
+
+.row {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    width: 87.5%;
+    gap: 7.5%;
+    margin-block: 1cqh;
 }

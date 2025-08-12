@@ -26,10 +26,10 @@ button:hover:after {
 }
 
 button:after {
-	--padding: calc(var(--font-size) / 8);
+	--padding: calc(var(--font-size) / 6);
 	content: "";
 	position: absolute;
-	inset: var(--padding);
+	inset: calc(var(--padding) / 2);
 	border-radius: inherit;
 	z-index: -1;
 	background-color: rgba(0, 0, 0, 0.75);

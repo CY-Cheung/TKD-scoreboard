@@ -13,7 +13,7 @@
 
 .card::after,
 .card:hover::before {
-	--inset: -0.125vw;
+	--inset: -0.375cqh;
 	content: "";
 	position: absolute;
 	z-index: -1;
@@ -39,11 +39,11 @@
 	z-index: -2;
 	filter: blur(0.5vw);
 	opacity: 0.75;
-	animation: glowing-border 6.28s linear infinite;
+	animation: glowing-border 3.14s linear infinite;
 }
 
 .card:hover::after {
-	animation: glowing-border 6.28s linear infinite;
+	animation: glowing-border 3.14s linear infinite;
 }
 
 @property --angle {
