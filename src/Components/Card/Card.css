@@ -2,17 +2,17 @@
 	height: auto;
 	width: calc(var(--card-width, 75) * 1vw);
 	width: calc(var(--card-width, 75) * 1dvw);
-	background: #000000;
+	background: hsl(0, 0%, 5%);
 	border-radius: calc(var(--card-width, 75) / 10 * 1vw);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	position: relative;
-}
+}	
 
 .card::after,
 .card:hover::before {
-	--inset: -0.125vw;
+	--inset: -0.25vw;
 	content: "";
 	position: absolute;
 	z-index: -1;
@@ -28,11 +28,12 @@
 		var(--card-color-2),
 		#000000
 	);
+	border: hsl(0, 0%, 10%) solid 0.125vw;
 }
 
 .card:hover::before {
 	z-index: -2;
-	filter: blur(0.5vw);
+	filter: blur(1vw);
 	opacity: 0.75;
 	animation: glowing-border 3.14s linear infinite;
 }

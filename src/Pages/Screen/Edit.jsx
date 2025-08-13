@@ -7,8 +7,8 @@ import "../../Components/Card/Card.css";
 
 function Edit({ visible, setVisible }) {
     if (!visible) return null;
-    const cardWidth = 28;
-    const buttonFontSize = cardWidth/20; // 只存數字
+    const cardWidth = 25;
+    const buttonFontSize = cardWidth/25;
 
     return (
         <>
