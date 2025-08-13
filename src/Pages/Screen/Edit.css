@@ -19,7 +19,7 @@
     width: 100dvw;
     top: 0;
     left: 0;
-    margin-block: 4vw; /* 原本 5cqh → 5vw */
+    margin-block: 4vw;
 }
 
 
@@ -45,7 +45,19 @@ h1 {
     gap: 1.5vw;
 }
 
-.card p,
-.card button {
-    font-size: 1.25vw; /* 已經是 vw，無需更動 */
+.buttons button {
+    font-weight: bold;
+}
+
+.card select {
+    background-color: black;
+    color: white;
+}
+
+.row:has(select) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 1.5vw;
 }

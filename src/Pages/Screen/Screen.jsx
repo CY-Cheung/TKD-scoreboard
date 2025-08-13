@@ -33,7 +33,10 @@ function ScoreBoard() {
 
 	return (
 		<>
-			<div className="screen" onClick={() => document.documentElement.requestFullscreen()}>
+			<div
+				className="screen"
+				onClick={() => document.documentElement.requestFullscreen()}
+			>
 				<div className="top" style={{ flexDirection: direction }}>
 					<div className="red-name red-bg name-font">Red Player</div>
 					<div className="blue-name blue-bg name-font">
@@ -63,7 +66,14 @@ function ScoreBoard() {
 						<div className="red-score-info red-bg"></div>
 					</div>
 					<div className="match-info">
-						<div className="match">
+						<div
+							className="match"
+							onClick={() =>
+								setDirection((prev) =>
+									prev === "row" ? "row-reverse" : "row"
+								)
+							}
+						>
 							<div className="match-font">MATCH</div>
 							<div className="match-number">A1001</div>
 						</div>
@@ -97,7 +107,10 @@ function ScoreBoard() {
 								Time out
 							</div>
 						</div>
-						<div className="round-info" onClick={() => setShowEdit((prev) => !prev)}>
+						<div
+							className="round-info"
+							onClick={() => setShowEdit((prev) => !prev)}
+						>
 							<div className="round-font">ROUND</div>
 							<div className="round-number">1</div>
 						</div>
