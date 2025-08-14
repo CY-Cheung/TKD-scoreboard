@@ -265,10 +265,6 @@
 	align-items: center;
 	font-size: calc(var(--icon-width) - 0.25vw);
 	margin: 0.375vw;
-}
-
-.ref-num {
-	color: #000000;
-	background-color: #00ff00;
+	color: transparent;
 	font-weight: bold;
 }
