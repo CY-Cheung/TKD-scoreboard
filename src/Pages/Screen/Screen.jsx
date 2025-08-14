@@ -32,7 +32,7 @@ function ScoreBoard() {
 	}, []);
 
 	const scoreArray = [
-		[1, 0, 0, 0, 0, 0],
+		[0, 0, 0, 0, 0, 0],
 		[0, 0, 0, 0, 0, 0],
 	];
 
