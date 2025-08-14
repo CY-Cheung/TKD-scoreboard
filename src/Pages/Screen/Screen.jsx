@@ -32,7 +32,7 @@ function ScoreBoard() {
 	}, []);
 
 	const scoreArray = [
-		[0, 0, 0, 0, 0, 0],
+		[1, 0, 0, 0, 0, 0],
 		[0, 0, 0, 0, 0, 0],
 	];
 
@@ -114,7 +114,7 @@ function ScoreBoard() {
 						</div>
 						<div className="red-gamjeom red-bg">
 							<div className="gamjeom-font">GAM-JEOM</div>
-							<div className="gamjeom-number">{scoreArray[0][0]}</div>
+							<div className="gamjeom-number">{scoreArray[1][0]}</div>
 						</div>
 					</div>
 					<div className="red-score red-bg">
@@ -202,7 +202,7 @@ function ScoreBoard() {
 						</div>
 						<div className="blue-gamjeom blue-bg">
 							<div className="gamjeom-font">GAM-JEOM</div>
-							<div className="gamjeom-number">{scoreArray[1][0]}</div>
+							<div className="gamjeom-number">{scoreArray[0][0]}</div>
 						</div>
 					</div>
 				</div>
