@@ -38,9 +38,7 @@ function ScoreBoard() {
 				onClick={() => document.documentElement.requestFullscreen()}
 			>
 				<div className="top" style={{ flexDirection: direction }}>
-					<div className="red-name red-bg name-font">
-						Red Player
-					</div>
+					<div className="red-name red-bg name-font">Red Player</div>
 					<div className="blue-name blue-bg name-font">
 						Blue Player
 					</div>
@@ -48,13 +46,29 @@ function ScoreBoard() {
 				<div
 					className="midbottom"
 					style={{ flexDirection: direction, display: "flex" }}
-				> {/*19:39:34:39:19 = 150*/}
+				>
+					{" "}
+					{/*19:39:34:39:19 = 150*/}
 					<div className="red-log red-bg">
 						<div className="red-ref-log red-bg">
-							<div>X</div>
-							<div>O</div>
-							<div>O</div>
-							<div>O</div>
+							<div className="log-row">
+								<div className="log-icon">&#128074;</div>
+								<div className="log-icon">1</div>
+								<div className="log-icon">2</div>
+								<div className="log-icon">3</div>
+							</div>
+							<div className="log-row">
+								<div className="log-icon">&#129355;</div>
+								<div className="log-icon">1</div>
+								<div className="log-icon">2</div>
+								<div className="log-icon">3</div>
+							</div>
+							<div className="log-row">
+								<div className="log-icon">&#129686;</div>
+								<div className="log-icon">1</div>
+								<div className="log-icon">2</div>
+								<div className="log-icon">3</div>
+							</div>
 						</div>
 						<div className="red-gamjeom red-bg">
 							<div className="gamjeom-font">GAM-JEOM</div>
@@ -125,10 +139,24 @@ function ScoreBoard() {
 					</div>
 					<div className="blue-log blue-bg">
 						<div className="blue-ref-log blue-bg">
-							<div>X</div>
-							<div>O</div>
-							<div>O</div>
-							<div>O</div>
+							<div className="log-row">
+								<div className="log-icon">&#128074;</div>
+								<div className="log-icon">1</div>
+								<div className="log-icon">2</div>
+								<div className="log-icon">3</div>
+							</div>
+							<div className="log-row">
+								<div className="log-icon">&#129355;</div>
+								<div className="log-icon">1</div>
+								<div className="log-icon">2</div>
+								<div className="log-icon">3</div>
+							</div>
+							<div className="log-row">
+								<div className="log-icon">&#129686;</div>
+								<div className="log-icon">1</div>
+								<div className="log-icon">2</div>
+								<div className="log-icon">3</div>
+							</div>
 						</div>
 						<div className="blue-gamjeom blue-bg">
 							<div className="gamjeom-font">GAM-JEOM</div>

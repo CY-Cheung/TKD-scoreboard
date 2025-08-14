@@ -133,16 +133,20 @@
 
 .red-ref-log {
 	display: flex;
-	flex: 7;
-	width: 100%;
-	justify-content: center;
+	flex-direction: column;
+	width: calc(var(--screen-width) * 19/150);
+	height: calc(var(--screen-height) * 7/11);
+	align-items: center;
+	gap: 1vw;
 }
 
 .blue-ref-log {
 	display: flex;
-	flex: 7;
-	width: 100%;
-	justify-content: center;
+	flex-direction: column;
+	width: calc(var(--screen-width) * 19/150);
+	height: calc(var(--screen-height) * 7/11);
+	align-items: center;
+	gap: 1vw;
 }
 
 .red-gamjeom {
@@ -244,4 +248,22 @@
 .round-number {
 	font-size: 5vw;
 	font-weight: bold;
+}
+
+.log-row {
+	--log-width: calc(var(--screen-width) * 19/150);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: var(--log-width);
+}
+
+.log-icon {
+	--icon-width: calc(var(--screen-width) * 4/150);
+	width: var(--icon-width);
+	height: var(--icon-width);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: var(--icon-width);
 }
