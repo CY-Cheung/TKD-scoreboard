@@ -253,12 +253,12 @@
 .log-row {
 	--log-width: calc(var(--screen-width) * 19/150);
 	display: flex;
-	justify-content: center;
+	justify-content: space-evenly;
 	align-items: center;
 	width: var(--log-width);
 }
 
-.log-icon {
+.log-icon, .ref-num {
 	--icon-width: calc(var(--screen-width) * 4/150);
 	width: var(--icon-width);
 	height: var(--icon-width);
@@ -266,4 +266,10 @@
 	justify-content: center;
 	align-items: center;
 	font-size: var(--icon-width);
+}
+
+.ref-num {
+	color: #000000;
+	background-color: #00ff00;
+	font-weight: bold;
 }

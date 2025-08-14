@@ -47,27 +47,26 @@ function ScoreBoard() {
 					className="midbottom"
 					style={{ flexDirection: direction, display: "flex" }}
 				>
-					{" "}
 					{/*19:39:34:39:19 = 150*/}
 					<div className="red-log red-bg">
 						<div className="red-ref-log red-bg">
 							<div className="log-row">
 								<div className="log-icon">&#128074;</div>
-								<div className="log-icon">1</div>
-								<div className="log-icon">2</div>
-								<div className="log-icon">3</div>
+								<div className="ref-num">1</div>
+								<div className="ref-num">2</div>
+								<div className="ref-num">3</div>
 							</div>
 							<div className="log-row">
 								<div className="log-icon">&#129355;</div>
-								<div className="log-icon">1</div>
-								<div className="log-icon">2</div>
-								<div className="log-icon">3</div>
+								<div className="ref-num">1</div>
+								<div className="ref-num">2</div>
+								<div className="ref-num">3</div>
 							</div>
 							<div className="log-row">
 								<div className="log-icon">&#129686;</div>
-								<div className="log-icon">1</div>
-								<div className="log-icon">2</div>
-								<div className="log-icon">3</div>
+								<div className="ref-num">1</div>
+								<div className="ref-num">2</div>
+								<div className="ref-num">3</div>
 							</div>
 						</div>
 						<div className="red-gamjeom red-bg">
@@ -141,21 +140,21 @@ function ScoreBoard() {
 						<div className="blue-ref-log blue-bg">
 							<div className="log-row">
 								<div className="log-icon">&#128074;</div>
-								<div className="log-icon">1</div>
-								<div className="log-icon">2</div>
-								<div className="log-icon">3</div>
+								<div className="ref-num">1</div>
+								<div className="ref-num">2</div>
+								<div className="ref-num">3</div>
 							</div>
 							<div className="log-row">
 								<div className="log-icon">&#129355;</div>
-								<div className="log-icon">1</div>
-								<div className="log-icon">2</div>
-								<div className="log-icon">3</div>
+								<div className="ref-num">1</div>
+								<div className="ref-num">2</div>
+								<div className="ref-num">3</div>
 							</div>
 							<div className="log-row">
 								<div className="log-icon">&#129686;</div>
-								<div className="log-icon">1</div>
-								<div className="log-icon">2</div>
-								<div className="log-icon">3</div>
+								<div className="ref-num">1</div>
+								<div className="ref-num">2</div>
+								<div className="ref-num">3</div>
 							</div>
 						</div>
 						<div className="blue-gamjeom blue-bg">
