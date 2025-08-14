@@ -31,6 +31,16 @@ function ScoreBoard() {
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, []);
 
+	const scoreArray = [
+		[0, 0, 0, 0, 0, 0],
+		[0, 0, 0, 0, 0, 0],
+	];
+
+	const winDecision = [
+		[0, 0, 0, 0, 0],
+		[0, 0, 0, 0, 0],
+	];
+
 	return (
 		<>
 			<div

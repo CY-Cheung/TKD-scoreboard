@@ -166,12 +166,12 @@
 }
 
 .gamjeom-font {
-	font-size: 1.5vw;
+	font-size: 2vw;
 	font-weight: bold;
 }
 
 .gamjeom-number {
-	font-size: 4.5vw;
+	font-size: 5vw;
 	font-weight: bold;
 	margin: 0.5vw;
 }
@@ -253,19 +253,18 @@
 .log-row {
 	--log-width: calc(var(--screen-width) * 19/150);
 	display: flex;
-	justify-content: space-evenly;
-	align-items: center;
 	width: var(--log-width);
 }
 
 .log-icon, .ref-num {
-	--icon-width: calc(var(--screen-width) * 4/150);
-	width: var(--icon-width);
-	height: var(--icon-width);
+	--icon-width: calc(var(--screen-width) * 4/150 * 0.875);
+	width: calc(var(--icon-width));
+	height: calc(var(--icon-width));
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	font-size: var(--icon-width);
+	font-size: calc(var(--icon-width) - 0.25vw);
+	margin: 0.375vw;
 }
 
 .ref-num {
