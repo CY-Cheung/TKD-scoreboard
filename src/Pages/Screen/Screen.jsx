@@ -36,9 +36,43 @@ function ScoreBoard() {
 		[0, 0, 0, 0, 0, 0],
 	];
 
+	function blueScore(scoreArray) {
+		return (
+			scoreArray[0][1] * 1 +
+			scoreArray[0][2] * 2 +
+			scoreArray[0][3] * 3 +
+			scoreArray[0][4] * 4 +
+			scoreArray[0][5] * 5 +
+			scoreArray[1][0]
+		);
+	}
+
+	function redScore(scoreArray) {
+		return (
+			scoreArray[1][1] * 1 +
+			scoreArray[1][2] * 2 +
+			scoreArray[1][3] * 3 +
+			scoreArray[1][4] * 4 +
+			scoreArray[1][5] * 5 +
+			scoreArray[0][0]
+		);
+	}
+
 	const winDecision = [
-		[0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0],
+		[
+			scoreArray[0][4] * 4 + scoreArray[0][5] * 5,
+			scoreArray[0][5] + scoreArray[0][3],
+			scoreArray[0][4] + scoreArray[0][2],
+			scoreArray[0][1],
+			scoreArray[1][0],
+		],
+		[
+			scoreArray[1][4] * 4 + scoreArray[1][5] * 5,
+			scoreArray[1][5] + scoreArray[1][3],
+			scoreArray[1][4] + scoreArray[1][2],
+			scoreArray[1][1],
+			scoreArray[0][0],
+		],
 	];
 
 	return (
@@ -57,7 +91,6 @@ function ScoreBoard() {
 					className="midbottom"
 					style={{ flexDirection: direction, display: "flex" }}
 				>
-					{/*19:39:34:39:19 = 150*/}
 					<div className="red-log red-bg">
 						<div className="red-ref-log red-bg">
 							<div className="log-row">
@@ -81,12 +114,12 @@ function ScoreBoard() {
 						</div>
 						<div className="red-gamjeom red-bg">
 							<div className="gamjeom-font">GAM-JEOM</div>
-							<div className="gamjeom-number">0</div>
+							<div className="gamjeom-number">{scoreArray[0][0]}</div>
 						</div>
 					</div>
 					<div className="red-score red-bg">
 						<div className="red-score-text red-score-bg score-font">
-							0
+							{redScore(scoreArray)}
 						</div>
 						<div className="red-score-info red-bg"></div>
 					</div>
@@ -142,7 +175,7 @@ function ScoreBoard() {
 					</div>
 					<div className="blue-score blue-bg">
 						<div className="blue-score-text blue-score-bg score-font">
-							0
+							{blueScore(scoreArray)}
 						</div>
 						<div className="blue-score-info blue-bg"></div>
 					</div>
@@ -169,7 +202,7 @@ function ScoreBoard() {
 						</div>
 						<div className="blue-gamjeom blue-bg">
 							<div className="gamjeom-font">GAM-JEOM</div>
-							<div className="gamjeom-number">0</div>
+							<div className="gamjeom-number">{scoreArray[1][0]}</div>
 						</div>
 					</div>
 				</div>
