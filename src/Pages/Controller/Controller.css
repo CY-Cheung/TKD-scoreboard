@@ -1,7 +1,31 @@
 .controller {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100dvh;
-    width: 100dvw;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100dvh;
+	width: 100dvw;
+}
+
+.col {
+	display: flex;
+	flex-direction: column;
+	align-content: center;
+	height: 100dvh;
+	width: 20dvw;
+	padding-block: 10dvw;
+	box-sizing: border-box;
+}
+
+.col:nth-child(1),
+.col:nth-child(2) {
+	background-color: var(--red-secondary);
+}
+
+.col:nth-child(4),
+.col:nth-child(5) {
+	background-color: var(--blue-secondary);
+}
+
+.col>button {
+    height: 20dvh;
 }
