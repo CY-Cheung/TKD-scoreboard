@@ -1,6 +1,6 @@
 button {
-	--padding-block: calc(var(--font-size) / 12);
-	--radius: calc((var(--font-size) + var(--padding-block) + 0.5vw) / 2);
+	--padding-block: calc(var(--font-size) / 16);
+	--radius: calc((var(--font-size) + var(--padding-block) + 1vw) / 2);
 	display: inline-flex;
 	justify-content: center;
 	align-items: center;
@@ -27,11 +27,11 @@ button:hover:after {
 
 
 button:after {
-	--padding: 0.125vw;
+	--inset: calc(var(--font-size) / 16);
 	content: "";
 	position: absolute;
-	inset: var(--padding);
-	border-radius: calc(var(--radius) - var(--padding));
+	inset: var(--inset);
+	border-radius: calc(var(--radius) - var(--inset));
 	z-index: -1;
 	background-color: rgba(0, 0, 0, 0.75);
 	pointer-events: none;
