@@ -3,9 +3,9 @@ import './Controller.css'
 function Controller() {
 
   return (
-    <>
-      Controller
-    </>
+    <div className='controller'>
+      controller
+    </div>
   ) 
 }
 
