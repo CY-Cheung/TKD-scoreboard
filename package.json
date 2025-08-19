@@ -7,7 +7,10 @@
     "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "postbuild": "cp dist/index.html dist/404.html",
+    "deploy": "gh-pages -d dist"  
   },
   "dependencies": {
     "gsap": "^3.13.0",
