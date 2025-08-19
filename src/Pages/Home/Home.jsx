@@ -10,15 +10,15 @@ function Home() {
 			<div className="menu">
 				<Button
 					text="Screen"
-					fontSize="4cqh"
+					fontSize="3dvw"
 					angle={40}
-					onClick={() => navigate("/screen")}
+					onClick={() => navigate("/screen.html")}
 				/>
 				<Button
 					text="Controller"
-					fontSize="4cqh"
+					fontSize="3dvw"
 					angle={270}
-					onClick={() => navigate("/controller")}
+					onClick={() => navigate("/controller.html")}
 				/>
 			</div>
 		</div>

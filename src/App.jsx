@@ -9,8 +9,8 @@ function App() {
 		<Router>
 			<Routes>
 				<Route path="/" element={<Home />} />
-				<Route path="/controller" element={<Controller />} />
-				<Route path="/screen" element={<Screen />} />
+				<Route path="/controller.html" element={<Controller />} />
+				<Route path="/screen.html" element={<Screen />} />
 			</Routes>
 		</Router>
 	);
