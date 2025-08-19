@@ -9,7 +9,7 @@ function App() {
 	return (
 		<>
 			<TargetCursor spinDuration={3.14} hideDefaultCursor={true} />
-			<Router>
+			<Router basename="/TKD-scoreboard">
 				<Routes>
 					<Route path="/" element={<Home />} />
 					<Route path="/controller.html" element={<Controller />} />
