@@ -1,7 +1,6 @@
 import Button from "../../Components/Button/Button";
 import "./Home.css";
 import { useNavigate } from "react-router-dom";
-import DarkVeil from "../../Components/DarkVeil/DarkVeil";
 
 function Home() {
 	const navigate = useNavigate();
@@ -9,7 +8,6 @@ function Home() {
 	return (
 		<>
 			<div className="home">
-				<DarkVeil />
 				<div className="menu">
 					<Button
 						text="Screen"
