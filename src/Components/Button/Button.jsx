@@ -46,6 +46,7 @@ function Button({
 
     return (
         <button
+            className="cursor-target"
             style={{
                 "--font-size": fontSize,
                 "--button-gradient": gradientString,

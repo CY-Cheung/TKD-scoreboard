@@ -249,15 +249,15 @@ const TargetCursor = ({
             { x: -cornerSize * 1.5, y: cornerSize * 0.5 },
           ];
 
-          const tl = gsap.timeline();
           corners.forEach((corner, index) => {
-            tl.to(
+            gsap.to(
               corner,
               {
                 x: positions[index].x,
                 y: positions[index].y,
                 duration: 0.3,
                 ease: "power3.out",
+                clearProps: "x,y", // 加這行可強制清除 transform
               },
               0
             );
