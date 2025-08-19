@@ -100,8 +100,10 @@ function Screen() {
                 onClick={() => document.documentElement.requestFullscreen()}
             >
                 <div className="top" style={{ flexDirection: direction }}>
-                    <div className="red-name red-bg name-font">Red Player</div>
-                    <div className="blue-name blue-bg name-font">
+                    <div className="red-name red-bg name-font cursor-target">
+                        Red Player
+                    </div>
+                    <div className="blue-name blue-bg name-font cursor-target">
                         Blue Player
                     </div>
                 </div>
@@ -130,20 +132,21 @@ function Screen() {
                                 <div className="ref-num">3</div>
                             </div>
                         </div>
-                        <div className="red-gamjeom red-bg">
+                        <div className="red-gamjeom red-bg cursor-target" onClick={() => setShowEdit((prev) => !prev)}>
                             <div className="gamjeom-font">GAM-JEOM</div>
                             <div className="gamjeom-number">{scoreArray[1][0]}</div>
                         </div>
                     </div>
                     <div className="red-score red-bg">
-                        <div className="red-score-text red-score-bg score-font">
+                        <div className="red-score-text red-score-bg score-font cursor-target"
+                            onClick={() => setShowEdit((prev) => !prev)}>
                             {redScore(scoreArray)}
                         </div>
                         <div className="red-score-info red-bg"></div>
                     </div>
                     <div className="match-info">
                         <div
-                            className="match"
+                            className="match cursor-target"
                             onClick={() =>
                                 setDirection((prev) =>
                                     prev === "row" ? "row-reverse" : "row"
@@ -155,7 +158,7 @@ function Screen() {
                         </div>
                         <div className="timer">
                             <div
-                                className={`game-timer timer-font ${
+                                className={`game-timer timer-font cursor-target ${
                                     timeoutActive ? " timeout-active" : ""
                                 }`}
                                 onClick={handleTimeoutClick}
@@ -169,7 +172,7 @@ function Screen() {
                                 2:00
                             </div>
                             <div
-                                className={`time-out match-font ${
+                                className={`time-out match-font cursor-target ${
                                     timeoutActive ? " timeout-active" : ""
                                 }`}
                                 onClick={handleTimeoutClick}
@@ -185,14 +188,14 @@ function Screen() {
                         </div>
                         <div
                             className="round-info"
-                            onClick={() => setShowEdit((prev) => !prev)}
                         >
                             <div className="round-font">ROUND</div>
                             <div className="round-number">1</div>
                         </div>
                     </div>
                     <div className="blue-score blue-bg">
-                        <div className="blue-score-text blue-score-bg score-font">
+                        <div className="blue-score-text blue-score-bg score-font cursor-target"
+                            onClick={() => setShowEdit((prev) => !prev)}>
                             {blueScore(scoreArray)}
                         </div>
                         <div className="blue-score-info blue-bg"></div>
@@ -218,7 +221,7 @@ function Screen() {
                                 <div className="ref-num">3</div>
                             </div>
                         </div>
-                        <div className="blue-gamjeom blue-bg">
+                        <div className="blue-gamjeom blue-bg cursor-target" onClick={() => setShowEdit((prev) => !prev)}>
                             <div className="gamjeom-font">GAM-JEOM</div>
                             <div className="gamjeom-number">{scoreArray[0][0]}</div>
                         </div>
