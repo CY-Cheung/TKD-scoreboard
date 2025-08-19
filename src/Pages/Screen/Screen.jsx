@@ -3,213 +3,231 @@ import "./Screen.css";
 import "./Edit.css";
 import Edit from "./Edit";
 
-function ScoreBoard() {
-	const [timeoutActive, setTimeoutActive] = useState(true);
-	const [direction, setDirection] = useState("row");
-	const [showEdit, setShowEdit] = useState(false);
+function Screen() {
+    const [timeoutActive, setTimeoutActive] = useState(true);
+    const [direction, setDirection] = useState("row");
+    const [showEdit, setShowEdit] = useState(false);
 
-	const handleTimeoutClick = () => {
-		setTimeoutActive((prev) => !prev);
-	};
+    useEffect(() => {
+        // 初始化 AirConsole
+        if (window.AirConsole) {
+            const airconsole = new window.AirConsole();
 
-	// 空白鍵觸發 timeout，反斜線鍵切換方向，E鍵切換edit顯示
-	useEffect(() => {
-		const handleKeyDown = (e) => {
-			if (e.code === "Space") {
-				handleTimeoutClick();
-			}
-			if (e.key === "\\") {
-				setDirection((prev) =>
-					prev === "row" ? "row-reverse" : "row"
-				);
-			}
-			if (e.key === "e" || e.key === "E") {
-				setShowEdit((prev) => !prev);
-			}
-		};
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, []);
+            // 監聽訊息
+            airconsole.onMessage = function (from, data) {
+                // 收到訊息後回覆
+                airconsole.message(from, "Full of pixels!");
 
-	const scoreArray = [
-		[0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0],
-	];
+                // 顯示訊息在畫面上
+                const info = document.createElement("DIV");
+                info.innerHTML = data;
+                document.body.appendChild(info);
+            };
+        }
+    }, []);
 
-	function blueScore(scoreArray) {
-		return (
-			scoreArray[0][1] * 1 +
-			scoreArray[0][2] * 2 +
-			scoreArray[0][3] * 3 +
-			scoreArray[0][4] * 4 +
-			scoreArray[0][5] * 5 +
-			scoreArray[1][0]
-		);
-	}
+    const handleTimeoutClick = () => {
+        setTimeoutActive((prev) => !prev);
+    };
 
-	function redScore(scoreArray) {
-		return (
-			scoreArray[1][1] * 1 +
-			scoreArray[1][2] * 2 +
-			scoreArray[1][3] * 3 +
-			scoreArray[1][4] * 4 +
-			scoreArray[1][5] * 5 +
-			scoreArray[0][0]
-		);
-	}
+    // 空白鍵觸發 timeout，反斜線鍵切換方向，E鍵切換edit顯示
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.code === "Space") {
+                handleTimeoutClick();
+            }
+            if (e.key === "\\") {
+                setDirection((prev) =>
+                    prev === "row" ? "row-reverse" : "row"
+                );
+            }
+            if (e.key === "e" || e.key === "E") {
+                setShowEdit((prev) => !prev);
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
 
-	const winDecision = [
-		[
-			scoreArray[0][4] * 4 + scoreArray[0][5] * 5,
-			scoreArray[0][5] + scoreArray[0][3],
-			scoreArray[0][4] + scoreArray[0][2],
-			scoreArray[0][1],
-			scoreArray[1][0],
-		],
-		[
-			scoreArray[1][4] * 4 + scoreArray[1][5] * 5,
-			scoreArray[1][5] + scoreArray[1][3],
-			scoreArray[1][4] + scoreArray[1][2],
-			scoreArray[1][1],
-			scoreArray[0][0],
-		],
-	];
+    const scoreArray = [
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+    ];
 
-	return (
-		<>
-			<div
-				className="screen"
-				onClick={() => document.documentElement.requestFullscreen()}
-			>
-				<div className="top" style={{ flexDirection: direction }}>
-					<div className="red-name red-bg name-font">Red Player</div>
-					<div className="blue-name blue-bg name-font">
-						Blue Player
-					</div>
-				</div>
-				<div
-					className="midbottom"
-					style={{ flexDirection: direction, display: "flex" }}
-				>
-					<div className="red-log red-bg">
-						<div className="red-ref-log red-bg">
-							<div className="log-row">
-								<div className="log-icon">&#128074;</div>
-								<div className="ref-num">1</div>
-								<div className="ref-num">2</div>
-								<div className="ref-num">3</div>
-							</div>
-							<div className="log-row">
-								<div className="log-icon">&#129355;</div>
-								<div className="ref-num">1</div>
-								<div className="ref-num">2</div>
-								<div className="ref-num">3</div>
-							</div>
-							<div className="log-row">
-								<div className="log-icon">&#129686;</div>
-								<div className="ref-num">1</div>
-								<div className="ref-num">2</div>
-								<div className="ref-num">3</div>
-							</div>
-						</div>
-						<div className="red-gamjeom red-bg">
-							<div className="gamjeom-font">GAM-JEOM</div>
-							<div className="gamjeom-number">{scoreArray[1][0]}</div>
-						</div>
-					</div>
-					<div className="red-score red-bg">
-						<div className="red-score-text red-score-bg score-font">
-							{redScore(scoreArray)}
-						</div>
-						<div className="red-score-info red-bg"></div>
-					</div>
-					<div className="match-info">
-						<div
-							className="match"
-							onClick={() =>
-								setDirection((prev) =>
-									prev === "row" ? "row-reverse" : "row"
-								)
-							}
-						>
-							<div className="match-font">MATCH</div>
-							<div className="match-number">A1001</div>
-						</div>
-						<div className="timer">
-							<div
-								className={`game-timer timer-font ${
-									timeoutActive ? " timeout-active" : ""
-								}`}
-								onClick={handleTimeoutClick}
-								style={{
-									color: timeoutActive
-										? "#FFFFFF"
-										: "#FFFF00",
-									cursor: "pointer",
-								}}
-							>
-								2:00
-							</div>
-							<div
-								className={`time-out match-font ${
-									timeoutActive ? " timeout-active" : ""
-								}`}
-								onClick={handleTimeoutClick}
-								style={{
-									backgroundColor: timeoutActive
-										? "#000000"
-										: "#FFFF00",
-									cursor: "pointer",
-								}}
-							>
-								Time out
-							</div>
-						</div>
-						<div
-							className="round-info"
-							onClick={() => setShowEdit((prev) => !prev)}
-						>
-							<div className="round-font">ROUND</div>
-							<div className="round-number">1</div>
-						</div>
-					</div>
-					<div className="blue-score blue-bg">
-						<div className="blue-score-text blue-score-bg score-font">
-							{blueScore(scoreArray)}
-						</div>
-						<div className="blue-score-info blue-bg"></div>
-					</div>
-					<div className="blue-log blue-bg">
-						<div className="blue-ref-log blue-bg">
-							<div className="log-row">
-								<div className="log-icon">&#128074;</div>
-								<div className="ref-num">1</div>
-								<div className="ref-num">2</div>
-								<div className="ref-num">3</div>
-							</div>
-							<div className="log-row">
-								<div className="log-icon">&#129355;</div>
-								<div className="ref-num">1</div>
-								<div className="ref-num">2</div>
-								<div className="ref-num">3</div>
-							</div>
-							<div className="log-row">
-								<div className="log-icon">&#129686;</div>
-								<div className="ref-num">1</div>
-								<div className="ref-num">2</div>
-								<div className="ref-num">3</div>
-							</div>
-						</div>
-						<div className="blue-gamjeom blue-bg">
-							<div className="gamjeom-font">GAM-JEOM</div>
-							<div className="gamjeom-number">{scoreArray[0][0]}</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<Edit visible={showEdit} setVisible={setShowEdit} />
-		</>
-	);
+    function blueScore(scoreArray) {
+        return (
+            scoreArray[0][1] * 1 +
+            scoreArray[0][2] * 2 +
+            scoreArray[0][3] * 3 +
+            scoreArray[0][4] * 4 +
+            scoreArray[0][5] * 5 +
+            scoreArray[1][0]
+        );
+    }
+
+    function redScore(scoreArray) {
+        return (
+            scoreArray[1][1] * 1 +
+            scoreArray[1][2] * 2 +
+            scoreArray[1][3] * 3 +
+            scoreArray[1][4] * 4 +
+            scoreArray[1][5] * 5 +
+            scoreArray[0][0]
+        );
+    }
+
+    const winDecision = [
+        [
+            scoreArray[0][4] * 4 + scoreArray[0][5] * 5,
+            scoreArray[0][5] + scoreArray[0][3],
+            scoreArray[0][4] + scoreArray[0][2],
+            scoreArray[0][1],
+            scoreArray[1][0],
+        ],
+        [
+            scoreArray[1][4] * 4 + scoreArray[1][5] * 5,
+            scoreArray[1][5] + scoreArray[1][3],
+            scoreArray[1][4] + scoreArray[1][2],
+            scoreArray[1][1],
+            scoreArray[0][0],
+        ],
+    ];
+
+    return (
+        <>
+            <div
+                className="screen"
+                onClick={() => document.documentElement.requestFullscreen()}
+            >
+                <div className="top" style={{ flexDirection: direction }}>
+                    <div className="red-name red-bg name-font">Red Player</div>
+                    <div className="blue-name blue-bg name-font">
+                        Blue Player
+                    </div>
+                </div>
+                <div
+                    className="midbottom"
+                    style={{ flexDirection: direction, display: "flex" }}
+                >
+                    <div className="red-log red-bg">
+                        <div className="red-ref-log red-bg">
+                            <div className="log-row">
+                                <div className="log-icon">&#128074;</div>
+                                <div className="ref-num">1</div>
+                                <div className="ref-num">2</div>
+                                <div className="ref-num">3</div>
+                            </div>
+                            <div className="log-row">
+                                <div className="log-icon">&#129355;</div>
+                                <div className="ref-num">1</div>
+                                <div className="ref-num">2</div>
+                                <div className="ref-num">3</div>
+                            </div>
+                            <div className="log-row">
+                                <div className="log-icon">&#129686;</div>
+                                <div className="ref-num">1</div>
+                                <div className="ref-num">2</div>
+                                <div className="ref-num">3</div>
+                            </div>
+                        </div>
+                        <div className="red-gamjeom red-bg">
+                            <div className="gamjeom-font">GAM-JEOM</div>
+                            <div className="gamjeom-number">{scoreArray[1][0]}</div>
+                        </div>
+                    </div>
+                    <div className="red-score red-bg">
+                        <div className="red-score-text red-score-bg score-font">
+                            {redScore(scoreArray)}
+                        </div>
+                        <div className="red-score-info red-bg"></div>
+                    </div>
+                    <div className="match-info">
+                        <div
+                            className="match"
+                            onClick={() =>
+                                setDirection((prev) =>
+                                    prev === "row" ? "row-reverse" : "row"
+                                )
+                            }
+                        >
+                            <div className="match-font">MATCH</div>
+                            <div className="match-number">A1001</div>
+                        </div>
+                        <div className="timer">
+                            <div
+                                className={`game-timer timer-font ${
+                                    timeoutActive ? " timeout-active" : ""
+                                }`}
+                                onClick={handleTimeoutClick}
+                                style={{
+                                    color: timeoutActive
+                                        ? "#FFFFFF"
+                                        : "#FFFF00",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                2:00
+                            </div>
+                            <div
+                                className={`time-out match-font ${
+                                    timeoutActive ? " timeout-active" : ""
+                                }`}
+                                onClick={handleTimeoutClick}
+                                style={{
+                                    backgroundColor: timeoutActive
+                                        ? "#000000"
+                                        : "#FFFF00",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Time out
+                            </div>
+                        </div>
+                        <div
+                            className="round-info"
+                            onClick={() => setShowEdit((prev) => !prev)}
+                        >
+                            <div className="round-font">ROUND</div>
+                            <div className="round-number">1</div>
+                        </div>
+                    </div>
+                    <div className="blue-score blue-bg">
+                        <div className="blue-score-text blue-score-bg score-font">
+                            {blueScore(scoreArray)}
+                        </div>
+                        <div className="blue-score-info blue-bg"></div>
+                    </div>
+                    <div className="blue-log blue-bg">
+                        <div className="blue-ref-log blue-bg">
+                            <div className="log-row">
+                                <div className="log-icon">&#128074;</div>
+                                <div className="ref-num">1</div>
+                                <div className="ref-num">2</div>
+                                <div className="ref-num">3</div>
+                            </div>
+                            <div className="log-row">
+                                <div className="log-icon">&#129355;</div>
+                                <div className="ref-num">1</div>
+                                <div className="ref-num">2</div>
+                                <div className="ref-num">3</div>
+                            </div>
+                            <div className="log-row">
+                                <div className="log-icon">&#129686;</div>
+                                <div className="ref-num">1</div>
+                                <div className="ref-num">2</div>
+                                <div className="ref-num">3</div>
+                            </div>
+                        </div>
+                        <div className="blue-gamjeom blue-bg">
+                            <div className="gamjeom-font">GAM-JEOM</div>
+                            <div className="gamjeom-number">{scoreArray[0][0]}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <Edit visible={showEdit} setVisible={setShowEdit} />
+        </>
+    );
 }
 
-export default ScoreBoard;
+export default Screen;
