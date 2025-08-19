@@ -142,19 +142,10 @@ const TargetCursor = ({
 			}
 			gsap.to(cursorRef.current, { scale: 1, duration: 0.2 });
 			gsap.to(dotRef.current, { scale: 1, duration: 0.3 });
-
-			// 讓游標繼續旋轉
-			if (spinTl.current) {
-				spinTl.current.kill();
-				spinTl.current = gsap
-					.timeline({ repeat: -1 })
-					.to(cursorRef.current, {
-						rotation: "+=360",
-						duration: spinDuration,
-						ease: "none",
-					});
-			}
-		};
+			if (!dotRef.current) return;
+				gsap.to(dotRef.current, { scale: 1, duration: 0.3 });
+				gsap.to(cursorRef.current, { scale: 1, duration: 0.2 });
+			};
 
 		window.addEventListener("mousedown", mouseDownHandler);
 		window.addEventListener("mouseup", mouseUpHandler);
