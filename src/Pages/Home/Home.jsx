@@ -23,13 +23,31 @@ function Home() {
 					text="Screen"
 					fontSize="3dvw"
 					angle={40}
-					onClick={() => navigate("/screen.html")}
+					onClick={() => navigate("/screen")}
 				/>
 				<Button
 					text="Controller"
 					fontSize="3dvw"
 					angle={270}
-					onClick={() => navigate("/controller.html")}
+					onClick={() => navigate("/controller")}
+				/>
+        <Button
+					text="Admin"
+					fontSize="3dvw"
+					angle={120}
+					onClick={() => navigate("/admin")}
+				/>
+        <Button
+					text="Court Launcher"
+					fontSize="3dvw"
+					angle={210}
+					onClick={() => navigate("/launcher")}
+				/>
+        <Button
+					text="Referee Register"
+					fontSize="3dvw"
+					angle={310}
+					onClick={() => navigate("/referee/register")}
 				/>
 			</div>
 		</div>
