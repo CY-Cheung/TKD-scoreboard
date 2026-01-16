@@ -1,34 +1,41 @@
 import React, { useState, useEffect } from "react";
 import { ref, onValue } from "firebase/database";
-import { database } from "../../firebase"; // 引入我們設定好的 database 物件
+import { database } from "../../firebase";
 import "./Screen.css";
 import "./Edit.css";
 import Edit from "./Edit";
 
+// Helper function to format seconds into M:SS format
+const formatTime = (totalSeconds) => {
+    if (typeof totalSeconds !== 'number' || isNaN(totalSeconds)) {
+        return "0:00";
+    }
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
 function Screen() {
-    const [gameData, setGameData] = useState(null); // 用來儲存從 Firebase 讀取的整包遊戲資料
+    const [matchData, setMatchData] = useState(null); // Renamed for clarity
     const [timeoutActive, setTimeoutActive] = useState(true);
     const [direction, setDirection] = useState("row");
     const [showEdit, setShowEdit] = useState(false);
 
-    // --- Firebase 資料監聽 ---
+    // --- Firebase Data Listener ---
     useEffect(() => {
-        // 建立一個指向 'court1' 的引用
         const courtRef = ref(database, 'court1');
 
-        // 設定監聽器，當 'court1' 的資料有變化時，會觸發回呼函式
         const unsubscribe = onValue(courtRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                setGameData(data); // 將整包資料存到 state 中
+                setMatchData(data); // Store the entire match object
             }
         });
 
-        // Cleanup 函式：當元件卸載時，取消監聽
         return () => unsubscribe();
-    }, []); // 空陣列確保 effect 只在元件掛載時執行一次
+    }, []);
 
-    // --- 事件處理 ---
+    // --- Event Handlers ---
     const handleTimeoutClick = () => {
         setTimeoutActive((prev) => !prev);
     };
@@ -37,7 +44,7 @@ function Screen() {
         setDirection((prev) => (prev === "row" ? "row-reverse" : "row"));
     };
 
-    // 鍵盤快捷鍵監聽
+    // Keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.code === "Space") {
@@ -56,16 +63,19 @@ function Screen() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, []);
 
-    // 從 gameData state 中取得要顯示的資料，如果 gameData 還沒載入，就提供預設值
-    const redPlayerName = gameData?.info?.red || "Red Player";
-    const bluePlayerName = gameData?.info?.blue || "Blue Player";
-    const redTotalScore = gameData?.score?.red?.total || 0;
-    const blueTotalScore = gameData?.score?.blue?.total || 0;
-    const redGamJeom = gameData?.score?.red?.['gam-jeom'] || 0;
-    const blueGamJeom = gameData?.score?.blue?.['gam-jeom'] || 0;
-    const matchNumber = gameData?.info?.match || "A1001";
-    const roundNumber = gameData?.status?.round || 1;
-    const timer = gameData?.status?.time || "2:00";
+    // --- Data Extraction from the new structure ---
+    const redPlayerName = matchData?.config?.competitors?.red?.name || "Red Player";
+    const bluePlayerName = matchData?.config?.competitors?.blue?.name || "Blue Player";
+    
+    const redTotalScore = matchData?.stats?.red?.pointsStat?.reduce((acc, val) => acc + val, 0) || 0;
+    const blueTotalScore = matchData?.stats?.blue?.pointsStat?.reduce((acc, val) => acc + val, 0) || 0;
+    
+    const redGamJeom = matchData?.stats?.red?.gamjeom || 0;
+    const blueGamJeom = matchData?.stats?.blue?.gamjeom || 0;
+    
+    const matchNumber = matchData?.config?.matchId || "----";
+    const roundNumber = matchData?.state?.currentRound || 1;
+    const timer = formatTime(matchData?.state?.timer);
 
 
     return (
@@ -74,7 +84,7 @@ function Screen() {
                 className="screen"
                 onClick={() => document.documentElement.requestFullscreen()}
             >
-                {/* 頂部選手名稱 */}
+                {/* Top: Player Names */}
                 <div className="top" style={{ flexDirection: direction }}>
                     <div className="red-name red-bg name-font cursor-target">
                         {redPlayerName}
@@ -84,26 +94,17 @@ function Screen() {
                     </div>
                 </div>
 
-                {/* 中間主計分區 */}
+                {/* Mid/Bottom Section */}
                 <div
                     className="midbottom"
                     style={{ flexDirection: direction, display: "flex" }}
                 >
-                    {/* 紅方區塊 */}
+                    {/* Red Side Blocks */}
                     <div className="red-log red-bg">
-                        <div className="red-ref-log red-bg">
-                            {[128074, 129355, 12686].map((icon, idx) => (
-                                <div className="log-row" key={idx}>
-                                    <div className="log-icon">{String.fromCodePoint(icon)}</div>
-                                    <div className="ref-num">1</div>
-                                    <div className="ref-num">2</div>
-                                    <div className="ref-num">3</div>
-                                </div>
-                            ))}
-                        </div>
+                        {/* Referee logs can be implemented later */}
                         <div className="red-gamjeom red-bg cursor-target" onClick={() => setShowEdit(true)}>
-                            <div className="gamjeom-font">GAM-JEOM</div>
                             <div className="gamjeom-number">{redGamJeom}</div>
+                            <div className="gamjeom-font">GAM-JEOM</div>
                         </div>
                     </div>
 
@@ -111,10 +112,9 @@ function Screen() {
                         <div className="red-score-text red-score-bg score-font cursor-target" onClick={() => setShowEdit(true)}>
                             {redTotalScore}
                         </div>
-                        <div className="red-score-info red-bg"></div>
                     </div>
 
-                    {/* 中央比賽資訊 */}
+                    {/* Center: Match Info */}
                     <div className="match-info">
                         <div className="match cursor-target" onClick={toggleDirection}>
                             <div className="match-font">MATCH</div>
@@ -142,28 +142,17 @@ function Screen() {
                         </div>
                     </div>
 
-                    {/* 藍方區塊 */}
+                    {/* Blue Side Blocks */}
                     <div className="blue-score blue-bg">
                         <div className="blue-score-text blue-score-bg score-font cursor-target" onClick={() => setShowEdit(true)}>
                             {blueTotalScore}
                         </div>
-                        <div className="blue-score-info blue-bg"></div>
                     </div>
 
                     <div className="blue-log blue-bg">
-                        <div className="blue-ref-log blue-bg">
-                            {[128074, 129355, 12686].map((icon, idx) => (
-                                <div className="log-row" key={idx}>
-                                    <div className="log-icon">{String.fromCodePoint(icon)}</div>
-                                    <div className="ref-num">1</div>
-                                    <div className="ref-num">2</div>
-                                    <div className="ref-num">3</div>
-                                </div>
-                            ))}
-                        </div>
                         <div className="blue-gamjeom blue-bg cursor-target" onClick={() => setShowEdit(true)}>
-                            <div className="gamjeom-font">GAM-JEOM</div>
                             <div className="gamjeom-number">{blueGamJeom}</div>
+                            <div className="gamjeom-font">GAM-JEOM</div>
                         </div>
                     </div>
                 </div>

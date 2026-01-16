@@ -151,17 +151,15 @@
 
 .red-gamjeom {
 	display: flex;
-	flex-direction: column;
+	flex-direction: column-reverse;
 	flex: 2;
-	width: 100%;
 	align-items: center;
 }
 
 .blue-gamjeom {
 	display: flex;
-	flex-direction: column;
+	flex-direction: column-reverse;
 	flex: 2;
-	width: 100%;
 	align-items: center;
 }
 
