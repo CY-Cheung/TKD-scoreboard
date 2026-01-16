@@ -1,8 +1,8 @@
 import React from 'react';
 import './RefereeRegister.css';
 
-function RefereeLogin() {
-  return <div>RefereeLogin</div>;
+function RefereeRegister() {
+  return <div>RefereeRegister</div>;
 }
 
-export default RefereeLogin;
+export default RefereeRegister;

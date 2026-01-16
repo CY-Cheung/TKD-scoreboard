@@ -22,13 +22,13 @@ function Home() {
 				<Button
 					text="Screen"
 					fontSize="3dvw"
-					angle={40}
+					angle={0}
 					onClick={() => navigate("/screen")}
 				/>
 				<Button
 					text="Controller"
 					fontSize="3dvw"
-					angle={270}
+					angle={60}
 					onClick={() => navigate("/controller")}
 				/>
         <Button
@@ -38,15 +38,21 @@ function Home() {
 					onClick={() => navigate("/admin")}
 				/>
         <Button
+					text="Data Import"
+					fontSize="3dvw"
+					angle={180}
+					onClick={() => navigate("/import")}
+				/>
+        <Button
 					text="Court Launcher"
 					fontSize="3dvw"
-					angle={210}
+					angle={240}
 					onClick={() => navigate("/launcher")}
 				/>
         <Button
 					text="Referee Register"
 					fontSize="3dvw"
-					angle={310}
+					angle={300}
 					onClick={() => navigate("/referee/register")}
 				/>
 			</div>
