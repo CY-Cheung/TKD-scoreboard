@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ref, set, get } from "firebase/database";
+import { ref, set, get, update } from "firebase/database";
 import { database } from '../../firebase';
 import './DataImport.css';
 import Squares from '../../Components/Squares/Squares';
 import Button from '../../Components/Button/Button';
 import { useNavigate } from 'react-router-dom';
 
-// A helper function to parse name and club
+// A helper function to parse name and club from old format
 const parseName = (fullName) => {
     if (!fullName) return { name: '', club: '' };
     const match = fullName.match(/(.+?)\s*\((.+)\)/);
@@ -65,23 +65,6 @@ const DataImport = () => {
     }, [eventName]);
 
     useEffect(() => {
-        // Helper function to reset form fields for a new match
-        const resetFormFields = () => {
-            setCourtId('court1');
-            setNextMatchId('');
-            setNextMatchSlot('');
-            setMaxPointGap(12);
-            setMaxGamjeom(5);
-            setRoundDuration(120);
-            setRestDuration(60);
-            setBlueName('');
-            setBlueAffiliatedClub('');
-            setBlueSourceMatchId('');
-            setRedName('');
-            setRedAffiliatedClub('');
-            setRedSourceMatchId('');
-        };
-    
         if (matchId && currentMatches[matchId]) {
             const matchData = currentMatches[matchId];
             const config = matchData.config;
@@ -98,19 +81,30 @@ const DataImport = () => {
             setRoundDuration(rules.roundDuration || 120);
             setRestDuration(rules.restDuration || 60);
     
-            const bluePlayer = parseName(competitors.blue.name);
-            setBlueName(bluePlayer.name);
-            setBlueAffiliatedClub(bluePlayer.club);
-            setBlueSourceMatchId(competitors.blue.sourceMatchId || '');
+            const blueCompetitor = competitors.blue;
+            // Handle both new and old data structures
+            if (blueCompetitor.affiliatedClub !== undefined) {
+                setBlueName(blueCompetitor.name || '');
+                setBlueAffiliatedClub(blueCompetitor.affiliatedClub || '');
+            } else {
+                const bluePlayer = parseName(blueCompetitor.name);
+                setBlueName(bluePlayer.name);
+                setBlueAffiliatedClub(bluePlayer.club);
+            }
+            setBlueSourceMatchId(blueCompetitor.sourceMatchId || '');
     
-            const redPlayer = parseName(competitors.red.name);
-            setRedName(redPlayer.name);
-            setRedAffiliatedClub(redPlayer.club);
-            setRedSourceMatchId(competitors.red.sourceMatchId || '');
+            const redCompetitor = competitors.red;
+            // Handle both new and old data structures
+            if (redCompetitor.affiliatedClub !== undefined) {
+                setRedName(redCompetitor.name || '');
+                setRedAffiliatedClub(redCompetitor.affiliatedClub || '');
+            } else {
+                const redPlayer = parseName(redCompetitor.name);
+                setRedName(redPlayer.name);
+                setRedAffiliatedClub(redPlayer.club);
+            }
+            setRedSourceMatchId(redCompetitor.sourceMatchId || '');
     
-        } else {
-            // If matchId is new or cleared, don't auto-reset fields
-            // The user might be typing a new one
         }
     }, [matchId, currentMatches]);
 
@@ -139,9 +133,6 @@ const DataImport = () => {
                 await set(eventRef, initialEventData);
             }
             
-            const finalBlueName = blueAffiliatedClub ? `${blueName} (${blueAffiliatedClub})` : blueName;
-            const finalRedName = redAffiliatedClub ? `${redName} (${redAffiliatedClub})` : redName;
-
             const newMatch = {
                 config: {
                     matchId: matchId,
@@ -155,8 +146,16 @@ const DataImport = () => {
                         restDuration: parseInt(restDuration, 10),
                     },
                     competitors: {
-                        blue: { name: finalBlueName, sourceMatchId: blueSourceMatchId || null },
-                        red: { name: finalRedName, sourceMatchId: redSourceMatchId || null },
+                        blue: { 
+                            name: blueName, 
+                            affiliatedClub: blueAffiliatedClub || '', 
+                            sourceMatchId: blueSourceMatchId || null 
+                        },
+                        red: { 
+                            name: redName, 
+                            affiliatedClub: redAffiliatedClub || '',
+                            sourceMatchId: redSourceMatchId || null
+                        },
                     },
                 },
                 state: { 
@@ -206,17 +205,17 @@ const DataImport = () => {
             if (matchSnapshot.exists()) {
                 const matchData = matchSnapshot.val();
                 const targetCourt = matchData.config.courtId || 'court1';
-
-                const screenDisplayRef = ref(database, targetCourt);
-                const courtEventRef = ref(database, `events/${eventName}/courts/${targetCourt}/currentMatchId`);
+    
+                const courtRef = ref(database, `events/${eventName}/courts/${targetCourt}`);
                 
-                const screenFormattedData = {
-                    ...matchData
+                // Merge match data into the court object and set currentMatchId
+                const updates = {
+                    ...matchData,
+                    currentMatchId: selectedMatchId
                 };
-                
-                await set(screenDisplayRef, screenFormattedData);
-                await set(courtEventRef, selectedMatchId);
-
+    
+                await update(courtRef, updates);
+    
                 alert(`Match ${selectedMatchId} loaded to ${targetCourt}!`);
             } else {
                 alert('Could not find the selected match data.');
@@ -337,11 +336,25 @@ const DataImport = () => {
                         <div className="matches-list">
                             <h3>Matches in {eventName || 'Event'}</h3>
                             <ul>
-                                {Object.keys(currentMatches).map(mId => (
-                                    <li key={mId} onClick={() => setSelectedMatchId(mId)} className={selectedMatchId === mId ? 'selected' : ''}>
-                                        <strong>{mId}:</strong> {currentMatches[mId].config.competitors.blue.name} vs {currentMatches[mId].config.competitors.red.name}
-                                    </li>
-                                ))}
+                                {Object.keys(currentMatches).map(mId => {
+                                    const blue = currentMatches[mId].config.competitors.blue;
+                                    const red = currentMatches[mId].config.competitors.red;
+
+                                    const getDisplayText = (competitor) => {
+                                        // New format with separate name and club
+                                        if (competitor.affiliatedClub) {
+                                            return `${competitor.name} (${competitor.affiliatedClub})`;
+                                        }
+                                        // Old format where name is "Name (Club)" or new format with empty club
+                                        return competitor.name;
+                                    };
+
+                                    return (
+                                        <li key={mId} onClick={() => setSelectedMatchId(mId)} className={selectedMatchId === mId ? 'selected' : ''}>
+                                            <strong>{mId}:</strong> {`${getDisplayText(blue)} vs ${getDisplayText(red)}`}
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         </div>
                     </div>
