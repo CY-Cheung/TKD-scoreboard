@@ -5,6 +5,7 @@ import './DataImport.css';
 import Squares from '../../Components/Squares/Squares';
 import Button from '../../Components/Button/Button';
 import { useNavigate } from 'react-router-dom';
+import TargetCursor from '../../Components/TargetCursor/TargetCursor';
 
 // A helper function to parse name and club from old format
 const parseName = (fullName) => {
@@ -25,7 +26,6 @@ const DataImport = () => {
 
     // Form state
     const [matchId, setMatchId] = useState('');
-    const [courtId, setCourtId] = useState('court1');
     const [nextMatchId, setNextMatchId] = useState('');
     const [nextMatchSlot, setNextMatchSlot] = useState('');
     const [maxPointGap, setMaxPointGap] = useState(12);
@@ -72,7 +72,6 @@ const DataImport = () => {
             const competitors = config.competitors;
     
             // Populate form fields with data from the selected match
-            setCourtId(config.courtId || 'court1');
             setNextMatchId(config.nextMatchId || '');
             setNextMatchSlot(config.nextMatchSlot || '');
             
@@ -136,7 +135,6 @@ const DataImport = () => {
             const newMatch = {
                 config: {
                     matchId: matchId,
-                    courtId: courtId,
                     nextMatchId: nextMatchId || null,
                     nextMatchSlot: nextMatchSlot || null,
                     rules: {
@@ -193,43 +191,26 @@ const DataImport = () => {
         }
     };
 
-    const handleLoadMatch = async () => {
+    const handleLoadMatch = () => {
         if (!eventName || !selectedMatchId) {
             alert('Please select an event and a match to load.');
             return;
         }
-        try {
-            const matchDataRef = ref(database, `events/${eventName}/matches/${selectedMatchId}`);
-            const matchSnapshot = await get(matchDataRef);
-    
-            if (matchSnapshot.exists()) {
-                const matchData = matchSnapshot.val();
-                const targetCourt = matchData.config.courtId || 'court1';
-    
-                const courtRef = ref(database, `events/${eventName}/courts/${targetCourt}`);
-                
-                // Merge match data into the court object and set currentMatchId
-                const updates = {
-                    ...matchData,
-                    currentMatchId: selectedMatchId
-                };
-    
-                await update(courtRef, updates);
-    
-                alert(`Match ${selectedMatchId} loaded to ${targetCourt}!`);
-            } else {
-                alert('Could not find the selected match data.');
-            }
-    
-        } catch (error) {
-            console.error("Error loading match to screen:", error);
-            alert('Failed to load match. Check console for details.');
-        }
+        localStorage.setItem('selectedEvent', eventName);
+        localStorage.setItem('selectedMatchId', selectedMatchId);
+        alert(`Configuration saved! Screen will now display match ${selectedMatchId} from ${eventName}.`);
     };
 
     return (
         <div className="di-container">
-            <Squares speed={0.2} squareSize={80} borderColor="hsla(270, 50%, 50%, 0.25)" hoverFillColor="hsla(270, 50%, 50%, 0.1)" />
+            <TargetCursor />
+            <Squares
+                speed={0.5}
+                squareSize={100}
+                direction="diagonal"
+                borderColor="hsla(270, 50%, 50%, 0.25)"
+                hoverFillColor="hsla(60, 50%, 50%, 0.25)"
+            />
             <div className="di-content-wrapper">
 
                 <div className="di-form-and-list-container">
@@ -245,90 +226,92 @@ const DataImport = () => {
                             </datalist>
                         </div>
                         <div className="match-form">
-                            <fieldset>
-                                <legend>Match Configuration</legend>
-                                <div className="form-grid">
-                                    <div className="form-group">
-                                        <label>Match ID</label>
-                                        <input list="match-ids" type="text" value={matchId} onChange={e => setMatchId(e.target.value)} placeholder="A1001" />
-                                        <datalist id="match-ids">
-                                            {Object.keys(currentMatches).map(mId => (
-                                                <option key={mId} value={mId} />
-                                            ))}
-                                        </datalist>
+                            <div className="form-row-container">
+                                <fieldset>
+                                    <legend>Match Configuration</legend>
+                                    <div className="form-grid">
+                                        <div className="form-group">
+                                            <label>Match ID</label>
+                                            <input list="match-ids" type="text" value={matchId} onChange={e => setMatchId(e.target.value)} placeholder="A1001" />
+                                            <datalist id="match-ids">
+                                                {Object.keys(currentMatches).map(mId => (
+                                                    <option key={mId} value={mId} />
+                                                ))}
+                                            </datalist>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Next Match ID</label>
+                                            <input type="text" value={nextMatchId} onChange={e => setNextMatchId(e.target.value)} placeholder="e.g. A2001 (optional)" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Next Match Slot</label>
+                                            <select value={nextMatchSlot || ''} onChange={e => setNextMatchSlot(e.target.value)}>
+                                                <option value="">(optional)</option>
+                                                <option value="blue">Blue</option>
+                                                <option value="red">Red</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div className="form-group">
-                                        <label>Court ID</label>
-                                        <input type="text" value={courtId} onChange={e => setCourtId(e.target.value)} placeholder="court1" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Next Match ID</label>
-                                        <input type="text" value={nextMatchId} onChange={e => setNextMatchId(e.target.value)} placeholder="e.g. A2001 (optional)" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Next Match Slot</label>
-                                        <input type="text" value={nextMatchSlot} onChange={e => setNextMatchSlot(e.target.value)} placeholder="blue or red (optional)" />
-                                    </div>
-                                </div>
-                            </fieldset>
+                                </fieldset>
 
-                            <fieldset>
-                                <legend>Rules</legend>
-                                <div className="form-grid">
-                                    <div className="form-group">
-                                        <label>Max Point Gap</label>
-                                        <input type="number" value={maxPointGap} onChange={e => setMaxPointGap(e.target.value)} />
+                                <fieldset>
+                                    <legend>Rules</legend>
+                                    <div className="form-grid">
+                                        <div className="form-group">
+                                            <label>Max Point Gap</label>
+                                            <input type="number" value={maxPointGap} onChange={e => setMaxPointGap(e.target.value)} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Max Gam-jeom</label>
+                                            <input type="number" value={maxGamjeom} onChange={e => setMaxGamjeom(e.target.value)} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Round Duration (s)</label>
+                                            <input type="number" value={roundDuration} onChange={e => setRoundDuration(e.target.value)} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Rest Duration (s)</label>
+                                            <input type="number" value={restDuration} onChange={e => setRestDuration(e.target.value)} />
+                                        </div>
                                     </div>
-                                    <div className="form-group">
-                                        <label>Max Gam-jeom</label>
-                                        <input type="number" value={maxGamjeom} onChange={e => setMaxGamjeom(e.target.value)} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Round Duration (s)</label>
-                                        <input type="number" value={roundDuration} onChange={e => setRoundDuration(e.target.value)} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Rest Duration (s)</label>
-                                        <input type="number" value={restDuration} onChange={e => setRestDuration(e.target.value)} />
-                                    </div>
-                                </div>
-                            </fieldset>
+                                </fieldset>
 
-                            <fieldset>
-                                <legend>Competitors</legend>
-                                <div className="competitor-grid">
-                                    <div className="competitor-group blue">
-                                        <h3>Blue</h3>
-                                        <div className="form-group">
-                                            <label>Name</label>
-                                            <input type="text" value={blueName} onChange={e => setBlueName(e.target.value)} placeholder="Blue Player Name" />
+                                <fieldset>
+                                    <legend>Competitors</legend>
+                                    <div className="competitor-grid">
+                                        <div className="competitor-group blue">
+                                            <h3>Blue</h3>
+                                            <div className="form-group">
+                                                <label>Name</label>
+                                                <input type="text" value={blueName} onChange={e => setBlueName(e.target.value)} placeholder="Blue Player Name" />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Affiliated Club</label>
+                                                <input type="text" value={blueAffiliatedClub} onChange={e => setBlueAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Source Match ID</label>
+                                                <input type="text" value={blueSourceMatchId} onChange={e => setBlueSourceMatchId(e.target.value)} placeholder="Source Match (optional)" />
+                                            </div>
                                         </div>
-                                        <div className="form-group">
-                                            <label>Affiliated Club</label>
-                                            <input type="text" value={blueAffiliatedClub} onChange={e => setBlueAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Source Match ID</label>
-                                            <input type="text" value={blueSourceMatchId} onChange={e => setBlueSourceMatchId(e.target.value)} placeholder="Source Match (optional)" />
+                                        <div className="competitor-group red">
+                                            <h3>Red</h3>
+                                            <div className="form-group">
+                                                <label>Name</label>
+                                                <input type="text" value={redName} onChange={e => setRedName(e.target.value)} placeholder="Red Player Name" />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Affiliated Club</label>
+                                                <input type="text" value={redAffiliatedClub} onChange={e => setRedAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Source Match ID</label>
+                                                <input type="text" value={redSourceMatchId} onChange={e => setRedSourceMatchId(e.target.value)} placeholder="Source Match (optional)" />
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="competitor-group red">
-                                        <h3>Red</h3>
-                                        <div className="form-group">
-                                            <label>Name</label>
-                                            <input type="text" value={redName} onChange={e => setRedName(e.target.value)} placeholder="Red Player Name" />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Affiliated Club</label>
-                                            <input type="text" value={redAffiliatedClub} onChange={e => setRedAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Source Match ID</label>
-                                            <input type="text" value={redSourceMatchId} onChange={e => setRedSourceMatchId(e.target.value)} placeholder="Source Match (optional)" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </fieldset>
+                                </fieldset>
+                            </div>
                         </div>
                     </div>
 

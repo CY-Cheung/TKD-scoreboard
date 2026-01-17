@@ -21,76 +21,65 @@ function Screen() {
     const [direction, setDirection] = useState("row");
     const [showEdit, setShowEdit] = useState(false);
 
-    // New state for court and event identification
-    const [courtId, setCourtId] = useState(null);
-    const [selectedEvent, setSelectedEvent] = useState(null);
-    const [activeMatchId, setActiveMatchId] = useState(null);
+    // Get event and match ID from localStorage
+    const [selectedEvent, setSelectedEvent] = useState(localStorage.getItem('selectedEvent'));
+    const [selectedMatchId, setSelectedMatchId] = useState(localStorage.getItem('selectedMatchId'));
 
-    // 1. Get court/event config from localStorage
+    // Main data listener - dynamic based on localStorage values
     useEffect(() => {
-        const storedCourtId = localStorage.getItem('courtId');
-        const storedEvent = localStorage.getItem('selectedEvent');
-        if (storedCourtId && storedEvent) {
-            setCourtId(storedCourtId);
-            setSelectedEvent(storedEvent);
-            console.log(`Screen initialized for: ${storedEvent} - ${storedCourtId}`);
-        } else {
-            console.error("Court or Event not found in localStorage. Please run Court Setup.");
-        }
-    }, []);
+        // Listen for changes in localStorage and update state
+        const handleStorageChange = () => {
+            setSelectedEvent(localStorage.getItem('selectedEvent'));
+            setSelectedMatchId(localStorage.getItem('selectedMatchId'));
+        };
+        window.addEventListener('storage', handleStorageChange);
 
-    // 2. Listen for the active match ID for this court
-    useEffect(() => {
-        if (!selectedEvent || !courtId) return;
-        const activeMatchRef = ref(database, `events/${selectedEvent}/courts/${courtId}/activeMatchId`);
-        const unsubscribe = onValue(activeMatchRef, (snapshot) => {
-            const matchId = snapshot.val();
-            setActiveMatchId(matchId);
-            console.log(`Active match ID updated to: ${matchId}`);
-        });
-        return () => unsubscribe();
-    }, [selectedEvent, courtId]);
-
-    // 3. Main data listener - now dynamic based on activeMatchId
-    useEffect(() => {
-        if (!selectedEvent || !activeMatchId) {
+        if (!selectedEvent || !selectedMatchId) {
+            console.log("Event or Match ID not found in localStorage. Waiting for configuration...");
             setMatchData(null); // Clear data if no active match
             return;
         }
-        const matchRef = ref(database, `events/${selectedEvent}/matches/${activeMatchId}`);
+
+        console.log(`Screen configured for: ${selectedEvent} - Match ${selectedMatchId}`);
+        const matchRef = ref(database, `events/${selectedEvent}/matches/${selectedMatchId}`);
         const unsubscribe = onValue(matchRef, (snapshot) => {
             const data = snapshot.val();
             setMatchData(data);
-            console.log("Match data updated for", activeMatchId);
+            console.log("Match data updated for", selectedMatchId);
         });
-        return () => unsubscribe();
-    }, [selectedEvent, activeMatchId]);
 
-    // 4. Core Scoring Logic: Listen to the judging queue
+        return () => {
+            unsubscribe();
+            window.removeEventListener('storage', handleStorageChange);
+        }
+    }, [selectedEvent, selectedMatchId]);
+
+    // Core Scoring Logic: Listen to the fixed judging queue for court1
     useEffect(() => {
-        if (!selectedEvent || !courtId) return;
+        const eventName = localStorage.getItem('selectedEvent');
+        if (!eventName) return;
 
-        const queueRef = ref(database, `judgingQueue/${selectedEvent}/${courtId}`);
+        const matchId = localStorage.getItem('selectedMatchId');
+        const queueRef = ref(database, `judgingQueue/${eventName}/court1`);
 
         const unsubscribe = onValue(queueRef, (snapshot) => {
             const queueData = snapshot.val();
-            if (!queueData) return; // Queue is empty, do nothing.
+            if (!queueData) return;
 
             console.log("New votes detected in judging queue. Processing...");
 
-            if (!activeMatchId) {
-                console.warn("Votes received, but no active match. Clearing queue.");
+            if (!matchId) {
+                console.warn("Votes received, but no active match configured. Clearing queue.");
                 set(queueRef, null);
                 return;
             }
 
             const MAJORITY = 2;
             const POINT_VALUES = { punch: 1, body: 2, head: 3, bodyTurn: 4, headTurn: 5 };
-            const matchPath = `events/${selectedEvent}/matches/${activeMatchId}`;
+            const matchPath = `events/${eventName}/matches/${matchId}`;
 
             const processVotes = async () => {
                 for (const color of ['red', 'blue']) {
-                    // Process regular points
                     for (const type of Object.keys(POINT_VALUES)) {
                         if (queueData[color]?.[type] && Object.keys(queueData[color][type]).length >= MAJORITY) {
                             const pointValue = POINT_VALUES[type];
@@ -106,7 +95,6 @@ function Screen() {
                         }
                     }
 
-                    // Process Gam-jeom
                     if (queueData[color]?.['gamjeom'] && Object.keys(queueData[color]['gamjeom']).length >= MAJORITY) {
                         const opponentColor = color === 'red' ? 'blue' : 'red';
                         console.log(`MAJORITY: ${color} Gam-jeom. +1 for ${opponentColor}`);
@@ -132,16 +120,16 @@ function Screen() {
             processVotes().then(wasScoreApplied => {
                 if (wasScoreApplied) {
                     console.log("Clearing judging queue after successful update.");
-                    set(queueRef, null); // "Burn after reading"
+                    set(queueRef, null);
                 }
             });
         });
 
         return () => unsubscribe();
-    }, [selectedEvent, courtId, activeMatchId]);
+    }, []); // This effect should only run once to set up the listener
 
 
-    // --- Event Handlers (unchanged) ---
+    // --- Event Handlers ---
     const handleTimeoutClick = () => setTimeoutActive((prev) => !prev);
     const toggleDirection = () => setDirection((prev) => (prev === "row" ? "row-reverse" : "row"));
 
@@ -155,11 +143,20 @@ function Screen() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, []);
 
-    // --- Data Extraction (now safe with optional chaining) ---
-    const redPlayerName = matchData?.config?.competitors?.red?.name || "Red Player";
-    const bluePlayerName = matchData?.config?.competitors?.blue?.name || "Blue Player";
+    // --- Data Extraction ---
+    const getDisplayName = (competitor) => {
+        if (!competitor) return "";
+        const name = competitor.name || "";
+        const club = competitor.affiliatedClub || "";
+        if (name && club) {
+            return `${name} (${club})`;
+        }
+        return name;
+    };
+
+    const bluePlayerName = getDisplayName(matchData?.config?.competitors?.blue) || "Blue Player";
+    const redPlayerName = getDisplayName(matchData?.config?.competitors?.red) || "Red Player";
     
-    // Calculate total score from pointsStat array
     const redTotalScore = matchData?.stats?.red?.pointsStat?.reduce((acc, val) => acc + val, 0) || 0;
     const blueTotalScore = matchData?.stats?.blue?.pointsStat?.reduce((acc, val) => acc + val, 0) || 0;
     
