@@ -1,1 +1,121 @@
 /* CourtSetup.css */
+
+.cs-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #1a1a1a; /* Dark background from DataImport */
+    color: #fff;
+}
+
+.cs-content {
+    position: relative;
+    z-index: 2;
+    width: 90%;
+    max-width: 500px; /* Adjusted for a simpler form */
+    padding: 2.5rem 3rem;
+    background: rgba(0, 0, 0, 0.4); /* Semi-transparent backdrop */
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.cs-content h1 {
+    margin: 0;
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: #eee;
+    text-align: center;
+}
+
+.cs-content p {
+    margin: 0;
+    color: #aaa;
+    text-align: center;
+    max-width: 400px;
+    margin-bottom: 0.5rem; /* Add some space before the form */
+}
+
+.cs-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem; /* Spacing between form groups */
+    align-items: center;
+}
+
+.form-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #ccc; /* from DataImport */
+    margin-left: 5px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #555; /* from DataImport */
+    border-radius: 4px;
+    background-color: #333; /* from DataImport */
+    color: #fff;
+    font-size: 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: hsla(270, 50%, 60%, 0.8);
+    box-shadow: 0 0 8px hsla(270, 50%, 50%, 0.4);
+}
+
+.form-group select {
+    cursor: pointer;
+}
+
+.form-group input::placeholder {
+    color: #777;
+}
+
+.form-group input:disabled,
+.form-group select:disabled {
+    cursor: not-allowed;
+    background-color: #444;
+    opacity: 0.7;
+}
+
+.cs-action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.cs-error-message {
+    color: #ff8a8a; /* A slightly brighter red for dark backgrounds */
+    font-weight: 500;
+    text-align: center;
+    padding: 0.7rem;
+    border-radius: 6px;
+    background-color: rgba(255, 107, 107, 0.15);
+    border: 1px solid rgba(255, 107, 107, 0.4);
+    width: 100%;
+    margin-top: -0.5rem;
+}

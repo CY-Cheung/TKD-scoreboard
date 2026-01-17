@@ -44,10 +44,10 @@ function Home() {
 					onClick={() => navigate("/import")}
 				/>
         <Button
-					text="Court Launcher"
+					text="Court Setup"
 					fontSize="3dvw"
 					angle={240}
-					onClick={() => navigate("/launcher")}
+					onClick={() => navigate("/setup")}
 				/>
         <Button
 					text="Referee Register"

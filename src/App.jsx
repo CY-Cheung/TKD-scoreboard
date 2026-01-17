@@ -6,7 +6,6 @@ import TargetCursor from "./Components/TargetCursor/TargetCursor";
 
 // Pages
 import Home from "./Pages/Home/Home";
-import Admin from "./Pages/Admin/Admin";
 import CourtSetup from "./Pages/CourtSetup/CourtSetup";
 import Screen from "./Pages/Screen/Screen";
 import RefereeRegister from "./Pages/RefereeRegister/RefereeRegister";
@@ -19,11 +18,11 @@ function App() {
 			<TargetCursor spinDuration={3.14} hideDefaultCursor={true} />
 			<Router basename="/TKD-scoreboard">
 				<Routes>
+                    {/* All routes are now public */}
 					<Route path="/" element={<Home />} />
-					<Route path="/admin" element={<Admin />} />
 					<Route path="/setup" element={<CourtSetup />} />
 					<Route path="/screen" element={<Screen />} />
-					<Route path="/refereeRegister" element={<RefereeRegister />} />
+					<Route path="/referee/register" element={<RefereeRegister />} />
 					<Route path="/controller" element={<Controller />} />
 					<Route path="/import" element={<DataImport />} />
 				</Routes>

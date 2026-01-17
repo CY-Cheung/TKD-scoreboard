@@ -348,9 +348,9 @@ const DataImport = () => {
                 </div>
 
                 <div className="di-action-buttons">
-                    <Button text="Add Match" fontSize="2dvw" angle={260} onClick={handleAddMatch} />
-                    <Button text="Load to Screen" fontSize="2dvw" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} />
-                    <Button text="Back to Home" fontSize="2dvw" angle={150} onClick={() => navigate('/')} />
+                    <Button text="Add Match" fontSize="1.5dvw" angle={260} onClick={handleAddMatch} />
+                    <Button text="Load to Screen" fontSize="1.5dvw" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} />
+                    <Button text="Back to Home" fontSize="1.5dvw" angle={150} onClick={() => navigate('/')} />
                 </div>
             </div>
         </div>
