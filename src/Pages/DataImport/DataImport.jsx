@@ -4,9 +4,22 @@ import { database } from '../../firebase';
 import './DataImport.css';
 import Squares from '../../Components/Squares/Squares';
 import Button from '../../Components/Button/Button';
+import { useNavigate } from 'react-router-dom';
+
+// A helper function to parse name and club
+const parseName = (fullName) => {
+    if (!fullName) return { name: '', club: '' };
+    const match = fullName.match(/(.+?)\s*\((.+)\)/);
+    if (match) {
+        return { name: match[1].trim(), club: match[2].trim() };
+    }
+    return { name: fullName, club: '' };
+};
 
 const DataImport = () => {
+    const navigate = useNavigate();
     const [eventName, setEventName] = useState('');
+    const [eventsList, setEventsList] = useState([]);
     const [currentMatches, setCurrentMatches] = useState({});
     const [selectedMatchId, setSelectedMatchId] = useState(null);
 
@@ -20,9 +33,20 @@ const DataImport = () => {
     const [roundDuration, setRoundDuration] = useState(120);
     const [restDuration, setRestDuration] = useState(60);
     const [blueName, setBlueName] = useState('');
+    const [blueAffiliatedClub, setBlueAffiliatedClub] = useState('');
     const [blueSourceMatchId, setBlueSourceMatchId] = useState('');
     const [redName, setRedName] = useState('');
+    const [redAffiliatedClub, setRedAffiliatedClub] = useState('');
     const [redSourceMatchId, setRedSourceMatchId] = useState('');
+
+    useEffect(() => {
+        const eventsRef = ref(database, 'events');
+        get(eventsRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                setEventsList(Object.keys(snapshot.val()));
+            }
+        });
+    }, []);
 
     useEffect(() => {
         setSelectedMatchId(null);
@@ -40,6 +64,56 @@ const DataImport = () => {
         }
     }, [eventName]);
 
+    useEffect(() => {
+        // Helper function to reset form fields for a new match
+        const resetFormFields = () => {
+            setCourtId('court1');
+            setNextMatchId('');
+            setNextMatchSlot('');
+            setMaxPointGap(12);
+            setMaxGamjeom(5);
+            setRoundDuration(120);
+            setRestDuration(60);
+            setBlueName('');
+            setBlueAffiliatedClub('');
+            setBlueSourceMatchId('');
+            setRedName('');
+            setRedAffiliatedClub('');
+            setRedSourceMatchId('');
+        };
+    
+        if (matchId && currentMatches[matchId]) {
+            const matchData = currentMatches[matchId];
+            const config = matchData.config;
+            const rules = config.rules;
+            const competitors = config.competitors;
+    
+            // Populate form fields with data from the selected match
+            setCourtId(config.courtId || 'court1');
+            setNextMatchId(config.nextMatchId || '');
+            setNextMatchSlot(config.nextMatchSlot || '');
+            
+            setMaxPointGap(rules.maxPointGap || 12);
+            setMaxGamjeom(rules.maxGamjeom || 5);
+            setRoundDuration(rules.roundDuration || 120);
+            setRestDuration(rules.restDuration || 60);
+    
+            const bluePlayer = parseName(competitors.blue.name);
+            setBlueName(bluePlayer.name);
+            setBlueAffiliatedClub(bluePlayer.club);
+            setBlueSourceMatchId(competitors.blue.sourceMatchId || '');
+    
+            const redPlayer = parseName(competitors.red.name);
+            setRedName(redPlayer.name);
+            setRedAffiliatedClub(redPlayer.club);
+            setRedSourceMatchId(competitors.red.sourceMatchId || '');
+    
+        } else {
+            // If matchId is new or cleared, don't auto-reset fields
+            // The user might be typing a new one
+        }
+    }, [matchId, currentMatches]);
+
     const handleAddMatch = async () => {
         if (!eventName || !matchId) {
             alert('Please provide an Event Name and a Match ID.');
@@ -52,12 +126,12 @@ const DataImport = () => {
 
             if (!eventSnapshot.exists()) {
                 const initialEventData = {
-                    settings: { setupPassword: `${eventName.toLowerCase().replace(/\s+/g, '-')}@2025` },
+                    settings: {},
                     courts: {
-                        court1: { name: 'Court 1', currentMatchId: '', accessKey: 'temp_referee_key_123' },
-                        court2: { name: 'Court 2', currentMatchId: '', accessKey: 'temp_referee_key_123' },
-                        court3: { name: 'Court 3', currentMatchId: '', accessKey: 'temp_referee_key_123' },
-                        court4: { name: 'Court 4', currentMatchId: '', accessKey: 'temp_referee_key_123' }
+                        court1: { name: 'Court 1', currentMatchId: '' },
+                        court2: { name: 'Court 2', currentMatchId: '' },
+                        court3: { name: 'Court 3', currentMatchId: '' },
+                        court4: { name: 'Court 4', currentMatchId: '' }
                     },
                     judgingQueue: {},
                     matches: {}
@@ -65,6 +139,9 @@ const DataImport = () => {
                 await set(eventRef, initialEventData);
             }
             
+            const finalBlueName = blueAffiliatedClub ? `${blueName} (${blueAffiliatedClub})` : blueName;
+            const finalRedName = redAffiliatedClub ? `${redName} (${redAffiliatedClub})` : redName;
+
             const newMatch = {
                 config: {
                     matchId: matchId,
@@ -78,8 +155,8 @@ const DataImport = () => {
                         restDuration: parseInt(restDuration, 10),
                     },
                     competitors: {
-                        blue: { name: blueName, sourceMatchId: blueSourceMatchId || null },
-                        red: { name: redName, sourceMatchId: redSourceMatchId || null },
+                        blue: { name: finalBlueName, sourceMatchId: blueSourceMatchId || null },
+                        red: { name: finalRedName, sourceMatchId: redSourceMatchId || null },
                     },
                 },
                 state: { 
@@ -100,9 +177,12 @@ const DataImport = () => {
             alert(`Match ${matchId} added to event ${eventName} in Firebase!`);
             setCurrentMatches(prev => ({...prev, [matchId]: newMatch}));
 
+            // Clear inputs after successful submission
             setMatchId('');
             setBlueName('');
+            setBlueAffiliatedClub('');
             setRedName('');
+            setRedAffiliatedClub('');
             setNextMatchId('');
             setNextMatchSlot('');
             setBlueSourceMatchId('');
@@ -127,20 +207,14 @@ const DataImport = () => {
                 const matchData = matchSnapshot.val();
                 const targetCourt = matchData.config.courtId || 'court1';
 
-                // Define the path the Screen.jsx is listening to
                 const screenDisplayRef = ref(database, targetCourt);
-
-                // Also update the currentMatchId in the event's court data for consistency
                 const courtEventRef = ref(database, `events/${eventName}/courts/${targetCourt}/currentMatchId`);
                 
-                // Re-structure data to fit what Screen.jsx expects
                 const screenFormattedData = {
-                    ...matchData // Send the whole match data
+                    ...matchData
                 };
                 
-                // Write the full match data to the path the screen is listening to
                 await set(screenDisplayRef, screenFormattedData);
-                // Update the reference in the event data structure
                 await set(courtEventRef, selectedMatchId);
 
                 alert(`Match ${selectedMatchId} loaded to ${targetCourt}!`);
@@ -160,12 +234,16 @@ const DataImport = () => {
             <div className="di-content-wrapper">
 
                 <div className="di-form-and-list-container">
-                    {/* Form Section */}
                     <div className="di-form-section">
                         <h2>Import Event Data</h2>
                         <div className="form-group">
                             <label htmlFor="eventName">Event Name</label>
-                            <input type="text" id="eventName" value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="e.g., BlackBelt2025" />
+                            <input list="events-list" type="text" id="eventName" value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="e.g., BlackBelt2025" />
+                            <datalist id="events-list">
+                                {eventsList.map(event => (
+                                    <option key={event} value={event} />
+                                ))}
+                            </datalist>
                         </div>
                         <div className="match-form">
                             <fieldset>
@@ -173,7 +251,12 @@ const DataImport = () => {
                                 <div className="form-grid">
                                     <div className="form-group">
                                         <label>Match ID</label>
-                                        <input type="text" value={matchId} onChange={e => setMatchId(e.target.value)} placeholder="A1001" />
+                                        <input list="match-ids" type="text" value={matchId} onChange={e => setMatchId(e.target.value)} placeholder="A1001" />
+                                        <datalist id="match-ids">
+                                            {Object.keys(currentMatches).map(mId => (
+                                                <option key={mId} value={mId} />
+                                            ))}
+                                        </datalist>
                                     </div>
                                     <div className="form-group">
                                         <label>Court ID</label>
@@ -222,6 +305,10 @@ const DataImport = () => {
                                             <input type="text" value={blueName} onChange={e => setBlueName(e.target.value)} placeholder="Blue Player Name" />
                                         </div>
                                         <div className="form-group">
+                                            <label>Affiliated Club</label>
+                                            <input type="text" value={blueAffiliatedClub} onChange={e => setBlueAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
+                                        </div>
+                                        <div className="form-group">
                                             <label>Source Match ID</label>
                                             <input type="text" value={blueSourceMatchId} onChange={e => setBlueSourceMatchId(e.target.value)} placeholder="Source Match (optional)" />
                                         </div>
@@ -233,6 +320,10 @@ const DataImport = () => {
                                             <input type="text" value={redName} onChange={e => setRedName(e.target.value)} placeholder="Red Player Name" />
                                         </div>
                                         <div className="form-group">
+                                            <label>Affiliated Club</label>
+                                            <input type="text" value={redAffiliatedClub} onChange={e => setRedAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
+                                        </div>
+                                        <div className="form-group">
                                             <label>Source Match ID</label>
                                             <input type="text" value={redSourceMatchId} onChange={e => setRedSourceMatchId(e.target.value)} placeholder="Source Match (optional)" />
                                         </div>
@@ -242,14 +333,13 @@ const DataImport = () => {
                         </div>
                     </div>
 
-                    {/* Matches List Section */}
                     <div className="di-matches-section">
                         <div className="matches-list">
                             <h3>Matches in {eventName || 'Event'}</h3>
                             <ul>
                                 {Object.keys(currentMatches).map(mId => (
                                     <li key={mId} onClick={() => setSelectedMatchId(mId)} className={selectedMatchId === mId ? 'selected' : ''}>
-                                        <strong>{mId}:</strong> {currentMatches[mId].config.competitors.red.name} vs {currentMatches[mId].config.competitors.blue.name}
+                                        <strong>{mId}:</strong> {currentMatches[mId].config.competitors.blue.name} vs {currentMatches[mId].config.competitors.red.name}
                                     </li>
                                 ))}
                             </ul>
@@ -257,10 +347,10 @@ const DataImport = () => {
                     </div>
                 </div>
 
-                {/* Action Buttons at the bottom */}
                 <div className="di-action-buttons">
-                    <Button text="Add Match" fontSize="2dvw" angle={0} onClick={handleAddMatch} />
-                    <Button text="Load to Screen" fontSize="2dvw" angle={0} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} />
+                    <Button text="Add Match" fontSize="2dvw" angle={260} onClick={handleAddMatch} />
+                    <Button text="Load to Screen" fontSize="2dvw" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} />
+                    <Button text="Back to Home" fontSize="2dvw" angle={150} onClick={() => navigate('/')} />
                 </div>
             </div>
         </div>
