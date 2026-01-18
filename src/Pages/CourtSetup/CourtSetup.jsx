@@ -48,19 +48,15 @@ function CourtSetup() {
             if (password === correctPassword) {
                 const courtId = 'court1'; // Hardcoded as per previous changes
 
-                // Use the new login function from AuthContext
-                login({
+                // 1. 告訴系統這個人登入成功了
+                login({ 
+                    courtId: courtId, 
                     eventId: selectedEvent,
-                    courtId: courtId,
-                    role: 'admin' // Or another role as appropriate
+                    role: 'admin' 
                 });
 
-                // Remove old localStorage logic
-                // localStorage.setItem('courtId', courtId);
-                // localStorage.setItem('selectedEvent', selectedEvent);
-
-                // Navigate to a protected route, e.g., the home/dashboard for admins
-                navigate(`/`); 
+                // 2. 跳轉到首頁 (現在首頁已經被保護，有通行證才能進)
+                navigate('/'); 
             } else {
                 setError('Incorrect password, please try again.');
             }

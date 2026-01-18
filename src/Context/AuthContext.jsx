@@ -1,29 +1,26 @@
-// src/Context/AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // 這裡存放登入後的資訊 (例如 eventId, courtId, password)
-  const [authData, setAuthData] = useState(() => {
-    // 嘗試從 sessionStorage 讀取，這樣重新整理網頁後不會被登出 (如果想要更嚴格，可以拿掉這段)
-    const saved = sessionStorage.getItem('tkd_auth');
+  // 初始化時，檢查 sessionStorage 有沒有舊的登入資料
+  const [user, setUser] = useState(() => {
+    const saved = sessionStorage.getItem('tkd_user');
     return saved ? JSON.parse(saved) : null;
   });
 
-  const login = (data) => {
-    setAuthData(data);
-    // 存入 Session Storage (關閉分頁就會自動清除，比 LocalStorage 安全)
-    sessionStorage.setItem('tkd_auth', JSON.stringify(data));
+  const login = (userData) => {
+    setUser(userData);
+    sessionStorage.setItem('tkd_user', JSON.stringify(userData));
   };
 
   const logout = () => {
-    setAuthData(null);
-    sessionStorage.removeItem('tkd_auth');
+    setUser(null);
+    sessionStorage.removeItem('tkd_user');
   };
 
   return (
-    <AuthContext.Provider value={{ authData, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
