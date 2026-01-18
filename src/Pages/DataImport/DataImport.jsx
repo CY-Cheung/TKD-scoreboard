@@ -225,12 +225,12 @@ const DataImport = () => {
     return (
         <div className="di-container">
             <Squares
-                speed={0.5}
-                squareSize={100}
-                direction="diagonal"
-                borderColor="hsla(270, 50%, 50%, 0.25)"
-                hoverFillColor="hsla(60, 50%, 50%, 0.25)"
-            />
+				speed={0.5}
+				squareSize={100}
+				direction="diagonal"
+				borderColor="hsla(270, 50%, 50%, 0.25)"
+				hoverFillColor="hsla(60, 50%, 50%, 0.25)"
+			/>
             <div className="di-content-wrapper">
 
                 <div className="di-form-and-list-container">
@@ -336,6 +336,11 @@ const DataImport = () => {
                                 </div>
                             </fieldset>
                         </div>
+                        <div className="di-action-buttons">
+                            <Button text="Add Match" fontSize="1.5dvw" angle={260} onClick={handleAddMatch} />
+                            <Button text="Load to Screen" fontSize="1.5dvw" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} />
+                            <Button text="Back to Home" fontSize="1.5dvw" angle={150} onClick={() => navigate('/')} />
+                        </div>
                     </div>
 
                     <div className="di-matches-section">
@@ -362,12 +367,6 @@ const DataImport = () => {
                             </ul>
                         </div>
                     </div>
-                </div>
-
-                <div className="di-action-buttons">
-                    <Button text="Add Match" fontSize="1.5dvw" angle={260} onClick={handleAddMatch} />
-                    <Button text="Load to Screen" fontSize="1.5dvw" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} />
-                    <Button text="Back to Home" fontSize="1.5dvw" angle={150} onClick={() => navigate('/')} />
                 </div>
             </div>
         </div>
