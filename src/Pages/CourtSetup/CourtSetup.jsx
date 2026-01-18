@@ -13,8 +13,11 @@ function CourtSetup() {
   const [error, setError] = useState('');
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState('');
+  const [courtId, setCourtId] = useState(''); // New state for Court ID
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  const courtOptions = ['', 'court1', 'court2', 'court3', 'court4']; // Court options
 
   useEffect(() => {
     const eventsRef = ref(database, 'events');
@@ -22,9 +25,17 @@ function CourtSetup() {
       if (snapshot.exists()) {
         const eventList = Object.keys(snapshot.val());
         setEvents(eventList);
+        
+        // Restore last selected event
         const lastEvent = localStorage.getItem('selectedEvent');
         if (lastEvent && eventList.includes(lastEvent)) {
           setSelectedEvent(lastEvent);
+        }
+
+        // Restore last selected court
+        const lastCourt = localStorage.getItem('selectedCourt');
+        if (lastCourt && courtOptions.includes(lastCourt)) {
+            setCourtId(lastCourt);
         }
       }
     });
@@ -39,6 +50,11 @@ function CourtSetup() {
       return;
     }
 
+    if (!courtId) { // Validation for courtId
+        setError('Please select a court.');
+        return;
+    }
+
     const settingsRef = ref(database, `events/${selectedEvent}/settings/setupPassword`);
     
     try {
@@ -46,16 +62,16 @@ function CourtSetup() {
         if (snapshot.exists()) {
             const correctPassword = snapshot.val();
             if (password === correctPassword) {
-                const courtId = 'court1'; // Hardcoded as per previous changes
+                // Store selection in localStorage
+                localStorage.setItem('selectedEvent', selectedEvent);
+                localStorage.setItem('selectedCourt', courtId);
 
-                // 1. 告訴系統這個人登入成功了
                 login({ 
-                    courtId: courtId, 
+                    courtId: courtId, // Use state instead of hardcoded value
                     eventId: selectedEvent,
                     role: 'admin' 
                 });
 
-                // 2. 跳轉到首頁 (現在首頁已經被保護，有通行證才能進)
                 navigate('/'); 
             } else {
                 setError('Incorrect password, please try again.');
@@ -82,22 +98,41 @@ function CourtSetup() {
       <div className="cs-content">
         <h1>Court Setup</h1>
         <form onSubmit={handleSubmit} className="cs-form">
-          <p>Select the event and enter the Setup Password to connect this device.</p>
+          <p>Select the event, court, and enter the Setup Password to connect this device.</p>
           
           <div className="form-group">
-            <label htmlFor="event-select">Select Event</label>
-            <select
-              id="event-select"
+            <label htmlFor="event-input">Select Event</label>
+            <input
+              id="event-input"
+              list="event-list"
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
-            >
-              <option value="" disabled>-- Please Select --</option>
+              placeholder="-- Type or select an event --"
+              className="datalist-input"
+            />
+            <datalist id="event-list">
               {events.map(event => (
-                <option key={event} value={event}>
-                  {event}
-                </option>
+                <option key={event} value={event} />
               ))}
-            </select>
+            </datalist>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="court-input">Select Court</label>
+            <input
+              id="court-input"
+              list="court-list"
+              value={courtId}
+              onChange={(e) => setCourtId(e.target.value)}
+              placeholder="-- Type or select a court --"
+              className="datalist-input"
+              disabled={!selectedEvent}
+            />
+            <datalist id="court-list">
+              {courtOptions.map(court => (
+                <option key={court} value={court} />
+              ))}
+            </datalist>
           </div>
 
           <div className="form-group">
@@ -109,13 +144,13 @@ function CourtSetup() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter setup password"
               required
-              disabled={!selectedEvent}
+              disabled={!selectedEvent || !courtId}
             />
           </div>
           
           {error && <p className="cs-error-message">{error}</p>}
           <div className="cs-action-buttons">
-            <Button type="submit" text="Confirm Settings" fontSize="1.5dvw" angle={30} disabled={!selectedEvent} />
+            <Button type="submit" text="Confirm Settings" fontSize="1.5dvw" angle={30} disabled={!selectedEvent || !courtId} />
             <Button text="Back to Home" fontSize="1.5dvw" angle={150} onClick={() => navigate('/')} />
           </div>
         </form>
