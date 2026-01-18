@@ -165,6 +165,7 @@ const DataImport = () => {
                     isStarted: false, isPaused: true, isFinished: false,
                     currentRound: 1, timer: parseInt(roundDuration, 10),
                     winnerSide: null, phase: 'ROUND',
+                    winReason: null   // 新增欄位
                 },
                 stats: { 
                     roundWins: [0,0], 

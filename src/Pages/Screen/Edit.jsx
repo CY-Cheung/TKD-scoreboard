@@ -3,12 +3,18 @@ import { database } from '../../firebase';
 import { ref, runTransaction, get, update } from "firebase/database";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
+import { updateScoreAndCheckRules } from '../../Api'; // 引入上面的函數
 
 const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase }) => {
     const [matchMin, setMatchMin] = useState(0);
     const [matchSec, setMatchSec] = useState(0);
     const [restMin, setRestMin] = useState(0);
     const [restSec, setRestSec] = useState(0);
+
+    // 建立一個通用的處理函數
+    const handleAction = (side, type, index, delta) => {
+        updateScoreAndCheckRules(eventName, matchId, side, type, index, delta);
+    };
 
     useEffect(() => {
         if (visible && eventName && matchId) {
@@ -65,28 +71,6 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase }) 
             }
         });
     };
-
-    const updateStat = (side, type, index, delta) => {
-        if (!eventName || !matchId) {
-            console.error("Error: Missing eventName or matchId. Cannot write to database.");
-            return;
-        }
-
-        let path = `events/${eventName}/matches/${matchId}/stats/${side}/${type}`;
-
-        if (index !== null) {
-            path += `/${index}`;
-        }
-
-        const targetRef = ref(database, path);
-        runTransaction(targetRef, (currentVal) => {
-            const val = currentVal || 0;
-            const newVal = val + delta;
-            return newVal < 0 ? 0 : newVal;
-        })
-        .then(() => console.log(`Updated: ${path} => ${delta}`))
-        .catch((err) => console.error("Update failed", err));
-    };
     
     const handleMatchMinChange = (value) => {
         setMatchMin(value);
@@ -132,8 +116,8 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase }) 
                 {pointTypes.map(pt => (
                     <div className="grid-cell" key={`blue-${pt.name}`}>
                         <div className="buttons">
-                            <Button text="+" fontSize={buttonFontSize} onClick={() => updateStat('blue', pt.type, pt.index, 1)} angle={220} />
-                            <Button text="−" fontSize={buttonFontSize} onClick={() => updateStat('blue', pt.type, pt.index, -1)} angle={220} />
+                            <Button text="+" fontSize={buttonFontSize} onClick={() => handleAction('blue', pt.type, pt.index, 1)} angle={220} />
+                            <Button text="−" fontSize={buttonFontSize} onClick={() => handleAction('blue', pt.type, pt.index, -1)} angle={220} />
                         </div>
                     </div>
                 ))}
@@ -143,8 +127,8 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase }) 
                 {pointTypes.map(pt => (
                     <div className="grid-cell" key={`red-${pt.name}`}>
                         <div className="buttons">
-                            <Button text="+" fontSize={buttonFontSize} onClick={() => updateStat('red', pt.type, pt.index, 1)} angle={0} />
-                            <Button text="−" fontSize={buttonFontSize} onClick={() => updateStat('red', pt.type, pt.index, -1)} angle={0} />
+                            <Button text="+" fontSize={buttonFontSize} onClick={() => handleAction('red', pt.type, pt.index, 1)} angle={0} />
+                            <Button text="−" fontSize={buttonFontSize} onClick={() => handleAction('red', pt.type, pt.index, -1)} angle={0} />
                         </div>
                     </div>
                 ))}

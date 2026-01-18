@@ -219,6 +219,20 @@ function Screen() {
     const roundNumber = matchData.state?.currentRound || 1;
     const timerColor = matchData.state?.isPaused ? "#FFFF00" : "#FFFFFF";
 
+    const { winReason, isFinished } = matchData?.state || {};
+
+    const renderTimerContent = () => {
+        // 優先級 1: 特殊判決 (PTG/PUN) - 返回純文字，由父組件控制顏色
+        if (winReason === 'PTG') return 'PTG';
+        if (winReason === 'PUN') return 'PUN';
+
+        // 優先級 2: 時間到 (正常完賽)
+        if (isFinished) return "0:00";
+
+        // 優先級 3: 正常顯示倒數
+        return formatTime(displayTime);
+    };
+
     return (
         <>
             <div className="screen" onClick={() => !showEdit && document.documentElement.requestFullscreen()}>
@@ -243,7 +257,7 @@ function Screen() {
                         </div>
                         <div className="timer">
                             <div className="game-timer timer-font cursor-target" onClick={toggleTimer} style={{ color: timerColor }}>
-                                {formatTime(displayTime)}
+                                {renderTimerContent()}
                             </div>
                             <div className={`time-out match-font cursor-target ${!matchData.state?.isPaused ? "timeout-active" : ""}`} onClick={toggleTimer} style={{ backgroundColor: !matchData.state?.isPaused ? "#000000" : "#FFFF00" }}>
                                 Time out
