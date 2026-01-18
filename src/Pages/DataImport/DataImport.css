@@ -57,8 +57,7 @@
     color: #ccc;
 }
 
-.form-group input,
-.form-group select {
+.form-group input {
     width: 100%;
     padding: 10px;
     box-sizing: border-box;
@@ -70,8 +69,7 @@
 }
 
 /* General focus highlight */
-.form-group input:focus,
-.form-group select:focus {
+.form-group input:focus {
     outline: none;
     border-color: var(--yellow-primary);
 }

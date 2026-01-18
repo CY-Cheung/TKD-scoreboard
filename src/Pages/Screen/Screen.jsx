@@ -182,14 +182,13 @@ function Screen() {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (showEdit) return;
             if (e.code === "Space") { e.preventDefault(); toggleTimer(); }
             if (e.key === "\\") { toggleDirection(); }
-            if (e.key === "e" || e.key === "E") { setShowEdit(true); }
+            if (e.key === "e" || e.key === "E") { setShowEdit(prev => !prev); }
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [showEdit, selectedEvent, currentMatchId]);
+    }, [selectedEvent, currentMatchId]);
 
     if (!selectedCourt) {
         return <div className="screen-unconfigured"><h1>Screen Unconfigured</h1><p>Please go to <strong>Court Setup</strong> to assign this screen to a court.</p></div>;
@@ -224,12 +223,12 @@ function Screen() {
         <>
             <div className="screen" onClick={() => !showEdit && document.documentElement.requestFullscreen()}>
                 <div className="top" style={{ flexDirection: direction }}>
-                    <div className="red-name red-bg name-font cursor-target">{redPlayerName}</div>
-                    <div className="blue-name blue-bg name-font cursor-target">{bluePlayerName}</div>
+                    <div className="red-name red-bg name-font">{redPlayerName}</div>
+                    <div className="blue-name blue-bg name-font">{bluePlayerName}</div>
                 </div>
                 <div className="midbottom" style={{ flexDirection: direction, display: "flex" }}>
                     <div className="red-log red-bg">
-                        <div className="red-gamjeom red-bg cursor-target" onClick={() => setShowEdit(true)}>
+                        <div className="red-gamjeom red-bg" onClick={() => setShowEdit(true)}>
                             <div className="gamjeom-number">{redGamJeom}</div>
                             <div className="gamjeom-font">GAM-JEOM</div>
                         </div>
@@ -259,7 +258,7 @@ function Screen() {
                         <div className="blue-score-text blue-score-bg score-font cursor-target" onClick={() => setShowEdit(true)}>{blueTotalScore}</div>
                     </div>
                     <div className="blue-log blue-bg">
-                        <div className="blue-gamjeom blue-bg cursor-target" onClick={() => setShowEdit(true)}>
+                        <div className="blue-gamjeom blue-bg" onClick={() => setShowEdit(true)}>
                             <div className="gamjeom-number">{blueGamJeom}</div>
                             <div className="gamjeom-font">GAM-JEOM</div>
                         </div>

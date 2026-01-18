@@ -43,7 +43,6 @@
 
 /* Styling for the new datalist inputs */
 .datalist-input, 
-.form-group select, 
 .form-group input[type="password"] {
     width: 100%;
     padding: 0.8rem;
@@ -55,7 +54,6 @@
 }
 
 .datalist-input:focus, 
-.form-group select:focus, 
 .form-group input[type="password"]:focus {
     outline: none;
     border-color: var(--yellow-primary);
