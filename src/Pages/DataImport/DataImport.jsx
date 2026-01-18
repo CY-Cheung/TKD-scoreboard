@@ -63,6 +63,7 @@ const DataImport = () => {
         }
     }, [eventName]);
 
+    // Auto-populates the form when a match ID is entered manually
     useEffect(() => {
         if (matchId && currentMatches[matchId]) {
             const matchData = currentMatches[matchId];
@@ -70,7 +71,6 @@ const DataImport = () => {
             const rules = config.rules;
             const competitors = config.competitors;
     
-            // Populate form fields with data from the selected match
             setNextMatchId(config.nextMatchId || '');
             setNextMatchSlot(config.nextMatchSlot || '');
             
@@ -80,7 +80,6 @@ const DataImport = () => {
             setRestDuration(rules.restDuration || 60);
     
             const blueCompetitor = competitors.blue;
-            // Handle both new and old data structures
             if (blueCompetitor.affiliatedClub !== undefined) {
                 setBlueName(blueCompetitor.name || '');
                 setBlueAffiliatedClub(blueCompetitor.affiliatedClub || '');
@@ -92,7 +91,6 @@ const DataImport = () => {
             setBlueSourceMatchId(blueCompetitor.sourceMatchId || '');
     
             const redCompetitor = competitors.red;
-            // Handle both new and old data structures
             if (redCompetitor.affiliatedClub !== undefined) {
                 setRedName(redCompetitor.name || '');
                 setRedAffiliatedClub(redCompetitor.affiliatedClub || '');
@@ -105,6 +103,14 @@ const DataImport = () => {
     
         }
     }, [matchId, currentMatches]);
+
+    // Bridge: When a match is selected from the list, update the matchId state.
+    // This will trigger the useEffect above to populate the form.
+    useEffect(() => {
+        if (selectedMatchId) {
+            setMatchId(selectedMatchId);
+        }
+    }, [selectedMatchId]);
 
     const handleAddMatch = async () => {
         if (!eventName || !matchId) {
@@ -173,7 +179,6 @@ const DataImport = () => {
             alert(`Match ${matchId} added to event ${eventName} in Firebase!`);
             setCurrentMatches(prev => ({...prev, [matchId]: newMatch}));
 
-            // Clear inputs after successful submission
             setMatchId('');
             setBlueName('');
             setBlueAffiliatedClub('');
@@ -203,11 +208,9 @@ const DataImport = () => {
         }
     
         try {
-            // Update the currentMatchId for the selected court in Firebase
             const courtMatchIdRef = ref(database, `events/${eventName}/courts/${courtId}/currentMatchId`);
             await set(courtMatchIdRef, selectedMatchId);
     
-            // Also save selection to localStorage for other components to use
             localStorage.setItem('selectedEvent', eventName);
             localStorage.setItem('selectedMatchId', selectedMatchId);
             
@@ -234,13 +237,18 @@ const DataImport = () => {
                     <div className="di-form-section">
                         <h2>Import Event Data</h2>
                         <div className="form-group">
-                            <label htmlFor="eventName">Event Name</label>
-                            <input list="events-list" type="text" id="eventName" value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="e.g., BlackBelt2025" />
-                            <datalist id="events-list">
+                            <label htmlFor="eventName-select">Event Name</label>
+                            <select 
+                                id="eventName-select"
+                                value={eventName}
+                                onChange={(e) => setEventName(e.target.value)}
+                                required
+                            >
+                                <option value="" disabled>-- Please select an event --</option>
                                 {eventsList.map(event => (
-                                    <option key={event} value={event} />
+                                    <option key={event} value={event}>{event}</option>
                                 ))}
-                            </datalist>
+                            </select>
                         </div>
                         <div className="match-form">
                             <fieldset>
@@ -339,11 +347,9 @@ const DataImport = () => {
                                     const red = currentMatches[mId].config.competitors.red;
 
                                     const getDisplayText = (competitor) => {
-                                        // New format with separate name and club
                                         if (competitor.affiliatedClub) {
                                             return `${competitor.name} (${competitor.affiliatedClub})`;
                                         }
-                                        // Old format where name is "Name (Club)" or new format with empty club
                                         return competitor.name;
                                     };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
-import { ref, get, set } from "firebase/database"; // Import set
+import { ref, get, set } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
 
 import './CourtSetup.css';
@@ -14,7 +14,7 @@ function CourtSetup() {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState('');
   const [courtId, setCourtId] = useState(''); 
-  const [courtOptions, setCourtOptions] = useState([]); // State for dynamic court options
+  const [courtOptions, setCourtOptions] = useState([]);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -28,29 +28,34 @@ function CourtSetup() {
         const lastEvent = localStorage.getItem('selectedEvent');
         if (lastEvent && eventList.includes(lastEvent)) {
           setSelectedEvent(lastEvent);
+        } else {
+          setSelectedEvent(''); // Ensure placeholder shows if last event not in list
         }
       }
     });
   }, []);
 
-  // Effect to fetch courts when an event is selected
   useEffect(() => {
     if (selectedEvent) {
         const courtsRef = ref(database, `events/${selectedEvent}/courts`);
         get(courtsRef).then((snapshot) => {
             if (snapshot.exists()) {
                 setCourtOptions(Object.keys(snapshot.val()));
+                const lastCourt = localStorage.getItem('selectedCourt');
+                // check if last court is valid for this event
+                if(lastCourt && Object.keys(snapshot.val()).includes(lastCourt)){
+                    setCourtId(lastCourt);
+                } else {
+                    setCourtId(''); // Reset if last court not in new list
+                }
             } else {
-                setCourtOptions([]); // No courts exist for this event yet
-            }
-            // Restore last selected court after fetching options
-            const lastCourt = localStorage.getItem('selectedCourt');
-            if (lastCourt) {
-                setCourtId(lastCourt);
+                setCourtOptions([]);
+                setCourtId('');
             }
         });
     } else {
-        setCourtOptions([]); // Clear court options if no event is selected
+        setCourtOptions([]);
+        setCourtId('');
     }
 }, [selectedEvent]);
 
@@ -64,7 +69,7 @@ function CourtSetup() {
     }
 
     if (!courtId) { 
-        setError('Please enter a court name.');
+        setError('Please select a court.'); // Updated error message
         return;
     }
 
@@ -75,16 +80,14 @@ function CourtSetup() {
         if (snapshot.exists()) {
             const correctPassword = snapshot.val();
             if (password === correctPassword) {
-
-                // --- Add court to Firebase before logging in ---
+                // The set call ensures the court is configured as expected.
+                // It also resets the currentMatchId, which is often the desired behavior for a fresh setup.
                 const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
                 await set(courtRef, {
-                    name: courtId, // Use the input value as the court's name
-                    currentMatchId: '' // Initialize with no match
+                    name: courtId,
+                    currentMatchId: '' 
                 });
-                // -----------------------------------------------------
 
-                // Store selection in localStorage
                 localStorage.setItem('selectedEvent', selectedEvent);
                 localStorage.setItem('selectedCourt', courtId);
 
@@ -123,36 +126,34 @@ function CourtSetup() {
           <p>Select the event, court, and enter the Setup Password to connect this device.</p>
           
           <div className="form-group">
-            <label htmlFor="event-input">Select Event</label>
-            <input
-              id="event-input"
-              list="event-list"
+            <label htmlFor="event-select">Select Event</label>
+            <select
+              id="event-select"
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
-              placeholder="-- Type or select an event --"
-            />
-            <datalist id="event-list">
+              required
+            >
+              <option value="" disabled>-- Please select an event --</option>
               {events.map(event => (
-                <option key={event} value={event} />
+                <option key={event} value={event}>{event}</option>
               ))}
-            </datalist>
+            </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="court-input">Select or Create Court</label>
-            <input
-              id="court-input"
-              list="court-list"
+            <label htmlFor="court-select">Select Court</label>
+            <select
+              id="court-select"
               value={courtId}
               onChange={(e) => setCourtId(e.target.value)}
-              placeholder="-- Type or select a court --"
-              disabled={!selectedEvent}
-            />
-            <datalist id="court-list">
+              disabled={!selectedEvent || courtOptions.length === 0}
+              required
+            >
+              <option value="" disabled>-- Please select a court --</option>
               {courtOptions.map(court => (
-                <option key={court} value={court} />
+                <option key={court} value={court}>{court}</option>
               ))}
-            </datalist>
+            </select>
           </div>
 
           <div className="form-group">
