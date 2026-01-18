@@ -190,14 +190,33 @@ const DataImport = () => {
         }
     };
 
-    const handleLoadMatch = () => {
+    const handleLoadMatch = async () => {
         if (!eventName || !selectedMatchId) {
             alert('Please select an event and a match to load.');
             return;
         }
-        localStorage.setItem('selectedEvent', eventName);
-        localStorage.setItem('selectedMatchId', selectedMatchId);
-        alert(`Configuration saved! Screen will now display match ${selectedMatchId} from ${eventName}.`);
+    
+        const courtId = localStorage.getItem('selectedCourt');
+        if (!courtId) {
+            alert('No court is configured for this device. Please go to Court Setup first.');
+            return;
+        }
+    
+        try {
+            // Update the currentMatchId for the selected court in Firebase
+            const courtMatchIdRef = ref(database, `events/${eventName}/courts/${courtId}/currentMatchId`);
+            await set(courtMatchIdRef, selectedMatchId);
+    
+            // Also save selection to localStorage for other components to use
+            localStorage.setItem('selectedEvent', eventName);
+            localStorage.setItem('selectedMatchId', selectedMatchId);
+            
+            alert(`Match ${selectedMatchId} successfully loaded to ${courtId}.`);
+    
+        } catch (error) {
+            console.error("Error loading match to court:", error);
+            alert(`Failed to load match to court. See console for details.`);
+        }
     };
 
     return (
@@ -224,92 +243,90 @@ const DataImport = () => {
                             </datalist>
                         </div>
                         <div className="match-form">
-                            <div className="form-row-container">
-                                <fieldset>
-                                    <legend>Match Configuration</legend>
-                                    <div className="form-grid">
-                                        <div className="form-group">
-                                            <label>Match ID</label>
-                                            <input list="match-ids" type="text" value={matchId} onChange={e => setMatchId(e.target.value)} placeholder="A1001" />
-                                            <datalist id="match-ids">
-                                                {Object.keys(currentMatches).map(mId => (
-                                                    <option key={mId} value={mId} />
-                                                ))}
-                                            </datalist>
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Next Match ID</label>
-                                            <input type="text" value={nextMatchId} onChange={e => setNextMatchId(e.target.value)} placeholder="e.g. A2001 (optional)" />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Next Match Slot</label>
-                                            <select value={nextMatchSlot || ''} onChange={e => setNextMatchSlot(e.target.value)}>
-                                                <option value="">(optional)</option>
-                                                <option value="blue">Blue</option>
-                                                <option value="red">Red</option>
-                                            </select>
-                                        </div>
+                            <fieldset>
+                                <legend>Match Configuration</legend>
+                                <div className="fieldset-content">
+                                    <div className="form-group">
+                                        <label>Match ID</label>
+                                        <input list="match-ids" type="text" value={matchId} onChange={e => setMatchId(e.target.value)} placeholder="A1001" />
+                                        <datalist id="match-ids">
+                                            {Object.keys(currentMatches).map(mId => (
+                                                <option key={mId} value={mId} />
+                                            ))}
+                                        </datalist>
                                     </div>
-                                </fieldset>
+                                    <div className="form-group">
+                                        <label>Next Match ID</label>
+                                        <input type="text" value={nextMatchId} onChange={e => setNextMatchId(e.target.value)} placeholder="e.g. A2001 (optional)" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Next Match Slot</label>
+                                        <select value={nextMatchSlot || ''} onChange={e => setNextMatchSlot(e.target.value)}>
+                                            <option value="">(optional)</option>
+                                            <option value="blue">Blue</option>
+                                            <option value="red">Red</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </fieldset>
 
-                                <fieldset>
-                                    <legend>Rules</legend>
-                                    <div className="form-grid">
-                                        <div className="form-group">
-                                            <label>Max Point Gap</label>
-                                            <input type="number" value={maxPointGap} onChange={e => setMaxPointGap(e.target.value)} />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Max Gam-jeom</label>
-                                            <input type="number" value={maxGamjeom} onChange={e => setMaxGamjeom(e.target.value)} />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Round Duration (s)</label>
-                                            <input type="number" value={roundDuration} onChange={e => setRoundDuration(e.target.value)} />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Rest Duration (s)</label>
-                                            <input type="number" value={restDuration} onChange={e => setRestDuration(e.target.value)} />
-                                        </div>
+                            <fieldset>
+                                <legend>Rules</legend>
+                                <div className="fieldset-content">
+                                    <div className="form-group">
+                                        <label>Max Point Gap</label>
+                                        <input type="number" value={maxPointGap} onChange={e => setMaxPointGap(e.target.value)} />
                                     </div>
-                                </fieldset>
+                                    <div className="form-group">
+                                        <label>Max Gam-jeom</label>
+                                        <input type="number" value={maxGamjeom} onChange={e => setMaxGamjeom(e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Round Duration (s)</label>
+                                        <input type="number" value={roundDuration} onChange={e => setRoundDuration(e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Rest Duration (s)</label>
+                                        <input type="number" value={restDuration} onChange={e => setRestDuration(e.target.value)} />
+                                    </div>
+                                </div>
+                            </fieldset>
 
-                                <fieldset>
-                                    <legend>Competitors</legend>
-                                    <div className="competitor-grid">
-                                        <div className="competitor-group blue">
-                                            <h3>Blue</h3>
-                                            <div className="form-group">
-                                                <label>Name</label>
-                                                <input type="text" value={blueName} onChange={e => setBlueName(e.target.value)} placeholder="Blue Player Name" />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Affiliated Club</label>
-                                                <input type="text" value={blueAffiliatedClub} onChange={e => setBlueAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Source Match ID</label>
-                                                <input type="text" value={blueSourceMatchId} onChange={e => setBlueSourceMatchId(e.target.value)} placeholder="Source Match (optional)" />
-                                            </div>
-                                        </div>
-                                        <div className="competitor-group red">
-                                            <h3>Red</h3>
-                                            <div className="form-group">
-                                                <label>Name</label>
-                                                <input type="text" value={redName} onChange={e => setRedName(e.target.value)} placeholder="Red Player Name" />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Affiliated Club</label>
-                                                <input type="text" value={redAffiliatedClub} onChange={e => setRedAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Source Match ID</label>
-                                                <input type="text" value={redSourceMatchId} onChange={e => setRedSourceMatchId(e.target.value)} placeholder="Source Match (optional)" />
-                                            </div>
-                                        </div>
+                            <fieldset className="competitor-group blue">
+                                <legend>Blue Competitor</legend>
+                                <div className="fieldset-content">
+                                    <div className="form-group">
+                                        <label>Name</label>
+                                        <input type="text" value={blueName} onChange={e => setBlueName(e.target.value)} placeholder="Blue Player Name" />
                                     </div>
-                                </fieldset>
-                            </div>
+                                    <div className="form-group">
+                                        <label>Affiliated Club</label>
+                                        <input type="text" value={blueAffiliatedClub} onChange={e => setBlueAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Source Match ID</label>
+                                        <input type="text" value={blueSourceMatchId} onChange={e => setBlueSourceMatchId(e.target.value)} placeholder="Source Match (optional)" />
+                                    </div>
+                                </div>
+                            </fieldset>
+                            
+                            <fieldset className="competitor-group red">
+                                <legend>Red Competitor</legend>
+                                <div className="fieldset-content">
+                                    <div className="form-group">
+                                        <label>Name</label>
+                                        <input type="text" value={redName} onChange={e => setRedName(e.target.value)} placeholder="Red Player Name" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Affiliated Club</label>
+                                        <input type="text" value={redAffiliatedClub} onChange={e => setRedAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Source Match ID</label>
+                                        <input type="text" value={redSourceMatchId} onChange={e => setRedSourceMatchId(e.target.value)} placeholder="Source Match (optional)" />
+                                    </div>
+                                </div>
+                            </fieldset>
                         </div>
                     </div>
 

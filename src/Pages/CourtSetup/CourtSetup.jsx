@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
-import { ref, get } from "firebase/database";
+import { ref, get, set } from "firebase/database"; // Import set
 import { useAuth } from '../../Context/AuthContext';
 
 import './CourtSetup.css';
@@ -13,11 +13,10 @@ function CourtSetup() {
   const [error, setError] = useState('');
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState('');
-  const [courtId, setCourtId] = useState(''); // New state for Court ID
+  const [courtId, setCourtId] = useState(''); 
+  const [courtOptions, setCourtOptions] = useState([]); // State for dynamic court options
   const navigate = useNavigate();
   const { login } = useAuth();
-
-  const courtOptions = ['', 'court1', 'court2', 'court3', 'court4']; // Court options
 
   useEffect(() => {
     const eventsRef = ref(database, 'events');
@@ -26,20 +25,34 @@ function CourtSetup() {
         const eventList = Object.keys(snapshot.val());
         setEvents(eventList);
         
-        // Restore last selected event
         const lastEvent = localStorage.getItem('selectedEvent');
         if (lastEvent && eventList.includes(lastEvent)) {
           setSelectedEvent(lastEvent);
         }
-
-        // Restore last selected court
-        const lastCourt = localStorage.getItem('selectedCourt');
-        if (lastCourt && courtOptions.includes(lastCourt)) {
-            setCourtId(lastCourt);
-        }
       }
     });
   }, []);
+
+  // Effect to fetch courts when an event is selected
+  useEffect(() => {
+    if (selectedEvent) {
+        const courtsRef = ref(database, `events/${selectedEvent}/courts`);
+        get(courtsRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                setCourtOptions(Object.keys(snapshot.val()));
+            } else {
+                setCourtOptions([]); // No courts exist for this event yet
+            }
+            // Restore last selected court after fetching options
+            const lastCourt = localStorage.getItem('selectedCourt');
+            if (lastCourt) {
+                setCourtId(lastCourt);
+            }
+        });
+    } else {
+        setCourtOptions([]); // Clear court options if no event is selected
+    }
+}, [selectedEvent]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,8 +63,8 @@ function CourtSetup() {
       return;
     }
 
-    if (!courtId) { // Validation for courtId
-        setError('Please select a court.');
+    if (!courtId) { 
+        setError('Please enter a court name.');
         return;
     }
 
@@ -62,12 +75,21 @@ function CourtSetup() {
         if (snapshot.exists()) {
             const correctPassword = snapshot.val();
             if (password === correctPassword) {
+
+                // --- Add court to Firebase before logging in ---
+                const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
+                await set(courtRef, {
+                    name: courtId, // Use the input value as the court's name
+                    currentMatchId: '' // Initialize with no match
+                });
+                // -----------------------------------------------------
+
                 // Store selection in localStorage
                 localStorage.setItem('selectedEvent', selectedEvent);
                 localStorage.setItem('selectedCourt', courtId);
 
                 login({ 
-                    courtId: courtId, // Use state instead of hardcoded value
+                    courtId: courtId, 
                     eventId: selectedEvent,
                     role: 'admin' 
                 });
@@ -82,7 +104,7 @@ function CourtSetup() {
         }
     } catch (err) {
         setError('An error occurred while connecting to the database.');
-        console.error("Error fetching password:", err);
+        console.error("Error during setup:", err);
     }
   };
 
@@ -108,7 +130,6 @@ function CourtSetup() {
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
               placeholder="-- Type or select an event --"
-              className="datalist-input"
             />
             <datalist id="event-list">
               {events.map(event => (
@@ -118,14 +139,13 @@ function CourtSetup() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="court-input">Select Court</label>
+            <label htmlFor="court-input">Select or Create Court</label>
             <input
               id="court-input"
               list="court-list"
               value={courtId}
               onChange={(e) => setCourtId(e.target.value)}
               placeholder="-- Type or select a court --"
-              className="datalist-input"
               disabled={!selectedEvent}
             />
             <datalist id="court-list">

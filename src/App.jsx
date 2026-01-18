@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './Context/AuthContext';
 import ProtectedRoute from './Components/ProtectedRoute/ProtectedRoute';
 import './App.css'; // Import the main stylesheet
+import TargetCursor from './Components/TargetCursor/TargetCursor'; // Import the TargetCursor
 
 // Pages
 import Home from './Pages/Home/Home';
@@ -15,6 +16,8 @@ import RefereeRegister from './Pages/RefereeRegister/RefereeRegister';
 function App() {
   return (
     <AuthProvider>
+      {/* By adding the selector here, we make all inputs, selects, and elements with the .cursor-target class interactive with the cursor */}
+      <TargetCursor targetSelector="input, select, .cursor-target" />
       <BrowserRouter basename="/TKD-scoreboard">
         <Routes>
           {/* --- Public Routes --- */}
