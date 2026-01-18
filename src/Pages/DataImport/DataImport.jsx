@@ -5,7 +5,6 @@ import './DataImport.css';
 import Squares from '../../Components/Squares/Squares';
 import Button from '../../Components/Button/Button';
 import { useNavigate } from 'react-router-dom';
-import TargetCursor from '../../Components/TargetCursor/TargetCursor';
 
 // A helper function to parse name and club from old format
 const parseName = (fullName) => {
@@ -203,7 +202,6 @@ const DataImport = () => {
 
     return (
         <div className="di-container">
-            <TargetCursor />
             <Squares
                 speed={0.5}
                 squareSize={100}
