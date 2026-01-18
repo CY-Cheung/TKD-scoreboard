@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
-import { ref, get, set } from "firebase/database"; // Import set
+import { ref, get } from "firebase/database";
+import { useAuth } from '../../Context/AuthContext';
 
 import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
@@ -9,21 +10,20 @@ import Squares from '../../Components/Squares/Squares';
 
 function CourtSetup() {
   const [password, setPassword] = useState('');
-  const [courtId, setCourtId] = useState('court1');
   const [error, setError] = useState('');
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState('');
   const navigate = useNavigate();
-
-  const courtOptions = ['court1', 'court2', 'court3', 'court4'];
+  const { login } = useAuth();
 
   useEffect(() => {
     const eventsRef = ref(database, 'events');
     get(eventsRef).then((snapshot) => {
       if (snapshot.exists()) {
-        setEvents(Object.keys(snapshot.val()));
+        const eventList = Object.keys(snapshot.val());
+        setEvents(eventList);
         const lastEvent = localStorage.getItem('selectedEvent');
-        if (lastEvent && Object.keys(snapshot.val()).includes(lastEvent)) {
+        if (lastEvent && eventList.includes(lastEvent)) {
           setSelectedEvent(lastEvent);
         }
       }
@@ -46,14 +46,21 @@ function CourtSetup() {
         if (snapshot.exists()) {
             const correctPassword = snapshot.val();
             if (password === correctPassword) {
-                // Set court status to "connected" in Firebase
-                const courtStatusRef = ref(database, `events/${selectedEvent}/courts/${courtId}/status`);
-                await set(courtStatusRef, "connected");
+                const courtId = 'court1'; // Hardcoded as per previous changes
 
-                // Save to local storage and navigate
-                localStorage.setItem('courtId', courtId);
-                localStorage.setItem('selectedEvent', selectedEvent);
-                navigate(`/referee/register`); // Navigate to the referee registration page
+                // Use the new login function from AuthContext
+                login({
+                    eventId: selectedEvent,
+                    courtId: courtId,
+                    role: 'admin' // Or another role as appropriate
+                });
+
+                // Remove old localStorage logic
+                // localStorage.setItem('courtId', courtId);
+                // localStorage.setItem('selectedEvent', selectedEvent);
+
+                // Navigate to a protected route, e.g., the home/dashboard for admins
+                navigate(`/`); 
             } else {
                 setError('Incorrect password, please try again.');
             }
@@ -63,7 +70,7 @@ function CourtSetup() {
         }
     } catch (err) {
         setError('An error occurred while connecting to the database.');
-        console.error("Error writing status or fetching password:", err);
+        console.error("Error fetching password:", err);
     }
   };
 
@@ -79,7 +86,7 @@ function CourtSetup() {
       <div className="cs-content">
         <h1>Court Setup</h1>
         <form onSubmit={handleSubmit} className="cs-form">
-          <p>Select the event, enter the Setup Password, and choose the designated court for this computer.</p>
+          <p>Select the event and enter the Setup Password to connect this device.</p>
           
           <div className="form-group">
             <label htmlFor="event-select">Select Event</label>
@@ -108,22 +115,6 @@ function CourtSetup() {
               required
               disabled={!selectedEvent}
             />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="court-select">Select Court</label>
-            <select
-              id="court-select"
-              value={courtId}
-              onChange={(e) => setCourtId(e.target.value)}
-              disabled={!selectedEvent}
-            >
-              {courtOptions.map(court => (
-                <option key={court} value={court}>
-                  {`Court ${court.slice(-1)}`} 
-                </option>
-              ))}
-            </select>
           </div>
           
           {error && <p className="cs-error-message">{error}</p>}

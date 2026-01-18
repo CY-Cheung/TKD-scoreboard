@@ -32,12 +32,6 @@ function Home() {
 					onClick={() => navigate("/controller")}
 				/>
         <Button
-					text="Admin"
-					fontSize="3dvw"
-					angle={120}
-					onClick={() => navigate("/admin")}
-				/>
-        <Button
 					text="Data Import"
 					fontSize="3dvw"
 					angle={180}
