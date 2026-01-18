@@ -1,14 +1,45 @@
+import React, { useEffect, useState } from 'react';
+import { database } from '../../firebase';
+import { ref, runTransaction } from "firebase/database";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
-import { useState } from "react";
 import Mask from "../../Components/Mask/Mask";
 import Card from "../../Components/Card/Card";
 import "../../Components/Card/Card.css";
 
-function Edit({ visible, setVisible }) {
+const Edit = ({ visible, setVisible, eventName, matchId }) => {
 	if (!visible) return null;
+
 	const cardWidth = 25;
 	const buttonFontSize = cardWidth / 20;
+
+	// Re-integrated from our previous logic
+    const updateStat = (side, type, index, delta) => {
+        if (!eventName || !matchId) {
+            console.error("Error: Missing eventName or matchId. Cannot write to database.");
+            return;
+        }
+
+        let path = `events/${eventName}/matches/${matchId}/stats/${side}/${type}`;
+        
+        if (index !== null) {
+            path += `/${index}`;
+        }
+
+        const targetRef = ref(database, path);
+        runTransaction(targetRef, (currentVal) => {
+            const val = currentVal || 0;
+            const newVal = val + delta;
+            return newVal < 0 ? 0 : newVal;
+        })
+        .then(() => console.log(`Updated: ${path} => ${delta}`))
+        .catch((err) => console.error("Update failed", err));
+    };
+
+	// Placeholder for time update logic
+	const handleTimeUpdate = () => {
+		console.log("Time update logic not yet implemented.");
+	}
 
 	return (
 		<>
@@ -21,94 +52,46 @@ function Edit({ visible, setVisible }) {
 					<Card color1="var(--blue-primary)" width={cardWidth}>
 						<h1>Blue 藍方</h1>
 						<div className="rows">
-							<div className="row">
+                            <div className="row">
 								<p>Gam-jeom 扣分</p>
 								<div className="buttons">
-									<Button
-										text="+"
-										angle={210}
-										fontSize={`${buttonFontSize}vw`} // 這樣才是字串，Button 才能正確接收
-									/>
-									<Button
-										text="−"
-										angle={210}
-										fontSize={`${buttonFontSize}vw`}
-									/>
+                                    <Button text="+" angle={210} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('blue', 'gamjeom', null, 1)} />
+                                    <Button text="−" angle={210} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('blue', 'gamjeom', null, -1)} />
 								</div>
 							</div>
 							<div className="row">
 								<p>Punch 拳擊 - 1</p>
 								<div className="buttons">
-									<Button
-										text="+"
-										angle={210}
-										fontSize={`${buttonFontSize}vw`} // 這樣才是字串，Button 才能正確接收
-									/>
-									<Button
-										text="−"
-										angle={210}
-										fontSize={`${buttonFontSize}vw`}
-									/>
+									<Button text="+" angle={210} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('blue', 'pointsStat', 0, 1)} />
+									<Button text="−" angle={210} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('blue', 'pointsStat', 0, -1)} />
 								</div>
 							</div>
 							<div className="row">
 								<p>Body 軀幹 - 2</p>
 								<div className="buttons">
-									<Button
-										text="+"
-										angle={210}
-										fontSize={`${buttonFontSize}vw`} // 這樣才是字串，Button 才能正確接收
-									/>
-									<Button
-										text="−"
-										angle={210}
-										fontSize={`${buttonFontSize}vw`}
-									/>
+                                    <Button text="+" angle={210} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('blue', 'pointsStat', 1, 1)} />
+                                    <Button text="−" angle={210} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('blue', 'pointsStat', 1, -1)} />
 								</div>
 							</div>
 							<div className="row">
 								<p>Head 頭部 - 3</p>
 								<div className="buttons">
-									<Button
-										text="+"
-										angle={210}
-										fontSize={`${buttonFontSize}vw`} // 這樣才是字串，Button 才能正確接收
-									/>
-									<Button
-										text="−"
-										angle={210}
-										fontSize={`${buttonFontSize}vw`}
-									/>
+                                    <Button text="+" angle={210} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('blue', 'pointsStat', 2, 1)} />
+                                    <Button text="−" angle={210} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('blue', 'pointsStat', 2, -1)} />
 								</div>
 							</div>
 							<div className="row">
 								<p>Body(Turn) 軀幹(轉身) - 4</p>
 								<div className="buttons">
-									<Button
-										text="+"
-										angle={210}
-										fontSize={`${buttonFontSize}vw`} // 這樣才是字串，Button 才能正確接收
-									/>
-									<Button
-										text="−"
-										angle={210}
-										fontSize={`${buttonFontSize}vw`}
-									/>
+                                    <Button text="+" angle={210} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('blue', 'pointsStat', 3, 1)} />
+                                    <Button text="−" angle={210} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('blue', 'pointsStat', 3, -1)} />
 								</div>
 							</div>
 							<div className="row">
 								<p>Head(Turn) 頭部(轉身) - 5</p>
 								<div className="buttons">
-									<Button
-										text="+"
-										angle={210}
-										fontSize={`${buttonFontSize}vw`} // 這樣才是字串，Button 才能正確接收
-									/>
-									<Button
-										text="−"
-										angle={210}
-										fontSize={`${buttonFontSize}vw`}
-									/>
+                                    <Button text="+" angle={210} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('blue', 'pointsStat', 4, 1)} />
+                                    <Button text="−" angle={210} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('blue', 'pointsStat', 4, -1)} />
 								</div>
 							</div>
 						</div>
@@ -166,91 +149,43 @@ function Edit({ visible, setVisible }) {
 							<div className="row">
 								<p>Gam-jeom 扣分</p>
 								<div className="buttons">
-									<Button
-										text="+"
-										angle={350}
-										fontSize={`${buttonFontSize}vw`}
-									/>
-									<Button
-										text="−"
-										angle={350}
-										fontSize={`${buttonFontSize}vw`}
-									/>
+                                    <Button text="+" angle={350} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('red', 'gamjeom', null, 1)} />
+                                    <Button text="−" angle={350} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('red', 'gamjeom', null, -1)} />
 								</div>
 							</div>
 							<div className="row">
 								<p>Punch 拳擊 - 1</p>
 								<div className="buttons">
-									<Button
-										text="+"
-										angle={350}
-										fontSize={`${buttonFontSize}vw`}
-									/>
-									<Button
-										text="−"
-										angle={350}
-										fontSize={`${buttonFontSize}vw`}
-									/>
+									<Button text="+" angle={350} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('red', 'pointsStat', 0, 1)} />
+									<Button text="−" angle={350} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('red', 'pointsStat', 0, -1)} />
 								</div>
 							</div>
 							<div className="row">
 								<p>Body 軀幹 - 2</p>
 								<div className="buttons">
-									<Button
-										text="+"
-										angle={350}
-										fontSize={`${buttonFontSize}vw`}
-									/>
-									<Button
-										text="−"
-										angle={350}
-										fontSize={`${buttonFontSize}vw`}
-									/>
+									<Button text="+" angle={350} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('red', 'pointsStat', 1, 1)} />
+									<Button text="−" angle={350} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('red', 'pointsStat', 1, -1)} />
 								</div>
 							</div>
 							<div className="row">
 								<p>Head 頭部 - 3</p>
 								<div className="buttons">
-									<Button
-										text="+"
-										angle={350}
-										fontSize={`${buttonFontSize}vw`}
-									/>
-									<Button
-										text="−"
-										angle={350}
-										fontSize={`${buttonFontSize}vw`}
-									/>
+									<Button text="+" angle={350} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('red', 'pointsStat', 2, 1)} />
+									<Button text="−" angle={350} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('red', 'pointsStat', 2, -1)} />
 								</div>
 							</div>
 							<div className="row">
 								<p>Body(Turn) 軀幹(轉身) - 4</p>
 								<div className="buttons">
-									<Button
-										text="+"
-										angle={350}
-										fontSize={`${buttonFontSize}vw`}
-									/>
-									<Button
-										text="−"
-										angle={350}
-										fontSize={`${buttonFontSize}vw`}
-									/>
+									<Button text="+" angle={350} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('red', 'pointsStat', 3, 1)} />
+									<Button text="−" angle={350} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('red', 'pointsStat', 3, -1)} />
 								</div>
 							</div>
 							<div className="row">
 								<p>Head(Turn) 頭部(轉身) - 5</p>
 								<div className="buttons">
-									<Button
-										text="+"
-										angle={350}
-										fontSize={`${buttonFontSize}vw`}
-									/>
-									<Button
-										text="−"
-										angle={350}
-										fontSize={`${buttonFontSize}vw`}
-									/>
+									<Button text="+" angle={350} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('red', 'pointsStat', 4, 1)} />
+									<Button text="−" angle={350} fontSize={`${buttonFontSize}vw`} onClick={() => updateStat('red', 'pointsStat', 4, -1)} />
 								</div>
 							</div>
 						</div>
