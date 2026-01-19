@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { ref, onValue, set, get, update, runTransaction } from "firebase/database";
 import { database } from "../../firebase";
 import "./Screen.css";
@@ -12,6 +12,67 @@ const formatTime = (totalSeconds) => {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = Math.floor(totalSeconds % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+// --- 輔助函數：計算單邊總分 ---
+const calculateScore = (stats, opponentGamjeom) => {
+    const p = stats?.pointsStat || [0,0,0,0,0];
+    // p[0]=1分, p[1]=2分, p[2]=3分, p[3]=4分, p[4]=5分
+    return (p[0]*1) + (p[1]*2) + (p[2]*3) + (p[3]*4) + (p[4]*5) + (opponentGamjeom || 0);
+};
+
+/**
+ * --- 核心邏輯：優勢判定 (Superiority) ---
+ * 1. 總分高者勝
+ * 2. 平分 -> 比較 4分和5分 的「分數總和」(Value)
+ * 3. 平分 -> 比較 3分和5分 的「命中次數」(Count)
+ * 4. 平分 -> 比較 2分和4分 的「命中次數」(Count)
+ * 5. 平分 -> 比較 1分 的「命中次數」(Count)
+ * 6. 平分 -> 比較 Gamjeom 數量 (少者勝)
+ */
+const determineDominantSide = (redStats, blueStats) => {
+    // 防呆提取
+    const rP = redStats?.pointsStat || [0,0,0,0,0];
+    const bP = blueStats?.pointsStat || [0,0,0,0,0];
+    const rG = redStats?.gamjeom || 0;
+    const bG = blueStats?.gamjeom || 0;
+
+    // 1. 總分比較
+    const redTotal = calculateScore({pointsStat: rP}, bG);
+    const blueTotal = calculateScore({pointsStat: bP}, rG);
+
+    if (redTotal > blueTotal) return 'red';
+    if (blueTotal > redTotal) return 'blue';
+
+    // --- 同分 Tie-Breaker ---
+
+    // 2. 比較 4分和5分 的「分數總和」 (High Value Points)
+    const redTurningPoints = (rP[3] * 4) + (rP[4] * 5);
+    const blueTurningPoints = (bP[3] * 4) + (bP[4] * 5);
+    if (redTurningPoints > blueTurningPoints) return 'red';
+    if (blueTurningPoints > redTurningPoints) return 'blue';
+
+    // 3. 比較 3分和5分 的「命中次數」 (High Value Hits)
+    const redCount35 = rP[2] + rP[4];
+    const blueCount35 = bP[2] + bP[4];
+    if (redCount35 > blueCount35) return 'red';
+    if (blueCount35 > redCount35) return 'blue';
+
+    // 4. 比較 2分和4分 的「命中次數」 (Mid Value Hits)
+    const redCount24 = rP[1] + rP[3];
+    const blueCount24 = bP[1] + bP[3];
+    if (redCount24 > blueCount24) return 'red';
+    if (blueCount24 > redCount24) return 'blue';
+
+    // 5. 比較 1分 的「命中次數」 (Punch Hits)
+    if (rP[0] > bP[0]) return 'red';
+    if (bP[0] > rP[0]) return 'blue';
+
+    // 6. 比較 Gamjeom 數量 (少者優勢)
+    if (rG < bG) return 'red'; 
+    if (bG < rG) return 'blue';
+
+    return 'none'; // 完全平手
 };
 
 function Screen() {
@@ -190,6 +251,13 @@ function Screen() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [selectedEvent, currentMatchId]);
 
+    const redStats = matchData?.stats?.red;
+    const blueStats = matchData?.stats?.blue;
+
+    const dominantSide = useMemo(() => {
+        return determineDominantSide(redStats, blueStats);
+    }, [redStats, blueStats]);
+
     if (!selectedCourt) {
         return <div className="screen-unconfigured"><h1>Screen Unconfigured</h1><p>Please go to <strong>Court Setup</strong> to assign this screen to a court.</p></div>;
     }
@@ -197,12 +265,6 @@ function Screen() {
     if (!matchData) {
         return <div className="screen-configured-no-match"><h1>{selectedCourt.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</h1><p>Waiting for a match to be loaded...</p></div>;
     }
-
-    const calculatePointsFromStats = (stats) => {
-        if (!stats || !stats.pointsStat) return 0;
-        const pointValues = [1, 2, 3, 4, 5];
-        return stats.pointsStat.reduce((total, count, index) => total + ((count || 0) * pointValues[index]), 0);
-    };
 
     const getDisplayName = (c) => c ? (c.name && c.affiliatedClub ? `${c.name} (${c.affiliatedClub})` : c.name) : "";
 
@@ -212,24 +274,24 @@ function Screen() {
     const redGamJeom = matchData.stats?.red?.gamjeom || 0;
     const blueGamJeom = matchData.stats?.blue?.gamjeom || 0;
 
-    const redTotalScore = calculatePointsFromStats(matchData.stats?.red) + blueGamJeom;
-    const blueTotalScore = calculatePointsFromStats(matchData.stats?.blue) + redGamJeom;
+    const redTotalScore = calculateScore(matchData.stats?.red, blueGamJeom);
+    const blueTotalScore = calculateScore(matchData.stats?.blue, redGamJeom);
     
     const matchNumber = matchData.config?.matchId || "----";
     const roundNumber = matchData.state?.currentRound || 1;
+    
+    // --- Inline Style Logic ---
     const timerColor = matchData.state?.isPaused ? "#FFFF00" : "#FFFFFF";
+    const redScoreColor = dominantSide === 'red' ? '#FFFF00' : '#FFFFFF';
+    const blueScoreColor = dominantSide === 'blue' ? '#FFFF00' : '#FFFFFF';
+
 
     const { winReason, isFinished } = matchData?.state || {};
 
     const renderTimerContent = () => {
-        // 優先級 1: 特殊判決 (PTG/PUN) - 返回純文字，由父組件控制顏色
         if (winReason === 'PTG') return 'PTG';
         if (winReason === 'PUN') return 'PUN';
-
-        // 優先級 2: 時間到 (正常完賽)
         if (isFinished) return "0:00";
-
-        // 優先級 3: 正常顯示倒數
         return formatTime(displayTime);
     };
 
@@ -248,7 +310,13 @@ function Screen() {
                         </div>
                     </div>
                     <div className="red-score red-bg">
-                        <div className="red-score-text red-score-bg score-font cursor-target" onClick={() => setShowEdit(true)}>{redTotalScore}</div>
+                         <div 
+                            className={'red-score-text red-score-bg score-font cursor-target'}
+                            style={{ color: redScoreColor }}
+                            onClick={() => setShowEdit(true)}
+                        >
+                            {redTotalScore}
+                        </div>
                     </div>
                     <div className="match-info">
                         <div className="match cursor-target" onClick={toggleDirection}>
@@ -269,7 +337,13 @@ function Screen() {
                         </div>
                     </div>
                     <div className="blue-score blue-bg">
-                        <div className="blue-score-text blue-score-bg score-font cursor-target" onClick={() => setShowEdit(true)}>{blueTotalScore}</div>
+                        <div 
+                            className={'blue-score-text blue-score-bg score-font cursor-target'}
+                            style={{ color: blueScoreColor }}
+                            onClick={() => setShowEdit(true)}
+                        >
+                            {blueTotalScore}
+                        </div>
                     </div>
                     <div className="blue-log blue-bg">
                         <div className="blue-gamjeom blue-bg" onClick={() => setShowEdit(true)}>
