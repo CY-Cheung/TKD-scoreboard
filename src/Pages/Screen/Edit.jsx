@@ -3,7 +3,7 @@ import { database } from '../../firebase';
 import { ref, get, update } from "firebase/database";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
-import { updateScoreAndCheckRules, startRestTime, startNextRound, promoteWinner } from '../../Api';
+import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner } from '../../Api';
 
 const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
     const [matchMin, setMatchMin] = useState(0);
@@ -14,7 +14,7 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
 
     const handleWinDeclaration = (winnerSide) => {
         if (!eventName || !matchId || !winnerSide) return;
-        startRestTime(eventName, matchId, winnerSide);
+        declareRoundWinner(eventName, matchId, winnerSide);
         setVisible(false);
         setShowSuperiorityVote(false);
     };
@@ -47,9 +47,9 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
         const initialTimer = matchData?.state?.timer || 0;
         const currentMinutes = Math.floor(initialTimer / 60);
         const currentSeconds = Math.floor(initialTimer % 60);
-        const activePhase = matchData?.state?.matchPhase || 'FIGHTING';
+        const activePhase = matchData?.state?.phase || 'ROUND';
 
-        if (activePhase === 'FIGHTING' || activePhase === 'ROUND') {
+        if (activePhase === 'ROUND') {
             setMatchMin(currentMinutes);
             setMatchSec(currentSeconds);
         } else if (activePhase === 'REST') {
@@ -65,7 +65,7 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
                 const defaultMatchSec = config.rules?.roundDuration || 120;
                 const defaultRestSec = config.rules?.restDuration || 60;
 
-                if (activePhase === 'FIGHTING' || activePhase === 'ROUND') {
+                if (activePhase === 'ROUND') {
                     setRestMin(Math.floor(defaultRestSec / 60));
                     setRestSec(defaultRestSec % 60);
                 } else if (activePhase === 'REST') {
@@ -92,9 +92,9 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
         get(stateRef).then(snapshot => {
             if (snapshot.exists()) {
                 const stateData = snapshot.val();
-                const currentPhase = stateData.phase || 'FIGHTING';
+                const currentPhase = stateData.phase || 'ROUND';
 
-                if (timeType === 'match' && (currentPhase === 'FIGHTING' || currentPhase === 'ROUND')) {
+                if (timeType === 'match' && currentPhase === 'ROUND') {
                     update(stateRef, updates);
                 } else if (timeType === 'rest' && currentPhase === 'REST') {
                     update(stateRef, updates);
@@ -135,7 +135,9 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
 
     if (!matchData) return null;
 
-    const { matchPhase, isFinished, winReason, roundWins } = matchData.state || {};
+    const { state = {}, stats = {} } = matchData;
+    const { phase, isFinished, winReason } = state || {};
+    const { roundWins } = stats || {};
 
     const getWinner = () => {
         if (roundWins?.red > roundWins?.blue) return 'red';
@@ -195,7 +197,7 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
                     </div>
                 </div>
 
-                {matchPhase === 'REST' && !isFinished && (
+                {phase === 'REST' && !isFinished && (
                     <Button 
                         text={`Start Round ${(matchData?.state?.currentRound || 1) + 1}`} 
                         fontSize="1.8vw" 
@@ -232,7 +234,7 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
                     </div>
                 )}
 
-                 {!isFinished && matchPhase !== 'REST' && !showSuperiorityVote && (
+                 {phase === 'ROUND' && !isFinished && !showSuperiorityVote && (
                     <Button text="Declare Round Winner" fontSize="1.8vw" onClick={handleDeclareWinner} angle={50} />
                 )}
                 

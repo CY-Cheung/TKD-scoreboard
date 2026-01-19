@@ -14,7 +14,7 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
     runTransaction(matchRef, (matchData) => {
         if (!matchData) return;
 
-        if (matchData.state.matchPhase === 'REST') return;
+        if (matchData.state.phase === 'REST') return;
 
         if (!matchData.stats) matchData.stats = {
             red: { pointsStat: [0,0,0,0,0], gamjeom: 0 },
@@ -89,7 +89,7 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
     .catch((err) => console.error("Transaction failed:", err));
 };
 
-export const startRestTime = (eventName, matchId, winnerSide) => {
+export const declareRoundWinner = (eventName, matchId, winnerSide) => {
     const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
 
     runTransaction(matchRef, (matchData) => {
@@ -119,10 +119,9 @@ export const startRestTime = (eventName, matchId, winnerSide) => {
             matchData.state.isFinished = true;
             matchData.state.winReason = 'PTF';
             matchData.state.isPaused = true;
-            matchData.state.matchPhase = 'FIGHTING';
+            matchData.state.timer = 0;
+            matchData.state.phase = 'ROUND';
         } else {
-            // Match not over, start REST.
-            // Preserve round wins and scores, but reset current points and gamjeom.
             const originalStats = { ...matchData.stats };
             matchData.stats = {
                 ...originalStats,
@@ -130,13 +129,13 @@ export const startRestTime = (eventName, matchId, winnerSide) => {
                 blue: { gamjeom: 0, pointsStat: [0,0,0,0,0] }
             };
             
-            matchData.state.matchPhase = "REST";
+            matchData.state.phase = "REST";
             matchData.state.timer = matchData.config?.rules?.restDuration || 60;
             matchData.state.isPaused = false;
             matchData.state.lastStartTime = Date.now();
             matchData.state.isFinished = false;
-            matchData.state.winReason = null; // Clear PTG/PUN reason to show timer
-            matchData.state.dominantSide = 'none'; // Clear after processing
+            matchData.state.winReason = null;
+            matchData.state.dominantSide = 'none';
         }
 
         return matchData;
@@ -148,10 +147,11 @@ export const startNextRound = (eventName, matchId) => {
     runTransaction(matchRef, (matchData) => {
         if (!matchData) return;
 
-        // Score reset logic is now in startRestTime, removed from here.
+        matchData.stats.red = { gamjeom: 0, pointsStat: [0,0,0,0,0] };
+        matchData.stats.blue = { gamjeom: 0, pointsStat: [0,0,0,0,0] };
 
         matchData.state.currentRound = (matchData.state.currentRound || 1) + 1;
-        matchData.state.matchPhase = "FIGHTING";
+        matchData.state.phase = "ROUND";
         matchData.state.timer = matchData.config?.rules?.roundDuration || 120;
         matchData.state.isPaused = true;
         matchData.state.lastStartTime = null;
@@ -163,6 +163,26 @@ export const startNextRound = (eventName, matchId) => {
 };
 
 export const promoteWinner = (eventName, matchId, winner) => {
-    console.log(`Promoting ${winner} for match ${matchId} in event ${eventName}`);
-    // This is a placeholder. We will implement the logic later.
+    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
+    runTransaction(matchRef, (matchData) => {
+        if (!matchData || !matchData.config.nextMatchId) return;
+
+        const nextMatchRef = ref(database, `events/${eventName}/matches/${matchData.config.nextMatchId}`);
+        const winnerData = matchData.competitors[winner];
+
+        runTransaction(nextMatchRef, (nextMatchData) => {
+            if (!nextMatchData) return;
+
+            if (nextMatchData.competitors.red.name === "") {
+                nextMatchData.competitors.red.name = winnerData.name;
+                nextMatchData.competitors.red.club = winnerData.club;
+            } else if (nextMatchData.competitors.blue.name === "") {
+                nextMatchData.competitors.blue.name = winnerData.name;
+                nextMatchData.competitors.blue.club = winnerData.club;
+            }
+            return nextMatchData;
+        });
+
+        return matchData;
+    });
 };

@@ -95,10 +95,10 @@ function Screen() {
         if (!matchData?.state) return;
 
         const state = matchData.state;
-        const { timer, isPaused, lastStartTime, isFinished, matchPhase } = state;
+        const { timer, isPaused, lastStartTime, isFinished, phase } = state;
 
         const updateTimer = () => {
-            if (isFinished && matchPhase !== 'REST') {
+            if (isFinished && phase !== 'REST') {
                 setDisplayTime(0);
                 cancelAnimationFrame(animationFrameRef.current);
                 return;
@@ -118,7 +118,7 @@ function Screen() {
                 setDisplayTime(0);
                 cancelAnimationFrame(animationFrameRef.current);
                 
-                if (matchPhase !== 'REST') {
+                if (phase !== 'REST') {
                     const matchStateRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}/state`);
                     update(matchStateRef, {
                         isFinished: true,
@@ -190,10 +190,10 @@ function Screen() {
             if (!snapshot.exists()) return;
 
             const val = snapshot.val();
-            const { isStarted = false, isPaused = true, isFinished = false, timer = 0, lastStartTime = null, matchPhase } = val;
+            const { isStarted = false, isPaused = true, isFinished = false, timer = 0, lastStartTime = null, phase } = val;
             const now = Date.now();
 
-            if (isFinished && matchPhase !== 'REST') return;
+            if (isFinished && phase !== 'REST') return;
 
             if (!isStarted) {
                 await update(stateRef, { isStarted: true, isPaused: false, isFinished: false, lastStartTime: now });
@@ -218,7 +218,7 @@ function Screen() {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.code === "Space") { e.preventDefault(); toggleTimer(); }
-            if (e.key === "\\") { toggleDirection(); }
+            if (e.key === "\") { toggleDirection(); }
             if (e.key === "e" || e.key === "E") { setShowEdit(prev => !prev); }
         };
         window.addEventListener("keydown", handleKeyDown);
@@ -241,11 +241,19 @@ function Screen() {
     }
 
     const { state = {}, config = {}, stats = {} } = matchData;
-    const { matchPhase = 'FIGHTING', currentRound = 1, winReason, isFinished, isPaused } = state;
+    const { phase = 'ROUND', currentRound = 1, winReason, isFinished, isPaused } = state;
     const { roundScores = {}, roundWins = { red: 0, blue: 0 } } = stats;
-    const isResting = matchPhase === 'REST';
+    const isResting = phase === 'REST';
 
-    const getDisplayName = (c) => c ? (c.name && c.affiliatedClub ? `${c.name} (${c.affiliatedClub})` : c.name) : "";
+    const getDisplayName = (c) => {
+        if (c?.name) {
+            return c.affiliatedClub ? `${c.name} (${c.affiliatedClub})` : c.name;
+        }
+        if (c?.previousMatch) {
+            return `Winner of ${c.previousMatch}`;
+        }
+        return "";
+    };
 
     const bluePlayerName = getDisplayName(config.competitors?.blue) || "Blue Player";
     const redPlayerName = getDisplayName(config.competitors?.red) || "Red Player";
@@ -264,7 +272,6 @@ function Screen() {
 
     const renderTimerContent = () => {
         if (winReason) return winReason;
-        if (isFinished && !isResting) return "0:00";
         return formatTime(displayTime);
     };
 
