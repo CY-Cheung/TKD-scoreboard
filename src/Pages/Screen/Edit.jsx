@@ -3,20 +3,56 @@ import { database } from '../../firebase';
 import { ref, runTransaction, get, update } from "firebase/database";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
-import { updateScoreAndCheckRules } from '../../Api'; // 引入上面的函數
+import { updateScoreAndCheckRules } from '../../Api';
 
-const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase }) => {
+const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, dominantSide }) => {
     const [matchMin, setMatchMin] = useState(0);
     const [matchSec, setMatchSec] = useState(0);
     const [restMin, setRestMin] = useState(0);
     const [restSec, setRestSec] = useState(0);
+    const [showSuperiorityVote, setShowSuperiorityVote] = useState(false);
 
-    // 建立一個通用的處理函數
+    // Generic function to perform the win declaration
+    const declareWinner = (winnerSide) => {
+        if (!eventName || !matchId || !winnerSide) {
+            console.error("Missing info for declaring winner");
+            return;
+        }
+        // Blue is index 0, Red is index 1
+        const winnerIndex = winnerSide === 'blue' ? 0 : 1;
+        const roundWinsRef = ref(database, `events/${eventName}/matches/${matchId}/stats/roundWins/${winnerIndex}`);
+
+        runTransaction(roundWinsRef, (currentWins) => {
+            return (currentWins || 0) + 1;
+        }).then(() => {
+            console.log(`Declared ${winnerSide} as the round winner.`);
+            setVisible(false); // Close the whole edit panel
+            setShowSuperiorityVote(false); // Reset superiority vote UI
+        }).catch((error) => {
+            console.error("Failed to declare round winner:", error);
+            alert("Error declaring winner. Check console for details.");
+        });
+    };
+
+    // Entry point for declaring winner button
+    const handleDeclareWinner = () => {
+        if (dominantSide && dominantSide !== 'none') {
+            declareWinner(dominantSide);
+        } else {
+            // If it's a tie, show the superiority voting UI
+            setShowSuperiorityVote(true);
+        }
+    };
+
     const handleAction = (side, type, index, delta) => {
         updateScoreAndCheckRules(eventName, matchId, side, type, index, delta);
     };
 
     useEffect(() => {
+        if (!visible) {
+            // Reset superiority vote UI when panel is closed
+            setShowSuperiorityVote(false);
+        }
         if (visible && eventName && matchId) {
             const configRef = ref(database, `events/${eventName}/matches/${matchId}/config`);
             get(configRef).then((snapshot) => {
@@ -134,7 +170,7 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase }) 
                 ))}
             </div>
 
-            {/* Row 4: Time Controls */}
+            {/* Row 4: Time Controls & Actions */}
             <div className="time-bar">
                 <div className='time-control-group'>
                     <h2>Match Time</h2>
@@ -158,6 +194,19 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase }) 
                         </select> sec
                     </div>
                 </div>
+
+                {!showSuperiorityVote ? (
+                    <Button text="Declare Round Winner" fontSize="1.8vw" onClick={handleDeclareWinner} />
+                ) : (
+                    <div className="superiority-vote time-control-group">
+                        <h2>Woo-se-girok</h2>
+                        <div className="buttons">
+                            <Button text="Blue" fontSize="1.8vw" onClick={() => declareWinner('blue')} angle={220} />
+                            <Button text="Red" fontSize="1.8vw" onClick={() => declareWinner('red')} angle={0} />
+                        </div>
+                    </div>
+                )}
+
                 <Button text="Done" fontSize="2vw" onClick={() => setVisible(false)} />
             </div>
         </div>

@@ -360,6 +360,7 @@ function Screen() {
                 matchId={currentMatchId}
                 initialTimer={displayTime}
                 phase={matchData?.state?.phase}
+                dominantSide={dominantSide}
             />
         </>
     );
