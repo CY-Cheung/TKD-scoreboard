@@ -263,8 +263,7 @@ function Screen() {
     const blueScoreColor = !isResting && dominantSide === 'blue' ? '#FFFF00' : '#FFFFFF';
 
     const renderTimerContent = () => {
-        if (winReason === 'PTG') return 'PTG';
-        if (winReason === 'PUN') return 'PUN';
+        if (winReason) return winReason;
         if (isFinished && !isResting) return "0:00";
         return formatTime(displayTime);
     };
@@ -363,9 +362,7 @@ function Screen() {
                 setVisible={setShowEdit} 
                 eventName={selectedEvent}
                 matchId={currentMatchId}
-                initialTimer={displayTime}
-                phase={matchPhase}
-                dominantSide={dominantSide}
+                matchData={matchData}
             />
         </>
     );

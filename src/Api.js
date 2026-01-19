@@ -1,5 +1,5 @@
 // src/Api.js
-import { ref, runTransaction } from "firebase/database";
+import { ref, runTransaction, update } from "firebase/database";
 import { database } from './firebase';
 
 const getScoreValue = (stats, opponentGamjeom) => {
@@ -16,16 +16,16 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
 
         if (matchData.state.matchPhase === 'REST') return;
 
-        if (!matchData.stats) matchData.stats = { 
-            red: { pointsStat: [0,0,0,0,0], gamjeom: 0 }, 
-            blue: { pointsStat: [0,0,0,0,0], gamjeom: 0 } 
+        if (!matchData.stats) matchData.stats = {
+            red: { pointsStat: [0,0,0,0,0], gamjeom: 0 },
+            blue: { pointsStat: [0,0,0,0,0], gamjeom: 0 }
         };
-        if (!matchData.state) matchData.state = { 
-            isFinished: false, isPaused: true, timer: 0, winReason: null, lastStartTime: null 
+        if (!matchData.state) matchData.state = {
+            isFinished: false, isPaused: true, timer: 0, winReason: null, lastStartTime: null, dominantSide: 'none'
         };
 
         const targetSide = matchData.stats[side];
-        
+
         if (type === 'gamjeom') {
             targetSide.gamjeom = (targetSide.gamjeom || 0) + delta;
             if (targetSide.gamjeom < 0) targetSide.gamjeom = 0;
@@ -46,17 +46,16 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
         const redScore = getScoreValue(matchData.stats.red, blueGamjeom);
         const blueScore = getScoreValue(matchData.stats.blue, redGamjeom);
 
-        const freezeTimer = () => {
+        const pauseTimerForEvent = () => {
             if (!matchData.state.isPaused && matchData.state.lastStartTime) {
                 const now = Date.now();
                 const elapsed = Math.floor((now - matchData.state.lastStartTime) / 1000);
-                
+
                 matchData.state.timer = (matchData.state.timer || 0) - elapsed;
                 if (matchData.state.timer < 0) matchData.state.timer = 0;
             }
             matchData.state.isPaused = true;
             matchData.state.lastStartTime = null;
-            matchData.state.isFinished = true;
         };
 
         const maxGap = matchData.config?.rules?.maxPointGap || 12;
@@ -65,17 +64,22 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
         const isPUN = redGamjeom >= maxGJ || blueGamjeom >= maxGJ;
         const isPTG = Math.abs(redScore - blueScore) >= maxGap;
 
+        matchData.state.dominantSide = 'none'; // Reset dominance
+
         if (isPUN) {
-            freezeTimer();
+            pauseTimerForEvent();
             matchData.state.winReason = 'PUN';
-        } 
+            if (redGamjeom >= maxGJ) matchData.state.dominantSide = 'blue';
+            if (blueGamjeom >= maxGJ) matchData.state.dominantSide = 'red';
+        }
         else if (isPTG) {
-            freezeTimer();
+            pauseTimerForEvent();
             matchData.state.winReason = 'PTG';
-        } 
+            if (redScore > blueScore) matchData.state.dominantSide = 'red';
+            if (blueScore > redScore) matchData.state.dominantSide = 'blue';
+        }
         else {
             if (matchData.state.winReason === 'PTG' || matchData.state.winReason === 'PUN') {
-                matchData.state.isFinished = false; 
                 matchData.state.winReason = null;
             }
         }
@@ -87,8 +91,10 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
 
 export const startRestTime = (eventName, matchId, winnerSide) => {
     const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
+
     runTransaction(matchRef, (matchData) => {
         if (!matchData) return;
+        if (!matchData.state) matchData.state = {};
         if (!matchData.stats) matchData.stats = {};
         if (!matchData.stats.roundWins) matchData.stats.roundWins = { red: 0, blue: 0 };
         if (!matchData.stats.roundScores) matchData.stats.roundScores = {};
@@ -99,22 +105,39 @@ export const startRestTime = (eventName, matchId, winnerSide) => {
             blue: getScoreValue(matchData.stats.blue, matchData.stats.red.gamjeom)
         };
 
-        if (winnerSide && typeof winnerSide === 'string') {
-            const cleanWinnerSide = winnerSide.trim();
-            if (cleanWinnerSide === 'red') {
-                matchData.stats.roundWins.red = (matchData.stats.roundWins.red || 0) + 1;
-            }
-            if (cleanWinnerSide === 'blue') {
-                matchData.stats.roundWins.blue = (matchData.stats.roundWins.blue || 0) + 1;
-            }
+        if (winnerSide === 'red') {
+            matchData.stats.roundWins.red = (matchData.stats.roundWins.red || 0) + 1;
+        } else if (winnerSide === 'blue') {
+            matchData.stats.roundWins.blue = (matchData.stats.roundWins.blue || 0) + 1;
         }
 
-        matchData.state.matchPhase = "REST";
-        matchData.state.timer = 60; 
-        matchData.state.isPaused = false;
-        matchData.state.lastStartTime = Date.now();
-        matchData.state.isFinished = false; 
-        matchData.state.winReason = null;
+        const redWins = matchData.stats.roundWins.red;
+        const blueWins = matchData.stats.roundWins.blue;
+        const roundsToWin = matchData.config?.rules?.roundsToWin || 2;
+
+        if (redWins >= roundsToWin || blueWins >= roundsToWin) {
+            matchData.state.isFinished = true;
+            matchData.state.winReason = 'PTF';
+            matchData.state.isPaused = true;
+            matchData.state.matchPhase = 'FIGHTING';
+        } else {
+            // Match not over, start REST.
+            // Preserve round wins and scores, but reset current points and gamjeom.
+            const originalStats = { ...matchData.stats };
+            matchData.stats = {
+                ...originalStats,
+                red: { gamjeom: 0, pointsStat: [0,0,0,0,0] },
+                blue: { gamjeom: 0, pointsStat: [0,0,0,0,0] }
+            };
+            
+            matchData.state.matchPhase = "REST";
+            matchData.state.timer = matchData.config?.rules?.restDuration || 60;
+            matchData.state.isPaused = false;
+            matchData.state.lastStartTime = Date.now();
+            matchData.state.isFinished = false;
+            matchData.state.winReason = null; // Clear PTG/PUN reason to show timer
+            matchData.state.dominantSide = 'none'; // Clear after processing
+        }
 
         return matchData;
     });
@@ -125,22 +148,21 @@ export const startNextRound = (eventName, matchId) => {
     runTransaction(matchRef, (matchData) => {
         if (!matchData) return;
 
-        const originalStats = { ...matchData.stats };
-
-        matchData.stats = {
-            ...originalStats, 
-            red: { gamjeom: 0, pointsStat: [0,0,0,0,0] },
-            blue: { gamjeom: 0, pointsStat: [0,0,0,0,0] }
-        };
+        // Score reset logic is now in startRestTime, removed from here.
 
         matchData.state.currentRound = (matchData.state.currentRound || 1) + 1;
-
         matchData.state.matchPhase = "FIGHTING";
-        matchData.state.timer = 120;
+        matchData.state.timer = matchData.config?.rules?.roundDuration || 120;
         matchData.state.isPaused = true;
         matchData.state.lastStartTime = null;
         matchData.state.isFinished = false;
+        matchData.state.dominantSide = 'none';
 
         return matchData;
     });
+};
+
+export const promoteWinner = (eventName, matchId, winner) => {
+    console.log(`Promoting ${winner} for match ${matchId} in event ${eventName}`);
+    // This is a placeholder. We will implement the logic later.
 };

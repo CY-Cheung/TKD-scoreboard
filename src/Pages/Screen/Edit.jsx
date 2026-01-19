@@ -3,9 +3,9 @@ import { database } from '../../firebase';
 import { ref, get, update } from "firebase/database";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
-import { updateScoreAndCheckRules, startRestTime, startNextRound } from '../../Api';
+import { updateScoreAndCheckRules, startRestTime, startNextRound, promoteWinner } from '../../Api';
 
-const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, dominantSide }) => {
+const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
     const [matchMin, setMatchMin] = useState(0);
     const [matchSec, setMatchSec] = useState(0);
     const [restMin, setRestMin] = useState(0);
@@ -26,6 +26,7 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
     };
 
     const handleDeclareWinner = () => {
+        const dominantSide = matchData?.dominantSide;
         if (dominantSide && dominantSide.trim() !== 'none') {
             handleWinDeclaration(dominantSide);
         } else {
@@ -43,10 +44,10 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
             return;
         }
 
+        const initialTimer = matchData?.state?.timer || 0;
         const currentMinutes = Math.floor(initialTimer / 60);
         const currentSeconds = Math.floor(initialTimer % 60);
-
-        const activePhase = phase || 'FIGHTING';
+        const activePhase = matchData?.state?.matchPhase || 'FIGHTING';
 
         if (activePhase === 'FIGHTING' || activePhase === 'ROUND') {
             setMatchMin(currentMinutes);
@@ -73,7 +74,7 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
                 }
             });
         }
-    }, [visible, eventName, matchId, initialTimer, phase]);
+    }, [visible, eventName, matchId, matchData]);
 
     const handleTimeUpdate = (timeType, newMin, newSec) => {
         if (!eventName || !matchId) return;
@@ -122,27 +123,6 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
         handleTimeUpdate('rest', restMin, value);
     };
 
-    const renderActionButtons = () => {
-        const activePhase = phase || 'FIGHTING';
-        if (activePhase === 'REST') {
-            return <Button text="Start Next Round" fontSize="1.8vw" onClick={handleStartNextRound} angle={50} />;
-        }
-
-        if (!showSuperiorityVote) {
-            return <Button text="Declare Round Winner" fontSize="1.8vw" onClick={handleDeclareWinner} angle={50} />;
-        } else {
-            return (
-                <div className="superiority-vote time-control-group">
-                    <h2>Woo-se-girok</h2>
-                    <div className="buttons">
-                        <Button text="Blue" fontSize="1.8vw" onClick={() => handleWinDeclaration('blue')} angle={220} />
-                        <Button text="Red" fontSize="1.8vw" onClick={() => handleWinDeclaration('red')} angle={0} />
-                    </div>
-                </div>
-            );
-        }
-    };
-
     const buttonFontSize = '1.5dvw';
     const pointTypes = [
         { name: "Gam-jeom", type: "gamjeom", index: null },
@@ -153,10 +133,21 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
         { name: "Head(Turn)", type: "pointsStat", index: 4 }
     ];
 
+    if (!matchData) return null;
+
+    const { matchPhase, isFinished, winReason, roundWins } = matchData.state || {};
+
+    const getWinner = () => {
+        if (roundWins?.red > roundWins?.blue) return 'red';
+        if (roundWins?.blue > roundWins?.red) return 'blue';
+        return null;
+    };
+    const winner = getWinner();
+
     return (
         <div className={`edit-bar ${visible ? 'visible' : ''}`}>
             <div className="edit-grid">
-                <div className="grid-cell header"></div>
+                 <div className="grid-cell header"></div>
                 {pointTypes.map(pt => <div className="grid-cell header" key={pt.name}>{pt.name}</div>)}
 
                 <div className="grid-cell side-label blue">Blue</div>
@@ -204,7 +195,56 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
                     </div>
                 </div>
 
-                {renderActionButtons()}
+                {matchPhase === 'REST' && !isFinished && (
+                    <Button 
+                        text={`Start Round ${(matchData?.state?.currentRound || 1) + 1}`} 
+                        fontSize="1.8vw" 
+                        onClick={handleStartNextRound} 
+                        angle={50} 
+                    />
+                )}
+
+                {isFinished && winner && (
+                    <div style={{
+                        padding: '15px', 
+                        border: '1px solid #4CAF50', 
+                        borderRadius: '8px',
+                        background: 'rgba(0,0,0,0.5)'
+                    }}>
+                        <h3 style={{color: '#4CAF50', margin: '0 0 10px 0'}}>
+                            {winReason} - {winner.toUpperCase()} Wins
+                        </h3>
+                        
+                        <Button 
+                            onClick={() => promoteWinner(eventName, matchId, winner)}
+                            text="🚀 Promote Winner"
+                            style={{
+                                backgroundColor: '#4CAF50', 
+                                color: 'white',
+                                fontSize: '1.2rem',
+                                padding: '15px 30px'
+                            }}
+                        />
+                        
+                        <div style={{marginTop: '10px', color: '#ccc', fontSize: '0.9rem'}}>
+                            Next: {matchData?.config?.nextMatchId}
+                        </div>
+                    </div>
+                )}
+
+                 {!isFinished && matchPhase !== 'REST' && !showSuperiorityVote && (
+                    <Button text="Declare Round Winner" fontSize="1.8vw" onClick={handleDeclareWinner} angle={50} />
+                )}
+                
+                {showSuperiorityVote && (
+                    <div className="superiority-vote time-control-group">
+                        <h2>Woo-se-girok</h2>
+                        <div className="buttons">
+                            <Button text="Blue" fontSize="1.8vw" onClick={() => handleWinDeclaration('blue')} angle={220} />
+                            <Button text="Red" fontSize="1.8vw" onClick={() => handleWinDeclaration('red')} angle={0} />
+                        </div>
+                    </div>
+                )}
 
                 <Button text="Done" fontSize="2vw" onClick={() => setVisible(false)} />
             </div>
