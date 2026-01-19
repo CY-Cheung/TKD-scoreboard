@@ -5,3 +5,59 @@
     --blue-secondary: #000066;
     --yellow-primary: #ffff00;
 }
+
+/* --- A. 頂部狀態欄 (Header) --- */
+/* 正常狀態 (黃底黑字) */
+.time-out {
+    display: flex;
+    width: 100%;
+    background-color: var(--yellow-primary);
+    color: #000000;
+    transition: all 0.3s ease; /* 加入過渡動畫 */
+}
+
+/* 休息模式 (黑底白字) - 由 React 動態加入此 class */
+.time-out.rest-mode {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+/* --- B. 休息時的成績表 (Rest History Table) --- */
+.round-history-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    color: white; /* 在藍/紅背景上顯示白色文字 */
+    padding-top: 2vh; /* 增加頂部空間，避免內容太貼近邊緣 */
+}
+
+/* 每一行分數 (e.g. R1 5) - 已統一風格 */
+.history-row {
+    display: flex;
+    justify-content: space-between;
+    width: 70%;       /* 控制寬度，讓數字對齊 */
+    font-size: 4vw;   /* 與 MATCH 文字樣式統一 */
+    font-weight: bold;
+    margin-bottom: 0.5vh;
+}
+
+/* R1, R2 標籤 - 已移除透明度 */
+.history-label {
+    text-align: left;
+}
+
+/* 分數數值 */
+.history-value {
+    text-align: right;
+}
+
+/* 總勝局數 (最下面的大數字) - 已統一風格 */
+.total-round-wins {
+    font-size: 9vw;   /* 與 Timer 數字樣式統一 */
+    font-weight: bold;
+    margin: 0.5vw;
+    line-height: 1.2; /* 微調，避免與下方標籤太近 */
+}

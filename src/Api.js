@@ -1,34 +1,21 @@
 // src/Api.js
 import { ref, runTransaction } from "firebase/database";
-import { database } from './firebase'; // Use 'database' as per project setup
+import { database } from './firebase';
 
-/**
- * 輔助函數：計算總分
- * [修正] 加入 Index 3 (4分) 和 Index 4 (5分) 的計算
- */
-const calculateTotal = (pointsStat, opponentGamjeom) => {
-    // Index 對照表: 0=1分, 1=2分, 2=3分, 3=4分, 4=5分
-    const p1 = (pointsStat?.[0] || 0) * 1;
-    const p2 = (pointsStat?.[1] || 0) * 2;
-    const p3 = (pointsStat?.[2] || 0) * 3;
-    const p4 = (pointsStat?.[3] || 0) * 4; // [修正] 補回 4 分
-    const p5 = (pointsStat?.[4] || 0) * 5; // [修正] 補回 5 分
-    
-    const gamjeomPoints = (opponentGamjeom || 0);
-    
-    return p1 + p2 + p3 + p4 + p5 + gamjeomPoints;
+const getScoreValue = (stats, opponentGamjeom) => {
+    const p = stats?.pointsStat || [0,0,0,0,0];
+    const points = (p[0]*1) + (p[1]*2) + (p[2]*3) + (p[3]*4) + (p[4]*5);
+    return points + (opponentGamjeom || 0);
 };
 
-/**
- * 主函數：更新分數並執行自動裁決 (PTG/PUN)
- */
 export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta) => {
     const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
 
     runTransaction(matchRef, (matchData) => {
         if (!matchData) return;
 
-        // 1. 初始化結構 (防呆機制：確保長度為 5)
+        if (matchData.state.matchPhase === 'REST') return;
+
         if (!matchData.stats) matchData.stats = { 
             red: { pointsStat: [0,0,0,0,0], gamjeom: 0 }, 
             blue: { pointsStat: [0,0,0,0,0], gamjeom: 0 } 
@@ -37,75 +24,123 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
             isFinished: false, isPaused: true, timer: 0, winReason: null, lastStartTime: null 
         };
 
-        // 2. 執行加減分操作
         const targetSide = matchData.stats[side];
         
         if (type === 'gamjeom') {
             targetSide.gamjeom = (targetSide.gamjeom || 0) + delta;
             if (targetSide.gamjeom < 0) targetSide.gamjeom = 0;
         } else if (type === 'pointsStat') {
-            // [修正] 確保陣列長度足夠，防止 undefined 錯誤
             if (!targetSide.pointsStat || targetSide.pointsStat.length < 5) {
                  const oldStats = targetSide.pointsStat || [];
                  targetSide.pointsStat = [
                     oldStats[0] || 0, oldStats[1] || 0, oldStats[2] || 0,
-                    oldStats[3] || 0, oldStats[4] || 0 // 補齊
+                    oldStats[3] || 0, oldStats[4] || 0
                  ];
             }
             targetSide.pointsStat[index] = (targetSide.pointsStat[index] || 0) + delta;
             if (targetSide.pointsStat[index] < 0) targetSide.pointsStat[index] = 0;
         }
 
-        // 3. 獲取最新數值
         const redGamjeom = matchData.stats.red.gamjeom;
         const blueGamjeom = matchData.stats.blue.gamjeom;
-        const redScore = calculateTotal(matchData.stats.red.pointsStat, blueGamjeom);
-        const blueScore = calculateTotal(matchData.stats.blue.pointsStat, redGamjeom);
+        const redScore = getScoreValue(matchData.stats.red, blueGamjeom);
+        const blueScore = getScoreValue(matchData.stats.blue, redGamjeom);
 
-        // 4. 定義：凍結時間函數 (Snapshot Timer)
         const freezeTimer = () => {
-            // 只有在比賽進行中才需要結算時間
             if (!matchData.state.isPaused && matchData.state.lastStartTime) {
                 const now = Date.now();
                 const elapsed = Math.floor((now - matchData.state.lastStartTime) / 1000);
                 
-                // 更新 DB 中的 timer 為當前剩餘時間
                 matchData.state.timer = (matchData.state.timer || 0) - elapsed;
                 if (matchData.state.timer < 0) matchData.state.timer = 0;
             }
-            // 強制設定為暫停 & 結束
             matchData.state.isPaused = true;
             matchData.state.lastStartTime = null;
             matchData.state.isFinished = true;
         };
 
-        // 5. 規則引擎 (Rule Engine)
-        const maxGap = matchData.config?.rules?.maxPointGap || 12; // 動態讀取規則
-        const maxGJ = matchData.config?.rules?.maxGamjeom || 5;     // 動態讀取規則
+        const maxGap = matchData.config?.rules?.maxPointGap || 12;
+        const maxGJ = matchData.config?.rules?.maxGamjeom || 5;
 
         const isPUN = redGamjeom >= maxGJ || blueGamjeom >= maxGJ;
         const isPTG = Math.abs(redScore - blueScore) >= maxGap;
 
         if (isPUN) {
-            freezeTimer(); // [關鍵] 先結算時間
+            freezeTimer();
             matchData.state.winReason = 'PUN';
         } 
         else if (isPTG) {
-            freezeTimer(); // [關鍵] 先結算時間
+            freezeTimer();
             matchData.state.winReason = 'PTG';
         } 
         else {
-            // [復活檢查]
-            // 如果當前分數正常，但狀態卻是 PTG/PUN (代表之前誤判)，則執行復活
             if (matchData.state.winReason === 'PTG' || matchData.state.winReason === 'PUN') {
-                console.log("Auto-Resurrection: Clearing PTG/PUN status");
-                matchData.state.isFinished = false; // 解鎖
-                matchData.state.winReason = null;   // 清空原因
-                // timer 不用動，因為 freezeTimer 剛才已經存好了正確的剩餘時間
+                matchData.state.isFinished = false; 
+                matchData.state.winReason = null;
             }
         }
 
         return matchData;
     })
     .catch((err) => console.error("Transaction failed:", err));
+};
+
+export const startRestTime = (eventName, matchId, winnerSide) => {
+    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
+    runTransaction(matchRef, (matchData) => {
+        if (!matchData) return;
+        if (!matchData.stats) matchData.stats = {};
+        if (!matchData.stats.roundWins) matchData.stats.roundWins = { red: 0, blue: 0 };
+        if (!matchData.stats.roundScores) matchData.stats.roundScores = {};
+
+        const currentRound = matchData.state.currentRound || 1;
+        matchData.stats.roundScores[`R${currentRound}`] = {
+            red: getScoreValue(matchData.stats.red, matchData.stats.blue.gamjeom),
+            blue: getScoreValue(matchData.stats.blue, matchData.stats.red.gamjeom)
+        };
+
+        if (winnerSide && typeof winnerSide === 'string') {
+            const cleanWinnerSide = winnerSide.trim();
+            if (cleanWinnerSide === 'red') {
+                matchData.stats.roundWins.red = (matchData.stats.roundWins.red || 0) + 1;
+            }
+            if (cleanWinnerSide === 'blue') {
+                matchData.stats.roundWins.blue = (matchData.stats.roundWins.blue || 0) + 1;
+            }
+        }
+
+        matchData.state.matchPhase = "REST";
+        matchData.state.timer = 60; 
+        matchData.state.isPaused = false;
+        matchData.state.lastStartTime = Date.now();
+        matchData.state.isFinished = false; 
+        matchData.state.winReason = null;
+
+        return matchData;
+    });
+};
+
+export const startNextRound = (eventName, matchId) => {
+    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
+    runTransaction(matchRef, (matchData) => {
+        if (!matchData) return;
+
+        const originalStats = { ...matchData.stats };
+
+        matchData.stats = {
+            ...originalStats, 
+            red: { gamjeom: 0, pointsStat: [0,0,0,0,0] },
+            blue: { gamjeom: 0, pointsStat: [0,0,0,0,0] }
+        };
+
+        matchData.state.currentRound = (matchData.state.currentRound || 1) + 1;
+
+        matchData.state.matchPhase = "FIGHTING";
+        matchData.state.timer = 120;
+        matchData.state.isPaused = true;
+        matchData.state.lastStartTime = null;
+        matchData.state.isFinished = false;
+
+        return matchData;
+    });
 };

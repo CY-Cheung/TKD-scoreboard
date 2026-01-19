@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { database } from '../../firebase';
-import { ref, runTransaction, get, update } from "firebase/database";
+import { ref, get, update } from "firebase/database";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
-import { updateScoreAndCheckRules } from '../../Api';
+import { updateScoreAndCheckRules, startRestTime, startNextRound } from '../../Api';
 
 const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, dominantSide }) => {
     const [matchMin, setMatchMin] = useState(0);
@@ -12,34 +12,23 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
     const [restSec, setRestSec] = useState(0);
     const [showSuperiorityVote, setShowSuperiorityVote] = useState(false);
 
-    // Generic function to perform the win declaration
-    const declareWinner = (winnerSide) => {
-        if (!eventName || !matchId || !winnerSide) {
-            console.error("Missing info for declaring winner");
-            return;
-        }
-        // Blue is index 0, Red is index 1
-        const winnerIndex = winnerSide === 'blue' ? 0 : 1;
-        const roundWinsRef = ref(database, `events/${eventName}/matches/${matchId}/stats/roundWins/${winnerIndex}`);
-
-        runTransaction(roundWinsRef, (currentWins) => {
-            return (currentWins || 0) + 1;
-        }).then(() => {
-            console.log(`Declared ${winnerSide} as the round winner.`);
-            setVisible(false); // Close the whole edit panel
-            setShowSuperiorityVote(false); // Reset superiority vote UI
-        }).catch((error) => {
-            console.error("Failed to declare round winner:", error);
-            alert("Error declaring winner. Check console for details.");
-        });
+    const handleWinDeclaration = (winnerSide) => {
+        if (!eventName || !matchId || !winnerSide) return;
+        startRestTime(eventName, matchId, winnerSide);
+        setVisible(false);
+        setShowSuperiorityVote(false);
     };
 
-    // Entry point for declaring winner button
+    const handleStartNextRound = () => {
+        if (!eventName || !matchId) return;
+        startNextRound(eventName, matchId);
+        setVisible(false);
+    };
+
     const handleDeclareWinner = () => {
-        if (dominantSide && dominantSide !== 'none') {
-            declareWinner(dominantSide);
+        if (dominantSide && dominantSide.trim() !== 'none') {
+            handleWinDeclaration(dominantSide);
         } else {
-            // If it's a tie, show the superiority voting UI
             setShowSuperiorityVote(true);
         }
     };
@@ -50,10 +39,24 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
 
     useEffect(() => {
         if (!visible) {
-            // Reset superiority vote UI when panel is closed
             setShowSuperiorityVote(false);
+            return;
         }
-        if (visible && eventName && matchId) {
+
+        const currentMinutes = Math.floor(initialTimer / 60);
+        const currentSeconds = Math.floor(initialTimer % 60);
+
+        const activePhase = phase || 'FIGHTING';
+
+        if (activePhase === 'FIGHTING' || activePhase === 'ROUND') {
+            setMatchMin(currentMinutes);
+            setMatchSec(currentSeconds);
+        } else if (activePhase === 'REST') {
+            setRestMin(currentMinutes);
+            setRestSec(currentSeconds);
+        }
+
+        if (eventName && matchId) {
             const configRef = ref(database, `events/${eventName}/matches/${matchId}/config`);
             get(configRef).then((snapshot) => {
                 if (!snapshot.exists()) return;
@@ -61,25 +64,14 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
                 const defaultMatchSec = config.rules?.roundDuration || 120;
                 const defaultRestSec = config.rules?.restDuration || 60;
 
-                if (phase === 'ROUND') {
+                if (activePhase === 'FIGHTING' || activePhase === 'ROUND') {
                     setRestMin(Math.floor(defaultRestSec / 60));
                     setRestSec(defaultRestSec % 60);
-                } else {
+                } else if (activePhase === 'REST') {
                     setMatchMin(Math.floor(defaultMatchSec / 60));
                     setMatchSec(defaultMatchSec % 60);
                 }
             });
-
-            const currentMinutes = Math.floor(initialTimer / 60);
-            const currentSeconds = Math.floor(initialTimer % 60);
-
-            if (phase === 'ROUND') {
-                setMatchMin(currentMinutes);
-                setMatchSec(currentSeconds);
-            } else {
-                setRestMin(currentMinutes);
-                setRestSec(currentSeconds);
-            }
         }
     }, [visible, eventName, matchId, initialTimer, phase]);
 
@@ -99,9 +91,11 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
         get(stateRef).then(snapshot => {
             if (snapshot.exists()) {
                 const stateData = snapshot.val();
-                if (timeType === 'match' && stateData.phase === 'ROUND') {
+                const currentPhase = stateData.phase || 'FIGHTING';
+
+                if (timeType === 'match' && (currentPhase === 'FIGHTING' || currentPhase === 'ROUND')) {
                     update(stateRef, updates);
-                } else if (timeType === 'rest' && stateData.phase === 'REST') {
+                } else if (timeType === 'rest' && currentPhase === 'REST') {
                     update(stateRef, updates);
                 }
             }
@@ -128,6 +122,27 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
         handleTimeUpdate('rest', restMin, value);
     };
 
+    const renderActionButtons = () => {
+        const activePhase = phase || 'FIGHTING';
+        if (activePhase === 'REST') {
+            return <Button text="Start Next Round" fontSize="1.8vw" onClick={handleStartNextRound} angle={50} />;
+        }
+
+        if (!showSuperiorityVote) {
+            return <Button text="Declare Round Winner" fontSize="1.8vw" onClick={handleDeclareWinner} angle={50} />;
+        } else {
+            return (
+                <div className="superiority-vote time-control-group">
+                    <h2>Woo-se-girok</h2>
+                    <div className="buttons">
+                        <Button text="Blue" fontSize="1.8vw" onClick={() => handleWinDeclaration('blue')} angle={220} />
+                        <Button text="Red" fontSize="1.8vw" onClick={() => handleWinDeclaration('red')} angle={0} />
+                    </div>
+                </div>
+            );
+        }
+    };
+
     const buttonFontSize = '1.5dvw';
     const pointTypes = [
         { name: "Gam-jeom", type: "gamjeom", index: null },
@@ -141,13 +156,9 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
     return (
         <div className={`edit-bar ${visible ? 'visible' : ''}`}>
             <div className="edit-grid">
-                {/* Row 1: Titles */}
                 <div className="grid-cell header"></div>
-                {pointTypes.map(pt => (
-                    <div className="grid-cell header" key={pt.name}>{pt.name}</div>
-                ))}
+                {pointTypes.map(pt => <div className="grid-cell header" key={pt.name}>{pt.name}</div>)}
 
-                {/* Row 2: Blue Controls */}
                 <div className="grid-cell side-label blue">Blue</div>
                 {pointTypes.map(pt => (
                     <div className="grid-cell" key={`blue-${pt.name}`}>
@@ -158,7 +169,6 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
                     </div>
                 ))}
 
-                {/* Row 3: Red Controls */}
                 <div className="grid-cell side-label red">Red</div>
                 {pointTypes.map(pt => (
                     <div className="grid-cell" key={`red-${pt.name}`}>
@@ -170,7 +180,6 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
                 ))}
             </div>
 
-            {/* Row 4: Time Controls & Actions */}
             <div className="time-bar">
                 <div className='time-control-group'>
                     <h2>Match Time</h2>
@@ -195,17 +204,7 @@ const Edit = ({ visible, setVisible, eventName, matchId, initialTimer, phase, do
                     </div>
                 </div>
 
-                {!showSuperiorityVote ? (
-                    <Button text="Declare Round Winner" fontSize="1.8vw" onClick={handleDeclareWinner} />
-                ) : (
-                    <div className="superiority-vote time-control-group">
-                        <h2>Woo-se-girok</h2>
-                        <div className="buttons">
-                            <Button text="Blue" fontSize="1.8vw" onClick={() => declareWinner('blue')} angle={220} />
-                            <Button text="Red" fontSize="1.8vw" onClick={() => declareWinner('red')} angle={0} />
-                        </div>
-                    </div>
-                )}
+                {renderActionButtons()}
 
                 <Button text="Done" fontSize="2vw" onClick={() => setVisible(false)} />
             </div>

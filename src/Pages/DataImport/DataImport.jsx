@@ -168,7 +168,7 @@ const DataImport = () => {
                     winReason: null   // 新增欄位
                 },
                 stats: { 
-                    roundWins: [0,0], 
+                    roundWins: { red: 0, blue: 0 }, 
                     blue: { pointsStat: [0,0,0,0,0], gamjeom: 0 }, 
                     red: { pointsStat: [0,0,0,0,0], gamjeom: 0 } 
                 }
