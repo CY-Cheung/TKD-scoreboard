@@ -1,5 +1,5 @@
 // src/Api.js
-import { ref, runTransaction, update } from "firebase/database";
+import { ref, runTransaction, update, get } from "firebase/database";
 import { database } from './firebase';
 
 const getScoreValue = (stats, opponentGamjeom) => {
@@ -162,27 +162,37 @@ export const startNextRound = (eventName, matchId) => {
     });
 };
 
-export const promoteWinner = (eventName, matchId, winner) => {
-    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
-    runTransaction(matchRef, (matchData) => {
-        if (!matchData || !matchData.config.nextMatchId) return;
+export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
+    const matchRoot = `events/${eventName}/matches`;
 
-        const nextMatchRef = ref(database, `events/${eventName}/matches/${matchData.config.nextMatchId}`);
-        const winnerData = matchData.competitors[winner];
+    try {
+        // 1. 讀取當前比賽 Config
+        const snapshot = await get(ref(database, `${matchRoot}/${currentMatchId}/config`));
+        const config = snapshot.val();
+        if (!config) return;
 
-        runTransaction(nextMatchRef, (nextMatchData) => {
-            if (!nextMatchData) return;
+        // 2. 取得勝者資料 & 下一場路徑
+        const winnerData = config.competitors[winnerSide];
+        const { nextMatchId, nextMatchSlot } = config; // e.g. "A1010", "red"
 
-            if (nextMatchData.competitors.red.name === "") {
-                nextMatchData.competitors.red.name = winnerData.name;
-                nextMatchData.competitors.red.club = winnerData.club;
-            } else if (nextMatchData.competitors.blue.name === "") {
-                nextMatchData.competitors.blue.name = winnerData.name;
-                nextMatchData.competitors.blue.club = winnerData.club;
-            }
-            return nextMatchData;
+        if (!nextMatchId || !nextMatchSlot) {
+            alert("此場次未設定下一場比賽路徑 (Next Match ID/Slot missing)");
+            return;
+        }
+
+        // 3. 更新下一場 (只更新 Name & Club)
+        const targetPath = `${matchRoot}/${nextMatchId}/config/competitors/${nextMatchSlot}`;
+        
+        await update(ref(database, targetPath), {
+            name: winnerData.name,
+            affiliatedClub: winnerData.affiliatedClub || ""
         });
 
-        return matchData;
-    });
+        alert(`已成功晉級：
+${winnerData.name} -> ${nextMatchId} (${nextMatchSlot})`);
+
+    } catch (e) {
+        console.error(e);
+        alert(`晉級失敗: ${e.message}`);
+    }
 };

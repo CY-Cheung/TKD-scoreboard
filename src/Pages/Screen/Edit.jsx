@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { database } from '../../firebase';
 import { ref, get, update } from "firebase/database";
@@ -26,7 +27,7 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
     };
 
     const handleDeclareWinner = () => {
-        const dominantSide = matchData?.dominantSide;
+        const dominantSide = matchData?.state?.dominantSide;
         if (dominantSide && dominantSide.trim() !== 'none') {
             handleWinDeclaration(dominantSide);
         } else {
@@ -207,31 +208,12 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
                 )}
 
                 {isFinished && winner && (
-                    <div style={{
-                        padding: '15px', 
-                        border: '1px solid #4CAF50', 
-                        borderRadius: '8px',
-                        background: 'rgba(0,0,0,0.5)'
-                    }}>
-                        <h3 style={{color: '#4CAF50', margin: '0 0 10px 0'}}>
-                            {winReason} - {winner.toUpperCase()} Wins
-                        </h3>
-                        
-                        <Button 
-                            onClick={() => promoteWinner(eventName, matchId, winner)}
-                            text="🚀 Promote Winner"
-                            style={{
-                                backgroundColor: '#4CAF50', 
-                                color: 'white',
-                                fontSize: '1.2rem',
-                                padding: '15px 30px'
-                            }}
-                        />
-                        
-                        <div style={{marginTop: '10px', color: '#ccc', fontSize: '0.9rem'}}>
-                            Next: {matchData?.config?.nextMatchId}
-                        </div>
-                    </div>
+                     <Button 
+                        onClick={() => promoteWinner(eventName, matchId, winner)}
+                        text="Promote Winner"
+                        fontSize="1.8vw" 
+                        angle={50}
+                    />
                 )}
 
                  {phase === 'ROUND' && !isFinished && !showSuperiorityVote && (

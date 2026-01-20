@@ -33,10 +33,10 @@ const DataImport = () => {
     const [restDuration, setRestDuration] = useState(60);
     const [blueName, setBlueName] = useState('');
     const [blueAffiliatedClub, setBlueAffiliatedClub] = useState('');
-    const [blueSourceMatchId, setBlueSourceMatchId] = useState('');
+    const [bluePreviousMatch, setBluePreviousMatch] = useState('');
     const [redName, setRedName] = useState('');
     const [redAffiliatedClub, setRedAffiliatedClub] = useState('');
-    const [redSourceMatchId, setRedSourceMatchId] = useState('');
+    const [redPreviousMatch, setRedPreviousMatch] = useState('');
 
     useEffect(() => {
         const eventsRef = ref(database, 'events');
@@ -88,7 +88,7 @@ const DataImport = () => {
                 setBlueName(bluePlayer.name);
                 setBlueAffiliatedClub(bluePlayer.club);
             }
-            setBlueSourceMatchId(blueCompetitor.sourceMatchId || '');
+            setBluePreviousMatch(blueCompetitor.previousMatch || '');
     
             const redCompetitor = competitors.red;
             if (redCompetitor.affiliatedClub !== undefined) {
@@ -99,7 +99,7 @@ const DataImport = () => {
                 setRedName(redPlayer.name);
                 setRedAffiliatedClub(redPlayer.club);
             }
-            setRedSourceMatchId(redCompetitor.sourceMatchId || '');
+            setRedPreviousMatch(redCompetitor.previousMatch || '');
     
         }
     }, [matchId, currentMatches]);
@@ -152,12 +152,12 @@ const DataImport = () => {
                         blue: { 
                             name: blueName, 
                             affiliatedClub: blueAffiliatedClub || '', 
-                            sourceMatchId: blueSourceMatchId || null 
+                            previousMatch: bluePreviousMatch || null 
                         },
                         red: { 
                             name: redName, 
                             affiliatedClub: redAffiliatedClub || '',
-                            sourceMatchId: redSourceMatchId || null
+                            previousMatch: redPreviousMatch || null
                         },
                     },
                 },
@@ -187,8 +187,8 @@ const DataImport = () => {
             setRedAffiliatedClub('');
             setNextMatchId('');
             setNextMatchSlot('');
-            setBlueSourceMatchId('');
-            setRedSourceMatchId('');
+            setBluePreviousMatch('');
+            setRedPreviousMatch('');
 
         } catch (error) {
             console.error("Error writing to Firebase:", error);
@@ -314,7 +314,7 @@ const DataImport = () => {
                                     </div>
                                     <div className="form-group">
                                         <label>Source Match ID</label>
-                                        <input type="text" value={blueSourceMatchId} onChange={e => setBlueSourceMatchId(e.target.value)} placeholder="Source Match (optional)" />
+                                        <input type="text" value={bluePreviousMatch} onChange={e => setBluePreviousMatch(e.target.value)} placeholder="Source Match (optional)" />
                                     </div>
                                 </div>
                             </fieldset>
@@ -332,7 +332,7 @@ const DataImport = () => {
                                     </div>
                                     <div className="form-group">
                                         <label>Source Match ID</label>
-                                        <input type="text" value={redSourceMatchId} onChange={e => setRedSourceMatchId(e.target.value)} placeholder="Source Match (optional)" />
+                                        <input type="text" value={redPreviousMatch} onChange={e => setRedPreviousMatch(e.target.value)} placeholder="Source Match (optional)" />
                                     </div>
                                 </div>
                             </fieldset>

@@ -218,7 +218,7 @@ function Screen() {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.code === "Space") { e.preventDefault(); toggleTimer(); }
-            if (e.key === "\") { toggleDirection(); }
+            if (e.key === "\\") { toggleDirection(); }
             if (e.key === "e" || e.key === "E") { setShowEdit(prev => !prev); }
         };
         window.addEventListener("keydown", handleKeyDown);
@@ -244,6 +244,7 @@ function Screen() {
     const { phase = 'ROUND', currentRound = 1, winReason, isFinished, isPaused } = state;
     const { roundScores = {}, roundWins = { red: 0, blue: 0 } } = stats;
     const isResting = phase === 'REST';
+    const isFinal = roundWins.red === 2 || roundWins.blue === 2;
 
     const getDisplayName = (c) => {
         if (c?.name) {
@@ -322,7 +323,7 @@ function Screen() {
                             style={{ color: redScoreColor }}
                             onClick={() => setShowEdit(true)}
                         >
-                            {isResting ? renderSideHistory('red') : redTotalScore}
+                            {isResting || winReason || isFinal ? renderSideHistory('red') : redTotalScore}
                         </div>
                     </div>
                     <div className="match-info">
@@ -353,7 +354,7 @@ function Screen() {
                             style={{ color: blueScoreColor }}
                             onClick={() => setShowEdit(true)}
                         >
-                            {isResting ? renderSideHistory('blue') : blueTotalScore}
+                            {isResting || winReason || isFinal ? renderSideHistory('blue') : blueTotalScore}
                         </div>
                     </div>
                     <div className="blue-log blue-bg">
