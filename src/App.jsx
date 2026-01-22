@@ -9,7 +9,6 @@ import Home from './Pages/Home/Home';
 import CourtSetup from './Pages/CourtSetup/CourtSetup';
 import Controller from './Pages/Controller/Controller';
 import Screen from './Pages/Screen/Screen';
-import RefereeLogin from './Pages/RefereeLogin/RefereeLogin';
 import DataImport from './Pages/DataImport/DataImport';
 import RefereeRegister from './Pages/RefereeRegister/RefereeRegister';
 
@@ -23,7 +22,6 @@ function App() {
           {/* --- Public Routes --- */}
           <Route path="/court-setup" element={<CourtSetup />} />
           <Route path="/screen" element={<Screen />} />
-          <Route path="/referee/login" element={<RefereeLogin />} />
 
           {/* --- Protected Routes --- */}
           {/* The root route is now the Home menu */}

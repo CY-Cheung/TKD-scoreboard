@@ -20,38 +20,53 @@ const calculateScore = (stats, opponentGamjeom) => {
 };
 
 const determineDominantSide = (redStats, blueStats) => {
-    const rP = redStats?.pointsStat || [0,0,0,0,0];
-    const bP = blueStats?.pointsStat || [0,0,0,0,0];
     const rG = redStats?.gamjeom || 0;
     const bG = blueStats?.gamjeom || 0;
+
+    // Rule 1: Check for disqualification by penalties (PUN)
+    // A player with 5 or more Gam-jeom automatically loses.
+    if (rG >= 5) return 'blue';
+    if (bG >= 5) return 'red';
+
+    // If no disqualification, proceed to score calculation
+    const rP = redStats?.pointsStat || [0,0,0,0,0];
+    const bP = blueStats?.pointsStat || [0,0,0,0,0];
 
     const redTotal = calculateScore({pointsStat: rP}, bG);
     const blueTotal = calculateScore({pointsStat: bP}, rG);
 
+    // Rule 2: Higher total score wins
     if (redTotal > blueTotal) return 'red';
     if (blueTotal > redTotal) return 'blue';
 
+    // --- Tie-breaking rules ---
+    // Rule 3: Most turning kicks (4 & 5 points)
     const redTurningPoints = (rP[3] * 4) + (rP[4] * 5);
     const blueTurningPoints = (bP[3] * 4) + (bP[4] * 5);
     if (redTurningPoints > blueTurningPoints) return 'red';
     if (blueTurningPoints > redTurningPoints) return 'blue';
-
+    
+    // Rule 4: Most high-value kicks (3 & 5 points)
     const redCount35 = rP[2] + rP[4];
     const blueCount35 = bP[2] + bP[4];
     if (redCount35 > blueCount35) return 'red';
     if (blueCount35 > redCount35) return 'blue';
 
+    // Rule 5: Most mid-value kicks (2 & 4 points)
     const redCount24 = rP[1] + rP[3];
     const blueCount24 = bP[1] + bP[3];
     if (redCount24 > blueCount24) return 'red';
     if (blueCount24 > redCount24) return 'blue';
 
+    // Rule 6: Most basic punches (1 point)
     if (rP[0] > bP[0]) return 'red';
     if (bP[0] > rP[0]) return 'blue';
-
+    
+    // Rule 7: Fewer penalties
     if (rG < bG) return 'red';
     if (bG < rG) return 'blue';
 
+    // If all else is equal, it's a draw (superiority decision needed)
     return 'none';
 };
 
@@ -323,7 +338,7 @@ function Screen() {
                             style={{ color: redScoreColor }}
                             onClick={() => setShowEdit(true)}
                         >
-                            {isResting || winReason || isFinal ? renderSideHistory('red') : redTotalScore}
+                            {isResting || isFinal ? renderSideHistory('red') : redTotalScore}
                         </div>
                     </div>
                     <div className="match-info">
@@ -354,7 +369,7 @@ function Screen() {
                             style={{ color: blueScoreColor }}
                             onClick={() => setShowEdit(true)}
                         >
-                            {isResting || winReason || isFinal ? renderSideHistory('blue') : blueTotalScore}
+                            {isResting || isFinal ? renderSideHistory('blue') : blueTotalScore}
                         </div>
                     </div>
                     <div className="blue-log blue-bg">
@@ -371,6 +386,7 @@ function Screen() {
                 eventName={selectedEvent}
                 matchId={currentMatchId}
                 matchData={matchData}
+                dominantSide={dominantSide}
             />
         </>
     );

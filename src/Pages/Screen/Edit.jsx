@@ -6,7 +6,7 @@ import "./Edit.css";
 import Button from "../../Components/Button/Button";
 import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner } from '../../Api';
 
-const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
+const Edit = ({ visible, setVisible, eventName, matchId, matchData, dominantSide }) => {
     const [matchMin, setMatchMin] = useState(0);
     const [matchSec, setMatchSec] = useState(0);
     const [restMin, setRestMin] = useState(0);
@@ -27,7 +27,6 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
     };
 
     const handleDeclareWinner = () => {
-        const dominantSide = matchData?.state?.dominantSide;
         if (dominantSide && dominantSide.trim() !== 'none') {
             handleWinDeclaration(dominantSide);
         } else {
@@ -136,16 +135,25 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
 
     if (!matchData) return null;
 
-    const { state = {}, stats = {} } = matchData;
+    const { config = {}, state = {}, stats = {} } = matchData;
     const { phase, isFinished, winReason } = state || {};
     const { roundWins } = stats || {};
+    const { rules = {} } = config;
+    
+    const roundsToWin = rules.roundsToWin || 2;
 
-    const getWinner = () => {
-        if (roundWins?.red > roundWins?.blue) return 'red';
-        if (roundWins?.blue > roundWins?.red) return 'blue';
+    const getFinalWinner = () => {
+        const redWins = roundWins?.red || 0;
+        const blueWins = roundWins?.blue || 0;
+        if (redWins >= roundsToWin) return 'red';
+        if (blueWins >= roundsToWin) return 'blue';
         return null;
     };
-    const winner = getWinner();
+
+    const finalWinner = getFinalWinner();
+
+    const showDeclareWinnerButton = (phase === 'ROUND' && (isFinished || winReason)) && !finalWinner && !showSuperiorityVote;
+    const showPromoteWinnerButton = isFinished && finalWinner;
 
     return (
         <div className={`edit-bar ${visible ? 'visible' : ''}`}>
@@ -207,16 +215,16 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData }) => {
                     />
                 )}
 
-                {isFinished && winner && (
+                {showPromoteWinnerButton && (
                      <Button 
-                        onClick={() => promoteWinner(eventName, matchId, winner)}
+                        onClick={() => promoteWinner(eventName, matchId, finalWinner)}
                         text="Promote Winner"
                         fontSize="1.8vw" 
                         angle={50}
                     />
                 )}
 
-                 {phase === 'ROUND' && !isFinished && !showSuperiorityVote && (
+                 {showDeclareWinnerButton && (
                     <Button text="Declare Round Winner" fontSize="1.8vw" onClick={handleDeclareWinner} angle={50} />
                 )}
                 
