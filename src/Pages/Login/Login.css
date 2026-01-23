@@ -1,0 +1,53 @@
+/* Main Container & Background */
+.login-container {
+    position: relative;
+    width: 100dvw;
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+}
+
+.login-content-wrapper {
+    position: relative;
+    z-index: 2;
+    width: 90%;
+    max-width: 500px; /* Adjusted for a login form */
+    height: auto; /* Auto height */
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.login-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.login-box h2 {
+    font-size: 2.5dvw;
+    margin-bottom: 1rem;
+}
+
+.login-box p {
+    font-size: 1.2dvw;
+    margin-bottom: 2rem;
+}
+
+.login-action-buttons {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.error-message {
+    color: var(--red-primary);
+    margin-top: 1rem;
+    font-size: 1dvw;
+}

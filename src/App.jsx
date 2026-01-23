@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './Context/AuthContext';
 import ProtectedRoute from './Components/ProtectedRoute/ProtectedRoute';
-import './App.css'; // Import the main stylesheet
-import TargetCursor from './Components/TargetCursor/TargetCursor'; // Import the TargetCursor
+import './App.css';
+import TargetCursor from './Components/TargetCursor/TargetCursor';
 
 // Pages
 import Home from './Pages/Home/Home';
@@ -11,27 +11,26 @@ import Controller from './Pages/Controller/Controller';
 import Screen from './Pages/Screen/Screen';
 import DataImport from './Pages/DataImport/DataImport';
 import RefereeRegister from './Pages/RefereeRegister/RefereeRegister';
+import Login from './Pages/Login/Login'; // Import the Login page
 
 function App() {
   return (
-    <AuthProvider>
-      {/* By adding the selector here, we make all inputs, selects, and elements with the .cursor-target class interactive with the cursor */}
-      <TargetCursor targetSelector="input, select, .cursor-target" />
-      <BrowserRouter basename="/TKD-scoreboard">
+    <BrowserRouter basename="/TKD-scoreboard">
+      <AuthProvider>
+        <TargetCursor targetSelector="input, select, .cursor-target" />
         <Routes>
           {/* --- Public Routes --- */}
+          <Route path="/login" element={<Login />} />
           <Route path="/court-setup" element={<CourtSetup />} />
           <Route path="/screen" element={<Screen />} />
 
           {/* --- Protected Routes --- */}
-          {/* The root route is now the Home menu */}
           <Route path="/" element={
             <ProtectedRoute>
               <Home />
             </ProtectedRoute>
           } />
 
-          {/* Other protected pages */}
           <Route path="/controller" element={
             <ProtectedRoute>
               <Controller />
@@ -48,12 +47,12 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Catch-all redirects to the protected home page */}
+          {/* Catch-all redirects to the protected home page or login */}
           <Route path="*" element={<Navigate to="/" replace />} />
 
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
