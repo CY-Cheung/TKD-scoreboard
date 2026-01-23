@@ -86,7 +86,7 @@ function RefereeRegister() {
                 )}
                 
                 <div className="rr-button-container">
-                    <Button text="Back to Home" fontSize="1rem" angle={0} onClick={() => navigate('/')} />
+                    <Button text="Back to Home" fontSize="1.5dvw" angle={0} onClick={() => navigate('/')} />
                 </div>
             </div>
         </div>

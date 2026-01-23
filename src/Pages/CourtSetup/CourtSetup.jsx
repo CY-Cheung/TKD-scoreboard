@@ -115,7 +115,7 @@ function CourtSetup() {
     <div className="cs-container">
       <Squares
         speed={0.5}
-        squareSize={100}
+        squareSize={"10dvw"}
         direction="diagonal"
         borderColor="hsla(270, 50%, 50%, 0.25)"
         hoverFillColor="hsla(60, 50%, 50%, 0.25)"
@@ -129,6 +129,7 @@ function CourtSetup() {
             <label htmlFor="event-select">Select Event</label>
             <select
               id="event-select"
+              className="datalist-input"
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
               required
@@ -144,6 +145,7 @@ function CourtSetup() {
             <label htmlFor="court-select">Select Court</label>
             <select
               id="court-select"
+              className="datalist-input"
               value={courtId}
               onChange={(e) => setCourtId(e.target.value)}
               disabled={!selectedEvent || courtOptions.length === 0}

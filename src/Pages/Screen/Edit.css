@@ -34,12 +34,12 @@
 
 .grid-cell.header {
     font-weight: bold;
-    font-size: 1.5vw;
+    font-size: 1.5dvw;
 }
 
 .grid-cell.side-label {
     font-weight: bold;
-    font-size: 1.8vw;
+    font-size: 1.8dvw;
     justify-content: flex-start;
 }
 
@@ -67,7 +67,7 @@
 
 .time-control-group h2 {
     margin-right: 10px;
-    font-size: 1.5vw;
+    font-size: 1.5dvw;
 }
 
 .time-selects {
