@@ -80,21 +80,15 @@ function CourtSetup() {
         if (snapshot.exists()) {
             const correctPassword = snapshot.val();
             if (password === correctPassword) {
-                // The set call ensures the court is configured as expected.
-                // It also resets the currentMatchId, which is often the desired behavior for a fresh setup.
                 const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
                 await set(courtRef, {
                     name: courtId,
                     currentMatchId: '' 
                 });
 
-                localStorage.setItem('selectedEvent', selectedEvent);
-                localStorage.setItem('selectedCourt', courtId);
-
                 login({ 
-                    courtId: courtId, 
                     eventId: selectedEvent,
-                    role: 'admin' 
+                    courtId: courtId
                 });
 
                 navigate('/'); 

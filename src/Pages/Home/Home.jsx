@@ -6,20 +6,20 @@ import './Home.css';
 import Button from '../../Components/Button/Button';
 import Squares from '../../Components/Squares/Squares';
 
+// 引入 Bootstrap Icons
+import { Display, Controller, Diagram2, PersonBadge } from 'react-bootstrap-icons';
+
 function Home() {
 	const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { session, logout } = useAuth();
 
     const handleLogout = () => {
         logout();
-        navigate('/court-setup'); // Redirect to login page after logout
+        navigate('/court-setup');
     };
 
 	return (
-		<div
-			className="home"
-			// onClick={() => document.documentElement.requestFullscreen()} // Optional: can be re-enabled if needed
-		>
+		<div className="home">
 			<Squares
 				speed={0.5}
 				squareSize={100}
@@ -31,45 +31,45 @@ function Home() {
             <div className="session-info-form">
                 <div className="form-group">
                     <label>Event ID</label>
-                    <div className="form-value">{user?.eventId || 'N/A'}</div>
+                    <div className="form-value">{session?.eventId || 'N/A'}</div>
                 </div>
                 <div className="form-group">
                     <label>Court ID</label>
-                    <div className="form-value">{user?.courtId || 'N/A'}</div>
+                    <div className="form-value">{session?.courtId || 'N/A'}</div>
                 </div>
                 <Button
                     text="Logout"
                     onClick={handleLogout}
-                    fontSize="1.5dvw"
+                    fontSize="1.6dvh"
                     angle={0}
                 />
             </div>
 
-			<div className="menu">
-				<Button
-					text="Screen"
-					fontSize="3dvw"
-					angle={0}
-					onClick={() => navigate("/screen")}
-				/>
-				<Button
-					text="Controller"
-					fontSize="3dvw"
-					angle={60}
-					onClick={() => navigate("/controller")}
-				/>
-                <Button
-					text="Data Import"
-					fontSize="3dvw"
-					angle={180}
-					onClick={() => navigate("/import")}
-				/>
-                <Button
-					text="Referee Register"
-					fontSize="3dvw"
-					angle={300}
-					onClick={() => navigate("/referee/register")}
-				/>
+            {/* --- 2x2 網格佈局 --- */}
+			<div className="home-grid">
+                {/* Screen Card */}
+                <div className="home-card" onClick={() => navigate("/screen")}>
+                    <Display className="home-card-icon" />
+                    <Button text="Screen" fontSize="2.5dvh" angle={50} readOnly />
+                </div>
+
+                {/* Controller Card */}
+                <div className="home-card" onClick={() => navigate("/controller")}>
+                    <Controller className="home-card-icon" />
+                    <Button text="Controller" fontSize="2.5dvh" angle={270} readOnly />
+                </div>
+
+                {/* Data Import Card */}
+                <div className="home-card" onClick={() => navigate("/import")}>
+                    <Diagram2 className="home-card-icon" />
+                    <Button text="Data Import" fontSize="2.5dvh" angle={90} readOnly />
+                </div>
+
+                {/* Referee Register Card */}
+                <div className="home-card" onClick={() => navigate("/referee/register")}>
+                    <PersonBadge className="home-card-icon" />
+                    <Button text="Referee Register" fontSize="2.5dvh" angle={180} readOnly />
+                </div>
 			</div>
 		</div>
 	);

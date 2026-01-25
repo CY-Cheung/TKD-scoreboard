@@ -1,57 +1,89 @@
 .home {
-    position: relative; /* 讓 Squares 的絕對定位以 .home 為基準 */
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100dvh;
     width: 100dvw;
-    overflow: hidden; /* 防止 canvas 溢出 */
+    overflow: hidden;
 }
 
-.menu {
-    position: relative;
+/* --- 2x2 網格佈局 --- */
+.home-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 3dvw; /* 卡片之間的間距 */
+    width: 60dvw;
+    height: 60dvh;
     z-index: 1;
-    display: flex;
-    flex-direction: column; /* 將排列方向由橫向改成直向 */
-    align-items: center;   /* 確保所有掣喺中間對齊 */
-    gap: 2dvh;             /* 喺每個掣之間加啲空位，等佢哋唔好黐埋一齊 */
 }
 
+/* --- 卡片樣式 --- */
+.home-card {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 2dvh;
+    padding: 2dvh;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.home-card:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-5px);
+}
+
+/* --- 卡片圖示樣式 (加大) --- */
+.home-card-icon {
+    font-size: 12dvh; /* 由 10dvh 增加到 12dvh */
+    color: #fff;
+}
+
+/* --- 右上角資訊卡樣式 --- */
 .session-info-form {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 2dvh;
+    right: 1dvw;
     background-color: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 8px;
+    padding: 1.5dvh 1dvw;
+    border-radius: 1dvh;
     border: 1px solid rgba(255, 255, 255, 0.2);
     z-index: 2;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    width: 250px; /* Adjust width as needed */
-    align-items: center; /* Center the button */
+    gap: 1dvh;
+    width: 15dvw;
+    min-width: 180px;
+    align-items: center;
 }
 
 .session-info-form .form-group {
     display: flex;
     flex-direction: column;
-    width: 100%; /* Make form groups take full width */
+    width: 100%;
 }
 
-.session-info-form label {
-    font-size: 12px;
+.session-info-form .form-group label {
+    font-size: 1.5dvh;
     color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 4px;
-    text-transform: uppercase;
+    margin-bottom: 0.5dvh;
 }
 
-.session-info-form .form-value {
-    background-color: rgba(0, 0, 0, 0.3);
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: bold;
-    color: white;
+.session-info-form .form-group .form-value {
+    font-size: 1.8dvh;
+    font-weight: 500;
+}
+
+.session-info-form Button {
+    font-size: 1.6dvh !important;
+    margin-top: 1dvh;
 }

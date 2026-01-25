@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ref, set, get, update } from "firebase/database";
+import { ref, set, get } from "firebase/database";
 import { database } from '../../firebase';
 import './DataImport.css';
 import Squares from '../../Components/Squares/Squares';
 import Button from '../../Components/Button/Button';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../Context/AuthContext';
 
 // A helper function to parse name and club from old format
 const parseName = (fullName) => {
@@ -18,8 +19,8 @@ const parseName = (fullName) => {
 
 const DataImport = () => {
     const navigate = useNavigate();
+    const { session } = useAuth(); 
     const [eventName, setEventName] = useState('');
-    const [eventsList, setEventsList] = useState([]);
     const [currentMatches, setCurrentMatches] = useState({});
     const [selectedMatchId, setSelectedMatchId] = useState(null);
 
@@ -39,13 +40,10 @@ const DataImport = () => {
     const [redPreviousMatch, setRedPreviousMatch] = useState('');
 
     useEffect(() => {
-        const eventsRef = ref(database, 'events');
-        get(eventsRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                setEventsList(Object.keys(snapshot.val()));
-            }
-        });
-    }, []);
+        if (session && session.eventId) {
+            setEventName(session.eventId);
+        }
+    }, [session]);
 
     useEffect(() => {
         setSelectedMatchId(null);
@@ -119,24 +117,6 @@ const DataImport = () => {
         }
 
         try {
-            const eventRef = ref(database, `events/${eventName}`);
-            const eventSnapshot = await get(eventRef);
-
-            if (!eventSnapshot.exists()) {
-                const initialEventData = {
-                    settings: {},
-                    courts: {
-                        court1: { name: 'Court 1', currentMatchId: '' },
-                        court2: { name: 'Court 2', currentMatchId: '' },
-                        court3: { name: 'Court 3', currentMatchId: '' },
-                        court4: { name: 'Court 4', currentMatchId: '' }
-                    },
-                    judgingQueue: {},
-                    matches: {}
-                };
-                await set(eventRef, initialEventData);
-            }
-            
             const newMatch = {
                 config: {
                     matchId: matchId,
@@ -165,7 +145,7 @@ const DataImport = () => {
                     isStarted: false, isPaused: true, isFinished: false,
                     currentRound: 1, timer: parseInt(roundDuration, 10),
                     winnerSide: null, phase: 'ROUND',
-                    winReason: null   // 新增欄位
+                    winReason: null
                 },
                 stats: { 
                     roundWins: { red: 0, blue: 0 }, 
@@ -201,21 +181,19 @@ const DataImport = () => {
             alert('Please select an event and a match to load.');
             return;
         }
-    
-        const courtId = localStorage.getItem('selectedCourt');
-        if (!courtId) {
+        
+        if (!session || !session.courtId) {
             alert('No court is configured for this device. Please go to Court Setup first.');
             return;
         }
     
         try {
-            const courtMatchIdRef = ref(database, `events/${eventName}/courts/${courtId}/currentMatchId`);
+            const courtMatchIdRef = ref(database, `events/${eventName}/courts/${session.courtId}/currentMatchId`);
             await set(courtMatchIdRef, selectedMatchId);
     
-            localStorage.setItem('selectedEvent', eventName);
             localStorage.setItem('selectedMatchId', selectedMatchId);
             
-            alert(`Match ${selectedMatchId} successfully loaded to ${courtId}.`);
+            alert(`Match ${selectedMatchId} successfully loaded to ${session.courtId}.`);
     
         } catch (error) {
             console.error("Error loading match to court:", error);
@@ -238,18 +216,13 @@ const DataImport = () => {
                     <div className="di-form-section">
                         <h2>Import Event Data</h2>
                         <div className="form-group">
-                            <label htmlFor="eventName-select">Event Name</label>
-                            <select 
-                                id="eventName-select"
+                            <label htmlFor="eventName-input">Event Name</label>
+                            <input 
+                                id="eventName-input"
+                                type="text"
                                 value={eventName}
-                                onChange={(e) => setEventName(e.target.value)}
-                                required
-                            >
-                                <option value="" disabled>-- Please select an event --</option>
-                                {eventsList.map(event => (
-                                    <option key={event} value={event}>{event}</option>
-                                ))}
-                            </select>
+                                disabled
+                            />
                         </div>
                         <div className="match-form">
                             <fieldset>
