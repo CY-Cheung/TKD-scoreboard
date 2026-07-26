@@ -266,3 +266,32 @@
 	color: transparent;
 	font-weight: bold;
 }
+
+/* QR Code trigger button on Screen */
+.qr-trigger-btn {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	z-index: 100;
+	background: rgba(15, 23, 42, 0.85);
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	color: #ffffff;
+	padding: 6px 14px;
+	border-radius: 20px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 1vw;
+	font-weight: 600;
+	cursor: pointer;
+	backdrop-filter: blur(6px);
+	transition: all 0.2s ease;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.qr-trigger-btn:hover {
+	background: rgba(30, 41, 59, 0.95);
+	border-color: #38bdf8;
+	color: #38bdf8;
+	transform: scale(1.05);
+}

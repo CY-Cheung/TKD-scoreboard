@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { ref, onValue, set, get, update, runTransaction } from "firebase/database";
+import { ref, onValue, update } from "firebase/database";
 import { database } from "../../firebase";
+import { QrCode } from "react-bootstrap-icons";
 import "./Screen.css";
 import "../../App.css";
 import Edit from "./Edit";
+import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
 
 const formatTime = (totalSeconds) => {
     if (typeof totalSeconds !== 'number' || isNaN(totalSeconds)) {
@@ -63,6 +65,7 @@ function Screen() {
     const [matchData, setMatchData] = useState(null);
     const [direction, setDirection] = useState("row");
     const [showEdit, setShowEdit] = useState(false);
+    const [showQRCode, setShowQRCode] = useState(false);
     const [displayTime, setDisplayTime] = useState(0);
 
     const [selectedEvent, setSelectedEvent] = useState(localStorage.getItem('selectedEvent'));
@@ -89,7 +92,7 @@ function Screen() {
 
     useEffect(() => {
         if (!currentMatchId || !selectedEvent) {
-            setMatchData(null); // Ensure matchData is cleared if no match ID
+            setMatchData(null);
             return;
         }
         const matchRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}`);
@@ -150,18 +153,28 @@ function Screen() {
 
     }, [matchData?.state, selectedEvent, currentMatchId]);
 
-    // --- Real-time Judging Queue Processing --- 
-    useEffect(() => {
-        if (!selectedEvent || !selectedCourt || !currentMatchId) return;
-        // ... (judging logic remains the same)
-    }, [selectedEvent, selectedCourt, currentMatchId]);
-
     const toggleDirection = () => setDirection((prev) => (prev === "row" ? "row-reverse" : "row"));
     
     const toggleTimer = async () => {
         if (!isMatchLoaded) return;
         const stateRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}/state`);
-        // ... (timer toggle logic remains the same)
+        const currentState = matchData?.state || {};
+        const isPaused = currentState.isPaused ?? true;
+
+        if (isPaused) {
+            update(stateRef, {
+                isPaused: false,
+                lastStartTime: Date.now()
+            });
+        } else {
+            const elapsed = Math.floor((Date.now() - (currentState.lastStartTime || Date.now())) / 1000);
+            const newTimer = Math.max(0, (currentState.timer || 0) - elapsed);
+            update(stateRef, {
+                isPaused: true,
+                timer: newTimer,
+                lastStartTime: null
+            });
+        }
     };
 
     useEffect(() => {
@@ -169,12 +182,12 @@ function Screen() {
             if (e.code === "Space") { e.preventDefault(); toggleTimer(); }
             if (e.key === "\\") { toggleDirection(); }
             if (e.key === "e" || e.key === "E") { setShowEdit(prev => !prev); }
+            if (e.key === "q" || e.key === "Q") { setShowQRCode(prev => !prev); }
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [isMatchLoaded, selectedEvent, currentMatchId]); // Added isMatchLoaded dependency
+    }, [isMatchLoaded, selectedEvent, currentMatchId]);
 
-    // --- Data Handling for Display ---
     const { state = {}, config = {}, stats = {} } = matchData || {};
     const { phase = 'ROUND', currentRound: matchCurrentRound, winReason, isFinished, isPaused = true } = state;
     const { roundScores = {}, roundWins: matchRoundWins = {} } = stats;
@@ -188,7 +201,12 @@ function Screen() {
     }, [redStats, blueStats, isMatchLoaded]);
 
     if (!selectedCourt) {
-        return <div className="screen-unconfigured"><h1>Screen Unconfigured</h1><p>Please go to <strong>Court Setup</strong> to assign this screen to a court.</p></div>;
+        return (
+            <div className="screen-unconfigured">
+                <h1>Screen Unconfigured</h1>
+                <p>Please go to <strong>Court Setup</strong> to assign this screen to a court.</p>
+            </div>
+        );
     }
 
     const isResting = phase === 'REST';
@@ -196,7 +214,7 @@ function Screen() {
     const isFinal = roundWins.red === 2 || roundWins.blue === 2;
 
     const getDisplayName = (c) => {
-        if (!c || !c.name) return " "; // Return a space for layout stability
+        if (!c || !c.name) return " ";
         return c.affiliatedClub ? `${c.name} (${c.affiliatedClub})` : c.name;
     };
 
@@ -240,7 +258,6 @@ function Screen() {
     };
 
     const getTimeoutStyle = () => {
-        // Default style for when there is no match
         const style = { backgroundColor: "#FFFF00", color: "#000000" }; 
         if (isMatchLoaded) {
             Object.assign(style, { backgroundColor: !isPaused ? "#000000" : "#FFFF00" });
@@ -255,7 +272,20 @@ function Screen() {
 
     return (
         <>
-            <div className="screen" onClick={() => !showEdit && document.documentElement.requestFullscreen()}>
+            <div className="screen" onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}>
+                {/* Floating QRCode Toggle Trigger Button */}
+                <button
+                    className="qr-trigger-btn cursor-target"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowQRCode(true);
+                    }}
+                    title="Show Referee Controller QR Code (Key: Q)"
+                >
+                    <QrCode size={22} />
+                    <span>Connect Controller</span>
+                </button>
+
                 {/* Top Section: Player Names */}
                 <div className={`top ${isResting ? 'rest-mode' : ''}`} style={{ flexDirection: direction }}>
                     <div className="red-name red-bg name-font">{redPlayerName}</div>
@@ -332,6 +362,14 @@ function Screen() {
                 matchId={currentMatchId}
                 matchData={matchData}
                 dominantSide={dominantSide}
+            />
+
+            {/* Controller Connection QR Code Modal */}
+            <QRCodeDisplay
+                eventId={selectedEvent}
+                courtId={selectedCourt}
+                visible={showQRCode}
+                onClose={() => setShowQRCode(false)}
             />
         </>
     );
