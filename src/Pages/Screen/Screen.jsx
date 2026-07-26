@@ -18,7 +18,7 @@ const formatTime = (totalSeconds) => {
 
 const calculateScore = (stats, opponentGamjeom) => {
     const p = stats?.pointsStat || [0,0,0,0,0];
-    return (p[0]*1) + (p[1]*2) + (p[2]*3) + (p[3]*4) + (p[4]*5) + (opponentGamjeom || 0);
+    return (p[0]*1) + (p[1]*2) + (p[2]*3) + (p[3]*4) + (p[4]*6) + (opponentGamjeom || 0);
 };
 
 const determineDominantSide = (redStats, blueStats) => {
@@ -37,8 +37,8 @@ const determineDominantSide = (redStats, blueStats) => {
     if (redTotal > blueTotal) return 'red';
     if (blueTotal > redTotal) return 'blue';
 
-    const redTurningPoints = (rP[3] * 4) + (rP[4] * 5);
-    const blueTurningPoints = (bP[3] * 4) + (bP[4] * 5);
+    const redTurningPoints = (rP[3] * 4) + (rP[4] * 6);
+    const blueTurningPoints = (bP[3] * 4) + (bP[4] * 6);
     if (redTurningPoints > blueTurningPoints) return 'red';
     if (blueTurningPoints > redTurningPoints) return 'blue';
     

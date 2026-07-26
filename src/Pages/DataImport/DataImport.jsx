@@ -24,11 +24,11 @@ const DataImport = () => {
     const [currentMatches, setCurrentMatches] = useState({});
     const [selectedMatchId, setSelectedMatchId] = useState(null);
 
-    // Form state
+    // Form state - Default Point Gap set to 15 as per new rules
     const [matchId, setMatchId] = useState('');
     const [nextMatchId, setNextMatchId] = useState('');
     const [nextMatchSlot, setNextMatchSlot] = useState('');
-    const [maxPointGap, setMaxPointGap] = useState(12);
+    const [maxPointGap, setMaxPointGap] = useState(15);
     const [maxGamjeom, setMaxGamjeom] = useState(5);
     const [roundDuration, setRoundDuration] = useState(120);
     const [restDuration, setRestDuration] = useState(60);
@@ -72,7 +72,7 @@ const DataImport = () => {
             setNextMatchId(config.nextMatchId || '');
             setNextMatchSlot(config.nextMatchSlot || '');
             
-            setMaxPointGap(rules.maxPointGap || 12);
+            setMaxPointGap(rules.maxPointGap || 15);
             setMaxGamjeom(rules.maxGamjeom || 5);
             setRoundDuration(rules.roundDuration || 120);
             setRestDuration(rules.restDuration || 60);

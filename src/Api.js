@@ -4,7 +4,7 @@ import { database } from './firebase';
 
 const getScoreValue = (stats, opponentGamjeom) => {
     const p = stats?.pointsStat || [0,0,0,0,0];
-    const points = (p[0]*1) + (p[1]*2) + (p[2]*3) + (p[3]*4) + (p[4]*5);
+    const points = (p[0]*1) + (p[1]*2) + (p[2]*3) + (p[3]*4) + (p[4]*6);
     return points + (opponentGamjeom || 0);
 };
 
@@ -58,7 +58,7 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
             matchData.state.lastStartTime = null;
         };
 
-        const maxGap = matchData.config?.rules?.maxPointGap || 12;
+        const maxGap = matchData.config?.rules?.maxPointGap || 15;
         const maxGJ = matchData.config?.rules?.maxGamjeom || 5;
 
         const isPUN = redGamjeom >= maxGJ || blueGamjeom >= maxGJ;
@@ -166,21 +166,18 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
     const matchRoot = `events/${eventName}/matches`;
 
     try {
-        // 1. 讀取當前比賽 Config
         const snapshot = await get(ref(database, `${matchRoot}/${currentMatchId}/config`));
         const config = snapshot.val();
         if (!config) return;
 
-        // 2. 取得勝者資料 & 下一場路徑
         const winnerData = config.competitors[winnerSide];
-        const { nextMatchId, nextMatchSlot } = config; // e.g. "A1010", "red"
+        const { nextMatchId, nextMatchSlot } = config;
 
         if (!nextMatchId || !nextMatchSlot) {
             alert("此場次未設定下一場比賽路徑 (Next Match ID/Slot missing)");
             return;
         }
 
-        // 3. 更新下一場 (只更新 Name & Club)
         const targetPath = `${matchRoot}/${nextMatchId}/config/competitors/${nextMatchSlot}`;
         
         await update(ref(database, targetPath), {
@@ -188,8 +185,7 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
             affiliatedClub: winnerData.affiliatedClub || ""
         });
 
-        alert(`已成功晉級：
-${winnerData.name} -> ${nextMatchId} (${nextMatchSlot})`);
+        alert(`已成功晉級：\n${winnerData.name} -> ${nextMatchId} (${nextMatchSlot})`);
 
     } catch (e) {
         console.error(e);

@@ -11,22 +11,49 @@ function Controller() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
-    // Extract event and court from URL query or fallback to localStorage
-    const eventFromUrl = searchParams.get("event") || localStorage.getItem("selectedEvent") || "";
-    const courtFromUrl = searchParams.get("court") || localStorage.getItem("selectedCourt") || "";
+    // Helper to extract query parameter from searchParams, search URL, Hash URL, or localStorage
+    const getParam = (key) => {
+        const fromSearch = searchParams.get(key);
+        if (fromSearch) return fromSearch;
 
-    const [eventId, setEventId] = useState(eventFromUrl);
-    const [courtId, setCourtId] = useState(courtFromUrl);
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get(key)) return urlParams.get(key);
+
+        if (window.location.hash.includes("?")) {
+            const hashQuery = window.location.hash.split("?")[1];
+            const hashParams = new URLSearchParams(hashQuery);
+            if (hashParams.get(key)) return hashParams.get(key);
+        }
+
+        if (key === "event") return localStorage.getItem("selectedEvent") || "";
+        if (key === "court") return localStorage.getItem("selectedCourt") || "";
+
+        return "";
+    };
+
+    const initialEvent = getParam("event");
+    const initialCourt = getParam("court");
+
+    const [eventId, setEventId] = useState(initialEvent);
+    const [courtId, setCourtId] = useState(initialCourt);
     const [currentMatchId, setCurrentMatchId] = useState(null);
     const [matchData, setMatchData] = useState(null);
-    const [lastAction, setLastAction] = useState(null);
+    const [lastAction, setLastAction] = useState(null); // { side: 'red'|'blue', text: '...' }
     const [isConnected, setIsConnected] = useState(false);
 
-    // Save selected params to localStorage
+    // Sync state if URL changes
     useEffect(() => {
-        if (eventId) localStorage.setItem("selectedEvent", eventId);
-        if (courtId) localStorage.setItem("selectedCourt", courtId);
-    }, [eventId, courtId]);
+        const ev = getParam("event");
+        const ct = getParam("court");
+        if (ev) {
+            setEventId(ev);
+            localStorage.setItem("selectedEvent", ev);
+        }
+        if (ct) {
+            setCourtId(ct);
+            localStorage.setItem("selectedCourt", ct);
+        }
+    }, [searchParams]);
 
     // Listen to currentMatchId on court
     useEffect(() => {
@@ -66,24 +93,37 @@ function Controller() {
         });
 
         return () => unsubscribe();
-    }, [eventId, currentMatchId]);
+    }, [currentMatchId, eventId]);
+
+    // Cross-browser Fullscreen request helper
+    const handleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) {
+                document.documentElement.msRequestFullscreen();
+            }
+        }
+    };
 
     const handleScore = (side, index, label) => {
         if (!eventId || !currentMatchId) return;
 
-        // Mobile haptic feedback
+        // Mobile haptic vibration feedback
         if (navigator.vibrate) {
             navigator.vibrate(60);
         }
 
-        // Call scoring API (+1 point increment for the selected point index)
+        // Call scoring API (+1 point increment for selected point index)
         updateScoreAndCheckRules(eventId, currentMatchId, side, "pointsStat", index, 1);
 
-        const actionText = `${side.toUpperCase()} ${label}`;
-        setLastAction(actionText);
+        const actionObj = { side, text: `${side.toUpperCase()} ${label}` };
+        setLastAction(actionObj);
 
         setTimeout(() => {
-            setLastAction((prev) => (prev === actionText ? null : prev));
+            setLastAction((prev) => (prev?.text === actionObj.text ? null : prev));
         }, 1800);
     };
 
@@ -94,10 +134,17 @@ function Controller() {
     const isPaused = matchData?.state?.isPaused ?? true;
 
     return (
-        <div className="controller">
+        <div className="controller" onClick={handleFullscreen}>
             {/* Top Bar Banner for Match & Connection Status */}
             <div className="ctrl-top-bar">
-                <button className="ctrl-back-btn" onClick={() => navigate("/")} aria-label="Back">
+                <button 
+                    className="ctrl-back-btn" 
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        navigate("/");
+                    }} 
+                    aria-label="Back"
+                >
                     <ArrowLeft size={18} />
                 </button>
                 <div className="ctrl-info-badges">
@@ -114,93 +161,97 @@ function Controller() {
                 </div>
             </div>
 
-            {/* Action Feedback Banner Toast */}
-            {lastAction && <div className="ctrl-action-banner">{lastAction}</div>}
+            {/* Action Feedback Banner Toast with Side Color */}
+            {lastAction && (
+                <div className={`ctrl-action-banner ${lastAction.side === "red" ? "red-banner" : "blue-banner"}`}>
+                    {lastAction.text}
+                </div>
+            )}
 
-            {/* Column 1: Red 5, Red 4, Red 1 */}
-            <div className="col">
+            {/* Column 1: Red 6, Red 4, Red 1 */}
+            <div className="col red-col">
                 <Button 
-                    text="Red 5" 
+                    text="Red 6" 
                     angle={350} 
-                    fontSize="3.5vw" 
-                    onClick={() => handleScore("red", 4, "+5 Turn Head")} 
+                    fontSize="4vw" 
+                    onClick={() => handleScore("red", 4, "+6 Turn Head")} 
                 />
                 <Button 
                     text="Red 4" 
                     angle={350} 
-                    fontSize="3.5vw" 
+                    fontSize="4vw" 
                     onClick={() => handleScore("red", 3, "+4 Turn Body")} 
                 />
                 <Button 
                     text="Red 1" 
                     angle={350} 
-                    fontSize="3.5vw" 
+                    fontSize="4vw" 
                     onClick={() => handleScore("red", 0, "+1 Punch")} 
                 />
             </div>
 
             {/* Column 2: Red 3, Red 2 */}
-            <div className="col">
+            <div className="col red-col">
                 <Button 
                     text="Red 3" 
                     angle={350} 
-                    fontSize="3.5vw" 
+                    fontSize="4vw" 
                     onClick={() => handleScore("red", 2, "+3 Head")} 
                 />
                 <Button 
                     text="Red 2" 
                     angle={350} 
-                    fontSize="3.5vw" 
+                    fontSize="4vw" 
                     onClick={() => handleScore("red", 1, "+2 Body")} 
                 />
             </div>
 
-            {/* Column 3: Center Info Panel */}
+            {/* Column 3: Center Info Panel (Horizontal Left-to-Right layout) */}
             <div className="col center-col">
-                <div className="center-match-details">
-                    <div className="competitor-label red-text">{redName}</div>
-                    <div className="vs-divider">VS</div>
-                    <div className="competitor-label blue-text">{blueName}</div>
-                    <div className="round-pill">
-                        Round {currentRound} ({isPaused ? "PAUSED" : "ACTIVE"})
+                <div className="center-match-details-horizontal">
+                    <div className="competitor-side red-side-text">{redName}</div>
+                    <div className="center-vs-box">
+                        <span className="vs-badge">VS</span>
+                        <span className="round-pill">R{currentRound} • {isPaused ? "PAUSED" : "LIVE"}</span>
                     </div>
+                    <div className="competitor-side blue-side-text">{blueName}</div>
                 </div>
             </div>
 
             {/* Column 4: Blue 3, Blue 2 */}
-            <div className="col">
+            <div className="col blue-col">
                 <Button 
                     text="Blue 3" 
                     angle={210} 
-                    fontSize="3.5vw" 
+                    fontSize="4vw" 
                     onClick={() => handleScore("blue", 2, "+3 Head")} 
                 />
                 <Button 
                     text="Blue 2" 
                     angle={210} 
-                    fontSize="3.5vw" 
+                    fontSize="4vw" 
                     onClick={() => handleScore("blue", 1, "+2 Body")} 
                 />
             </div>
 
-            {/* Column 5: Blue 5, Blue 4, Blue 1 */}
-            <div className="col">
+            {/* Column 5: Blue 6, Blue 4, Blue 1 */}
+            <div className="col blue-col">
                 <Button 
-                    text="Blue 5" 
+                    text="Blue 6" 
                     angle={210} 
-                    fontSize="3.5vw" 
-                    onClick={() => handleScore("blue", 4, "+5 Turn Head")} 
+                    fontSize="4vw" 
+                    onClick={() => handleScore("blue", 4, "+6 Turn Head")} 
                 />
                 <Button 
                     text="Blue 4" 
                     angle={210} 
-                    fontSize="3.5vw" 
+                    fontSize="4vw" 
                     onClick={() => handleScore("blue", 3, "+4 Turn Body")} 
                 />
                 <Button 
                     text="Blue 1" 
                     angle={210} 
-                    fontSize="3.5vw" 
+                    fontSize="4vw" 
                     onClick={() => handleScore("blue", 0, "+1 Punch")} 
                 />
             </div>

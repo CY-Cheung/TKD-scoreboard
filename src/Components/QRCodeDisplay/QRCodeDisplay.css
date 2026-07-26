@@ -1,4 +1,4 @@
-/* QRCodeDisplay.css */
+/* QRCodeDisplay.css - Clean default QR code modal */
 
 .qrcode-modal-overlay {
   position: fixed;
@@ -20,13 +20,13 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
   width: 90%;
-  max-width: 440px;
-  padding: 20px 24px;
+  max-width: 420px;
+  padding: 24px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
   color: #ffffff;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
   animation: slideUp 0.25s ease-out;
 }
 
@@ -35,14 +35,14 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 10px;
+  padding-bottom: 12px;
 }
 
 .qrcode-title {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #e0e0e0;
 }
@@ -74,7 +74,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .qrcode-info {
@@ -88,7 +88,7 @@
   color: #66a3ff;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -98,29 +98,9 @@
   color: #ff6699;
 }
 
-.qrcode-warning-banner {
-  background: rgba(234, 179, 8, 0.15);
-  border: 1px solid rgba(234, 179, 8, 0.4);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.8rem;
-  color: #fef08a;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  line-height: 1.35;
-  width: 100%;
-}
-
-.warning-icon {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: #eab308;
-}
-
 .qrcode-wrapper {
   background: #ffffff;
-  padding: 12px;
+  padding: 16px;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   display: flex;
@@ -129,63 +109,11 @@
 }
 
 .qrcode-instructions {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #b0b0c0;
   text-align: center;
   margin: 0;
-  line-height: 1.3;
-}
-
-/* Host IP Configuration Box */
-.qrcode-ip-config-box {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px dashed rgba(255, 255, 255, 0.15);
-  padding: 8px 10px;
-  border-radius: 8px;
-}
-
-.ip-config-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.75rem;
-  color: #94a3b8;
-}
-
-.ip-config-header label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.clear-ip-btn {
-  background: transparent;
-  border: none;
-  color: #38bdf8;
-  font-size: 0.7rem;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
-}
-
-.ip-config-input {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  padding: 6px 10px;
-  color: #38bdf8;
-  font-size: 0.85rem;
-  font-family: monospace;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.ip-config-input:focus {
-  border-color: #38bdf8;
+  line-height: 1.4;
 }
 
 .qrcode-url-box {
