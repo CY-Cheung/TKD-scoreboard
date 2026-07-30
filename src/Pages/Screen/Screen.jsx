@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { ref, onValue, update } from "firebase/database";
 import { database } from "../../firebase";
-import { QrCode } from "react-bootstrap-icons";
 import "./Screen.css";
 import "../../App.css";
 import Edit from "./Edit";
@@ -17,8 +16,8 @@ const formatTime = (totalSeconds) => {
 };
 
 const calculateScore = (stats, opponentGamjeom) => {
-    const p = stats?.pointsStat || [0,0,0,0,0];
-    return (p[0]*1) + (p[1]*2) + (p[2]*3) + (p[3]*4) + (p[4]*6) + (opponentGamjeom || 0);
+    const p = stats?.pointsStat || [0, 0, 0, 0, 0];
+    return (p[0] * 1) + (p[1] * 2) + (p[2] * 3) + (p[3] * 4) + (p[4] * 6) + (opponentGamjeom || 0);
 };
 
 const determineDominantSide = (redStats, blueStats) => {
@@ -28,11 +27,11 @@ const determineDominantSide = (redStats, blueStats) => {
     if (rG >= 5) return 'blue';
     if (bG >= 5) return 'red';
 
-    const rP = redStats?.pointsStat || [0,0,0,0,0];
-    const bP = blueStats?.pointsStat || [0,0,0,0,0];
+    const rP = redStats?.pointsStat || [0, 0, 0, 0, 0];
+    const bP = blueStats?.pointsStat || [0, 0, 0, 0, 0];
 
-    const redTotal = calculateScore({pointsStat: rP}, bG);
-    const blueTotal = calculateScore({pointsStat: bP}, rG);
+    const redTotal = calculateScore({ pointsStat: rP }, bG);
+    const blueTotal = calculateScore({ pointsStat: bP }, rG);
 
     if (redTotal > blueTotal) return 'red';
     if (blueTotal > redTotal) return 'blue';
@@ -41,7 +40,7 @@ const determineDominantSide = (redStats, blueStats) => {
     const blueTurningPoints = (bP[3] * 4) + (bP[4] * 6);
     if (redTurningPoints > blueTurningPoints) return 'red';
     if (blueTurningPoints > redTurningPoints) return 'blue';
-    
+
     const redCount35 = rP[2] + rP[4];
     const blueCount35 = bP[2] + bP[4];
     if (redCount35 > blueCount35) return 'red';
@@ -54,7 +53,7 @@ const determineDominantSide = (redStats, blueStats) => {
 
     if (rP[0] > bP[0]) return 'red';
     if (bP[0] > rP[0]) return 'blue';
-    
+
     if (rG < bG) return 'red';
     if (bG < rG) return 'blue';
 
@@ -71,9 +70,20 @@ function Screen() {
     const [selectedEvent, setSelectedEvent] = useState(localStorage.getItem('selectedEvent'));
     const [selectedCourt, setSelectedCourt] = useState(localStorage.getItem('selectedCourt'));
     const [currentMatchId, setCurrentMatchId] = useState(null);
+    const [refereesData, setRefereesData] = useState({});
 
     const animationFrameRef = useRef();
     const isMatchLoaded = !!matchData;
+
+    // Listen to referees status on current court
+    useEffect(() => {
+        if (!selectedEvent || !selectedCourt) return;
+        const refereesRef = ref(database, `events/${selectedEvent}/courts/${selectedCourt}/referees`);
+        const unsubscribe = onValue(refereesRef, (snapshot) => {
+            setRefereesData(snapshot.val() || {});
+        });
+        return () => unsubscribe();
+    }, [selectedEvent, selectedCourt]);
 
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
@@ -131,7 +141,7 @@ function Screen() {
             if (remaining <= 0) {
                 setDisplayTime(0);
                 cancelAnimationFrame(animationFrameRef.current);
-                
+
                 if (phase !== 'REST') {
                     const matchStateRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}/state`);
                     update(matchStateRef, {
@@ -154,7 +164,7 @@ function Screen() {
     }, [matchData?.state, selectedEvent, currentMatchId]);
 
     const toggleDirection = () => setDirection((prev) => (prev === "row" ? "row-reverse" : "row"));
-    
+
     const toggleTimer = async () => {
         if (!isMatchLoaded) return;
         const stateRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}/state`);
@@ -200,6 +210,15 @@ function Screen() {
         return determineDominantSide(redStats, blueStats);
     }, [redStats, blueStats, isMatchLoaded]);
 
+    // Compute occupied referee count (J1, J2, J3)
+    const occupiedRefereesCount = useMemo(() => {
+        let count = 0;
+        if (refereesData?.J1?.status === 'occupied') count++;
+        if (refereesData?.J2?.status === 'occupied') count++;
+        if (refereesData?.J3?.status === 'occupied') count++;
+        return count;
+    }, [refereesData]);
+
     if (!selectedCourt) {
         return (
             <div className="screen-unconfigured">
@@ -220,16 +239,16 @@ function Screen() {
 
     const bluePlayerName = getDisplayName(config.competitors?.blue);
     const redPlayerName = getDisplayName(config.competitors?.red);
-    
+
     const redGamJeom = stats.red?.gamjeom ?? 0;
     const blueGamJeom = stats.blue?.gamjeom ?? 0;
 
     const redTotalScore = isMatchLoaded ? calculateScore(stats.red, blueGamJeom) : 0;
     const blueTotalScore = isMatchLoaded ? calculateScore(stats.blue, redGamJeom) : 0;
-    
+
     const matchNumber = config.matchId ?? "000";
     const currentRound = matchCurrentRound ?? 1;
-    
+
     const timerColor = isPaused ? "#FFFF00" : "#FFFFFF";
     const redScoreColor = !isResting && dominantSide === 'red' ? '#FFFF00' : '#FFFFFF';
     const blueScoreColor = !isResting && dominantSide === 'blue' ? '#FFFF00' : '#FFFFFF';
@@ -258,7 +277,7 @@ function Screen() {
     };
 
     const getTimeoutStyle = () => {
-        const style = { backgroundColor: "#FFFF00", color: "#000000" }; 
+        const style = { backgroundColor: "#FFFF00", color: "#000000" };
         if (isMatchLoaded) {
             Object.assign(style, { backgroundColor: !isPaused ? "#000000" : "#FFFF00" });
             if (isPaused) {
@@ -273,19 +292,6 @@ function Screen() {
     return (
         <>
             <div className="screen" onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}>
-                {/* Floating QRCode Toggle Trigger Button */}
-                <button
-                    className="qr-trigger-btn cursor-target"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setShowQRCode(true);
-                    }}
-                    title="Show Referee Controller QR Code (Key: Q)"
-                >
-                    <QrCode size={22} />
-                    <span>Connect Controller</span>
-                </button>
-
                 {/* Top Section: Player Names */}
                 <div className={`top ${isResting ? 'rest-mode' : ''}`} style={{ flexDirection: direction }}>
                     <div className="red-name red-bg name-font">{redPlayerName}</div>
@@ -302,7 +308,7 @@ function Screen() {
                         </div>
                     </div>
                     <div className="red-score red-bg">
-                         <div 
+                        <div
                             className={'red-score-text red-score-bg score-font cursor-target'}
                             style={{ color: redScoreColor }}
                             onClick={() => isMatchLoaded && setShowEdit(true)}
@@ -317,12 +323,12 @@ function Screen() {
                             <div className="match-font">MATCH</div>
                             <div className="match-number">{matchNumber}</div>
                         </div>
-                        <div className="timer">
-                            <div className="game-timer timer-font cursor-target" onClick={toggleTimer} style={{ color: timerColor }}>
+                        <div className="timer cursor-target">
+                            <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: timerColor }}>
                                 {renderTimerContent()}
                             </div>
-                            <div 
-                                className={`time-out match-font cursor-target ${isMatchLoaded && !isPaused ? "timeout-active" : ""} ${isResting ? 'rest-mode' : ''}`}
+                            <div
+                                className={`time-out match-font ${isMatchLoaded && !isPaused ? "timeout-active" : ""} ${isResting ? 'rest-mode' : ''}`}
                                 onClick={toggleTimer}
                                 style={getTimeoutStyle()}
                             >
@@ -337,7 +343,7 @@ function Screen() {
 
                     {/* Blue Side: Score and Gam-jeom */}
                     <div className="blue-score blue-bg">
-                        <div 
+                        <div
                             className={'blue-score-text blue-score-bg score-font cursor-target'}
                             style={{ color: blueScoreColor }}
                             onClick={() => isMatchLoaded && setShowEdit(true)}
@@ -354,14 +360,16 @@ function Screen() {
                 </div>
             </div>
 
-            {/* Edit Modal */}
-            <Edit 
-                visible={showEdit} 
-                setVisible={setShowEdit} 
+            {/* Edit Drawer Modal */}
+            <Edit
+                visible={showEdit}
+                setVisible={setShowEdit}
                 eventName={selectedEvent}
                 matchId={currentMatchId}
                 matchData={matchData}
                 dominantSide={dominantSide}
+                setShowQRCode={setShowQRCode}
+                occupiedRefereesCount={occupiedRefereesCount}
             />
 
             {/* Controller Connection QR Code Modal */}
@@ -370,6 +378,7 @@ function Screen() {
                 courtId={selectedCourt}
                 visible={showQRCode}
                 onClose={() => setShowQRCode(false)}
+                refereesData={refereesData}
             />
         </>
     );

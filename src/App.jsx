@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './Context/AuthContext';
 import './App.css';
 import TargetCursor from './Components/TargetCursor/TargetCursor';
+import ProtectedRoute from './Components/ProtectedRoute/ProtectedRoute';
 
 // Pages
 import Home from './Pages/Home/Home';
@@ -20,10 +21,31 @@ function App() {
           <Route path="/court-setup" element={<CourtSetup />} />
           <Route path="/screen" element={<Screen />} />
 
-          {/* --- Routes that require session info --- */}
-          <Route path="/" element={<Home />} />
-          <Route path="/controller" element={<Controller />} />
-          <Route path="/import" element={<DataImport />} />
+          {/* --- Routes that require session info (Protected Routes) --- */}
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/controller" 
+            element={
+              <ProtectedRoute>
+                <Controller />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/import" 
+            element={
+              <ProtectedRoute>
+                <DataImport />
+              </ProtectedRoute>
+            } 
+          />
 
           {/* Catch-all redirects to the home page */}
           <Route path="*" element={<Navigate to="/" replace />} />

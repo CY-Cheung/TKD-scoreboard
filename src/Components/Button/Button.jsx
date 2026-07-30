@@ -1,59 +1,53 @@
+import React from "react";
 import "./Button.css";
 
-// 將 HSL 轉 HEX
-function hslToHex(h, s, l) {
-    s /= 100;
-    l /= 100;
-    let c = (1 - Math.abs(2 * l - 1)) * s;
-    let x = c * (1 - Math.abs((h / 60) % 2 - 1));
-    let m = l - c / 2;
-    let r = 0, g = 0, b = 0;
-    if (0 <= h && h < 60) [r, g, b] = [c, x, 0];
-    else if (60 <= h && h < 120) [r, g, b] = [x, c, 0];
-    else if (120 <= h && h < 180) [r, g, b] = [0, c, x];
-    else if (180 <= h && h < 240) [r, g, b] = [0, x, c];
-    else if (240 <= h && h < 300) [r, g, b] = [x, 0, c];
-    else if (300 <= h && h < 360) [r, g, b] = [c, 0, x];
-    r = Math.round((r + m) * 255);
-    g = Math.round((g + m) * 255);
-    b = Math.round((b + m) * 255);
-    return "#" + [r, g, b].map(x => x.toString(16).padStart(2, "0")).join("");
-}
-
 function Button({
-    text = "Button Text",
+    text,
+    children,
+    icon,
     fontSize = "1vw",
     angle = 270,
-    step = 10,
+    step = 40,
     gradient,
-    onClick
+    variant,
+    onClick,
+    type = "button",
+    disabled = false,
+    className = "",
+    style = {},
+    ...restProps
 }) {
-    // 如果有 gradient prop，直接用
-    let gradientColors = gradient;
-    // 否則用 angle/step 計算三組顏色
-    if (!gradientColors) {
-        const h1 = angle % 360;
-        const h2 = (angle + step) % 360;
-        const h3 = (angle + step * 2) % 360;
-        gradientColors = [
-            hslToHex(h1, 100, 50),
-            hslToHex(h2, 100, 20),
-            hslToHex(h3, 100, 50)
-        ];
+    let gradientString = gradient;
+
+    if (!gradientString) {
+        if (variant === "gemini") {
+            gradientString = "linear-gradient(135deg, #4f46e5, #8b5cf6, #ec4899, #f43f5e)";
+        } else if (variant === "orange") {
+            gradientString = "linear-gradient(135deg, #f97316, #d97706, #f59e0b)";
+        } else {
+            const h1 = angle % 360;
+            const h2 = (angle + step) % 360;
+            gradientString = `linear-gradient(135deg, hsl(${h1}, 90%, 55%), hsl(${h2}, 90%, 55%))`;
+        }
+    } else if (Array.isArray(gradientString)) {
+        gradientString = `linear-gradient(135deg, ${gradientString.join(", ")})`;
     }
-    // 組成 linear-gradient 字串
-    const gradientString = `linear-gradient(135deg, ${gradientColors.join(", ")})`;
 
     return (
         <button
-            className="cursor-target"
+            type={type}
+            disabled={disabled}
+            className={`tkd-btn cursor-target ${className}`}
             style={{
                 "--font-size": fontSize,
                 "--button-gradient": gradientString,
+                ...style
             }}
             onClick={onClick}
+            {...restProps}
         >
-            {text}
+            {icon && <span className="tkd-btn-icon">{icon}</span>}
+            {children || text}
         </button>
     );
 }

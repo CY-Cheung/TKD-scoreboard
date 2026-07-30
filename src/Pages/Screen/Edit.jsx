@@ -1,12 +1,21 @@
-
 import React, { useEffect, useState } from 'react';
 import { database } from '../../firebase';
 import { ref, get, update } from "firebase/database";
+import { QrCode, PeopleFill } from "react-bootstrap-icons";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
 import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner } from '../../Api';
 
-const Edit = ({ visible, setVisible, eventName, matchId, matchData, dominantSide }) => {
+const Edit = ({ 
+    visible, 
+    setVisible, 
+    eventName, 
+    matchId, 
+    matchData, 
+    dominantSide, 
+    setShowQRCode, 
+    occupiedRefereesCount = 0 
+}) => {
     const [matchMin, setMatchMin] = useState(0);
     const [matchSec, setMatchSec] = useState(0);
     const [restMin, setRestMin] = useState(0);
@@ -205,6 +214,19 @@ const Edit = ({ visible, setVisible, eventName, matchId, matchData, dominantSide
                         </select> sec
                     </div>
                 </div>
+
+                {/* QR Code Controller Toggle Button inside Edit Drawer */}
+                {setShowQRCode && (
+                    <Button 
+                        text={`QR Code (${occupiedRefereesCount}/3)`}
+                        fontSize="1.6vw"
+                        angle={300}
+                        onClick={() => {
+                            setVisible(false);
+                            setShowQRCode(true);
+                        }}
+                    />
+                )}
 
                 {phase === 'REST' && !isFinished && (
                     <Button 

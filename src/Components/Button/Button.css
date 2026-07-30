@@ -1,38 +1,53 @@
-button {
-	--padding-block: calc(var(--font-size) / 16);
-	--radius: calc((var(--font-size) + var(--padding-block) + 1vw) / 2);
-	display: inline-flex;
-	justify-content: center;
-	align-items: center;
-	border: none;
-	position: relative;
-	z-index: 0; /* 確保在 .card 偽元素之上 */
-	background: var(
-		--button-gradient,
-		linear-gradient(135deg, #2196f3, #21cbf3, #ffffff)
-	);
-	color: white;
-	font-size: var(--font-size);
-	padding-block: var(--padding-block);
-	padding-inline: var(--radius);
-	border-radius: var(--radius);
-	margin: calc(var(--font-size) / 4);
-	cursor: pointer;
+/* Button.css - Modern Pill-shaped Gradient Border Button (Matching Gemini & DB Button style) */
+
+.tkd-btn {
+  --font-size: 1vw;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+  position: relative;
+  border-radius: 9999px;
+  border: 2.5px solid transparent;
+  background: 
+    linear-gradient(#18181c, #18181c) padding-box,
+    var(--button-gradient, linear-gradient(135deg, #3b82f6, #ec4899)) border-box;
+  color: #ffffff;
+  font-size: var(--font-size);
+  font-weight: 600;
+  padding: 0.55em 1.5em;
+  margin: 0.35vw;
+  cursor: pointer;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  font-family: inherit;
+  line-height: 1.2;
 }
 
-button:active:after,
-button:hover:after {
-	background-color: rgba(0, 0, 0, 0.25);
+.tkd-btn:hover {
+  filter: brightness(1.25);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
 }
 
+.tkd-btn:active {
+  transform: translateY(0) scale(0.97);
+  filter: brightness(0.95);
+}
 
-button:after {
-	--inset: calc(var(--font-size) / 16);
-	content: "";
-	position: absolute;
-	inset: var(--inset);
-	border-radius: calc(var(--radius) - var(--inset));
-	z-index: -1;
-	background-color: rgba(0, 0, 0, 0.75);
-	pointer-events: none;
+.tkd-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+.tkd-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1em;
 }

@@ -22,14 +22,20 @@ function CourtSetup() {
     const eventsRef = ref(database, 'events');
     get(eventsRef).then((snapshot) => {
       if (snapshot.exists()) {
-        const eventList = Object.keys(snapshot.val());
+        const val = snapshot.val();
+        const eventList = Object.keys(val).map(key => {
+          const item = val[key];
+          const displayName = item?.EventName || item?.eventName || item?.settings?.eventName || item?.name || key;
+          return { id: key, displayName };
+        });
         setEvents(eventList);
         
         const lastEvent = localStorage.getItem('selectedEvent');
-        if (lastEvent && eventList.includes(lastEvent)) {
+        const validIds = eventList.map(e => e.id);
+        if (lastEvent && validIds.includes(lastEvent)) {
           setSelectedEvent(lastEvent);
         } else {
-          setSelectedEvent(''); // Ensure placeholder shows if last event not in list
+          setSelectedEvent('');
         }
       }
     });
@@ -69,7 +75,7 @@ function CourtSetup() {
     }
 
     if (!courtId) { 
-        setError('Please select a court.'); // Updated error message
+        setError('Please select a court.');
         return;
     }
 
@@ -86,9 +92,13 @@ function CourtSetup() {
                     currentMatchId: '' 
                 });
 
+                const selectedEventData = events.find(e => e.id === selectedEvent);
+                const eventDisplayName = selectedEventData?.displayName || selectedEvent;
+
                 login({ 
                     eventId: selectedEvent,
-                    courtId: courtId
+                    courtId: courtId,
+                    eventName: eventDisplayName
                 });
 
                 navigate('/'); 
@@ -130,7 +140,9 @@ function CourtSetup() {
             >
               <option value="" disabled>-- Please select an event --</option>
               {events.map(event => (
-                <option key={event} value={event}>{event}</option>
+                <option key={event.id} value={event.id}>
+                  {event.displayName !== event.id ? `${event.displayName} (${event.id})` : event.id}
+                </option>
               ))}
             </select>
           </div>
