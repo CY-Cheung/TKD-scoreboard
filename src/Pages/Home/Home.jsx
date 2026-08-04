@@ -10,11 +10,11 @@ import Squares from '../../Components/Squares/Squares';
 import QRCodeDisplay from '../../Components/QRCodeDisplay/QRCodeDisplay';
 
 // 引入 Bootstrap Icons
-import { Display, Controller, Diagram2, PersonBadge } from 'react-bootstrap-icons';
+import { Display, Controller, Diagram2, PersonBadge, BoxArrowRight } from 'react-bootstrap-icons';
 
 function Home() {
     const navigate = useNavigate();
-    const { session, logout } = useAuth();
+    const { session, user, googleLogout, logout } = useAuth();
     const [eventName, setEventName] = useState('');
     const [showQRCode, setShowQRCode] = useState(false);
 
@@ -24,7 +24,7 @@ function Home() {
             return;
         }
 
-        // Fetch Event Name from Database (checks EventName, eventName, settings/eventName, or name)
+        // Fetch Event Name from Database
         const eventRef = ref(database, `events/${session.eventId}`);
         get(eventRef).then((snapshot) => {
             if (snapshot.exists()) {
@@ -50,7 +50,7 @@ function Home() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    const handleLogout = () => {
+    const handleSessionLogout = () => {
         logout();
         navigate('/court-setup');
     };
@@ -65,7 +65,39 @@ function Home() {
                 hoverFillColor="hsla(60, 50%, 50%, 0.25)"
             />
 
+            {/* --- Top Right Session & User Profile Info Card --- */}
             <div className="session-info-form">
+                {user && (
+                    <div className="user-profile-header">
+                        <div className="user-info-group">
+                            {user.photoURL ? (
+                                <img 
+                                    src={user.photoURL} 
+                                    alt="User Avatar" 
+                                    className="user-avatar-img"
+                                />
+                            ) : (
+                                <div className="user-avatar-fallback">
+                                    {user.displayName?.[0] || 'U'}
+                                </div>
+                            )}
+                            <div className="user-text-details">
+                                <div className="user-display-name">{user.displayName || 'User'}</div>
+                                <div className="user-email-text" title={user.email}>{user.email}</div>
+                            </div>
+                        </div>
+                        <Button 
+                            onClick={googleLogout}
+                            title="Sign Out of Google Account"
+                            fontSize="1.1dvh"
+                            variant="orange"
+                            icon={<BoxArrowRight size={12} />}
+                            text="Log Out"
+                            style={{ padding: '0.4dvh 0.8dvw', minWidth: 'auto' }}
+                        />
+                    </div>
+                )}
+
                 <div className="form-group">
                     <label>Event Name</label>
                     <div className="form-value">{session?.eventName || eventName || session?.eventId || 'N/A'}</div>
@@ -79,37 +111,38 @@ function Home() {
                     <div className="form-value">{session?.courtId || 'N/A'}</div>
                 </div>
                 <Button
-                    text="Logout"
-                    onClick={handleLogout}
-                    fontSize="1.6dvh"
+                    text="Change Court Session"
+                    onClick={handleSessionLogout}
+                    fontSize="1.4dvh"
                     angle={0}
+                    className="change-session-btn"
                 />
             </div>
 
-            {/* --- 2x2 網格佈局 --- */}
+            {/* --- 中間 2x2 網格佈局 (帶有專屬動態 Glow 特效) --- */}
             <div className="home-grid">
                 {/* Screen Card */}
-                <div className="home-card" onClick={() => navigate("/screen")}>
+                <div className="home-card screen-card" onClick={() => navigate("/screen")}>
                     <Display className="home-card-icon" />
-                    <Button text="Screen" fontSize="2.5dvh" angle={50} readOnly />
+                    <Button text="Screen" fontSize="2.2dvh" angle={50} readOnly />
                 </div>
 
                 {/* Controller Card */}
-                <div className="home-card" onClick={() => navigate("/controller")}>
+                <div className="home-card controller-card" onClick={() => navigate("/controller")}>
                     <Controller className="home-card-icon" />
-                    <Button text="Controller" fontSize="2.5dvh" angle={270} readOnly />
+                    <Button text="Controller" fontSize="2.2dvh" angle={270} readOnly />
                 </div>
 
                 {/* Data Import Card */}
-                <div className="home-card" onClick={() => navigate("/import")}>
+                <div className="home-card import-card" onClick={() => navigate("/import")}>
                     <Diagram2 className="home-card-icon" />
-                    <Button text="Data Import" fontSize="2.5dvh" angle={90} readOnly />
+                    <Button text="Data Import" fontSize="2.2dvh" angle={90} readOnly />
                 </div>
 
-                {/* Referee Register Card - Now opens Referee Controller QR Code modal directly */}
-                <div className="home-card" onClick={() => setShowQRCode(true)}>
+                {/* Referee Register Card */}
+                <div className="home-card referee-card" onClick={() => setShowQRCode(true)}>
                     <PersonBadge className="home-card-icon" />
-                    <Button text="Referee Register" fontSize="2.5dvh" angle={180} readOnly />
+                    <Button text="Referee Register" fontSize="2.2dvh" angle={180} readOnly />
                 </div>
             </div>
 

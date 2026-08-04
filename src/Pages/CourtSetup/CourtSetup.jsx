@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
-import { ref, get, set } from "firebase/database";
+import { ref, get, set, remove } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
+import { FolderPlus, Trash, ExclamationTriangle, Key } from 'react-bootstrap-icons';
 
 import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
@@ -15,55 +16,180 @@ function CourtSetup() {
   const [selectedEvent, setSelectedEvent] = useState('');
   const [courtId, setCourtId] = useState(''); 
   const [courtOptions, setCourtOptions] = useState([]);
-  const navigate = useNavigate();
-  const { login } = useAuth();
+  const [authError, setAuthError] = useState('');
 
-  useEffect(() => {
+  // Create Event Modal State
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newEventId, setNewEventId] = useState('');
+  const [newEventName, setNewEventName] = useState('');
+  const [newSetupPassword, setNewSetupPassword] = useState('BCB2026');
+  const [courtCount, setCourtCount] = useState(4); // Default 4 courts
+
+  // Delete Confirmation Modal State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const navigate = useNavigate();
+  const { user, userLoading, googleLogin, googleLogout, login } = useAuth();
+
+  // Load events from Firebase
+  const fetchEvents = () => {
+    if (!user) return;
+    setAuthError('');
+
     const eventsRef = ref(database, 'events');
-    get(eventsRef).then((snapshot) => {
-      if (snapshot.exists()) {
-        const val = snapshot.val();
-        const eventList = Object.keys(val).map(key => {
-          const item = val[key];
-          const displayName = item?.EventName || item?.eventName || item?.settings?.eventName || item?.name || key;
-          return { id: key, displayName };
-        });
-        setEvents(eventList);
-        
-        const lastEvent = localStorage.getItem('selectedEvent');
-        const validIds = eventList.map(e => e.id);
-        if (lastEvent && validIds.includes(lastEvent)) {
-          setSelectedEvent(lastEvent);
+    get(eventsRef)
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          const val = snapshot.val();
+          const eventList = Object.keys(val).map(key => {
+            const item = val[key];
+            const displayName = item?.EventName || item?.eventName || item?.settings?.eventName || item?.name || key;
+            return { id: key, displayName, createdBy: item?.createdBy || null };
+          });
+          setEvents(eventList);
+          
+          const lastEvent = localStorage.getItem('selectedEvent');
+          const validIds = eventList.map(e => e.id);
+          if (selectedEvent && validIds.includes(selectedEvent)) {
+            // Keep current selection
+          } else if (lastEvent && validIds.includes(lastEvent)) {
+            setSelectedEvent(lastEvent);
+          } else if (eventList.length > 0) {
+            setSelectedEvent(eventList[0].id);
+          }
         } else {
+          setEvents([]);
           setSelectedEvent('');
         }
-      }
-    });
-  }, []);
+      })
+      .catch(err => {
+        console.error("Error fetching events:", err);
+        setAuthError("Failed to fetch events from database. Please check your network or login.");
+      });
+  };
 
   useEffect(() => {
-    if (selectedEvent) {
-        const courtsRef = ref(database, `events/${selectedEvent}/courts`);
-        get(courtsRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                setCourtOptions(Object.keys(snapshot.val()));
-                const lastCourt = localStorage.getItem('selectedCourt');
-                // check if last court is valid for this event
-                if(lastCourt && Object.keys(snapshot.val()).includes(lastCourt)){
-                    setCourtId(lastCourt);
-                } else {
-                    setCourtId(''); // Reset if last court not in new list
-                }
-            } else {
-                setCourtOptions([]);
-                setCourtId('');
-            }
-        });
+    fetchEvents();
+  }, [user]);
+
+  useEffect(() => {
+    if (selectedEvent && user) {
+      const courtsRef = ref(database, `events/${selectedEvent}/courts`);
+      get(courtsRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          setCourtOptions(Object.keys(snapshot.val()));
+          const lastCourt = localStorage.getItem('selectedCourt');
+          if (lastCourt && Object.keys(snapshot.val()).includes(lastCourt)) {
+            setCourtId(lastCourt);
+          } else {
+            setCourtId('');
+          }
+        } else {
+          setCourtOptions([]);
+          setCourtId('');
+        }
+      });
     } else {
-        setCourtOptions([]);
-        setCourtId('');
+      setCourtOptions([]);
+      setCourtId('');
     }
-}, [selectedEvent]);
+  }, [selectedEvent, user]);
+
+  const handleGoogleSignIn = async () => {
+    setAuthError('');
+    try {
+      await googleLogin();
+    } catch (err) {
+      console.error("Google Sign-In Error:", err);
+      setAuthError(`Login failed: ${err.message}`);
+    }
+  };
+
+  // Create Event Handler
+  const handleCreateEvent = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      alert('🔒 請先登入 Google 帳號！');
+      return;
+    }
+
+    const trimmedId = newEventId.trim();
+    const trimmedName = newEventName.trim();
+
+    if (!trimmedId || !trimmedName) {
+      alert('請提供有效的 Event ID 與 Event Name！');
+      return;
+    }
+
+    // Dynamically generate courts object based on courtCount
+    const generatedCourts = {};
+    const count = Math.max(1, Math.min(12, parseInt(courtCount, 10) || 4));
+    for (let i = 1; i <= count; i++) {
+      generatedCourts[`court${i}`] = { name: `court${i}`, currentMatchId: '' };
+    }
+
+    try {
+      const eventRef = ref(database, `events/${trimmedId}`);
+      await set(eventRef, {
+        EventName: trimmedName,
+        createdBy: user.uid,
+        createdByEmail: user.email || '',
+        createdAt: Date.now(),
+        settings: {
+          setupPassword: newSetupPassword || 'BCB2026'
+        },
+        courts: generatedCourts,
+        matches: {}
+      });
+
+      alert(`✅ 成功建立賽事：${trimmedName} (${trimmedId})，包含 ${count} 個場地！`);
+      setNewEventId('');
+      setNewEventName('');
+      setNewSetupPassword('BCB2026');
+      setCourtCount(4);
+      setShowCreateModal(false);
+      setSelectedEvent(trimmedId);
+      fetchEvents();
+
+    } catch (err) {
+      console.error("Create Event Failed:", err);
+      alert(`建立賽事失敗: ${err.message}`);
+    }
+  };
+
+  // Trigger Delete Event Confirmation Modal
+  const promptDeleteEvent = () => {
+    if (!selectedEvent) {
+      alert('請先選擇要刪除的賽事。');
+      return;
+    }
+    if (!user) {
+      alert('🔒 請先登入 Google 帳號！');
+      return;
+    }
+    setShowDeleteModal(true);
+  };
+
+  // Confirm Delete Event Execution
+  const confirmDeleteEvent = async () => {
+    if (!selectedEvent || !user) return;
+    setIsDeleting(true);
+
+    try {
+      const eventRef = ref(database, `events/${selectedEvent}`);
+      await remove(eventRef);
+      alert(`🗑️ 賽事 ${selectedEvent} 已成功刪除！`);
+      setShowDeleteModal(false);
+      setSelectedEvent('');
+      fetchEvents();
+    } catch (err) {
+      console.error("Delete Event Failed:", err);
+      alert(`刪除賽事失敗：只有該賽事的建立者或協作者可以刪除！\n(${err.message})`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,43 +201,42 @@ function CourtSetup() {
     }
 
     if (!courtId) { 
-        setError('Please select a court.');
-        return;
+      setError('Please select a court.');
+      return;
     }
 
     const settingsRef = ref(database, `events/${selectedEvent}/settings/setupPassword`);
     
     try {
-        const snapshot = await get(settingsRef);
-        if (snapshot.exists()) {
-            const correctPassword = snapshot.val();
-            if (password === correctPassword) {
-                const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
-                await set(courtRef, {
-                    name: courtId,
-                    currentMatchId: '' 
-                });
+      const snapshot = await get(settingsRef);
+      if (snapshot.exists()) {
+        const correctPassword = snapshot.val();
+        if (password === correctPassword) {
+          const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
+          await set(courtRef, {
+            name: courtId,
+            currentMatchId: '' 
+          });
 
-                const selectedEventData = events.find(e => e.id === selectedEvent);
-                const eventDisplayName = selectedEventData?.displayName || selectedEvent;
+          const selectedEventData = events.find(e => e.id === selectedEvent);
+          const eventDisplayName = selectedEventData?.displayName || selectedEvent;
 
-                login({ 
-                    eventId: selectedEvent,
-                    courtId: courtId,
-                    eventName: eventDisplayName
-                });
+          login({ 
+            eventId: selectedEvent,
+            courtId: courtId,
+            eventName: eventDisplayName
+          });
 
-                navigate('/'); 
-            } else {
-                setError('Incorrect password, please try again.');
-            }
+          navigate('/'); 
         } else {
-            setError('Setup Password has not been configured for this event. Please contact an administrator.');
-            console.error(`Setup password not found at 'events/${selectedEvent}/settings/setupPassword'`);
+          setError('Incorrect password, please try again.');
         }
+      } else {
+        setError('Setup Password has not been configured for this event. Please contact an administrator.');
+      }
     } catch (err) {
-        setError('An error occurred while connecting to the database.');
-        console.error("Error during setup:", err);
+      setError('An error occurred while connecting to the database.');
+      console.error("Error during setup:", err);
     }
   };
 
@@ -126,64 +251,274 @@ function CourtSetup() {
       />
       <div className="cs-content">
         <h1>Court Setup</h1>
-        <form onSubmit={handleSubmit} className="cs-form">
-          <p>Select the event, court, and enter the Setup Password to connect this device.</p>
-          
-          <div className="form-group">
-            <label htmlFor="event-select">Select Event</label>
-            <select
-              id="event-select"
-              className="datalist-input"
-              value={selectedEvent}
-              onChange={(e) => setSelectedEvent(e.target.value)}
-              required
-            >
-              <option value="" disabled>-- Please select an event --</option>
-              {events.map(event => (
-                <option key={event.id} value={event.id}>
-                  {event.displayName !== event.id ? `${event.displayName} (${event.id})` : event.id}
-                </option>
-              ))}
-            </select>
-          </div>
 
-          <div className="form-group">
-            <label htmlFor="court-select">Select Court</label>
-            <select
-              id="court-select"
-              className="datalist-input"
-              value={courtId}
-              onChange={(e) => setCourtId(e.target.value)}
-              disabled={!selectedEvent || courtOptions.length === 0}
-              required
-            >
-              <option value="" disabled>-- Please select a court --</option>
-              {courtOptions.map(court => (
-                <option key={court} value={court}>{court}</option>
-              ))}
-            </select>
+        {userLoading ? (
+          <p>Loading authentication state...</p>
+        ) : !user ? (
+          /* Google Sign-in Login Required Block */
+          <div className="cs-form" style={{ marginTop: '2dvh', textAlign: 'center' }}>
+            <p style={{ fontSize: '1.4dvw', color: '#ffcc00', marginBottom: '2dvh' }}>
+              🔒 您需要先登入 Google 帳號，方可存取賽事資料庫！
+            </p>
+            {authError && <p className="cs-error-message">{authError}</p>}
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '2dvh 0' }}>
+              <Button 
+                onClick={handleGoogleSignIn}
+                text="使用 Google 帳號登入 (Sign in with Google)"
+                icon={<Key size={20} />}
+                fontSize="1.6dvw"
+                variant="gemini"
+              />
+            </div>
+            <p style={{ fontSize: '1dvw', color: 'rgba(255, 255, 255, 0.6)' }}>
+              登入後系統即可向 Firebase Database 驗證您的身分並載入賽事場地數據。
+            </p>
           </div>
+        ) : (
+          /* Authenticated User Setup Form */
+          <form onSubmit={handleSubmit} className="cs-form">
+            <div style={{ 
+              display: 'flex', 
+              justify: 'space-between', 
+              alignItems: 'center', 
+              backgroundColor: 'rgba(255,255,255,0.08)',
+              padding: '0.8dvw 1.2dvw',
+              borderRadius: '0.6dvw',
+              marginBottom: '1dvh'
+            }}>
+              <span style={{ fontSize: '1.2dvw', color: '#4cd964' }}>
+                ✅ 已登入：<strong>{user.displayName || user.email}</strong>
+              </span>
+              <Button 
+                onClick={googleLogout}
+                text="登出 Google"
+                fontSize="1dvw"
+                variant="orange"
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="setup-password">Setup Password</label>
-            <input
-              id="setup-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter setup password"
-              required
-              disabled={!selectedEvent || !courtId}
-            />
-          </div>
-          
-          {error && <p className="cs-error-message">{error}</p>}
-          <div className="cs-action-buttons">
-            <Button type="submit" text="Confirm Settings" fontSize="1.5dvw" angle={30} disabled={!selectedEvent || !courtId} />
-            <Button text="Back to Home" fontSize="1.5dvw" angle={150} onClick={() => navigate('/')} />
-          </div>
-        </form>
+            <p>Select the event, court, and enter the Setup Password to connect this device.</p>
+            
+            <div className="form-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '0.5dvh' }}>
+                <label htmlFor="event-select" style={{ margin: 0 }}>Select Event</label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <Button
+                    onClick={() => setShowCreateModal(true)}
+                    title="Create New Event"
+                    fontSize="1dvw"
+                    angle={120}
+                    icon={<FolderPlus size={14} />}
+                    text="建立賽事"
+                  />
+                  <Button
+                    onClick={promptDeleteEvent}
+                    disabled={!selectedEvent}
+                    title="Delete Selected Event"
+                    fontSize="1dvw"
+                    angle={350}
+                    icon={<Trash size={14} />}
+                    text="刪除賽事"
+                  />
+                </div>
+              </div>
+
+              <select
+                id="event-select"
+                className="datalist-input"
+                value={selectedEvent}
+                onChange={(e) => setSelectedEvent(e.target.value)}
+                required
+              >
+                <option value="" disabled>-- Please select an event --</option>
+                {events.map(event => (
+                  <option key={event.id} value={event.id}>
+                    {event.displayName !== event.id ? `${event.displayName} (${event.id})` : event.id}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="court-select">Select Court</label>
+              <select
+                id="court-select"
+                className="datalist-input"
+                value={courtId}
+                onChange={(e) => setCourtId(e.target.value)}
+                disabled={!selectedEvent || courtOptions.length === 0}
+                required
+              >
+                <option value="" disabled>-- Please select a court --</option>
+                {courtOptions.map(court => (
+                  <option key={court} value={court}>{court}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="setup-password">Setup Password</label>
+              <input
+                id="setup-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter setup password"
+                required
+                disabled={!selectedEvent || !courtId}
+              />
+            </div>
+            
+            {error && <p className="cs-error-message">{error}</p>}
+            <div className="cs-action-buttons">
+              <Button type="submit" text="Confirm Settings" fontSize="1.5dvw" angle={30} disabled={!selectedEvent || !courtId} />
+              <Button text="Back to Home" fontSize="1.5dvw" angle={150} onClick={() => navigate('/')} />
+            </div>
+          </form>
+        )}
       </div>
+
+      {/* --- Create Event Modal Overlay --- */}
+      {showCreateModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            backgroundColor: '#1e1e1e',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '12px',
+            padding: '25px',
+            width: '90%',
+            maxWidth: '450px',
+            color: '#fff',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+            textAlign: 'left'
+          }}>
+            <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#34c759', fontSize: '1.4rem' }}>
+              <FolderPlus size={24} /> 建立新賽事 (Create Event)
+            </h3>
+            <form onSubmit={handleCreateEvent} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div className="form-group">
+                <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Event ID (賽事識別碼)</label>
+                <input 
+                  type="text" 
+                  placeholder="例如: TKD2026 (不可重複)" 
+                  value={newEventId}
+                  onChange={e => setNewEventId(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                />
+              </div>
+              <div className="form-group">
+                <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Event Name (賽事全稱)</label>
+                <input 
+                  type="text" 
+                  placeholder="例如: 2026 全港跆拳道錦標賽" 
+                  value={newEventName}
+                  onChange={e => setNewEventName(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                />
+              </div>
+              <div className="form-group">
+                <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Setup Password (設定密碼)</label>
+                <input 
+                  type="text" 
+                  placeholder="例如: BCB2026" 
+                  value={newSetupPassword}
+                  onChange={e => setNewSetupPassword(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                />
+              </div>
+              <div className="form-group">
+                <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Courts Count (場地數量: 1~12)</label>
+                <input 
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={courtCount}
+                  onChange={e => setCourtCount(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                <Button 
+                  onClick={() => setShowCreateModal(false)}
+                  text="取消"
+                  fontSize="0.9rem"
+                  angle={0}
+                />
+                <Button 
+                  type="submit"
+                  text="確認建立"
+                  fontSize="0.9rem"
+                  angle={120}
+                />
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- Custom Delete Confirmation Modal Overlay --- */}
+      {showDeleteModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          zIndex: 1100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            backgroundColor: '#221515',
+            border: '1px solid rgba(255, 59, 48, 0.5)',
+            borderRadius: '12px',
+            padding: '25px',
+            width: '90%',
+            maxWidth: '440px',
+            color: '#fff',
+            boxShadow: '0 10px 40px rgba(255, 59, 48, 0.3)',
+            textAlign: 'left'
+          }}>
+            <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px', color: '#ff3b30', fontSize: '1.4rem' }}>
+              <ExclamationTriangle size={28} /> 刪除賽事確認 (Confirm Delete)
+            </h3>
+            <p style={{ fontSize: '1rem', lineHeight: '1.5', color: '#ddd' }}>
+              您確定要刪除整個賽事「<strong style={{ color: '#ffcc00' }}>{selectedEvent}</strong>」嗎？
+            </p>
+            <p style={{ fontSize: '0.85rem', color: '#ff6b6b', backgroundColor: 'rgba(255, 59, 48, 0.1)', padding: '10px', borderRadius: '6px' }}>
+              ⚠️ 此操作會將該賽事下的所有比賽數據、場地設定及賽程永久刪除，無法復原！
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' }}>
+              <Button 
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+                text="取消"
+                fontSize="0.9rem"
+                angle={0}
+              />
+              <Button 
+                onClick={confirmDeleteEvent}
+                disabled={isDeleting}
+                text={isDeleting ? '刪除中...' : '確認刪除'}
+                icon={<Trash size={16} />}
+                fontSize="0.9rem"
+                angle={350}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

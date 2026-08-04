@@ -19,9 +19,16 @@ function App() {
         <Routes>
           {/* --- Public Routes --- */}
           <Route path="/court-setup" element={<CourtSetup />} />
-          <Route path="/screen" element={<Screen />} />
 
           {/* --- Routes that require session info (Protected Routes) --- */}
+          <Route 
+            path="/screen" 
+            element={
+              <ProtectedRoute>
+                <Screen />
+              </ProtectedRoute>
+            } 
+          />
           <Route 
             path="/" 
             element={

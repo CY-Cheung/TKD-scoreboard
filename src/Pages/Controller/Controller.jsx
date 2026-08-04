@@ -137,16 +137,17 @@ function Controller() {
         <div className="controller" onClick={handleFullscreen}>
             {/* Top Bar Banner for Match & Connection Status */}
             <div className="ctrl-top-bar">
-                <button 
+                <Button 
                     className="ctrl-back-btn" 
                     onClick={(e) => {
                         e.stopPropagation();
                         navigate("/");
                     }} 
                     aria-label="Back"
-                >
-                    <ArrowLeft size={18} />
-                </button>
+                    icon={<ArrowLeft size={18} />}
+                    fontSize="1rem"
+                    angle={180}
+                />
                 <div className="ctrl-info-badges">
                     <span className="ctrl-badge">{eventId || "No Event"}</span>
                     <span className="ctrl-badge court">{courtId || "No Court"}</span>

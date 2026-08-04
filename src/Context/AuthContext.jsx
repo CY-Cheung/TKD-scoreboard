@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth } from '../firebase';
+import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 
 const AuthContext = createContext(null);
 
@@ -7,7 +9,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  // Synchronously initialize session state from localStorage to avoid initial render flicker
+  // Synchronously initialize session state from localStorage
   const [session, setSession] = useState(() => {
     const savedEvent = localStorage.getItem('selectedEvent');
     const savedCourt = localStorage.getItem('selectedCourt');
@@ -22,19 +24,26 @@ export function AuthProvider({ children }) {
     return null;
   });
 
-  useEffect(() => {
-    const savedEvent = localStorage.getItem('selectedEvent');
-    const savedCourt = localStorage.getItem('selectedCourt');
-    const savedEventName = localStorage.getItem('selectedEventName');
+  const [user, setUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
 
-    if (savedEvent && savedCourt) {
-      setSession({ 
-        eventId: savedEvent, 
-        courtId: savedCourt, 
-        eventName: savedEventName || savedEvent 
-      });
-    }
+  // Listen to Firebase Auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setUserLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
+
+  const googleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    return await signInWithPopup(auth, provider);
+  };
+
+  const googleLogout = async () => {
+    await signOut(auth);
+  };
 
   const login = (sessionData) => {
     localStorage.setItem('selectedEvent', sessionData.eventId);
@@ -54,6 +63,10 @@ export function AuthProvider({ children }) {
 
   const value = {
     session,
+    user,
+    userLoading,
+    googleLogin,
+    googleLogout,
     login,
     logout
   };

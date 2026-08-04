@@ -4,6 +4,7 @@ import { QrCode, X, Copy, Check, PeopleFill, CheckCircleFill, Globe } from 'reac
 import { ref, onValue } from 'firebase/database';
 import { database } from '../../firebase';
 import './QRCodeDisplay.css';
+import Button from '../Button/Button';
 
 function QRCodeDisplay({ eventId, courtId, visible, onClose, refereesData: propRefereesData }) {
   const [copied, setCopied] = useState(false);
@@ -81,9 +82,14 @@ function QRCodeDisplay({ eventId, courtId, visible, onClose, refereesData: propR
             <QrCode className="qrcode-icon" />
             <span>Referee Controller QR Code</span>
           </div>
-          <button className="qrcode-close-btn cursor-target" onClick={onClose} aria-label="Close">
-            <X size={24} />
-          </button>
+          <Button 
+            className="qrcode-close-btn" 
+            onClick={onClose} 
+            aria-label="Close"
+            icon={<X size={24} />}
+            fontSize="1rem"
+            variant="orange"
+          />
         </div>
 
         <div className="qrcode-body">
@@ -157,10 +163,14 @@ function QRCodeDisplay({ eventId, courtId, visible, onClose, refereesData: propR
           {/* Controller URL preview and Copy */}
           <div className="qrcode-url-box">
             <input type="text" readOnly value={controllerUrl} className="qrcode-url-input cursor-target" />
-            <button className="qrcode-copy-btn cursor-target" onClick={handleCopy}>
-              {copied ? <Check size={18} color="#4cd964" /> : <Copy size={18} />}
-              {copied ? '已複製' : '複製'}
-            </button>
+            <Button 
+              className="qrcode-copy-btn" 
+              onClick={handleCopy}
+              icon={copied ? <Check size={18} color="#4cd964" /> : <Copy size={18} />}
+              text={copied ? '已複製' : '複製'}
+              fontSize="0.9rem"
+              angle={120}
+            />
           </div>
         </div>
       </div>

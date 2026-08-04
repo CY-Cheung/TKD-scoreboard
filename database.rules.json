@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "events": {
+      ".read": "auth != null",
+      "$eventId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (
+          (!data.exists() && newData.child('createdBy').val() === auth.uid) ||
+          (data.exists() && (
+            !data.child('createdBy').exists() ||
+            data.child('createdBy').val() === auth.uid ||
+            data.child('coAdmins').hasChild(auth.uid)
+          ))
+        )",
+        ".validate": "!newData.exists() || newData.hasChild('createdBy')"
+      }
+    }
+  }
+}

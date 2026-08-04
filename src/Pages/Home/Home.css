@@ -9,23 +9,24 @@
     overflow: hidden;
 }
 
-/* --- 2x2 網格佈局 --- */
+/* --- 中間 2x2 網格佈局 --- */
 .home-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(2, 1fr);
-    gap: 3dvw; /* 卡片之間的間距 */
-    width: 60dvw;
-    height: 60dvh;
+    gap: 2.5dvw; /* 卡片之間的間距 */
+    width: 48dvw;
+    height: 58dvh;
     z-index: 1;
 }
 
-/* --- 卡片樣式 --- */
+/* --- 卡片基本樣式 --- */
 .home-card {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 2dvh;
-    padding: 2dvh;
+    padding: 2dvh 1.5dvw;
     
     display: flex;
     flex-direction: column;
@@ -34,56 +35,231 @@
     text-align: center;
 
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+    overflow: hidden;
 }
 
-.home-card:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-5px);
+/* 微懸浮背景光暈脈衝效果 */
+.home-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+    pointer-events: none;
+    z-index: 0;
 }
 
-/* --- 卡片圖示樣式 (加大) --- */
+.home-card > * {
+    z-index: 1;
+}
+
+/* --- 卡片圖示樣式 --- */
 .home-card-icon {
-    font-size: 12dvh; /* 由 10dvh 增加到 12dvh */
+    font-size: 11dvh;
     color: #fff;
+    transition: transform 0.35s ease, filter 0.35s ease, color 0.35s ease;
 }
+
+/* =========================================
+   中央 4 張卡片動態 Glow Effect (顏色精確對應 Button 漸變色)
+   ========================================= */
+
+/* 1. Screen Card (Button angle=50 -> HSL 50°~90° 黃綠/黃金 Neon Glow) */
+.home-card.screen-card::before {
+    background: radial-gradient(circle, hsla(70, 90%, 55%, 0.3) 0%, transparent 70%);
+}
+.home-card.screen-card:hover {
+    background-color: hsla(70, 90%, 55%, 0.1);
+    border-color: hsla(70, 90%, 55%, 0.85);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 0 32px hsla(70, 90%, 55%, 0.5), 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+.home-card.screen-card:hover .home-card-icon {
+    color: hsl(70, 95%, 65%);
+    filter: drop-shadow(0 0 14px hsla(70, 90%, 55%, 0.85));
+    transform: scale(1.08);
+}
+.home-card.screen-card:hover::before {
+    opacity: 1;
+}
+
+/* 2. Controller Card (Button angle=270 -> HSL 270°~310° 紫羅蘭/洋紅 Neon Glow) */
+.home-card.controller-card::before {
+    background: radial-gradient(circle, hsla(290, 90%, 55%, 0.32) 0%, transparent 70%);
+}
+.home-card.controller-card:hover {
+    background-color: hsla(290, 90%, 55%, 0.1);
+    border-color: hsla(290, 90%, 55%, 0.85);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 0 32px hsla(290, 90%, 55%, 0.5), 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+.home-card.controller-card:hover .home-card-icon {
+    color: hsl(290, 95%, 68%);
+    filter: drop-shadow(0 0 14px hsla(290, 90%, 55%, 0.85));
+    transform: scale(1.08);
+}
+.home-card.controller-card:hover::before {
+    opacity: 1;
+}
+
+/* 3. Data Import Card (Button angle=90 -> HSL 90°~130° 翡翠綠 Neon Glow) */
+.home-card.import-card::before {
+    background: radial-gradient(circle, hsla(110, 90%, 55%, 0.3) 0%, transparent 70%);
+}
+.home-card.import-card:hover {
+    background-color: hsla(110, 90%, 55%, 0.1);
+    border-color: hsla(110, 90%, 55%, 0.85);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 0 32px hsla(110, 90%, 55%, 0.5), 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+.home-card.import-card:hover .home-card-icon {
+    color: hsl(110, 95%, 62%);
+    filter: drop-shadow(0 0 14px hsla(110, 90%, 55%, 0.85));
+    transform: scale(1.08);
+}
+.home-card.import-card:hover::before {
+    opacity: 1;
+}
+
+/* 4. Referee Register Card (Button angle=180 -> HSL 180°~220° 蔚藍/天藍 Neon Glow) */
+.home-card.referee-card::before {
+    background: radial-gradient(circle, hsla(200, 90%, 55%, 0.3) 0%, transparent 70%);
+}
+.home-card.referee-card:hover {
+    background-color: hsla(200, 90%, 55%, 0.1);
+    border-color: hsla(200, 90%, 55%, 0.85);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 0 32px hsla(200, 90%, 55%, 0.5), 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+.home-card.referee-card:hover .home-card-icon {
+    color: hsl(200, 95%, 65%);
+    filter: drop-shadow(0 0 14px hsla(200, 90%, 55%, 0.85));
+    transform: scale(1.08);
+}
+.home-card.referee-card:hover::before {
+    opacity: 1;
+}
+
 
 /* --- 右上角資訊卡樣式 --- */
 .session-info-form {
     position: absolute;
     top: 2dvh;
-    right: 1dvw;
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 1.5dvh 1dvw;
-    border-radius: 1dvh;
+    right: 1.5dvw;
+    background-color: rgba(20, 20, 25, 0.78);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 1.5dvh 1.2dvw;
+    border-radius: 1.2dvh;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     z-index: 2;
     display: flex;
     flex-direction: column;
     gap: 1dvh;
-    width: 15dvw;
-    min-width: 180px;
+    width: 20dvw;
+    min-width: 240px;
+    max-width: 320px;
+    box-sizing: border-box;
+}
+
+/* 用戶頭像與名稱導覽列 */
+.user-profile-header {
+    display: flex;
     align-items: center;
+    justify: space-between;
+    width: 100%;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding-bottom: 0.8dvh;
+    margin-bottom: 0.3dvh;
+    gap: 8px;
+}
+
+.user-info-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+.user-avatar-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #4cd964;
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.user-avatar-fallback {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #4285F4;
+    display: flex;
+    align-items: center;
+    justify: center;
+    font-weight: bold;
+    color: #fff;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+}
+
+.user-text-details {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    text-align: left;
+}
+
+.user-display-name {
+    font-size: 1.35dvh;
+    font-weight: bold;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-email-text {
+    font-size: 1.05dvh;
+    color: rgba(255, 255, 255, 0.65);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .session-info-form .form-group {
     display: flex;
     flex-direction: column;
     width: 100%;
+    text-align: left;
 }
 
 .session-info-form .form-group label {
-    font-size: 1.5dvh;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 0.5dvh;
+    font-size: 1.2dvh;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 0.2dvh;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .session-info-form .form-group .form-value {
-    font-size: 1.8dvh;
+    font-size: 1.5dvh;
     font-weight: 500;
+    color: #ffffff;
+    word-break: break-word;
+    line-height: 1.3;
 }
 
-.session-info-form Button {
-    font-size: 1.6dvh !important;
-    margin-top: 1dvh;
+.session-info-form .change-session-btn {
+    width: 100%;
+    margin-top: 0.6dvh;
 }
