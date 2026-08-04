@@ -1,0 +1,5044 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.firebase/
+  hosting.ZGlzdA.cache
+.idx/
+  dev.nix
+docs/
+  FIREBASE_MULTI_DEVICE_DESIGN.md
+src/
+  Components/
+    Button/
+      Button.css
+      Button.jsx
+    Card/
+      Card.css
+      Card.jsx
+    Mask/
+      Mask.css
+      Mask.jsx
+    ProtectedRoute/
+      ProtectedRoute.jsx
+    QRCodeDisplay/
+      QRCodeDisplay.css
+      QRCodeDisplay.jsx
+    Squares/
+      Squares.css
+      Squares.jsx
+    TargetCursor/
+      TargetCursor.css
+      TargetCursor.jsx
+  Context/
+    AuthContext.jsx
+  Pages/
+    Controller/
+      Controller.css
+      Controller.jsx
+    CourtSetup/
+      CourtSetup.css
+      CourtSetup.jsx
+    DataImport/
+      DataImport.css
+      DataImport.jsx
+    Home/
+      Home.css
+      Home.jsx
+    Screen/
+      Edit.css
+      Edit.jsx
+      Screen.css
+      Screen.jsx
+  Api.js
+  App.css
+  App.jsx
+  firebase.js
+  index.css
+  main.jsx
+.gitignore
+commit.ps1
+commit.sh
+eslint.config.js
+firebase.json
+gh-pages.ps1
+gh-pages.sh
+index.html
+ngrok.exe
+package.json
+README.md
+vite.config.js
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="src/main.jsx">
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+</file>
+
+<file path=".gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+</file>
+
+<file path="commit.sh">
+#!/bin/bash
+git add .
+git commit -m "Quick commit by script."
+git push
+</file>
+
+<file path="eslint.config.js">
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{js,jsx}'],
+    extends: [
+      js.configs.recommended,
+      reactHooks.configs['recommended-latest'],
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+])
+</file>
+
+<file path=".firebase/hosting.ZGlzdA.cache">
+index.html,1769152907371,d7e69385e1beef4784c550139e0534ebbaa8642e83a8b8bc5c3d5709f1e71873
+404.html,1769152907479,d7e69385e1beef4784c550139e0534ebbaa8642e83a8b8bc5c3d5709f1e71873
+assets/index-D5FPsWZA.css,1769152907366,76138746aa6d0aa83d1badacf58ba6083b22bdde9d71827be223fcd1d91e61e9
+assets/index-D0S11FC2.js,1769152907372,237011ba0804579f31a5ccbf5bda95fd9f0e4316b0d13b4f79a900b49f111461
+</file>
+
+<file path=".idx/dev.nix">
+{pkgs}: {
+  channel = "stable-24.05";
+  packages = [
+    pkgs.nodejs_20
+  ];
+  idx.extensions = [
+    "svelte.svelte-vscode"
+    "vue.volar"
+  ];
+  idx.previews = {
+    previews = {
+      web = {
+        command = [
+          "npm"
+          "run"
+          "dev"
+          "--"
+          "--port"
+          "$PORT"
+          "--host"
+          "0.0.0.0"
+        ];
+        manager = "web";
+      };
+    };
+  };
+}
+</file>
+
+<file path="docs/FIREBASE_MULTI_DEVICE_DESIGN.md">
+# TKD-scoreboard 跆拳道多裝置實時互動與裁判搶位系統設計文件
+(TKD-scoreboard Multi-device Real-time Interaction & Referee Slot Machine Design Document)
+
+## 1. 系統概述 (System Overview)
+本系統專為 **TKD Scoreboard (跆拳道計分系統)** 打造，旨在透過 Firebase Realtime Database (實時資料庫) 實現電腦端 Host (主機端，即比賽大螢幕 Screen / 場地管理 CourtSetup) 與最多 3 部手機端 Client (客戶端，即 Corner Judge / 角裁控制器 Controller) 之間的低延遲實時互動與狀態同步。
+
+系統支援：
+- **Dynamic QR Code Generation (動態二維碼生成)**：Host 根據 `eventId` (賽事識別碼) 與 `courtId` (場地識別碼) 產生包含專屬網址的 QR Code (二維碼)。
+- **Slot-based State Machine (基於席位嘅狀態機)**：每座 Court (場地) 設有 `J1`、`J2`、`J3` 三個固定 Corner Judge (角裁) 席位。
+- **Atomic Transaction (原子事務) 搶位**：防範多部手機同時掃碼引致的 Race Condition (競態條件)。
+- **Automatic Disconnect Recovery (自動斷線修復)**：透過 `onDisconnect()` Hook (斷線鉤子) 自動釋放離線裁判的席位。
+- **Persistent Token (持久化權杖)**：結合 Local Storage (本地儲存)，防止手機重載網頁時丟失裁判身分。
+
+---
+
+## 2. 資料庫架構與專案對接 (Database Schema & Repository Integration)
+於 Firebase Realtime Database (實時資料庫) 的 `events/{eventId}/courts/{courtId}` 節點下建立 `referees` (裁判席位) 狀態區塊，與現有的 `matches` 賽事數據分開存取，確保 Namespace Isolation (命名空間隔離)：
+
+```json
+{
+  "events": {
+    "2026-TKD-Open": {
+      "courts": {
+        "Court1": {
+          "name": "Court 1",
+          "currentMatchId": "M101",
+          "hostStatus": "online",
+          "referees": {
+            "J1": {
+              "clientId": "judge_client_uuid_881",
+              "status": "occupied",
+              "token": "token_secret_111",
+              "lastSeen": 1770000000
+            },
+            "J2": {
+              "clientId": null,
+              "status": "vacant",
+              "token": null,
+              "lastSeen": null
+            },
+            "J3": {
+              "clientId": "judge_client_uuid_992",
+              "status": "occupied",
+              "token": "token_secret_333",
+              "lastSeen": 1770000010
+            }
+          }
+        }
+      },
+      "matches": {
+        "M101": {
+          "config": {
+            "matchId": "M101",
+            "competitors": {
+              "red": { "name": "Hong (Red)" },
+              "blue": { "name": "Chung (Blue)" }
+            }
+          },
+          "state": {
+            "currentRound": 1,
+            "isPaused": true
+          },
+          "stats": {
+            "red": { "pointsStat": [0,0,0,0,0], "gamjeom": 0 },
+            "blue": { "pointsStat": [0,0,0,0,0], "gamjeom": 0 }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+## 3. 核心運作邏輯 (Core Operation Logic)
+
+```
+[Corner Judge 手機]                      [Firebase Realtime Database]                     [Host 大螢幕 / Screen]
+       |                                              |                                           |
+       |--- 掃描 QR Code 進入 Controller ------------->|                                           |
+       |    (?event=2026-TKD-Open&court=Court1)       |                                           |
+       |                                              |                                           |
+       |--- 檢查 Local Storage 有無 Token ------------>|                                           |
+       |    - 無：執行 runTransaction() 尋找 vacant    |                                           |
+       |    - 有：帶入 Token 進行驗證與續期            |                                           |
+       |                                              |                                           |
+       |<-- 搶位成功：獲派發 J1 及 Token -------------|                                           |
+       |    並註冊 onDisconnect() 鉤子                 |--- 觸發 referees 監聽器 ----------------->|
+       |                                              |    更新裁判人數 (例如: 2/3)                 |
+       |                                              |                                           |
+       |--- 按下按鈕得分 (updateScoreAndCheckRules) -->|--- 實時同步比賽數據 --------------------->|
+       |                                              |    大螢幕實時更新紅藍分數                 |
+       |                                              |                                           |
+       |--- 手機離線 / 關閉瀏覽器 ------------------->|                                           |
+       |    (Firebase 自動執行 onDisconnect)          |--- 席位設回 vacant ---------------------->|
+       |                                              |    大螢幕更新為 (1/3)，釋放席位           |
+```
+
+### 3.1 搶位與鎖定 (Atomic Transaction)
+手機掃碼連線時，前端發起 `runTransaction()` 針對 `events/{eventId}/courts/{courtId}/referees` 進行寫入：
+1. 遍歷 `J1`, `J2`, `J3` 席位。
+2. 找出第一個 `status === 'vacant'` 的席位。
+3. 生成獨一無二的 `clientId` 與 `token`。
+4. 將該席位更新為 `occupied` 並回傳成功。若 3 個席位皆為 `occupied`，回傳滿額警告。
+
+### 3.2 自動斷線釋放 (Disconnect Hook)
+成功佔據席位後，手機端執行：
+```javascript
+const slotRef = ref(database, `events/${eventId}/courts/${courtId}/referees/${assignedSlot}`);
+onDisconnect(slotRef).update({
+  status: "vacant",
+  clientId: null,
+  token: null
+});
+```
+
+### 3.3 重新整理恢復 (Reconnection & Persistence)
+手機端連線時先檢查 `localStorage.getItem("tkd_judge_session")`：
+- 若存在包含 `{ eventId, courtId, slot, token }` 的 Local Storage (本地儲存) 記錄，系統發起驗證請求。
+- 若該 Slot (席位) 的 Token (權杖) 與紀錄相符，即使狀態目前標記為離線，亦可直接重連並鎖定該席位，無需重新搶位。
+
+---
+
+## 4. 模組實作指南 (Module Implementation Guide)
+
+### 4.1 Host 主機端與 QR Code (Screen.jsx / QRCodeDisplay.jsx)
+- **檔案**: `src/Components/QRCodeDisplay/QRCodeDisplay.jsx`
+- **邏輯**: 產生的控制器連結格式為：
+  `${window.location.origin}${basePath}controller?event=${eventId}&court=${courtId}`
+- **畫面回饋**: 在 [Screen.jsx](file:///c:/Users/cyche/Document/TKD-scoreboard/src/Pages/Screen/Screen.jsx) 畫面上加入 Referee Badge (裁判狀態標籤)，顯示目前 `J1`, `J2`, `J3` 的在線狀態。
+
+### 4.2 Client 裁判端 (Controller.jsx)
+- **檔案**: `src/Pages/Controller/Controller.jsx`
+- **邏輯**: 
+  - 進入頁面時初始化席位申請。
+  - 頂端 Bar 顯示當前裁判身分（例如 `[Judge J1]`）。
+  - 按下得分按鈕時，呼叫 `src/Api.js` 中的 `updateScoreAndCheckRules(eventId, currentMatchId, side, type, index, delta)` 進行賽分更新。
+
+### 4.3 Firebase Security Rules (安全規則)
+寫入 `firebase.json` 或 Firebase 控制台：
+```json
+{
+  "rules": {
+    "events": {
+      "$eventId": {
+        "courts": {
+          "$courtId": {
+            "referees": {
+              ".read": true,
+              ".write": true
+            }
+          }
+        },
+        "matches": {
+          ".read": true,
+          ".write": true
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+## 5. 邊緣情況與容錯機制 (Edge Cases & Error Handling)
+
+1. **滿額掃描 (Full Slot Handling)**：
+   若 3 位裁判已滿，第 4 位掃碼者會收到彈出提示：「目前裁判席位已滿 (3/3 All Referees Occupied)，請稍後再試或聯絡大會主裁。」
+2. **大螢幕 Host 離線 (Host Disconnect)**：
+   當大螢幕關閉時，`courts/{courtId}/hostStatus` 被設為 `offline`。裁判手機會顯示橙色警示巴：「與大螢幕失去同步 (Host Disconnected)」，但仍可暫存本地得分指令。
+3. **誤關網頁與快速重連 (Accidental Refresh)**：
+   裁判如果不小心 Refresh (重新整理) 瀏覽器，可在 3 秒之內透過 Persistent Token (持久化權杖) 無縫恢復原本位置，其他裁判不會被強行剔除。
+
+---
+*文件建立日期: 2026-07-30*  
+*專案名稱: TKD-scoreboard*
+</file>
+
+<file path="src/Components/Squares/Squares.css">
+.squares-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100dvw;
+  height: 100dvh;
+  z-index: 0;
+  border: none;
+  display: block;
+}
+</file>
+
+<file path="src/Components/Squares/Squares.jsx">
+import { useRef, useEffect } from 'react';
+import './Squares.css';
+
+const Squares = ({
+  direction = 'right',
+  speed = 1,
+  borderColor = '#999',
+  squareSize = 40,
+  hoverFillColor = '#222',
+  className = ''
+}) => {
+  const canvasRef = useRef(null);
+  const requestRef = useRef(null);
+  const numSquaresX = useRef();
+  const numSquaresY = useRef();
+  const gridOffset = useRef({ x: 0, y: 0 });
+  const hoveredSquare = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    const resizeCanvas = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      numSquaresX.current = Math.ceil(canvas.width / squareSize) + 1;
+      numSquaresY.current = Math.ceil(canvas.height / squareSize) + 1;
+    };
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const drawGrid = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const startX = Math.floor(gridOffset.current.x / squareSize) * squareSize;
+      const startY = Math.floor(gridOffset.current.y / squareSize) * squareSize;
+
+      for (let x = startX; x < canvas.width + squareSize; x += squareSize) {
+        for (let y = startY; y < canvas.height + squareSize; y += squareSize) {
+          const squareX = x - (gridOffset.current.x % squareSize);
+          const squareY = y - (gridOffset.current.y % squareSize);
+
+          if (
+            hoveredSquare.current &&
+            Math.floor((x - startX) / squareSize) === hoveredSquare.current.x &&
+            Math.floor((y - startY) / squareSize) === hoveredSquare.current.y
+          ) {
+            ctx.fillStyle = hoverFillColor;
+            ctx.fillRect(squareX, squareY, squareSize, squareSize);
+          }
+
+          ctx.strokeStyle = borderColor;
+          ctx.strokeRect(squareX, squareY, squareSize, squareSize);
+        }
+      }
+
+      const gradient = ctx.createRadialGradient(
+        canvas.width / 2,
+        canvas.height / 2,
+        0,
+        canvas.width / 2,
+        canvas.height / 2,
+        Math.sqrt(canvas.width ** 2 + canvas.height ** 2) / 2
+      );
+      gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
+
+    const updateAnimation = () => {
+      const effectiveSpeed = Math.max(speed, 0.1);
+      switch (direction) {
+        case 'right':
+          gridOffset.current.x = (gridOffset.current.x - effectiveSpeed + squareSize) % squareSize;
+          break;
+        case 'left':
+          gridOffset.current.x = (gridOffset.current.x + effectiveSpeed + squareSize) % squareSize;
+          break;
+        case 'up':
+          gridOffset.current.y = (gridOffset.current.y + effectiveSpeed + squareSize) % squareSize;
+          break;
+        case 'down':
+          gridOffset.current.y = (gridOffset.current.y - effectiveSpeed + squareSize) % squareSize;
+          break;
+        case 'diagonal':
+          gridOffset.current.x = (gridOffset.current.x - effectiveSpeed + squareSize) % squareSize;
+          gridOffset.current.y = (gridOffset.current.y - effectiveSpeed + squareSize) % squareSize;
+          break;
+        default:
+          break;
+      }
+
+      drawGrid();
+      requestRef.current = requestAnimationFrame(updateAnimation);
+    };
+
+    const handleMouseMove = (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+
+      const startX = Math.floor(gridOffset.current.x / squareSize) * squareSize;
+      const startY = Math.floor(gridOffset.current.y / squareSize) * squareSize;
+
+      const hoveredSquareX = Math.floor((mouseX + gridOffset.current.x - startX) / squareSize);
+      const hoveredSquareY = Math.floor((mouseY + gridOffset.current.y - startY) / squareSize);
+
+      if (
+        !hoveredSquare.current ||
+        hoveredSquare.current.x !== hoveredSquareX ||
+        hoveredSquare.current.y !== hoveredSquareY
+      ) {
+        hoveredSquare.current = { x: hoveredSquareX, y: hoveredSquareY };
+      }
+    };
+
+    const handleMouseLeave = () => {
+      hoveredSquare.current = null;
+    };
+
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseleave', handleMouseLeave);
+
+    requestRef.current = requestAnimationFrame(updateAnimation);
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      cancelAnimationFrame(requestRef.current);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [direction, speed, borderColor, hoverFillColor, squareSize]);
+
+  return <canvas ref={canvasRef} className={`squares-canvas ${className}`}></canvas>;
+};
+
+export default Squares;
+</file>
+
+<file path="commit.ps1">
+git add .
+git commit -m "Quick commit by script."
+git push
+</file>
+
+<file path="firebase.json">
+{
+  "hosting": {
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
+</file>
+
+<file path="gh-pages.ps1">
+npm run build
+npm run deploy
+</file>
+
+<file path="gh-pages.sh">
+#!/bin/sh
+npm run build
+npm run postbuild
+npm run deploy
+</file>
+
+<file path="README.md">
+# WT 跆拳道即時計分系統
+
+## 測試與起動指南 (Quick Start)
+
+呢份文件記錄咗點樣喺 Local (本地) 起動同埋測試呢個計分系統，如果你唔記得咗點開，隨時睇返呢度就得！
+
+### 第一步：起動 Server (後端)
+1. 喺 VS Code 按 `Ctrl + ~` (或者去頂部 Menu 揀 `Terminal -> New Terminal`) 打開終端機。
+2. 輸入以下指令啟動 Server：
+   ```powershell
+   cd server
+   node server.js
+   ```
+   *(如果你見到 `Server listening on port 3001` 就代表成功啦)*
+
+### 第二步：起動 Client (前端)
+1. 喺終端機面版嘅右上角，㩒個 `+` 號開多個新 Tab (分頁)。
+2. 輸入以下指令啟動 Frontend：
+   ```powershell
+   cd client
+   npm run dev -- --host
+   ```
+   *(如果成功，佢會彈一條 Link 出嚟，通常係 `http://localhost:5173`)*
+
+### 第三步：打開 Browser (瀏覽器) 試玩
+打開 Chrome，開幾個唔同嘅 Window (視窗)，貼上以下網址去模擬唔同角色：
+
+| 角色 | 測試網址 | 操作方法 |
+| :--- | :--- | :--- |
+| **大螢幕** | `http://localhost:5173/` | 純顯示，禁 `\` 鍵可以左右反轉 |
+| **主控台** | `http://localhost:5173/?role=admin` | 禁 `Enter` 鍵會喺下面彈個 Admin 面板出嚟，可以控制加減分同埋 Start/Pause |
+| **裁判手掣** | `http://localhost:5173/?role=referee` | 禁上面嘅掣測試打分 (建議撳 F12 開 Developer Tools 扮手機版睇，每撳一吓都會震) |
+
+💡 **測試小貼士**：最好將「大螢幕」同「主控台」並排一齊睇，當你喺 Admin 面板或者手掣度㩒掣，大螢幕嘅分數同埋 Timer 會做到零延遲即刻同步更新！
+
+---
+
+## 軟件需求規格說明書 (Software Requirements Specification) v3
+
+### 1. 系統整體架構與角色 (Architecture & Roles)
+
+系統採用「即棄式 (Disposable)」MVP 設計，無須 Database (數據庫)，所有資料暫存於 Server (伺服器) 嘅 Memory (記憶體) 中。重置比賽即清空資料。
+
+系統底層嚴格區分 3 個角色，以確保 Security (安全性) 及支援多螢幕擴展
+| 角色 | 連線識別 (URL 參數) | 職責與權限 |
+| :--- | :--- | :--- |
+| **Server (伺服器)** | (中央大腦) | 唯一嘅「真理來源」。負責運算 Logic (邏輯)、管理連線、維持 State Machine (狀態機) 及向全場進行 Broadcast (廣播)。 |
+| **主控台 (Admin)** | `?role=admin` | 最高權限。UI (用戶介面) 與大螢幕結合，包含隱藏之控制面板。負責開局、設定裁判人數、暫停、手動加減分、確認回合結果及執行 IVR (即時錄像重審)。 |
+| **大螢幕 (Display)** | `?role=display` | 狀態接收器。UI (用戶介面) 為純淨版大螢幕，無任何隱藏控制按鈕。被動顯示 Server (伺服器) 傳送嘅最新分數與時間。 |
+| **裁判手掣 (Referee)** | `?role=referee` | 動作觸發器。只負責將按鍵訊號發送畀 Server (伺服器)。採用 **Fixed Slots (固定席位制)** 處理斷線重連。 |
+
+### 2. 核心數據模型 (Core Data Model)
+
+為防止數據衝突及支援完美復原，系統採用 **Single Source of Truth (單一真理來源)** 及 **Derived State (衍生狀態)** 設計：
+
+* **比賽設定檔 (Configuration)：** 包含裁判人數 (可選 1 至 3 人)、PTG 分差門檻 (預設 15)、PUN 犯規門檻 (預設 5)、回合時間等。
+* **動作計數表 (Action Counts)：** 系統只記錄動作「發生次數」，不直接修改分數。
+    * 紅/藍雙方各自擁有獨立紀錄：`punch` (正拳)、`body` (踢軀幹)、`head` (踢頭)、`turningBody` (轉身軀幹)、`turningHead` (轉身踢頭)、`gamJeom` (犯規)。
+* **分數映射表 (Point Map - 2026新例)：** 獨立設定各動作價值。根據最新賽例轉身分數乘2：正拳=1, 踢軀幹=2, 踢頭=3, 轉身踢軀幹=4, 轉身踢頭=6, 對方 Gam-jeom=1。
+* **計分公式：** 總分 = Σ (各項動作次數 × 對應分數)
+
+### 3. 核心業務邏輯 (Core Business Logic)
+
+#### A. 動態聯判機制 (Dynamic Co-judging Mechanism)
+系統支援 1 至 3 名裁判模式，由主控台於開局前設定，運作邏輯如下：
+
+* **單人裁判模式 (1 Referee)：**
+    * 裁判按下攻擊按鈕後，**即時生效**。
+    * 直接寫入歷史紀錄並重新計算分數，向全場進行 Broadcast (廣播)，無須等候。
+* **多人裁判模式 (2-3 Referees)：**
+    * 採用 Asynchronous Processing (非同步處理)，紅藍雙方擁有獨立嘅 Time Window (時間窗) 計時器。
+    * **收到第一票：** 啟動 1000ms 倒數。
+    * **防連撳作弊：** 同一個 Time Window 內，收到同一位裁判第二票將被忽略。
+    * **判定得分：** 1000ms 內收到兩票或以上，判定得分並廣播，即時重置該方計時器。
+    * **判定無效：** 1000ms 結束仍未達兩票，清空該次紀錄。
+
+#### B. Gam-jeom (犯規) 執行流程
+1. **暫停觸發：** Centre Referee (場上主審) 嗌出暫定口令。
+2. **封鎖與停錶：** 主控台人員即時按下【暫停】。Server (伺服器) 暫停時間，並 **Block (封鎖)** 所有裁判手掣輸入。
+3. **輸入犯規：** 主控台按下對應嘅【Gam-jeom】。
+4. **計算與廣播：** 犯規方 `gamJeom` 數量 +1，重新計算雙方總分並廣播。大螢幕之 Event Log (事件日誌) 永久保留該紀錄。
+5. **恢復比賽：** 等待主控台手動按下【繼續】以恢復比賽及解鎖手掣。
+
+#### C. 自動監察與提早結束 (Early Termination)
+每次分數變動，Server (伺服器) 會根據設定檔檢查以下 Variable (變數)，一旦觸發，立即暫停並觸發回合結束：
+* **PTG (分差勝)：** 雙方小分差距 >= 設定值（預設 15 分）。
+* **PUN (犯規落敗)：** 單方累積 Gam-jeom 達設定值（預設 5 次）。
+
+#### D. 平手自動裁決演算法 (Tie-breaker Algorithm)
+回合結束且分數平手時，系統後台瞬間執行 6 層 Algorithm (演算法) 判斷：
+1. 比較轉身動作總得分 (`turningBody` + `turningHead`)。
+2. 比較踢頭總次數 (`head` + `turningHead`)。
+3. 比較踢軀幹總次數 (`body` + `turningBody`)。
+4. 比較正拳次數 (`punch`)。
+5. 比較 Gam-jeom 數量（少者勝）。
+6. **Level 6 (Woo-see girok)：** 若 5 項全同，進入 `SUPERIORITY_WAITING` 狀態。系統鎖定，由主控台根據場上裁判手勢，手動輸入勝方。
+
+### 4. 狀態機與比賽流程 (State Machine Flow)
+
+| 狀態 (State) | 觸發條件 | 系統運作邏輯 |
+| :--- | :--- | :--- |
+| **`ROUND_READY`** (回合就緒) | 開局 或 休息結束 | 顯示回合時間 (如 2:00)。小分及 Gam-jeom 清零。手掣鎖定。等待主控台按開始。 |
+| **`ROUND_IN_PROGRESS`** (回合進行中) | 主控台按「開始」 | 倒數計時。手掣解鎖，接收得分訊號。持續執行自動監察。 |
+| **`ROUND_END_TRIGGERED`** (觸發回合結束) | 0:00、達 PTG 或 PUN | 自動停止計時，鎖定手掣。進入結果確認階段。 |
+| **`RESULT_CONFIRMATION`** (結果確認/IVR緩衝) | 緊接上一步自動進入 | 顯示「暫定結果」。主控台可執行 IVR 修改數據。等待最終人手確認。 |
+| **`REST_IN_PROGRESS`** (局間休息) | 主控台按「確認結果」 | 派發「大分」(勝局)。啟動休息倒數 (如 1:00)。倒數完畢自動切回 `ROUND_READY`。 |
+
+### 5. 前端介面設計規範 (Frontend UI Specs)
+
+#### A. 大螢幕與主控台二合一架構 (Combined Display & Admin UI)
+為咗方便單機操作並保留擴充性，主控台與大螢幕將共用底層 `Screen.jsx` 組件，並透過 Conditional Rendering (條件渲染) 區分功能：
+* **`?role=display` 模式：** 只渲染純淨嘅分數牌與 Event Log (事件日誌)，屏蔽所有點擊事件。接收到按鍵事件時亮起對應燈號，多人聯判模式下 1000ms 結算後不熄滅並保持在 Score Record (得分紀錄)。
+* **`?role=admin` 模式：** 底層渲染分數牌，但可透過特定按鈕或 Keyboard Shortcuts (鍵盤快捷鍵) 呼叫出 Overlay Modal (覆蓋式模態視窗)，顯示 `Edit.jsx` 控制面板以進行各項賽事操作 (包含開局設定裁判人數)。
+
+#### B. 裁判手掣 (Referee UI)
+* **盲打優化 (Blind-typing Optimized)：** 橫向佈局。5 個巨大按鈕 (正拳、軀幹、頭、轉身軀幹、轉身頭)。
+* **無視覺干擾：** 按下不顯示得分提示，僅提供 **Haptic Feedback (觸覺震動回饋)**。
+</file>
+
+<file path="src/App.css">
+:root {
+    --red-primary: #aa0000;
+    --blue-primary: #0000aa;
+    --red-secondary: #660000;
+    --blue-secondary: #000066;
+    --yellow-primary: #ffff00;
+}
+
+/* --- A. 頂部狀態欄 (Header) --- */
+/* 正常狀態 (黃底黑字) */
+.time-out {
+    display: flex;
+    width: 100%;
+    background-color: var(--yellow-primary);
+    color: #000000;
+    transition: all 0.3s ease; /* 加入過渡動畫 */
+}
+
+/* 休息模式 (黑底白字) - 由 React 動態加入此 class */
+.time-out.rest-mode {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+/* --- B. 休息時的成績表 (Rest History Table) --- */
+.round-history-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    color: white; /* 在藍/紅背景上顯示白色文字 */
+    padding-top: 2vh; /* 增加頂部空間，避免內容太貼近邊緣 */
+}
+
+/* 每一行分數 (e.g. R1 5) - 已統一風格 */
+.history-row {
+    display: flex;
+    justify-content: space-between;
+    width: 70%;       /* 控制寬度，讓數字對齊 */
+    font-size: 4vw;   /* 與 MATCH 文字樣式統一 */
+    font-weight: bold;
+    margin-bottom: 0.5vh;
+}
+
+/* R1, R2 標籤 - 已移除透明度 */
+.history-label {
+    text-align: left;
+}
+
+/* 分數數值 */
+.history-value {
+    text-align: right;
+}
+
+/* 總勝局數 (最下面的大數字) - 已統一風格 */
+.total-round-wins {
+    font-size: 9vw;   /* 與 Timer 數字樣式統一 */
+    font-weight: bold;
+    margin: 0.5vw;
+    line-height: 1.2; /* 微調，避免與下方標籤太近 */
+}
+</file>
+
+<file path="vite.config.js">
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  base: '/TKD-scoreboard/', // 跟你的 repo 名稱完全一致（注意大小寫）
+})
+</file>
+
+<file path="src/Components/Mask/Mask.jsx">
+import './Mask.css'
+
+function Mask() {
+
+  return (
+    <div className="mask" onClick={() => document.documentElement.requestFullscreen()}/>
+  )
+}
+
+export default Mask
+</file>
+
+<file path="src/firebase.js">
+import { initializeApp } from "firebase/app";
+import { getDatabase } from "firebase/database";
+import { getAuth } from "firebase/auth";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAWmDDr3A7r0Jg1bxh-XjHjAkM_RCdlHQk",
+  authDomain: "tkd-react-app.firebaseapp.com",
+  databaseURL: "https://tkd-react-app-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "tkd-react-app",
+  storageBucket: "tkd-react-app.firebasestorage.app",
+  messagingSenderId: "131767355176",
+  appId: "1:131767355176:web:4955187fe336e69f7bf21d",
+  measurementId: "G-TNYHYGHZ8C"
+};
+
+
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+const auth = getAuth(app);
+
+export { database, auth };
+</file>
+
+<file path="index.html">
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Taekwondo Scoreboard</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap"
+		rel="stylesheet" />
+</head>
+
+<body>
+	<div id="root"></div>
+	<script type="module" src="/src/main.jsx"></script>
+	<script type="text/javascript" src="https://www.airconsole.com/api/airconsole-1.9.0.js"></script>
+</body>
+
+</html>
+</file>
+
+<file path="src/Components/Card/Card.jsx">
+import "./Card.css";
+
+function Card({ color1, color2, width, children }) {
+	const c1 = color1 || "#fff";
+	const c2 = color2 || color1 || "#fff";
+
+	return (
+		<div
+			className="card"
+			style={{
+				"--card-color-1": c1,
+				"--card-color-2": c2,
+				"--card-width": width,
+			}}
+			onClick={() => document.documentElement.requestFullscreen()}
+		>
+			{children}
+		</div>
+	);
+}
+
+export default Card;
+</file>
+
+<file path="src/Components/QRCodeDisplay/QRCodeDisplay.css">
+/* QRCodeDisplay.css - Clean default QR code modal with Referee Connection Badges */
+
+.qrcode-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.qrcode-modal-card {
+  background: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 440px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slideUp 0.25s ease-out;
+}
+
+.qrcode-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+}
+
+.qrcode-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #e0e0e0;
+}
+
+.qrcode-icon {
+  font-size: 1.4rem;
+  color: #ff0055;
+}
+
+.qrcode-close-btn {
+  background: transparent;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.qrcode-close-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.qrcode-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.qrcode-info {
+  display: flex;
+  gap: 10px;
+}
+
+.qrcode-badge {
+  background: rgba(0, 85, 255, 0.2);
+  border: 1px solid rgba(0, 85, 255, 0.4);
+  color: #66a3ff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.qrcode-badge.court {
+  background: rgba(255, 0, 85, 0.2);
+  border: 1px solid rgba(255, 0, 85, 0.4);
+  color: #ff6699;
+}
+
+/* Network Host Config Section */
+.qrcode-host-config {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255, 170, 0, 0.08);
+  border: 1px solid rgba(255, 170, 0, 0.25);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.qrcode-host-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.qrcode-host-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  outline: none;
+  font-family: monospace;
+  transition: border-color 0.2s;
+}
+
+.qrcode-host-input:focus {
+  border-color: #fbbf24;
+}
+
+.qrcode-host-warning {
+  font-size: 0.75rem;
+  color: #fca5a5;
+  line-height: 1.3;
+}
+
+/* Referee Real-time Status Panel */
+.referee-status-box {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.referee-status-box.full {
+  background: rgba(76, 217, 100, 0.1);
+  border-color: rgba(76, 217, 100, 0.4);
+}
+
+.referee-status-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.full-icon {
+  color: #4cd964;
+  margin-left: auto;
+}
+
+.referee-badges-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.ref-slot-pill {
+  flex: 1;
+  text-align: center;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+.ref-slot-pill.online {
+  background: rgba(76, 217, 100, 0.2);
+  border: 1px solid rgba(76, 217, 100, 0.5);
+  color: #4cd964;
+}
+
+.ref-slot-pill.vacant {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+.qrcode-wrapper {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.qrcode-instructions {
+  font-size: 0.9rem;
+  color: #b0b0c0;
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.text-warning {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.qrcode-url-box {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+.qrcode-url-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #ddd;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.qrcode-copy-btn {
+  background: #334155;
+  border: none;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.qrcode-copy-btn:hover {
+  background: #475569;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+</file>
+
+<file path="src/Components/QRCodeDisplay/QRCodeDisplay.jsx">
+import React, { useState, useEffect } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { QrCode, X, Copy, Check, PeopleFill, CheckCircleFill, Globe } from 'react-bootstrap-icons';
+import { ref, onValue } from 'firebase/database';
+import { database } from '../../firebase';
+import './QRCodeDisplay.css';
+
+function QRCodeDisplay({ eventId, courtId, visible, onClose, refereesData: propRefereesData }) {
+  const [copied, setCopied] = useState(false);
+  const [referees, setReferees] = useState(propRefereesData || {});
+  
+  // Custom Network Host state (for localhost dev environment mobile scans)
+  const [customHost, setCustomHost] = useState(() => {
+    return localStorage.getItem('qrCustomHost') || '';
+  });
+
+  // If propRefereesData is not provided, listen to Firebase directly
+  useEffect(() => {
+    if (propRefereesData) {
+      setReferees(propRefereesData);
+      return;
+    }
+
+    if (!eventId || !courtId) return;
+
+    const refereesRef = ref(database, `events/${eventId}/courts/${courtId}/referees`);
+    const unsubscribe = onValue(refereesRef, (snapshot) => {
+      setReferees(snapshot.val() || {});
+    });
+
+    return () => unsubscribe();
+  }, [eventId, courtId, propRefereesData]);
+
+  if (!visible) return null;
+
+  // Calculate referee slot statuses (J1, J2, J3)
+  const isJ1 = referees?.J1?.status === 'occupied';
+  const isJ2 = referees?.J2?.status === 'occupied';
+  const isJ3 = referees?.J3?.status === 'occupied';
+  const occupiedCount = (isJ1 ? 1 : 0) + (isJ2 ? 1 : 0) + (isJ3 ? 1 : 0);
+  const isFull = occupiedCount === 3;
+
+  // Detect localhost
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+  // Use custom host if set, otherwise current location host
+  const protocol = window.location.protocol;
+  const host = customHost.trim() || window.location.host;
+
+  // Extract clean base path
+  let basePath = window.location.pathname;
+  if (basePath.includes('/screen')) {
+    basePath = basePath.replace(/\/screen\/?$/, '/');
+  } else if (basePath.includes('/controller')) {
+    basePath = basePath.replace(/\/controller\/?$/, '/');
+  }
+  if (!basePath.endsWith('/')) {
+    basePath += '/';
+  }
+
+  // Build default BrowserRouter controller URL
+  const controllerUrl = `${protocol}//${host}${basePath}controller?event=${encodeURIComponent(eventId || '')}&court=${encodeURIComponent(courtId || '')}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(controllerUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleHostChange = (e) => {
+    const value = e.target.value;
+    setCustomHost(value);
+    localStorage.setItem('qrCustomHost', value);
+  };
+
+  return (
+    <div className="qrcode-modal-overlay" onClick={onClose}>
+      <div className="qrcode-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="qrcode-header">
+          <div className="qrcode-title">
+            <QrCode className="qrcode-icon" />
+            <span>Referee Controller QR Code</span>
+          </div>
+          <button className="qrcode-close-btn cursor-target" onClick={onClose} aria-label="Close">
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="qrcode-body">
+          <div className="qrcode-info">
+            <span className="qrcode-badge">Event: {eventId || 'N/A'}</span>
+            <span className="qrcode-badge court">Court: {courtId || 'N/A'}</span>
+          </div>
+
+          {/* Network Host IP Setting (Visible when on localhost or custom host active) */}
+          {(isLocalhost || customHost) && (
+            <div className="qrcode-host-config">
+              <label className="qrcode-host-label">
+                <Globe size={14} />
+                <span>Network Host / IP (手機連線網址):</span>
+              </label>
+              <input
+                type="text"
+                className="qrcode-host-input cursor-target"
+                placeholder="例如: 192.168.1.104:5174 或 10.2.0.2:5174"
+                value={customHost}
+                onChange={handleHostChange}
+              />
+              {isLocalhost && !customHost && (
+                <div className="qrcode-host-warning">
+                  ⚠️ 檢測到使用 localhost，手機無法直接連線！請輸入你嘅局域網 IP (如 192.168.1.104:5174 或 10.2.0.2:5174)。
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Real-time Referee Connection Status Badge Panel */}
+          <div className={`referee-status-box ${isFull ? 'full' : ''}`}>
+            <div className="referee-status-title">
+              <PeopleFill size={16} />
+              <span>Referees Connected: {occupiedCount}/3</span>
+              {isFull && <CheckCircleFill size={16} className="full-icon" />}
+            </div>
+            <div className="referee-badges-row">
+              <span className={`ref-slot-pill ${isJ1 ? 'online' : 'vacant'}`}>
+                J1 {isJ1 ? '• Online' : '• Vacant'}
+              </span>
+              <span className={`ref-slot-pill ${isJ2 ? 'online' : 'vacant'}`}>
+                J2 {isJ2 ? '• Online' : '• Vacant'}
+              </span>
+              <span className={`ref-slot-pill ${isJ3 ? 'online' : 'vacant'}`}>
+                J3 {isJ3 ? '• Online' : '• Vacant'}
+              </span>
+            </div>
+          </div>
+
+          {/* QR Code Container */}
+          <div className="qrcode-wrapper">
+            <QRCodeSVG
+              value={controllerUrl}
+              size={200}
+              bgColor="#ffffff"
+              fgColor="#000000"
+              level="H"
+              includeMargin={true}
+            />
+          </div>
+
+          <p className="qrcode-instructions">
+            {isFull ? (
+              <span className="text-warning">⚠️ 裁判席位已滿 (All 3 Referee Slots Occupied)</span>
+            ) : (
+              '請裁判使用手機掃描二維碼開啟控制頁面'
+            )}
+          </p>
+
+          {/* Controller URL preview and Copy */}
+          <div className="qrcode-url-box">
+            <input type="text" readOnly value={controllerUrl} className="qrcode-url-input cursor-target" />
+            <button className="qrcode-copy-btn cursor-target" onClick={handleCopy}>
+              {copied ? <Check size={18} color="#4cd964" /> : <Copy size={18} />}
+              {copied ? '已複製' : '複製'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default QRCodeDisplay;
+</file>
+
+<file path="src/Components/TargetCursor/TargetCursor.css">
+.target-cursor-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 100000;
+  mix-blend-mode: difference;
+  transform: translate(-50%, -50%);
+}
+
+.target-cursor-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.5dvw;
+  aspect-ratio: 1;
+  background: #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
+
+.target-cursor-corner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.75dvw;
+  aspect-ratio: 1;
+  border: 0.125dvw solid #fff;
+  will-change: transform;
+}
+
+.corner-tl {
+  transform: translate(-150%, -150%);
+  border-right: none;
+  border-bottom: none;
+}
+
+.corner-tr {
+  transform: translate(50%, -150%);
+  border-left: none;
+  border-bottom: none;
+}
+
+.corner-br {
+  transform: translate(50%, 50%);
+  border-left: none;
+  border-top: none;
+}
+
+.corner-bl {
+  transform: translate(-150%, 50%);
+  border-right: none;
+  border-top: none;
+}
+</file>
+
+<file path="src/Components/TargetCursor/TargetCursor.jsx">
+import { useEffect, useRef, useCallback, useMemo } from "react";
+import { gsap } from "gsap";
+import "./TargetCursor.css";
+
+const TargetCursor = ({
+	targetSelector = ".cursor-target",
+	spinDuration = 3.14,
+	hideDefaultCursor = true,
+}) => {
+	const cursorRef = useRef(null);
+	const cornersRef = useRef(null);
+	const spinTl = useRef(null);
+	const dotRef = useRef(null);
+	const constants = useMemo(
+		() => ({
+			borderWidth: 3,
+			cornerSize: 12,
+			parallaxStrength: 0.00005,
+		}),
+		[]
+	);
+
+	const moveCursor = useCallback((x, y) => {
+		if (!cursorRef.current) return;
+		gsap.to(cursorRef.current, {
+			x,
+			y,
+			duration: 0.1,
+			ease: "power3.out",
+		});
+	}, []);
+
+	useEffect(() => {
+		if (!cursorRef.current) return;
+
+		const originalCursor = document.body.style.cursor;
+		if (hideDefaultCursor) {
+			document.body.style.cursor = "none";
+		}
+
+		const cursor = cursorRef.current;
+		cornersRef.current = cursor.querySelectorAll(".target-cursor-corner");
+
+		let activeTarget = null;
+		let currentTargetMove = null;
+		let currentLeaveHandler = null;
+		let isAnimatingToTarget = false;
+		let resumeTimeout = null;
+
+		const cleanupTarget = (target) => {
+			if (currentTargetMove) {
+				target.removeEventListener("mousemove", currentTargetMove);
+			}
+			if (currentLeaveHandler) {
+				target.removeEventListener("mouseleave", currentLeaveHandler);
+			}
+			currentTargetMove = null;
+			currentLeaveHandler = null;
+		};
+
+		gsap.set(cursor, {
+			xPercent: -50,
+			yPercent: -50,
+			x: window.innerWidth / 2,
+			y: window.innerHeight / 2,
+		});
+
+		const createSpinTimeline = () => {
+			if (spinTl.current) {
+				spinTl.current.kill();
+			}
+			spinTl.current = gsap.timeline({ repeat: -1 }).to(cursor, {
+				rotation: "+=360",
+				duration: spinDuration,
+				ease: "none",
+			});
+		};
+
+		createSpinTimeline();
+
+		const moveHandler = (e) => moveCursor(e.clientX, e.clientY);
+		window.addEventListener("mousemove", moveHandler);
+
+		const scrollHandler = () => {
+			if (!activeTarget || !cursorRef.current) return;
+
+			const mouseX = gsap.getProperty(cursorRef.current, "x");
+			const mouseY = gsap.getProperty(cursorRef.current, "y");
+
+			const elementUnderMouse = document.elementFromPoint(mouseX, mouseY);
+			const isStillOverTarget =
+				elementUnderMouse &&
+				(elementUnderMouse === activeTarget ||
+					elementUnderMouse.closest(targetSelector) === activeTarget);
+
+			if (!isStillOverTarget) {
+				if (currentLeaveHandler) {
+					currentLeaveHandler();
+				}
+			}
+		};
+
+		window.addEventListener("scroll", scrollHandler, { passive: true });
+
+		//---------------------------------------------------------------
+		// This code for onclick animation
+
+		window.addEventListener("mousemove", moveHandler);
+		const mouseDownHandler = () => {
+			if (!dotRef.current) return;
+			gsap.to(dotRef.current, { scale: 0.7, duration: 0.3 });
+			gsap.to(cursorRef.current, { scale: 0.9, duration: 0.2 });
+		};
+
+		// Animate it back to its original size
+		const mouseUpHandler = () => {
+			if (cornersRef.current) {
+				const corners = Array.from(cornersRef.current);
+				gsap.killTweensOf(corners);
+
+				const { cornerSize } = constants;
+				const positions = [
+					{ x: -cornerSize * 1.5, y: -cornerSize * 1.5 },
+					{ x: cornerSize * 0.5, y: -cornerSize * 1.5 },
+					{ x: cornerSize * 0.5, y: cornerSize * 0.5 },
+					{ x: -cornerSize * 1.5, y: cornerSize * 0.5 },
+				];
+
+				corners.forEach((corner, index) => {
+					gsap.to(
+						corner,
+						{
+							x: positions[index].x,
+							y: positions[index].y,
+							duration: 0.3,
+							ease: "power3.out",
+							clearProps: "x,y",
+						},
+						0
+					);
+				});
+			}
+			gsap.to(cursorRef.current, { scale: 1, duration: 0.2 });
+			gsap.to(dotRef.current, { scale: 1, duration: 0.3 });
+			if (!dotRef.current) return;
+				gsap.to(dotRef.current, { scale: 1, duration: 0.3 });
+				gsap.to(cursorRef.current, { scale: 1, duration: 0.2 });
+			};
+
+		window.addEventListener("mousedown", mouseDownHandler);
+		window.addEventListener("mouseup", mouseUpHandler);
+
+		//----------------------------------------------------------------
+		const enterHandler = (e) => {
+			const directTarget = e.target;
+
+			const allTargets = [];
+			let current = directTarget;
+			while (current && current !== document.body) {
+				if (current.matches(targetSelector)) {
+					allTargets.push(current);
+				}
+				current = current.parentElement;
+			}
+
+			const target = allTargets[0] || null;
+			if (!target || !cursorRef.current || !cornersRef.current) return;
+
+			if (activeTarget === target) return;
+
+			if (activeTarget) {
+				cleanupTarget(activeTarget);
+			}
+
+			if (resumeTimeout) {
+				clearTimeout(resumeTimeout);
+				resumeTimeout = null;
+			}
+
+			activeTarget = target;
+
+			gsap.killTweensOf(cursorRef.current, "rotation");
+			spinTl.current?.pause();
+
+			gsap.set(cursorRef.current, { rotation: 0 });
+
+			const updateCorners = (mouseX, mouseY) => {
+				const rect = target.getBoundingClientRect();
+				const cursorRect = cursorRef.current.getBoundingClientRect();
+
+				const cursorCenterX = cursorRect.left + cursorRect.width / 2;
+				const cursorCenterY = cursorRect.top + cursorRect.height / 2;
+
+				const [tlc, trc, brc, blc] = Array.from(cornersRef.current);
+
+				const { borderWidth, cornerSize, parallaxStrength } = constants;
+
+				let tlOffset = {
+					x: rect.left - cursorCenterX - borderWidth,
+					y: rect.top - cursorCenterY - borderWidth,
+				};
+				let trOffset = {
+					x: rect.right - cursorCenterX + borderWidth - cornerSize,
+					y: rect.top - cursorCenterY - borderWidth,
+				};
+				let brOffset = {
+					x: rect.right - cursorCenterX + borderWidth - cornerSize,
+					y: rect.bottom - cursorCenterY + borderWidth - cornerSize,
+				};
+				let blOffset = {
+					x: rect.left - cursorCenterX - borderWidth,
+					y: rect.bottom - cursorCenterY + borderWidth - cornerSize,
+				};
+
+				if (mouseX !== undefined && mouseY !== undefined) {
+					const targetCenterX = rect.left + rect.width / 2;
+					const targetCenterY = rect.top + rect.height / 2;
+					const mouseOffsetX =
+						(mouseX - targetCenterX) * parallaxStrength;
+					const mouseOffsetY =
+						(mouseY - targetCenterY) * parallaxStrength;
+
+					tlOffset.x += mouseOffsetX;
+					tlOffset.y += mouseOffsetY;
+					trOffset.x += mouseOffsetX;
+					trOffset.y += mouseOffsetY;
+					brOffset.x += mouseOffsetX;
+					brOffset.y += mouseOffsetY;
+					blOffset.x += mouseOffsetX;
+					blOffset.y += mouseOffsetY;
+				}
+
+				const tl = gsap.timeline();
+				const corners = [tlc, trc, brc, blc];
+				const offsets = [tlOffset, trOffset, brOffset, blOffset];
+
+				corners.forEach((corner, index) => {
+					tl.to(
+						corner,
+						{
+							x: offsets[index].x,
+							y: offsets[index].y,
+							duration: 0.2,
+							ease: "power2.out",
+						},
+						0
+					);
+				});
+			};
+
+			isAnimatingToTarget = true;
+			updateCorners();
+
+			setTimeout(() => {
+				isAnimatingToTarget = false;
+			}, 1);
+
+			let moveThrottle = null;
+			const targetMove = (ev) => {
+				if (moveThrottle || isAnimatingToTarget) return;
+				moveThrottle = requestAnimationFrame(() => {
+					const mouseEvent = ev;
+					updateCorners(mouseEvent.clientX, mouseEvent.clientY);
+					moveThrottle = null;
+				});
+			};
+
+			const leaveHandler = () => {
+				activeTarget = null;
+				isAnimatingToTarget = false;
+
+				if (cornersRef.current) {
+					const corners = Array.from(cornersRef.current);
+					gsap.killTweensOf(corners);
+
+					const { cornerSize } = constants;
+					const positions = [
+						{ x: -cornerSize * 1.5, y: -cornerSize * 1.5 },
+						{ x: cornerSize * 0.5, y: -cornerSize * 1.5 },
+						{ x: cornerSize * 0.5, y: cornerSize * 0.5 },
+						{ x: -cornerSize * 1.5, y: cornerSize * 0.5 },
+					];
+
+					corners.forEach((corner, index) => {
+						gsap.to(
+							corner,
+							{
+								x: positions[index].x,
+								y: positions[index].y,
+								duration: 0.3,
+								ease: "power3.out",
+								clearProps: "x,y", // 加這行可強制清除 transform
+							},
+							0
+						);
+					});
+				}
+
+				resumeTimeout = setTimeout(() => {
+					if (!activeTarget && cursorRef.current && spinTl.current) {
+						const currentRotation = gsap.getProperty(
+							cursorRef.current,
+							"rotation"
+						);
+						const normalizedRotation = currentRotation % 360;
+
+						spinTl.current.kill();
+						spinTl.current = gsap
+							.timeline({ repeat: -1 })
+							.to(cursorRef.current, {
+								rotation: "+=360",
+								duration: spinDuration,
+								ease: "none",
+							});
+
+						gsap.to(cursorRef.current, {
+							rotation: normalizedRotation + 360,
+							duration:
+								spinDuration * (1 - normalizedRotation / 360),
+							ease: "none",
+							onComplete: () => {
+								spinTl.current?.restart();
+							},
+						});
+					}
+					resumeTimeout = null;
+				}, 50);
+
+				cleanupTarget(target);
+			};
+
+			currentTargetMove = targetMove;
+			currentLeaveHandler = leaveHandler;
+
+			target.addEventListener("mousemove", targetMove);
+			target.addEventListener("mouseleave", leaveHandler);
+		};
+
+		window.addEventListener("mouseover", enterHandler, { passive: true });
+
+		return () => {
+			window.removeEventListener("mousemove", moveHandler);
+			window.removeEventListener("mouseover", enterHandler);
+			window.removeEventListener("scroll", scrollHandler);
+
+			if (activeTarget) {
+				cleanupTarget(activeTarget);
+			}
+
+			console.log("Cleaning up TargetCursor");
+
+			spinTl.current?.kill();
+			document.body.style.cursor = originalCursor;
+		};
+	}, [
+		targetSelector,
+		spinDuration,
+		moveCursor,
+		constants,
+		hideDefaultCursor,
+	]);
+
+	useEffect(() => {
+		if (!cursorRef.current || !spinTl.current) return;
+
+		if (spinTl.current.isActive()) {
+			spinTl.current.kill();
+			spinTl.current = gsap
+				.timeline({ repeat: -1 })
+				.to(cursorRef.current, {
+					rotation: "+=360",
+					duration: spinDuration,
+					ease: "none",
+				});
+		}
+	}, [spinDuration]);
+
+	return (
+		<div ref={cursorRef} className="target-cursor-wrapper">
+			<div ref={dotRef} className="target-cursor-dot" />
+			<div className="target-cursor-corner corner-tl" />
+			<div className="target-cursor-corner corner-tr" />
+			<div className="target-cursor-corner corner-br" />
+			<div className="target-cursor-corner corner-bl" />
+		</div>
+	);
+};
+
+export default TargetCursor;
+</file>
+
+<file path="src/Components/ProtectedRoute/ProtectedRoute.jsx">
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../Context/AuthContext';
+
+/**
+ * ProtectedRoute Component
+ * Guards routes that require an active Event ID and Court ID session.
+ * Automatically checks:
+ * 1. AuthContext session state
+ * 2. localStorage fallback
+ * 3. URL query parameters (for direct QR Code scan access like /controller?event=X&court=Y)
+ */
+function ProtectedRoute({ children }) {
+  const { session } = useAuth();
+  const location = useLocation();
+
+  // Helper to check if URL query params contain event and court
+  const hasUrlParams = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const hasSearch = searchParams.get('event') && searchParams.get('court');
+    if (hasSearch) return true;
+
+    if (window.location.hash.includes('?')) {
+      const hashQuery = window.location.hash.split('?')[1];
+      const hashParams = new URLSearchParams(hashQuery);
+      return hashParams.get('event') && hashParams.get('court');
+    }
+    return false;
+  };
+
+  const hasLocalStorage = () => {
+    return !!(localStorage.getItem('selectedEvent') && localStorage.getItem('selectedCourt'));
+  };
+
+  const isAuthenticated = !!session || hasLocalStorage() || hasUrlParams();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/court-setup" replace />;
+  }
+
+  return children;
+}
+
+export default ProtectedRoute;
+</file>
+
+<file path="src/Context/AuthContext.jsx">
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+const AuthContext = createContext(null);
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+export function AuthProvider({ children }) {
+  // Synchronously initialize session state from localStorage to avoid initial render flicker
+  const [session, setSession] = useState(() => {
+    const savedEvent = localStorage.getItem('selectedEvent');
+    const savedCourt = localStorage.getItem('selectedCourt');
+    const savedEventName = localStorage.getItem('selectedEventName');
+    if (savedEvent && savedCourt) {
+      return { 
+        eventId: savedEvent, 
+        courtId: savedCourt, 
+        eventName: savedEventName || savedEvent 
+      };
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const savedEvent = localStorage.getItem('selectedEvent');
+    const savedCourt = localStorage.getItem('selectedCourt');
+    const savedEventName = localStorage.getItem('selectedEventName');
+
+    if (savedEvent && savedCourt) {
+      setSession({ 
+        eventId: savedEvent, 
+        courtId: savedCourt, 
+        eventName: savedEventName || savedEvent 
+      });
+    }
+  }, []);
+
+  const login = (sessionData) => {
+    localStorage.setItem('selectedEvent', sessionData.eventId);
+    localStorage.setItem('selectedCourt', sessionData.courtId);
+    if (sessionData.eventName) {
+      localStorage.setItem('selectedEventName', sessionData.eventName);
+    }
+    setSession(sessionData);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('selectedEvent');
+    localStorage.removeItem('selectedCourt');
+    localStorage.removeItem('selectedEventName');
+    setSession(null);
+  };
+
+  const value = {
+    session,
+    login,
+    logout
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+</file>
+
+<file path="src/Pages/CourtSetup/CourtSetup.css">
+.cs-container {
+    position: relative;
+    height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.cs-content {
+    position: relative;
+    z-index: 1;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 3dvw;
+    border-radius: 1.5dvw;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 90%;
+    max-width: 60dvw; /* 限制最大寬度 */
+    text-align: center;
+}
+
+.cs-content h1 {
+    font-size: 3dvw;
+}
+
+.cs-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5dvh;
+}
+
+.cs-form p {
+    margin-bottom: 1dvh;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Label靠左 */
+}
+
+.form-group label {
+    margin-bottom: 0.5dvh;
+    font-size: 1.5dvw;
+}
+
+/* Styling for the new datalist inputs */
+.datalist-input, 
+.form-group input[type="password"] {
+    width: 100%;
+    padding: 0.8dvw;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0.5dvw;
+    color: white;
+    font-size: 1.5dvw;
+}
+
+.datalist-input:focus, 
+.form-group input[type="password"]:focus {
+    outline: none;
+    border-color: var(--yellow-primary);
+}
+
+.datalist-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.form-group input:disabled {
+    background-color: rgba(255, 255, 255, 0.05);
+    cursor: not-allowed;
+}
+
+.cs-action-buttons {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 1dvh;
+}
+
+.cs-error-message {
+    color: var(--red-primary);
+    margin-top: -0.5dvh;
+    margin-bottom: 0.5dvh;
+    min-height: 1.2em; /* 避免沒錯誤時佈局跳動 */
+}
+</file>
+
+<file path="src/Components/Mask/Mask.css">
+.mask {
+    width: 100vw;
+    height: 100vh;
+    width: 100dvw;
+    height: 100dvh;
+    background-color: hsla(0, 0%, 5%, 0.875);
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+</file>
+
+<file path="src/index.css">
+:root {
+    background: #000000;
+    color: #ffffff;
+    font-family: sans-serif;
+}
+
+body {
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Global Select (Dropdown) Styles */
+select {
+    background-color: #333;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: .65em auto;
+    padding-right: 30px; /* Make space for the arrow */
+    width: 100%; /* Ensure full width */
+    box-sizing: border-box;
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--yellow-primary);
+}
+
+select option {
+    background-color: #333;
+    color: white;
+}
+</file>
+
+<file path="src/Components/Card/Card.css">
+.card {
+	height: auto;
+	width: calc(var(--card-width, 75) * 1vw);
+	width: calc(var(--card-width, 75) * 1dvw);
+	background: hsl(0, 0%, 5%);
+	border-radius: calc(var(--card-width, 75) / 10 * 1vw);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	position: relative;
+}	
+
+.card::after,
+.card:hover::before {
+	--inset: -0.25vw;
+	content: "";
+	position: absolute;
+	z-index: -1;
+	inset: var(--inset);
+	border-radius: calc(var(--card-width, 75) / 10 * 1vw - var(--inset));
+	background: conic-gradient(
+		from var(--angle),
+		#000000,
+		#000000,
+		var(--card-color-1),
+		#000000,
+		#000000,
+		var(--card-color-2),
+		#000000
+	);
+	border: hsl(0, 0%, 10%) solid 0.125vw;
+}
+
+.card:hover::before {
+	z-index: -2;
+	filter: blur(1vw);
+	opacity: 0.75;
+	animation: glowing-border 3.14s linear infinite;
+}
+
+.card:hover::after {
+	animation: glowing-border 3.14s linear infinite;
+}
+
+@property --angle {
+	syntax: "<angle>";
+	initial-value: 0deg;
+	inherits: false;
+}
+
+@keyframes glowing-border {
+	from {
+		--angle: 0deg;
+	}
+	to {
+		--angle: 360deg;
+	}
+}
+</file>
+
+<file path="src/Pages/DataImport/DataImport.css">
+/* Main Container & Background */
+.di-container {
+    position: relative;
+    width: 100dvw;
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* background-color: #1a1a1a; */ /* This was hiding the Squares component */
+    color: #fff; /* White text */
+}
+
+.di-content-wrapper {
+    position: relative;
+    z-index: 2;
+    width: 90%;
+    max-width: 1200px;
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    background: transparent; /* Make wrapper transparent */
+    border-radius: 10px;
+    /* Removed box-shadow as it's not ideal on a transparent wrapper */
+}
+
+.di-form-and-list-container {
+    display: grid;
+    grid-template-columns: 7fr 3fr; /* Form takes 70%, List takes 30% */
+    gap: 15px;
+    overflow: hidden;
+    height: 100%;
+}
+
+/* Form & List Sections */
+.di-form-section, .di-matches-section {
+    overflow-y: auto; /* Allow scrolling within sections */
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05); /* Restore the greyish background */
+    border-radius: 8px;
+}
+
+.di-form-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Pushes action buttons to the bottom */
+}
+
+
+/* --- Form Specifics --- */
+.di-form-section h2 {
+    text-align: center;
+    margin-top: 0;
+    color: #fff;
+    font-size: 2dvw;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 3px;
+    font-weight: bold;
+    font-size: 1dvw;
+    color: #ccc;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: #333;
+    color: #fff;
+    transition: border-color 0.2s ease-in-out;
+    font-size: 1.2dvw;
+}
+
+/* General focus highlight */
+.form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--yellow-primary);
+}
+
+/* --- New Form Layout Styles --- */
+.match-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* Space between fieldsets */
+    overflow-y: auto; /* Make the form scrollable, not the whole section */
+    padding-right: 10px; /* Add some padding to avoid scrollbar overlap */
+    margin-right: -10px; /* Counteract the padding for alignment */
+}
+
+.match-form fieldset {
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.match-form legend {
+    color: #fff;
+    font-weight: bold;
+    padding: 0 0.5rem; /* Add some padding around the legend text */
+    font-size: 1.5dvw;
+}
+
+/* This container will make the form-groups inside a fieldset appear in a row */
+.fieldset-content {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end; /* Aligns labels and inputs nicely */
+}
+
+.fieldset-content .form-group {
+    flex: 1; /* Each form group will take equal width */
+    min-width: 0; /* Prevents overflow issues with flex items */
+}
+
+/* --- Competitor Specific Theming --- */
+/* We now target the legend instead of a h3 */
+.competitor-group.blue legend {
+    color: #fff;
+}
+
+.competitor-group.red legend {
+    color: #fff;
+}
+
+/* Override general focus color for competitors */
+.competitor-group.blue .form-group input:focus {
+    border-color: var(--blue-secondary);
+}
+
+.competitor-group.red .form-group input:focus {
+    border-color: var(--red-secondary);
+}
+
+
+/* --- Matches List Specifics --- */
+.matches-list h3 {
+    margin-top: 0;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #555;
+    font-size: 1.8dvw;
+}
+
+.matches-list ul {
+    list-style-type: none;
+    padding: 0;
+    max-height: calc(100% - 50px);
+    overflow-y: auto;
+}
+
+.matches-list li {
+    padding: 8px 12px;
+    border-bottom: 1px solid #444;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 1.1dvw;
+}
+
+.matches-list li:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.matches-list li.selected {
+    background-color: hsla(270, 50%, 50%, 0.4);
+    font-weight: bold;
+}
+
+/* Action Buttons */
+.di-action-buttons {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding-top: 10px;
+}
+</file>
+
+<file path="src/Api.js">
+// src/Api.js
+import { ref, runTransaction, update, get } from "firebase/database";
+import { database } from './firebase';
+
+const getScoreValue = (stats, opponentGamjeom) => {
+    const p = stats?.pointsStat || [0,0,0,0,0];
+    const points = (p[0]*1) + (p[1]*2) + (p[2]*3) + (p[3]*4) + (p[4]*6);
+    return points + (opponentGamjeom || 0);
+};
+
+export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta) => {
+    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
+
+    runTransaction(matchRef, (matchData) => {
+        if (!matchData) return;
+
+        if (matchData.state.phase === 'REST') return;
+
+        if (!matchData.stats) matchData.stats = {
+            red: { pointsStat: [0,0,0,0,0], gamjeom: 0 },
+            blue: { pointsStat: [0,0,0,0,0], gamjeom: 0 }
+        };
+        if (!matchData.state) matchData.state = {
+            isFinished: false, isPaused: true, timer: 0, winReason: null, lastStartTime: null, dominantSide: 'none'
+        };
+
+        const targetSide = matchData.stats[side];
+
+        if (type === 'gamjeom') {
+            targetSide.gamjeom = (targetSide.gamjeom || 0) + delta;
+            if (targetSide.gamjeom < 0) targetSide.gamjeom = 0;
+        } else if (type === 'pointsStat') {
+            if (!targetSide.pointsStat || targetSide.pointsStat.length < 5) {
+                 const oldStats = targetSide.pointsStat || [];
+                 targetSide.pointsStat = [
+                    oldStats[0] || 0, oldStats[1] || 0, oldStats[2] || 0,
+                    oldStats[3] || 0, oldStats[4] || 0
+                 ];
+            }
+            targetSide.pointsStat[index] = (targetSide.pointsStat[index] || 0) + delta;
+            if (targetSide.pointsStat[index] < 0) targetSide.pointsStat[index] = 0;
+        }
+
+        const redGamjeom = matchData.stats.red.gamjeom;
+        const blueGamjeom = matchData.stats.blue.gamjeom;
+        const redScore = getScoreValue(matchData.stats.red, blueGamjeom);
+        const blueScore = getScoreValue(matchData.stats.blue, redGamjeom);
+
+        const pauseTimerForEvent = () => {
+            if (!matchData.state.isPaused && matchData.state.lastStartTime) {
+                const now = Date.now();
+                const elapsed = Math.floor((now - matchData.state.lastStartTime) / 1000);
+
+                matchData.state.timer = (matchData.state.timer || 0) - elapsed;
+                if (matchData.state.timer < 0) matchData.state.timer = 0;
+            }
+            matchData.state.isPaused = true;
+            matchData.state.lastStartTime = null;
+        };
+
+        const maxGap = matchData.config?.rules?.maxPointGap || 15;
+        const maxGJ = matchData.config?.rules?.maxGamjeom || 5;
+
+        const isPUN = redGamjeom >= maxGJ || blueGamjeom >= maxGJ;
+        const isPTG = Math.abs(redScore - blueScore) >= maxGap;
+
+        matchData.state.dominantSide = 'none'; // Reset dominance
+
+        if (isPUN) {
+            pauseTimerForEvent();
+            matchData.state.winReason = 'PUN';
+            if (redGamjeom >= maxGJ) matchData.state.dominantSide = 'blue';
+            if (blueGamjeom >= maxGJ) matchData.state.dominantSide = 'red';
+        }
+        else if (isPTG) {
+            pauseTimerForEvent();
+            matchData.state.winReason = 'PTG';
+            if (redScore > blueScore) matchData.state.dominantSide = 'red';
+            if (blueScore > redScore) matchData.state.dominantSide = 'blue';
+        }
+        else {
+            if (matchData.state.winReason === 'PTG' || matchData.state.winReason === 'PUN') {
+                matchData.state.winReason = null;
+            }
+        }
+
+        return matchData;
+    })
+    .catch((err) => console.error("Transaction failed:", err));
+};
+
+export const declareRoundWinner = (eventName, matchId, winnerSide) => {
+    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
+
+    runTransaction(matchRef, (matchData) => {
+        if (!matchData) return;
+        if (!matchData.state) matchData.state = {};
+        if (!matchData.stats) matchData.stats = {};
+        if (!matchData.stats.roundWins) matchData.stats.roundWins = { red: 0, blue: 0 };
+        if (!matchData.stats.roundScores) matchData.stats.roundScores = {};
+
+        const currentRound = matchData.state.currentRound || 1;
+        matchData.stats.roundScores[`R${currentRound}`] = {
+            red: getScoreValue(matchData.stats.red, matchData.stats.blue.gamjeom),
+            blue: getScoreValue(matchData.stats.blue, matchData.stats.red.gamjeom)
+        };
+
+        if (winnerSide === 'red') {
+            matchData.stats.roundWins.red = (matchData.stats.roundWins.red || 0) + 1;
+        } else if (winnerSide === 'blue') {
+            matchData.stats.roundWins.blue = (matchData.stats.roundWins.blue || 0) + 1;
+        }
+
+        const redWins = matchData.stats.roundWins.red;
+        const blueWins = matchData.stats.roundWins.blue;
+        const roundsToWin = matchData.config?.rules?.roundsToWin || 2;
+
+        if (redWins >= roundsToWin || blueWins >= roundsToWin) {
+            matchData.state.isFinished = true;
+            matchData.state.winReason = 'PTF';
+            matchData.state.isPaused = true;
+            matchData.state.timer = 0;
+            matchData.state.phase = 'ROUND';
+        } else {
+            const originalStats = { ...matchData.stats };
+            matchData.stats = {
+                ...originalStats,
+                red: { gamjeom: 0, pointsStat: [0,0,0,0,0] },
+                blue: { gamjeom: 0, pointsStat: [0,0,0,0,0] }
+            };
+            
+            matchData.state.phase = "REST";
+            matchData.state.timer = matchData.config?.rules?.restDuration || 60;
+            matchData.state.isPaused = false;
+            matchData.state.lastStartTime = Date.now();
+            matchData.state.isFinished = false;
+            matchData.state.winReason = null;
+            matchData.state.dominantSide = 'none';
+        }
+
+        return matchData;
+    });
+};
+
+export const startNextRound = (eventName, matchId) => {
+    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
+    runTransaction(matchRef, (matchData) => {
+        if (!matchData) return;
+
+        matchData.stats.red = { gamjeom: 0, pointsStat: [0,0,0,0,0] };
+        matchData.stats.blue = { gamjeom: 0, pointsStat: [0,0,0,0,0] };
+
+        matchData.state.currentRound = (matchData.state.currentRound || 1) + 1;
+        matchData.state.phase = "ROUND";
+        matchData.state.timer = matchData.config?.rules?.roundDuration || 120;
+        matchData.state.isPaused = true;
+        matchData.state.lastStartTime = null;
+        matchData.state.isFinished = false;
+        matchData.state.dominantSide = 'none';
+
+        return matchData;
+    });
+};
+
+export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
+    const matchRoot = `events/${eventName}/matches`;
+
+    try {
+        const snapshot = await get(ref(database, `${matchRoot}/${currentMatchId}/config`));
+        const config = snapshot.val();
+        if (!config) return;
+
+        const winnerData = config.competitors[winnerSide];
+        const { nextMatchId, nextMatchSlot } = config;
+
+        if (!nextMatchId || !nextMatchSlot) {
+            alert("此場次未設定下一場比賽路徑 (Next Match ID/Slot missing)");
+            return;
+        }
+
+        const targetPath = `${matchRoot}/${nextMatchId}/config/competitors/${nextMatchSlot}`;
+        
+        await update(ref(database, targetPath), {
+            name: winnerData.name,
+            affiliatedClub: winnerData.affiliatedClub || ""
+        });
+
+        alert(`已成功晉級：\n${winnerData.name} -> ${nextMatchId} (${nextMatchSlot})`);
+
+    } catch (e) {
+        console.error(e);
+        alert(`晉級失敗: ${e.message}`);
+    }
+};
+</file>
+
+<file path="src/Components/Button/Button.jsx">
+import React from "react";
+import "./Button.css";
+
+function Button({
+    text,
+    children,
+    icon,
+    fontSize = "1vw",
+    angle = 270,
+    step = 40,
+    gradient,
+    variant,
+    onClick,
+    type = "button",
+    disabled = false,
+    className = "",
+    style = {},
+    ...restProps
+}) {
+    let gradientString = gradient;
+
+    if (!gradientString) {
+        if (variant === "gemini") {
+            gradientString = "linear-gradient(135deg, #4f46e5, #8b5cf6, #ec4899, #f43f5e)";
+        } else if (variant === "orange") {
+            gradientString = "linear-gradient(135deg, #f97316, #d97706, #f59e0b)";
+        } else {
+            const h1 = angle % 360;
+            const h2 = (angle + step) % 360;
+            gradientString = `linear-gradient(135deg, hsl(${h1}, 90%, 55%), hsl(${h2}, 90%, 55%))`;
+        }
+    } else if (Array.isArray(gradientString)) {
+        gradientString = `linear-gradient(135deg, ${gradientString.join(", ")})`;
+    }
+
+    return (
+        <button
+            type={type}
+            disabled={disabled}
+            className={`tkd-btn cursor-target ${className}`}
+            style={{
+                "--font-size": fontSize,
+                "--button-gradient": gradientString,
+                ...style
+            }}
+            onClick={onClick}
+            {...restProps}
+        >
+            {icon && <span className="tkd-btn-icon">{icon}</span>}
+            {children || text}
+        </button>
+    );
+}
+
+export default Button;
+</file>
+
+<file path="src/Pages/Home/Home.css">
+.home {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100dvh;
+    width: 100dvw;
+    overflow: hidden;
+}
+
+/* --- 2x2 網格佈局 --- */
+.home-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 3dvw; /* 卡片之間的間距 */
+    width: 60dvw;
+    height: 60dvh;
+    z-index: 1;
+}
+
+/* --- 卡片樣式 --- */
+.home-card {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 2dvh;
+    padding: 2dvh;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.home-card:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-5px);
+}
+
+/* --- 卡片圖示樣式 (加大) --- */
+.home-card-icon {
+    font-size: 12dvh; /* 由 10dvh 增加到 12dvh */
+    color: #fff;
+}
+
+/* --- 右上角資訊卡樣式 --- */
+.session-info-form {
+    position: absolute;
+    top: 2dvh;
+    right: 1dvw;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1.5dvh 1dvw;
+    border-radius: 1dvh;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 1dvh;
+    width: 15dvw;
+    min-width: 180px;
+    align-items: center;
+}
+
+.session-info-form .form-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.session-info-form .form-group label {
+    font-size: 1.5dvh;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.5dvh;
+}
+
+.session-info-form .form-group .form-value {
+    font-size: 1.8dvh;
+    font-weight: 500;
+}
+
+.session-info-form Button {
+    font-size: 1.6dvh !important;
+    margin-top: 1dvh;
+}
+</file>
+
+<file path="src/Pages/Controller/Controller.css">
+/* Controller.css - Restored 5-column layout with responsive top header */
+
+*, *::before, *::after {
+	box-sizing: border-box;
+}
+
+.controller {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100dvh;
+	width: 100dvw;
+	max-width: 100vw;
+	position: relative;
+	background-color: #0f172a;
+	overflow: hidden;
+	user-select: none;
+	box-sizing: border-box;
+}
+
+/* Top Status Bar Banner - Strictly bounded to 100% width */
+.ctrl-top-bar {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	max-width: 100vw;
+	box-sizing: border-box;
+	height: 40px;
+	background-color: rgba(15, 23, 42, 0.95);
+	backdrop-filter: blur(8px);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0 12px;
+	z-index: 50;
+	overflow: hidden;
+}
+
+.ctrl-back-btn {
+	background: transparent;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	color: #94a3b8;
+	padding: 3px 6px;
+	border-radius: 6px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+.ctrl-info-badges {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	overflow: hidden;
+	flex-shrink: 1;
+}
+
+.ctrl-badge {
+	background: rgba(255, 255, 255, 0.1);
+	color: #cbd5e1;
+	font-size: 0.75rem;
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100px;
+}
+
+.ctrl-badge.court {
+	background: rgba(2, 132, 199, 0.4);
+	color: #38bdf8;
+}
+
+.ctrl-badge.match {
+	background: rgba(217, 119, 6, 0.4);
+	color: #fbbf24;
+}
+
+.ctrl-conn-status {
+	font-size: 0.75rem;
+	font-weight: 600;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.conn-connected {
+	color: #4ade80;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.conn-disconnected {
+	color: #f87171;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+/* Action Toast Banner with Side Color */
+.ctrl-action-banner {
+	position: absolute;
+	top: 46px;
+	left: 50%;
+	transform: translateX(-50%);
+	padding: 4px 16px;
+	border-radius: 20px;
+	font-weight: 800;
+	font-size: 0.85rem;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+	z-index: 100;
+	color: #ffffff;
+	animation: popIn 0.2s ease-out;
+	white-space: nowrap;
+}
+
+.ctrl-action-banner.red-banner {
+	background-color: #dc2626;
+	border: 1px solid #f87171;
+}
+
+.ctrl-action-banner.blue-banner {
+	background-color: #2563eb;
+	border: 1px solid #60a5fa;
+}
+
+/* 5-Column Layout Structure */
+.col {
+	display: flex;
+	flex-direction: column;
+	align-content: center;
+	justify-content: center;
+	height: 100dvh;
+	width: 20dvw;
+	padding-top: 44px;
+	padding-bottom: 8px;
+	box-sizing: border-box;
+}
+
+.col.red-col {
+	background-color: var(--red-secondary);
+}
+
+.col.blue-col {
+	background-color: var(--blue-secondary);
+}
+
+.col > button {
+	height: 25dvh;
+}
+
+/* Center Info Panel Column (Horizontal Layout) */
+.col.center-col {
+	background-color: #020617;
+	border-left: 1px solid rgba(255, 255, 255, 0.1);
+	border-right: 1px solid rgba(255, 255, 255, 0.1);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding-inline: 6px;
+}
+
+.center-match-details-horizontal {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	gap: 4px;
+	overflow: hidden;
+}
+
+.competitor-side {
+	flex: 1;
+	font-size: 1.1vw;
+	font-weight: 800;
+	text-align: center;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.red-side-text {
+	color: #f87171;
+}
+
+.blue-side-text {
+	color: #60a5fa;
+}
+
+.center-vs-box {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
+	flex-shrink: 0;
+}
+
+.vs-badge {
+	font-size: 1.1vw;
+	font-weight: 900;
+	color: #fbbf24;
+	letter-spacing: 1px;
+}
+
+.round-pill {
+	font-size: 0.75vw;
+	background: rgba(255, 255, 255, 0.12);
+	color: #e2e8f0;
+	padding: 2px 6px;
+	border-radius: 10px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+@keyframes popIn {
+	from { transform: translate(-50%, -10px); opacity: 0; }
+	to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+	.ctrl-top-bar {
+		padding: 0 8px;
+		height: 36px;
+	}
+	.ctrl-badge {
+		font-size: 0.65rem;
+		padding: 1px 4px;
+		max-width: 70px;
+	}
+	.ctrl-conn-status {
+		font-size: 0.7rem;
+	}
+	.competitor-side {
+		font-size: 0.75rem;
+	}
+	.vs-badge {
+		font-size: 0.8rem;
+	}
+	.round-pill {
+		font-size: 0.6rem;
+	}
+}
+</file>
+
+<file path="package.json">
+{
+  "name": "tkd-scoreboard",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "postbuild": "node -e \"import('fs').then(fs => fs.copyFileSync('dist/index.html', 'dist/404.html'))\"",
+    "deploy": "gh-pages -d dist"
+  },
+  "dependencies": {
+    "firebase": "^12.8.0",
+    "gsap": "^3.13.0",
+    "ogl": "^1.0.11",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.1.0",
+    "react-bootstrap-icons": "^1.11.6",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.7.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.1",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^9.30.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "gh-pages": "^6.3.0",
+    "globals": "^16.3.0",
+    "vite": "^5.2.0"
+  }
+}
+</file>
+
+<file path="src/Pages/CourtSetup/CourtSetup.jsx">
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { database } from '../../firebase';
+import { ref, get, set } from "firebase/database";
+import { useAuth } from '../../Context/AuthContext';
+
+import './CourtSetup.css';
+import Button from '../../Components/Button/Button';
+import Squares from '../../Components/Squares/Squares';
+
+function CourtSetup() {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState('');
+  const [courtId, setCourtId] = useState(''); 
+  const [courtOptions, setCourtOptions] = useState([]);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  useEffect(() => {
+    const eventsRef = ref(database, 'events');
+    get(eventsRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        const val = snapshot.val();
+        const eventList = Object.keys(val).map(key => {
+          const item = val[key];
+          const displayName = item?.EventName || item?.eventName || item?.settings?.eventName || item?.name || key;
+          return { id: key, displayName };
+        });
+        setEvents(eventList);
+        
+        const lastEvent = localStorage.getItem('selectedEvent');
+        const validIds = eventList.map(e => e.id);
+        if (lastEvent && validIds.includes(lastEvent)) {
+          setSelectedEvent(lastEvent);
+        } else {
+          setSelectedEvent('');
+        }
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (selectedEvent) {
+        const courtsRef = ref(database, `events/${selectedEvent}/courts`);
+        get(courtsRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                setCourtOptions(Object.keys(snapshot.val()));
+                const lastCourt = localStorage.getItem('selectedCourt');
+                // check if last court is valid for this event
+                if(lastCourt && Object.keys(snapshot.val()).includes(lastCourt)){
+                    setCourtId(lastCourt);
+                } else {
+                    setCourtId(''); // Reset if last court not in new list
+                }
+            } else {
+                setCourtOptions([]);
+                setCourtId('');
+            }
+        });
+    } else {
+        setCourtOptions([]);
+        setCourtId('');
+    }
+}, [selectedEvent]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!selectedEvent) {
+      setError('Please select an event.');
+      return;
+    }
+
+    if (!courtId) { 
+        setError('Please select a court.');
+        return;
+    }
+
+    const settingsRef = ref(database, `events/${selectedEvent}/settings/setupPassword`);
+    
+    try {
+        const snapshot = await get(settingsRef);
+        if (snapshot.exists()) {
+            const correctPassword = snapshot.val();
+            if (password === correctPassword) {
+                const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
+                await set(courtRef, {
+                    name: courtId,
+                    currentMatchId: '' 
+                });
+
+                const selectedEventData = events.find(e => e.id === selectedEvent);
+                const eventDisplayName = selectedEventData?.displayName || selectedEvent;
+
+                login({ 
+                    eventId: selectedEvent,
+                    courtId: courtId,
+                    eventName: eventDisplayName
+                });
+
+                navigate('/'); 
+            } else {
+                setError('Incorrect password, please try again.');
+            }
+        } else {
+            setError('Setup Password has not been configured for this event. Please contact an administrator.');
+            console.error(`Setup password not found at 'events/${selectedEvent}/settings/setupPassword'`);
+        }
+    } catch (err) {
+        setError('An error occurred while connecting to the database.');
+        console.error("Error during setup:", err);
+    }
+  };
+
+  return (
+    <div className="cs-container">
+      <Squares
+        speed={0.5}
+        squareSize={"10dvw"}
+        direction="diagonal"
+        borderColor="hsla(270, 50%, 50%, 0.25)"
+        hoverFillColor="hsla(60, 50%, 50%, 0.25)"
+      />
+      <div className="cs-content">
+        <h1>Court Setup</h1>
+        <form onSubmit={handleSubmit} className="cs-form">
+          <p>Select the event, court, and enter the Setup Password to connect this device.</p>
+          
+          <div className="form-group">
+            <label htmlFor="event-select">Select Event</label>
+            <select
+              id="event-select"
+              className="datalist-input"
+              value={selectedEvent}
+              onChange={(e) => setSelectedEvent(e.target.value)}
+              required
+            >
+              <option value="" disabled>-- Please select an event --</option>
+              {events.map(event => (
+                <option key={event.id} value={event.id}>
+                  {event.displayName !== event.id ? `${event.displayName} (${event.id})` : event.id}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="court-select">Select Court</label>
+            <select
+              id="court-select"
+              className="datalist-input"
+              value={courtId}
+              onChange={(e) => setCourtId(e.target.value)}
+              disabled={!selectedEvent || courtOptions.length === 0}
+              required
+            >
+              <option value="" disabled>-- Please select a court --</option>
+              {courtOptions.map(court => (
+                <option key={court} value={court}>{court}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="setup-password">Setup Password</label>
+            <input
+              id="setup-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter setup password"
+              required
+              disabled={!selectedEvent || !courtId}
+            />
+          </div>
+          
+          {error && <p className="cs-error-message">{error}</p>}
+          <div className="cs-action-buttons">
+            <Button type="submit" text="Confirm Settings" fontSize="1.5dvw" angle={30} disabled={!selectedEvent || !courtId} />
+            <Button text="Back to Home" fontSize="1.5dvw" angle={150} onClick={() => navigate('/')} />
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default CourtSetup;
+</file>
+
+<file path="src/Pages/Controller/Controller.jsx">
+import React, { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { ref, onValue } from "firebase/database";
+import { database } from "../../firebase";
+import { updateScoreAndCheckRules } from "../../Api";
+import Button from "../../Components/Button/Button";
+import { Wifi, WifiOff, ArrowLeft } from "react-bootstrap-icons";
+import "./Controller.css";
+
+function Controller() {
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
+
+    // Helper to extract query parameter from searchParams, search URL, Hash URL, or localStorage
+    const getParam = (key) => {
+        const fromSearch = searchParams.get(key);
+        if (fromSearch) return fromSearch;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get(key)) return urlParams.get(key);
+
+        if (window.location.hash.includes("?")) {
+            const hashQuery = window.location.hash.split("?")[1];
+            const hashParams = new URLSearchParams(hashQuery);
+            if (hashParams.get(key)) return hashParams.get(key);
+        }
+
+        if (key === "event") return localStorage.getItem("selectedEvent") || "";
+        if (key === "court") return localStorage.getItem("selectedCourt") || "";
+
+        return "";
+    };
+
+    const initialEvent = getParam("event");
+    const initialCourt = getParam("court");
+
+    const [eventId, setEventId] = useState(initialEvent);
+    const [courtId, setCourtId] = useState(initialCourt);
+    const [currentMatchId, setCurrentMatchId] = useState(null);
+    const [matchData, setMatchData] = useState(null);
+    const [lastAction, setLastAction] = useState(null); // { side: 'red'|'blue', text: '...' }
+    const [isConnected, setIsConnected] = useState(false);
+
+    // Sync state if URL changes
+    useEffect(() => {
+        const ev = getParam("event");
+        const ct = getParam("court");
+        if (ev) {
+            setEventId(ev);
+            localStorage.setItem("selectedEvent", ev);
+        }
+        if (ct) {
+            setCourtId(ct);
+            localStorage.setItem("selectedCourt", ct);
+        }
+    }, [searchParams]);
+
+    // Listen to currentMatchId on court
+    useEffect(() => {
+        if (!eventId || !courtId) {
+            setIsConnected(false);
+            return;
+        }
+
+        const courtMatchIdRef = ref(database, `events/${eventId}/courts/${courtId}/currentMatchId`);
+        const unsubscribe = onValue(
+            courtMatchIdRef,
+            (snapshot) => {
+                setIsConnected(true);
+                const matchId = snapshot.val();
+                setCurrentMatchId(matchId || null);
+                if (!matchId) setMatchData(null);
+            },
+            (error) => {
+                console.error("Court match ID listener error:", error);
+                setIsConnected(false);
+            }
+        );
+
+        return () => unsubscribe();
+    }, [eventId, courtId]);
+
+    // Listen to matchData
+    useEffect(() => {
+        if (!eventId || !currentMatchId) {
+            setMatchData(null);
+            return;
+        }
+
+        const matchRef = ref(database, `events/${eventId}/matches/${currentMatchId}`);
+        const unsubscribe = onValue(matchRef, (snapshot) => {
+            setMatchData(snapshot.val());
+        });
+
+        return () => unsubscribe();
+    }, [currentMatchId, eventId]);
+
+    // Cross-browser Fullscreen request helper
+    const handleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) {
+                document.documentElement.msRequestFullscreen();
+            }
+        }
+    };
+
+    const handleScore = (side, index, label) => {
+        if (!eventId || !currentMatchId) return;
+
+        // Mobile haptic vibration feedback
+        if (navigator.vibrate) {
+            navigator.vibrate(60);
+        }
+
+        // Call scoring API (+1 point increment for selected point index)
+        updateScoreAndCheckRules(eventId, currentMatchId, side, "pointsStat", index, 1);
+
+        const actionObj = { side, text: `${side.toUpperCase()} ${label}` };
+        setLastAction(actionObj);
+
+        setTimeout(() => {
+            setLastAction((prev) => (prev?.text === actionObj.text ? null : prev));
+        }, 1800);
+    };
+
+    const redName = matchData?.config?.competitors?.red?.name || "Hong (Red)";
+    const blueName = matchData?.config?.competitors?.blue?.name || "Chung (Blue)";
+    const matchNo = matchData?.config?.matchId || currentMatchId || "N/A";
+    const currentRound = matchData?.state?.currentRound || 1;
+    const isPaused = matchData?.state?.isPaused ?? true;
+
+    return (
+        <div className="controller" onClick={handleFullscreen}>
+            {/* Top Bar Banner for Match & Connection Status */}
+            <div className="ctrl-top-bar">
+                <button 
+                    className="ctrl-back-btn" 
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        navigate("/");
+                    }} 
+                    aria-label="Back"
+                >
+                    <ArrowLeft size={18} />
+                </button>
+                <div className="ctrl-info-badges">
+                    <span className="ctrl-badge">{eventId || "No Event"}</span>
+                    <span className="ctrl-badge court">{courtId || "No Court"}</span>
+                    <span className="ctrl-badge match">Match #{matchNo}</span>
+                </div>
+                <div className="ctrl-conn-status">
+                    {isConnected ? (
+                        <span className="conn-connected"><Wifi size={16} /> Live</span>
+                    ) : (
+                        <span className="conn-disconnected"><WifiOff size={16} /> Offline</span>
+                    )}
+                </div>
+            </div>
+
+            {/* Action Feedback Banner Toast with Side Color */}
+            {lastAction && (
+                <div className={`ctrl-action-banner ${lastAction.side === "red" ? "red-banner" : "blue-banner"}`}>
+                    {lastAction.text}
+                </div>
+            )}
+
+            {/* Column 1: Red 6, Red 4, Red 1 */}
+            <div className="col red-col">
+                <Button 
+                    text="Red 6" 
+                    angle={350} 
+                    fontSize="4vw" 
+                    onClick={() => handleScore("red", 4, "+6 Turn Head")} 
+                />
+                <Button 
+                    text="Red 4" 
+                    angle={350} 
+                    fontSize="4vw" 
+                    onClick={() => handleScore("red", 3, "+4 Turn Body")} 
+                />
+                <Button 
+                    text="Red 1" 
+                    angle={350} 
+                    fontSize="4vw" 
+                    onClick={() => handleScore("red", 0, "+1 Punch")} 
+                />
+            </div>
+
+            {/* Column 2: Red 3, Red 2 */}
+            <div className="col red-col">
+                <Button 
+                    text="Red 3" 
+                    angle={350} 
+                    fontSize="4vw" 
+                    onClick={() => handleScore("red", 2, "+3 Head")} 
+                />
+                <Button 
+                    text="Red 2" 
+                    angle={350} 
+                    fontSize="4vw" 
+                    onClick={() => handleScore("red", 1, "+2 Body")} 
+                />
+            </div>
+
+            {/* Column 3: Center Info Panel (Horizontal Left-to-Right layout) */}
+            <div className="col center-col">
+                <div className="center-match-details-horizontal">
+                    <div className="competitor-side red-side-text">{redName}</div>
+                    <div className="center-vs-box">
+                        <span className="vs-badge">VS</span>
+                        <span className="round-pill">R{currentRound} • {isPaused ? "PAUSED" : "LIVE"}</span>
+                    </div>
+                    <div className="competitor-side blue-side-text">{blueName}</div>
+                </div>
+            </div>
+
+            {/* Column 4: Blue 3, Blue 2 */}
+            <div className="col blue-col">
+                <Button 
+                    text="Blue 3" 
+                    angle={210} 
+                    fontSize="4vw" 
+                    onClick={() => handleScore("blue", 2, "+3 Head")} 
+                />
+                <Button 
+                    text="Blue 2" 
+                    angle={210} 
+                    fontSize="4vw" 
+                    onClick={() => handleScore("blue", 1, "+2 Body")} 
+                />
+            </div>
+
+            {/* Column 5: Blue 6, Blue 4, Blue 1 */}
+            <div className="col blue-col">
+                <Button 
+                    text="Blue 6" 
+                    angle={210} 
+                    fontSize="4vw" 
+                    onClick={() => handleScore("blue", 4, "+6 Turn Head")} 
+                />
+                <Button 
+                    text="Blue 4" 
+                    angle={210} 
+                    fontSize="4vw" 
+                    onClick={() => handleScore("blue", 3, "+4 Turn Body")} 
+                />
+                <Button 
+                    text="Blue 1" 
+                    angle={210} 
+                    fontSize="4vw" 
+                    onClick={() => handleScore("blue", 0, "+1 Punch")} 
+                />
+            </div>
+        </div>
+    );
+}
+
+export default Controller;
+</file>
+
+<file path="src/Pages/Screen/Screen.css">
+.red-bg {
+	background-color: var(--red-secondary);
+}
+
+.blue-bg {
+	background-color: var(--blue-secondary);
+}
+
+.red-score-bg {
+	background-color: var(--red-primary);
+}
+
+.blue-score-bg {
+	background-color: var(--blue-primary);
+}
+
+.screen {
+	--screen-width: min(100dvw, 200dvh);
+	--screen-height: min(100dvh, 50dvw);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	aspect-ratio: 2 / 1;
+	width: var(--screen-width);
+	height: var(--screen-height);
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.top {
+	display: flex;
+	width: var(--screen-width);
+	height: calc(var(--screen-height) * 2/11);
+}
+
+.red-name {
+	display: flex;
+	width: calc(var(--screen-width)/2);
+	height: calc(var(--screen-height) * 2/11);
+	justify-content: center;
+	align-items: center;
+}
+
+.blue-name {
+	display: flex;
+	width: calc(var(--screen-width)/2);
+	height: calc(var(--screen-height) * 2/11);
+	justify-content: center;
+	align-items: center;
+}
+
+.name-font {
+	font-size: 3vw;
+	font-weight: bold;
+}
+
+.midbottom {
+	display: flex;
+	width: var(--screen-width);
+	height: calc(var(--screen-height) * 9/11);
+}
+
+.red-log {
+	display: flex;
+	flex-direction: column;
+	width: calc(var(--screen-width) * 19/150);
+	height: calc(var(--screen-height) * 9/11);
+}
+
+.red-score {
+	display: flex;
+	flex-direction: column;
+	width: calc(var(--screen-width) * 39/150);
+	height: calc(var(--screen-height) * 9/11);
+}
+
+.match-info {
+	display: flex;
+	flex-direction: column;
+	width: calc(var(--screen-width) * 34/150);
+	height: calc(var(--screen-height) * 9/11);
+}
+
+.blue-score {
+	display: flex;
+	flex-direction: column;
+	width: calc(var(--screen-width) * 39/150);
+	height: calc(var(--screen-height) * 9/11);
+}
+
+.blue-log {
+	display: flex;
+	flex-direction: column;
+	width: calc(var(--screen-width) * 19/150);
+	height: calc(var(--screen-height) * 9/11);
+}
+
+.red-score-text {
+	display: flex;
+	width: calc(var(--screen-width) * 39/150);
+	height: calc(var(--screen-height) * 7/11);
+	justify-content: center;
+	align-items: center;
+}
+
+.blue-score-text {
+	display: flex;
+	width: calc(var(--screen-width) * 39/150);
+	height: calc(var(--screen-height) * 7/11);
+	justify-content: center;
+	align-items: center;
+}
+
+.score-font {
+	font-size: 20vw;
+	font-weight: bold;
+}
+
+.red-score-info {
+	display: flex;
+	width: calc(var(--screen-width) * 39/150);
+	height: calc(var(--screen-height) * 2/11);
+}
+
+.blue-score-info {
+	display: flex;
+	width: calc(var(--screen-width) * 39/150);
+	height: calc(var(--screen-height) * 2/11);
+}
+
+.red-ref-log {
+	display: flex;
+	flex-direction: column;
+	width: calc(var(--screen-width) * 19/150);
+	height: calc(var(--screen-height) * 7/11);
+	align-items: center;
+	gap: 1vw;
+}
+
+.blue-ref-log {
+	display: flex;
+	flex-direction: column;
+	width: calc(var(--screen-width) * 19/150);
+	height: calc(var(--screen-height) * 7/11);
+	align-items: center;
+	gap: 1vw;
+}
+
+.red-gamjeom {
+	display: flex;
+	flex-direction: column-reverse;
+	flex: 2;
+	align-items: center;
+}
+
+.blue-gamjeom {
+	display: flex;
+	flex-direction: column-reverse;
+	flex: 2;
+	align-items: center;
+}
+
+.gamjeom-font {
+	font-size: 2vw;
+	font-weight: bold;
+}
+
+.gamjeom-number {
+	font-size: 5vw;
+	font-weight: bold;
+	margin: 0.5vw;
+}
+
+.match {
+	padding: 0.5vw;
+}
+
+.match-number {
+	display: flex;
+	flex-direction: column;
+	flex: 2;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
+	font-size: 5vw;
+	font-weight: bold;
+}
+
+.match-font {
+	display: flex;
+	flex-direction: column;
+	flex: 2;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
+	font-size: 4vw;
+	font-weight: bold;
+}
+
+.timer {
+	display: flex;
+	flex-direction: column;
+	margin-block: 1vw;
+}
+
+.game-timer {
+	display: flex;
+	flex: 2;
+	background-color: #000000;
+	color: #ffffff;
+	justify-content: center;
+	align-items: center;
+	border: 0.5vw solid var(--yellow-primary);
+}
+
+.timer-font {
+	font-size: 9vw;
+	font-weight: bold;
+}
+
+.time-out {
+	display: flex;
+	width: 100%;
+	background-color: var(--yellow-primary);
+	color: #000000;
+	justify-content: center;
+	align-items: center;
+}
+
+.round-info {
+	display: flex;
+	flex-direction: column;
+	flex: 2;
+	width: 100%;
+	align-items: center;
+}
+
+.round-font {
+	font-size: 4vw;
+	font-weight: bold;
+}
+
+.round-number {
+	font-size: 5vw;
+	font-weight: bold;
+}
+
+.log-row {
+	--log-width: calc(var(--screen-width) * 19/150);
+	display: flex;
+	width: var(--log-width);
+}
+
+.log-icon, .ref-num {
+	--icon-width: calc(var(--screen-width) * 4/150 * 0.875);
+	width: calc(var(--icon-width));
+	height: calc(var(--icon-width));
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: calc(var(--icon-width) - 0.25vw);
+	margin: 0.375vw;
+	color: transparent;
+	font-weight: bold;
+}
+
+/* QR Code trigger button on Screen */
+.qr-trigger-btn {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	z-index: 100;
+	background: rgba(15, 23, 42, 0.85);
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	color: #ffffff;
+	padding: 6px 14px;
+	border-radius: 20px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 1vw;
+	font-weight: 600;
+	cursor: pointer;
+	backdrop-filter: blur(6px);
+	transition: all 0.2s ease;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.qr-trigger-btn:hover {
+	background: rgba(30, 41, 59, 0.95);
+	border-color: #38bdf8;
+	color: #38bdf8;
+	transform: scale(1.05);
+}
+</file>
+
+<file path="src/Pages/DataImport/DataImport.jsx">
+import React, { useState, useEffect } from 'react';
+import { ref, set, get } from "firebase/database";
+import { database } from '../../firebase';
+import './DataImport.css';
+import Squares from '../../Components/Squares/Squares';
+import Button from '../../Components/Button/Button';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../Context/AuthContext';
+
+// A helper function to parse name and club from old format
+const parseName = (fullName) => {
+    if (!fullName) return { name: '', club: '' };
+    const match = fullName.match(/(.+?)\s*\((.+)\)/);
+    if (match) {
+        return { name: match[1].trim(), club: match[2].trim() };
+    }
+    return { name: fullName, club: '' };
+};
+
+const DataImport = () => {
+    const navigate = useNavigate();
+    const { session } = useAuth(); 
+    const [eventName, setEventName] = useState('');
+    const [currentMatches, setCurrentMatches] = useState({});
+    const [selectedMatchId, setSelectedMatchId] = useState(null);
+
+    // Form state - Default Point Gap set to 15 as per new rules
+    const [matchId, setMatchId] = useState('');
+    const [nextMatchId, setNextMatchId] = useState('');
+    const [nextMatchSlot, setNextMatchSlot] = useState('');
+    const [maxPointGap, setMaxPointGap] = useState(15);
+    const [maxGamjeom, setMaxGamjeom] = useState(5);
+    const [roundDuration, setRoundDuration] = useState(120);
+    const [restDuration, setRestDuration] = useState(60);
+    const [blueName, setBlueName] = useState('');
+    const [blueAffiliatedClub, setBlueAffiliatedClub] = useState('');
+    const [bluePreviousMatch, setBluePreviousMatch] = useState('');
+    const [redName, setRedName] = useState('');
+    const [redAffiliatedClub, setRedAffiliatedClub] = useState('');
+    const [redPreviousMatch, setRedPreviousMatch] = useState('');
+
+    useEffect(() => {
+        if (session && session.eventId) {
+            setEventName(session.eventId);
+        }
+    }, [session]);
+
+    useEffect(() => {
+        setSelectedMatchId(null);
+        if (eventName) {
+            const matchesRef = ref(database, `events/${eventName}/matches`);
+            get(matchesRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    setCurrentMatches(snapshot.val());
+                } else {
+                    setCurrentMatches({});
+                }
+            });
+        } else {
+            setCurrentMatches({});
+        }
+    }, [eventName]);
+
+    // Auto-populates the form when a match ID is entered manually
+    useEffect(() => {
+        if (matchId && currentMatches[matchId]) {
+            const matchData = currentMatches[matchId];
+            const config = matchData.config;
+            const rules = config.rules;
+            const competitors = config.competitors;
+    
+            setNextMatchId(config.nextMatchId || '');
+            setNextMatchSlot(config.nextMatchSlot || '');
+            
+            setMaxPointGap(rules.maxPointGap || 15);
+            setMaxGamjeom(rules.maxGamjeom || 5);
+            setRoundDuration(rules.roundDuration || 120);
+            setRestDuration(rules.restDuration || 60);
+    
+            const blueCompetitor = competitors.blue;
+            if (blueCompetitor.affiliatedClub !== undefined) {
+                setBlueName(blueCompetitor.name || '');
+                setBlueAffiliatedClub(blueCompetitor.affiliatedClub || '');
+            } else {
+                const bluePlayer = parseName(blueCompetitor.name);
+                setBlueName(bluePlayer.name);
+                setBlueAffiliatedClub(bluePlayer.club);
+            }
+            setBluePreviousMatch(blueCompetitor.previousMatch || '');
+    
+            const redCompetitor = competitors.red;
+            if (redCompetitor.affiliatedClub !== undefined) {
+                setRedName(redCompetitor.name || '');
+                setRedAffiliatedClub(redCompetitor.affiliatedClub || '');
+            } else {
+                const redPlayer = parseName(redCompetitor.name);
+                setRedName(redPlayer.name);
+                setRedAffiliatedClub(redPlayer.club);
+            }
+            setRedPreviousMatch(redCompetitor.previousMatch || '');
+    
+        }
+    }, [matchId, currentMatches]);
+
+    // Bridge: When a match is selected from the list, update the matchId state.
+    // This will trigger the useEffect above to populate the form.
+    useEffect(() => {
+        if (selectedMatchId) {
+            setMatchId(selectedMatchId);
+        }
+    }, [selectedMatchId]);
+
+    const handleAddMatch = async () => {
+        if (!eventName || !matchId) {
+            alert('Please provide an Event Name and a Match ID.');
+            return;
+        }
+
+        try {
+            const newMatch = {
+                config: {
+                    matchId: matchId,
+                    nextMatchId: nextMatchId || null,
+                    nextMatchSlot: nextMatchSlot || null,
+                    rules: {
+                        maxPointGap: parseInt(maxPointGap, 10),
+                        maxGamjeom: parseInt(maxGamjeom, 10),
+                        roundDuration: parseInt(roundDuration, 10),
+                        restDuration: parseInt(restDuration, 10),
+                    },
+                    competitors: {
+                        blue: { 
+                            name: blueName, 
+                            affiliatedClub: blueAffiliatedClub || '', 
+                            previousMatch: bluePreviousMatch || null 
+                        },
+                        red: { 
+                            name: redName, 
+                            affiliatedClub: redAffiliatedClub || '',
+                            previousMatch: redPreviousMatch || null
+                        },
+                    },
+                },
+                state: { 
+                    isStarted: false, isPaused: true, isFinished: false,
+                    currentRound: 1, timer: parseInt(roundDuration, 10),
+                    winnerSide: null, phase: 'ROUND',
+                    winReason: null
+                },
+                stats: { 
+                    roundWins: { red: 0, blue: 0 }, 
+                    blue: { pointsStat: [0,0,0,0,0], gamjeom: 0 }, 
+                    red: { pointsStat: [0,0,0,0,0], gamjeom: 0 } 
+                }
+            };
+
+            const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
+            await set(matchRef, newMatch);
+            
+            alert(`Match ${matchId} added to event ${eventName} in Firebase!`);
+            setCurrentMatches(prev => ({...prev, [matchId]: newMatch}));
+
+            setMatchId('');
+            setBlueName('');
+            setBlueAffiliatedClub('');
+            setRedName('');
+            setRedAffiliatedClub('');
+            setNextMatchId('');
+            setNextMatchSlot('');
+            setBluePreviousMatch('');
+            setRedPreviousMatch('');
+
+        } catch (error) {
+            console.error("Error writing to Firebase:", error);
+            alert(`Failed to add match to Firebase. See console for details.`);
+        }
+    };
+
+    const handleLoadMatch = async () => {
+        if (!eventName || !selectedMatchId) {
+            alert('Please select an event and a match to load.');
+            return;
+        }
+        
+        if (!session || !session.courtId) {
+            alert('No court is configured for this device. Please go to Court Setup first.');
+            return;
+        }
+    
+        try {
+            const courtMatchIdRef = ref(database, `events/${eventName}/courts/${session.courtId}/currentMatchId`);
+            await set(courtMatchIdRef, selectedMatchId);
+    
+            localStorage.setItem('selectedMatchId', selectedMatchId);
+            
+            alert(`Match ${selectedMatchId} successfully loaded to ${session.courtId}.`);
+    
+        } catch (error) {
+            console.error("Error loading match to court:", error);
+            alert(`Failed to load match to court. See console for details.`);
+        }
+    };
+
+    return (
+        <div className="di-container">
+            <Squares
+				speed={0.5}
+				squareSize={100}
+				direction="diagonal"
+				borderColor="hsla(270, 50%, 50%, 0.25)"
+				hoverFillColor="hsla(60, 50%, 50%, 0.25)"
+			/>
+            <div className="di-content-wrapper">
+
+                <div className="di-form-and-list-container">
+                    <div className="di-form-section">
+                        <h2>Import Event Data</h2>
+                        <div className="form-group">
+                            <label htmlFor="eventName-input">Event Name</label>
+                            <input 
+                                id="eventName-input"
+                                type="text"
+                                value={eventName}
+                                disabled
+                            />
+                        </div>
+                        <div className="match-form">
+                            <fieldset>
+                                <legend>Match Configuration</legend>
+                                <div className="fieldset-content">
+                                    <div className="form-group">
+                                        <label>Match ID</label>
+                                        <input list="match-ids" type="text" value={matchId} onChange={e => setMatchId(e.target.value)} placeholder="A1001" />
+                                        <datalist id="match-ids">
+                                            {Object.keys(currentMatches).map(mId => (
+                                                <option key={mId} value={mId} />
+                                            ))}
+                                        </datalist>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Next Match ID</label>
+                                        <input type="text" value={nextMatchId} onChange={e => setNextMatchId(e.target.value)} placeholder="e.g. A2001 (optional)" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Next Match Slot</label>
+                                        <select value={nextMatchSlot || ''} onChange={e => setNextMatchSlot(e.target.value)}>
+                                            <option value="">(optional)</option>
+                                            <option value="blue">Blue</option>
+                                            <option value="red">Red</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>Rules</legend>
+                                <div className="fieldset-content">
+                                    <div className="form-group">
+                                        <label>Max Point Gap</label>
+                                        <input type="number" value={maxPointGap} onChange={e => setMaxPointGap(e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Max Gam-jeom</label>
+                                        <input type="number" value={maxGamjeom} onChange={e => setMaxGamjeom(e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Round Duration (s)</label>
+                                        <input type="number" value={roundDuration} onChange={e => setRoundDuration(e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Rest Duration (s)</label>
+                                        <input type="number" value={restDuration} onChange={e => setRestDuration(e.target.value)} />
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset className="competitor-group blue">
+                                <legend>Blue Competitor</legend>
+                                <div className="fieldset-content">
+                                    <div className="form-group">
+                                        <label>Name</label>
+                                        <input type="text" value={blueName} onChange={e => setBlueName(e.target.value)} placeholder="Blue Player Name" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Affiliated Club</label>
+                                        <input type="text" value={blueAffiliatedClub} onChange={e => setBlueAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Source Match ID</label>
+                                        <input type="text" value={bluePreviousMatch} onChange={e => setBluePreviousMatch(e.target.value)} placeholder="Source Match (optional)" />
+                                    </div>
+                                </div>
+                            </fieldset>
+                            
+                            <fieldset className="competitor-group red">
+                                <legend>Red Competitor</legend>
+                                <div className="fieldset-content">
+                                    <div className="form-group">
+                                        <label>Name</label>
+                                        <input type="text" value={redName} onChange={e => setRedName(e.target.value)} placeholder="Red Player Name" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Affiliated Club</label>
+                                        <input type="text" value={redAffiliatedClub} onChange={e => setRedAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Source Match ID</label>
+                                        <input type="text" value={redPreviousMatch} onChange={e => setRedPreviousMatch(e.target.value)} placeholder="Source Match (optional)" />
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                        <div className="di-action-buttons">
+                            <Button text="Add Match" fontSize="1.5dvw" angle={260} onClick={handleAddMatch} />
+                            <Button text="Load to Screen" fontSize="1.5dvw" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} />
+                            <Button text="Back to Home" fontSize="1.5dvw" angle={150} onClick={() => navigate('/')} />
+                        </div>
+                    </div>
+
+                    <div className="di-matches-section">
+                        <div className="matches-list">
+                            <h3>Matches in {eventName || 'Event'}</h3>
+                            <ul>
+                                {Object.keys(currentMatches).map(mId => {
+                                    const blue = currentMatches[mId].config.competitors.blue;
+                                    const red = currentMatches[mId].config.competitors.red;
+
+                                    const getDisplayText = (competitor) => {
+                                        if (competitor.affiliatedClub) {
+                                            return `${competitor.name} (${competitor.affiliatedClub})`;
+                                        }
+                                        return competitor.name;
+                                    };
+
+                                    return (
+                                        <li key={mId} onClick={() => setSelectedMatchId(mId)} className={selectedMatchId === mId ? 'selected' : ''}>
+                                            <strong>{mId}:</strong> {`${getDisplayText(blue)} vs ${getDisplayText(red)}`}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default DataImport;
+</file>
+
+<file path="src/Pages/Screen/Edit.css">
+.edit-bar {
+    position: fixed;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: white;
+    display: flex;
+    flex-direction: column; /* Changed to column */
+    align-items: center;
+    padding: 15px;
+    transition: bottom 0.3s ease-in-out;
+    z-index: 1001;
+}
+
+.edit-bar.visible {
+    bottom: 0;
+}
+
+.edit-grid {
+    display: grid;
+    grid-template-columns: auto repeat(6, 1fr); /* 1 label column + 6 content columns */
+    gap: 10px;
+    width: 95%;
+    margin-bottom: 20px; /* Space between grid and time bar */
+}
+
+.grid-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
+}
+
+.grid-cell.header {
+    font-weight: bold;
+    font-size: 1.5dvw;
+}
+
+.grid-cell.side-label {
+    font-weight: bold;
+    font-size: 1.8dvw;
+    justify-content: flex-start;
+}
+
+.grid-cell .buttons {
+    display: flex;
+}
+
+.blue { color: var(--blue-primary); }
+.red { color: var(--red-primary); }
+
+.time-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding-top: 15px;
+    border-top: 1px solid #444;
+}
+
+.time-control-group {
+    display: flex;
+    align-items: center;
+    margin: 0 20px;
+}
+
+.time-control-group h2 {
+    margin-right: 10px;
+    font-size: 1.5dvw;
+}
+
+.time-selects {
+    display: flex;
+    align-items: center;
+    margin: 0 5px;
+}
+
+.time-selects select {
+    width: auto; /* Override the global 100% width */
+    margin: 0 5px;
+}
+
+/* Aligning the Done button */
+.time-bar > .btn-wrapper {
+    margin-left: 40px; /* Add some space before the Done button */
+}
+</file>
+
+<file path="src/App.jsx">
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './Context/AuthContext';
+import './App.css';
+import TargetCursor from './Components/TargetCursor/TargetCursor';
+import ProtectedRoute from './Components/ProtectedRoute/ProtectedRoute';
+
+// Pages
+import Home from './Pages/Home/Home';
+import CourtSetup from './Pages/CourtSetup/CourtSetup';
+import Controller from './Pages/Controller/Controller';
+import Screen from './Pages/Screen/Screen';
+import DataImport from './Pages/DataImport/DataImport';
+
+function App() {
+  return (
+    <BrowserRouter basename="/TKD-scoreboard">
+      <AuthProvider>
+        <TargetCursor targetSelector="input, select, .cursor-target" />
+        <Routes>
+          {/* --- Public Routes --- */}
+          <Route path="/court-setup" element={<CourtSetup />} />
+          <Route path="/screen" element={<Screen />} />
+
+          {/* --- Routes that require session info (Protected Routes) --- */}
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/controller" 
+            element={
+              <ProtectedRoute>
+                <Controller />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/import" 
+            element={
+              <ProtectedRoute>
+                <DataImport />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Catch-all redirects to the home page */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+</file>
+
+<file path="src/Components/Button/Button.css">
+/* Button.css - Modern Pill-shaped Gradient Border Button (Matching Gemini & DB Button style) */
+
+.tkd-btn {
+  --font-size: 1vw;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+  position: relative;
+  border-radius: 9999px;
+  border: 2.5px solid transparent;
+  background: 
+    linear-gradient(#18181c, #18181c) padding-box,
+    var(--button-gradient, linear-gradient(135deg, #3b82f6, #ec4899)) border-box;
+  color: #ffffff;
+  font-size: var(--font-size);
+  font-weight: 600;
+  padding: 0.55em 1.5em;
+  margin: 0.35vw;
+  cursor: pointer;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  font-family: inherit;
+  line-height: 1.2;
+}
+
+.tkd-btn:hover {
+  filter: brightness(1.25);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.tkd-btn:active {
+  transform: translateY(0) scale(0.97);
+  filter: brightness(0.95);
+}
+
+.tkd-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+.tkd-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1em;
+}
+</file>
+
+<file path="src/Pages/Home/Home.jsx">
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../Context/AuthContext';
+import { database } from '../../firebase';
+import { ref, get } from 'firebase/database';
+
+import './Home.css';
+import Button from '../../Components/Button/Button';
+import Squares from '../../Components/Squares/Squares';
+import QRCodeDisplay from '../../Components/QRCodeDisplay/QRCodeDisplay';
+
+// 引入 Bootstrap Icons
+import { Display, Controller, Diagram2, PersonBadge } from 'react-bootstrap-icons';
+
+function Home() {
+    const navigate = useNavigate();
+    const { session, logout } = useAuth();
+    const [eventName, setEventName] = useState('');
+    const [showQRCode, setShowQRCode] = useState(false);
+
+    useEffect(() => {
+        if (!session?.eventId) {
+            setEventName('');
+            return;
+        }
+
+        // Fetch Event Name from Database (checks EventName, eventName, settings/eventName, or name)
+        const eventRef = ref(database, `events/${session.eventId}`);
+        get(eventRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                const val = snapshot.val();
+                const fetchedName = val?.EventName || val?.eventName || val?.settings?.eventName || val?.name || session.eventId;
+                setEventName(fetchedName);
+            } else {
+                setEventName(session.eventId);
+            }
+        }).catch(() => {
+            setEventName(session.eventId);
+        });
+    }, [session?.eventId]);
+
+    // Shortcut key 'Q' to toggle QR code modal
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'q' || e.key === 'Q') {
+                setShowQRCode((prev) => !prev);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    const handleLogout = () => {
+        logout();
+        navigate('/court-setup');
+    };
+
+    return (
+        <div className="home">
+            <Squares
+                speed={0.5}
+                squareSize={100}
+                direction="diagonal"
+                borderColor="hsla(270, 50%, 50%, 0.25)"
+                hoverFillColor="hsla(60, 50%, 50%, 0.25)"
+            />
+
+            <div className="session-info-form">
+                <div className="form-group">
+                    <label>Event Name</label>
+                    <div className="form-value">{session?.eventName || eventName || session?.eventId || 'N/A'}</div>
+                </div>
+                <div className="form-group">
+                    <label>Event ID</label>
+                    <div className="form-value">{session?.eventId || 'N/A'}</div>
+                </div>
+                <div className="form-group">
+                    <label>Court ID</label>
+                    <div className="form-value">{session?.courtId || 'N/A'}</div>
+                </div>
+                <Button
+                    text="Logout"
+                    onClick={handleLogout}
+                    fontSize="1.6dvh"
+                    angle={0}
+                />
+            </div>
+
+            {/* --- 2x2 網格佈局 --- */}
+            <div className="home-grid">
+                {/* Screen Card */}
+                <div className="home-card" onClick={() => navigate("/screen")}>
+                    <Display className="home-card-icon" />
+                    <Button text="Screen" fontSize="2.5dvh" angle={50} readOnly />
+                </div>
+
+                {/* Controller Card */}
+                <div className="home-card" onClick={() => navigate("/controller")}>
+                    <Controller className="home-card-icon" />
+                    <Button text="Controller" fontSize="2.5dvh" angle={270} readOnly />
+                </div>
+
+                {/* Data Import Card */}
+                <div className="home-card" onClick={() => navigate("/import")}>
+                    <Diagram2 className="home-card-icon" />
+                    <Button text="Data Import" fontSize="2.5dvh" angle={90} readOnly />
+                </div>
+
+                {/* Referee Register Card - Now opens Referee Controller QR Code modal directly */}
+                <div className="home-card" onClick={() => setShowQRCode(true)}>
+                    <PersonBadge className="home-card-icon" />
+                    <Button text="Referee Register" fontSize="2.5dvh" angle={180} readOnly />
+                </div>
+            </div>
+
+            {/* QR Code Overlay Modal */}
+            <QRCodeDisplay
+                eventId={session?.eventId}
+                courtId={session?.courtId}
+                visible={showQRCode}
+                onClose={() => setShowQRCode(false)}
+            />
+        </div>
+    );
+}
+
+export default Home;
+</file>
+
+<file path="src/Pages/Screen/Edit.jsx">
+import React, { useEffect, useState } from 'react';
+import { database } from '../../firebase';
+import { ref, get, update } from "firebase/database";
+import { QrCode, PeopleFill } from "react-bootstrap-icons";
+import "./Edit.css";
+import Button from "../../Components/Button/Button";
+import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner } from '../../Api';
+
+const Edit = ({ 
+    visible, 
+    setVisible, 
+    eventName, 
+    matchId, 
+    matchData, 
+    dominantSide, 
+    setShowQRCode, 
+    occupiedRefereesCount = 0 
+}) => {
+    const [matchMin, setMatchMin] = useState(0);
+    const [matchSec, setMatchSec] = useState(0);
+    const [restMin, setRestMin] = useState(0);
+    const [restSec, setRestSec] = useState(0);
+    const [showSuperiorityVote, setShowSuperiorityVote] = useState(false);
+
+    const handleWinDeclaration = (winnerSide) => {
+        if (!eventName || !matchId || !winnerSide) return;
+        declareRoundWinner(eventName, matchId, winnerSide);
+        setVisible(false);
+        setShowSuperiorityVote(false);
+    };
+
+    const handleStartNextRound = () => {
+        if (!eventName || !matchId) return;
+        startNextRound(eventName, matchId);
+        setVisible(false);
+    };
+
+    const handleDeclareWinner = () => {
+        if (dominantSide && dominantSide.trim() !== 'none') {
+            handleWinDeclaration(dominantSide);
+        } else {
+            setShowSuperiorityVote(true);
+        }
+    };
+
+    const handleAction = (side, type, index, delta) => {
+        updateScoreAndCheckRules(eventName, matchId, side, type, index, delta);
+    };
+
+    useEffect(() => {
+        if (!visible) {
+            setShowSuperiorityVote(false);
+            return;
+        }
+
+        const initialTimer = matchData?.state?.timer || 0;
+        const currentMinutes = Math.floor(initialTimer / 60);
+        const currentSeconds = Math.floor(initialTimer % 60);
+        const activePhase = matchData?.state?.phase || 'ROUND';
+
+        if (activePhase === 'ROUND') {
+            setMatchMin(currentMinutes);
+            setMatchSec(currentSeconds);
+        } else if (activePhase === 'REST') {
+            setRestMin(currentMinutes);
+            setRestSec(currentSeconds);
+        }
+
+        if (eventName && matchId) {
+            const configRef = ref(database, `events/${eventName}/matches/${matchId}/config`);
+            get(configRef).then((snapshot) => {
+                if (!snapshot.exists()) return;
+                const config = snapshot.val();
+                const defaultMatchSec = config.rules?.roundDuration || 120;
+                const defaultRestSec = config.rules?.restDuration || 60;
+
+                if (activePhase === 'ROUND') {
+                    setRestMin(Math.floor(defaultRestSec / 60));
+                    setRestSec(defaultRestSec % 60);
+                } else if (activePhase === 'REST') {
+                    setMatchMin(Math.floor(defaultMatchSec / 60));
+                    setMatchSec(defaultMatchSec % 60);
+                }
+            });
+        }
+    }, [visible, eventName, matchId, matchData]);
+
+    const handleTimeUpdate = (timeType, newMin, newSec) => {
+        if (!eventName || !matchId) return;
+
+        const totalSeconds = parseInt(newMin, 10) * 60 + parseInt(newSec, 10);
+        const stateRef = ref(database, `events/${eventName}/matches/${matchId}/state`);
+
+        const updates = {
+            timer: totalSeconds,
+            isPaused: true,
+            lastStartTime: null,
+            isFinished: totalSeconds === 0,
+        };
+
+        get(stateRef).then(snapshot => {
+            if (snapshot.exists()) {
+                const stateData = snapshot.val();
+                const currentPhase = stateData.phase || 'ROUND';
+
+                if (timeType === 'match' && currentPhase === 'ROUND') {
+                    update(stateRef, updates);
+                } else if (timeType === 'rest' && currentPhase === 'REST') {
+                    update(stateRef, updates);
+                }
+            }
+        });
+    };
+    
+    const handleMatchMinChange = (value) => {
+        setMatchMin(value);
+        handleTimeUpdate('match', value, matchSec);
+    };
+
+    const handleMatchSecChange = (value) => {
+        setMatchSec(value);
+        handleTimeUpdate('match', matchMin, value);
+    };
+
+    const handleRestMinChange = (value) => {
+        setRestMin(value);
+        handleTimeUpdate('rest', value, restSec);
+    };
+
+    const handleRestSecChange = (value) => {
+        setRestSec(value);
+        handleTimeUpdate('rest', restMin, value);
+    };
+
+    const buttonFontSize = '1.5dvw';
+    const pointTypes = [
+        { name: "Gam-jeom", type: "gamjeom", index: null },
+        { name: "Punch", type: "pointsStat", index: 0 },
+        { name: "Body", type: "pointsStat", index: 1 },
+        { name: "Head", type: "pointsStat", index: 2 },
+        { name: "Body(Turn)", type: "pointsStat", index: 3 },
+        { name: "Head(Turn)", type: "pointsStat", index: 4 }
+    ];
+
+    if (!matchData) return null;
+
+    const { config = {}, state = {}, stats = {} } = matchData;
+    const { phase, isFinished, winReason } = state || {};
+    const { roundWins } = stats || {};
+    const { rules = {} } = config;
+    
+    const roundsToWin = rules.roundsToWin || 2;
+
+    const getFinalWinner = () => {
+        const redWins = roundWins?.red || 0;
+        const blueWins = roundWins?.blue || 0;
+        if (redWins >= roundsToWin) return 'red';
+        if (blueWins >= roundsToWin) return 'blue';
+        return null;
+    };
+
+    const finalWinner = getFinalWinner();
+
+    const showDeclareWinnerButton = (phase === 'ROUND' && (isFinished || winReason)) && !finalWinner && !showSuperiorityVote;
+    const showPromoteWinnerButton = isFinished && finalWinner;
+
+    return (
+        <div className={`edit-bar ${visible ? 'visible' : ''}`}>
+            <div className="edit-grid">
+                 <div className="grid-cell header"></div>
+                {pointTypes.map(pt => <div className="grid-cell header" key={pt.name}>{pt.name}</div>)}
+
+                <div className="grid-cell side-label blue">Blue</div>
+                {pointTypes.map(pt => (
+                    <div className="grid-cell" key={`blue-${pt.name}`}>
+                        <div className="buttons">
+                            <Button text="+" fontSize={buttonFontSize} onClick={() => handleAction('blue', pt.type, pt.index, 1)} angle={220} />
+                            <Button text="−" fontSize={buttonFontSize} onClick={() => handleAction('blue', pt.type, pt.index, -1)} angle={220} />
+                        </div>
+                    </div>
+                ))}
+
+                <div className="grid-cell side-label red">Red</div>
+                {pointTypes.map(pt => (
+                    <div className="grid-cell" key={`red-${pt.name}`}>
+                        <div className="buttons">
+                            <Button text="+" fontSize={buttonFontSize} onClick={() => handleAction('red', pt.type, pt.index, 1)} angle={0} />
+                            <Button text="−" fontSize={buttonFontSize} onClick={() => handleAction('red', pt.type, pt.index, -1)} angle={0} />
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="time-bar">
+                <div className='time-control-group'>
+                    <h2>Match Time</h2>
+                    <div className="time-selects">
+                        <select value={matchMin} onChange={(e) => handleMatchMinChange(e.target.value)}>
+                            {[0, 1, 2].map(min => <option key={min} value={min}>{min}</option>)}
+                        </select> min
+                        <select value={matchSec} onChange={(e) => handleMatchSecChange(e.target.value)}>
+                            {Array.from({ length: 60 }, (_, i) => i).map(sec => <option key={sec} value={sec}>{sec}</option>)}
+                        </select> sec
+                    </div>
+                </div>
+                <div className='time-control-group'>
+                    <h2>Rest Time</h2>
+                    <div className="time-selects">
+                        <select value={restMin} onChange={(e) => handleRestMinChange(e.target.value)}>
+                            {[0, 1].map(min => <option key={min} value={min}>{min}</option>)}
+                        </select> min
+                        <select value={restSec} onChange={(e) => handleRestSecChange(e.target.value)}>
+                            {Array.from({ length: 60 }, (_, i) => i).map(sec => <option key={sec} value={sec}>{sec}</option>)}
+                        </select> sec
+                    </div>
+                </div>
+
+                {/* QR Code Controller Toggle Button inside Edit Drawer */}
+                {setShowQRCode && (
+                    <Button 
+                        text={`QR Code (${occupiedRefereesCount}/3)`}
+                        fontSize="1.6vw"
+                        angle={300}
+                        onClick={() => {
+                            setVisible(false);
+                            setShowQRCode(true);
+                        }}
+                    />
+                )}
+
+                {phase === 'REST' && !isFinished && (
+                    <Button 
+                        text={`Start Round ${(matchData?.state?.currentRound || 1) + 1}`} 
+                        fontSize="1.8vw" 
+                        onClick={handleStartNextRound} 
+                        angle={50} 
+                    />
+                )}
+
+                {showPromoteWinnerButton && (
+                     <Button 
+                        onClick={() => promoteWinner(eventName, matchId, finalWinner)}
+                        text="Promote Winner"
+                        fontSize="1.8vw" 
+                        angle={50}
+                    />
+                )}
+
+                 {showDeclareWinnerButton && (
+                    <Button text="Declare Round Winner" fontSize="1.8vw" onClick={handleDeclareWinner} angle={50} />
+                )}
+                
+                {showSuperiorityVote && (
+                    <div className="superiority-vote time-control-group">
+                        <h2>Woo-se-girok</h2>
+                        <div className="buttons">
+                            <Button text="Blue" fontSize="1.8vw" onClick={() => handleWinDeclaration('blue')} angle={220} />
+                            <Button text="Red" fontSize="1.8vw" onClick={() => handleWinDeclaration('red')} angle={0} />
+                        </div>
+                    </div>
+                )}
+
+                <Button text="Done" fontSize="2vw" onClick={() => setVisible(false)} />
+            </div>
+        </div>
+    );
+}
+
+export default Edit;
+</file>
+
+<file path="src/Pages/Screen/Screen.jsx">
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { ref, onValue, update } from "firebase/database";
+import { database } from "../../firebase";
+import "./Screen.css";
+import "../../App.css";
+import Edit from "./Edit";
+import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
+
+const formatTime = (totalSeconds) => {
+    if (typeof totalSeconds !== 'number' || isNaN(totalSeconds)) {
+        return "0:00";
+    }
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+const calculateScore = (stats, opponentGamjeom) => {
+    const p = stats?.pointsStat || [0, 0, 0, 0, 0];
+    return (p[0] * 1) + (p[1] * 2) + (p[2] * 3) + (p[3] * 4) + (p[4] * 6) + (opponentGamjeom || 0);
+};
+
+const determineDominantSide = (redStats, blueStats) => {
+    const rG = redStats?.gamjeom || 0;
+    const bG = blueStats?.gamjeom || 0;
+
+    if (rG >= 5) return 'blue';
+    if (bG >= 5) return 'red';
+
+    const rP = redStats?.pointsStat || [0, 0, 0, 0, 0];
+    const bP = blueStats?.pointsStat || [0, 0, 0, 0, 0];
+
+    const redTotal = calculateScore({ pointsStat: rP }, bG);
+    const blueTotal = calculateScore({ pointsStat: bP }, rG);
+
+    if (redTotal > blueTotal) return 'red';
+    if (blueTotal > redTotal) return 'blue';
+
+    const redTurningPoints = (rP[3] * 4) + (rP[4] * 6);
+    const blueTurningPoints = (bP[3] * 4) + (bP[4] * 6);
+    if (redTurningPoints > blueTurningPoints) return 'red';
+    if (blueTurningPoints > redTurningPoints) return 'blue';
+
+    const redCount35 = rP[2] + rP[4];
+    const blueCount35 = bP[2] + bP[4];
+    if (redCount35 > blueCount35) return 'red';
+    if (blueCount35 > redCount35) return 'blue';
+
+    const redCount24 = rP[1] + rP[3];
+    const blueCount24 = bP[1] + bP[3];
+    if (redCount24 > blueCount24) return 'red';
+    if (blueCount24 > redCount24) return 'blue';
+
+    if (rP[0] > bP[0]) return 'red';
+    if (bP[0] > rP[0]) return 'blue';
+
+    if (rG < bG) return 'red';
+    if (bG < rG) return 'blue';
+
+    return 'none';
+};
+
+function Screen() {
+    const [matchData, setMatchData] = useState(null);
+    const [direction, setDirection] = useState("row");
+    const [showEdit, setShowEdit] = useState(false);
+    const [showQRCode, setShowQRCode] = useState(false);
+    const [displayTime, setDisplayTime] = useState(0);
+
+    const [selectedEvent, setSelectedEvent] = useState(localStorage.getItem('selectedEvent'));
+    const [selectedCourt, setSelectedCourt] = useState(localStorage.getItem('selectedCourt'));
+    const [currentMatchId, setCurrentMatchId] = useState(null);
+    const [refereesData, setRefereesData] = useState({});
+
+    const animationFrameRef = useRef();
+    const isMatchLoaded = !!matchData;
+
+    // Listen to referees status on current court
+    useEffect(() => {
+        if (!selectedEvent || !selectedCourt) return;
+        const refereesRef = ref(database, `events/${selectedEvent}/courts/${selectedCourt}/referees`);
+        const unsubscribe = onValue(refereesRef, (snapshot) => {
+            setRefereesData(snapshot.val() || {});
+        });
+        return () => unsubscribe();
+    }, [selectedEvent, selectedCourt]);
+
+    useEffect(() => {
+        if (!selectedEvent || !selectedCourt) return;
+        const courtMatchIdRef = ref(database, `events/${selectedEvent}/courts/${selectedCourt}/currentMatchId`);
+        const unsubscribe = onValue(courtMatchIdRef, (snapshot) => {
+            const newMatchId = snapshot.val();
+            if (newMatchId) {
+                setCurrentMatchId(newMatchId);
+            } else {
+                setCurrentMatchId(null);
+                setMatchData(null);
+            }
+        });
+        return () => unsubscribe();
+    }, [selectedEvent, selectedCourt]);
+
+    useEffect(() => {
+        if (!currentMatchId || !selectedEvent) {
+            setMatchData(null);
+            return;
+        }
+        const matchRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}`);
+        const unsubscribe = onValue(matchRef, (snapshot) => {
+            setMatchData(snapshot.val());
+        });
+        return () => unsubscribe();
+    }, [currentMatchId, selectedEvent]);
+
+    useEffect(() => {
+        if (!matchData?.state) {
+            setDisplayTime(0);
+            return;
+        };
+
+        const state = matchData.state;
+        const { timer, isPaused, lastStartTime, isFinished, phase } = state;
+
+        const updateTimer = () => {
+            if (isFinished && phase !== 'REST') {
+                setDisplayTime(0);
+                cancelAnimationFrame(animationFrameRef.current);
+                return;
+            }
+
+            if (isPaused) {
+                setDisplayTime(timer || 0);
+                cancelAnimationFrame(animationFrameRef.current);
+                return;
+            }
+
+            const now = Date.now();
+            const elapsed = Math.floor((now - lastStartTime) / 1000);
+            const remaining = (timer || 0) - elapsed;
+
+            if (remaining <= 0) {
+                setDisplayTime(0);
+                cancelAnimationFrame(animationFrameRef.current);
+
+                if (phase !== 'REST') {
+                    const matchStateRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}/state`);
+                    update(matchStateRef, {
+                        isFinished: true,
+                        isPaused: true,
+                        timer: 0,
+                        lastStartTime: null
+                    });
+                }
+            } else {
+                setDisplayTime(remaining);
+                animationFrameRef.current = requestAnimationFrame(updateTimer);
+            }
+        };
+
+        animationFrameRef.current = requestAnimationFrame(updateTimer);
+
+        return () => cancelAnimationFrame(animationFrameRef.current);
+
+    }, [matchData?.state, selectedEvent, currentMatchId]);
+
+    const toggleDirection = () => setDirection((prev) => (prev === "row" ? "row-reverse" : "row"));
+
+    const toggleTimer = async () => {
+        if (!isMatchLoaded) return;
+        const stateRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}/state`);
+        const currentState = matchData?.state || {};
+        const isPaused = currentState.isPaused ?? true;
+
+        if (isPaused) {
+            update(stateRef, {
+                isPaused: false,
+                lastStartTime: Date.now()
+            });
+        } else {
+            const elapsed = Math.floor((Date.now() - (currentState.lastStartTime || Date.now())) / 1000);
+            const newTimer = Math.max(0, (currentState.timer || 0) - elapsed);
+            update(stateRef, {
+                isPaused: true,
+                timer: newTimer,
+                lastStartTime: null
+            });
+        }
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.code === "Space") { e.preventDefault(); toggleTimer(); }
+            if (e.key === "\\") { toggleDirection(); }
+            if (e.key === "e" || e.key === "E") { setShowEdit(prev => !prev); }
+            if (e.key === "q" || e.key === "Q") { setShowQRCode(prev => !prev); }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isMatchLoaded, selectedEvent, currentMatchId]);
+
+    const { state = {}, config = {}, stats = {} } = matchData || {};
+    const { phase = 'ROUND', currentRound: matchCurrentRound, winReason, isFinished, isPaused = true } = state;
+    const { roundScores = {}, roundWins: matchRoundWins = {} } = stats;
+
+    const redStats = stats.red;
+    const blueStats = stats.blue;
+
+    const dominantSide = useMemo(() => {
+        if (!isMatchLoaded) return 'none';
+        return determineDominantSide(redStats, blueStats);
+    }, [redStats, blueStats, isMatchLoaded]);
+
+    // Compute occupied referee count (J1, J2, J3)
+    const occupiedRefereesCount = useMemo(() => {
+        let count = 0;
+        if (refereesData?.J1?.status === 'occupied') count++;
+        if (refereesData?.J2?.status === 'occupied') count++;
+        if (refereesData?.J3?.status === 'occupied') count++;
+        return count;
+    }, [refereesData]);
+
+    if (!selectedCourt) {
+        return (
+            <div className="screen-unconfigured">
+                <h1>Screen Unconfigured</h1>
+                <p>Please go to <strong>Court Setup</strong> to assign this screen to a court.</p>
+            </div>
+        );
+    }
+
+    const isResting = phase === 'REST';
+    const roundWins = { red: matchRoundWins.red || 0, blue: matchRoundWins.blue || 0 };
+    const isFinal = roundWins.red === 2 || roundWins.blue === 2;
+
+    const getDisplayName = (c) => {
+        if (!c || !c.name) return " ";
+        return c.affiliatedClub ? `${c.name} (${c.affiliatedClub})` : c.name;
+    };
+
+    const bluePlayerName = getDisplayName(config.competitors?.blue);
+    const redPlayerName = getDisplayName(config.competitors?.red);
+
+    const redGamJeom = stats.red?.gamjeom ?? 0;
+    const blueGamJeom = stats.blue?.gamjeom ?? 0;
+
+    const redTotalScore = isMatchLoaded ? calculateScore(stats.red, blueGamJeom) : 0;
+    const blueTotalScore = isMatchLoaded ? calculateScore(stats.blue, redGamJeom) : 0;
+
+    const matchNumber = config.matchId ?? "000";
+    const currentRound = matchCurrentRound ?? 1;
+
+    const timerColor = isPaused ? "#FFFF00" : "#FFFFFF";
+    const redScoreColor = !isResting && dominantSide === 'red' ? '#FFFF00' : '#FFFFFF';
+    const blueScoreColor = !isResting && dominantSide === 'blue' ? '#FFFF00' : '#FFFFFF';
+
+    const renderTimerContent = () => {
+        if (winReason) return winReason;
+        if (!isMatchLoaded) return "0:00";
+        return formatTime(displayTime);
+    };
+
+    const renderSideHistory = (color) => {
+        const scores = roundScores || {};
+        return (
+            <div className="round-history-container">
+                {Object.entries(scores)
+                    .sort(([a], [b]) => parseInt(a.substring(1)) - parseInt(b.substring(1)))
+                    .map(([round, scoreData]) => (
+                        <div className="history-row" key={round}>
+                            <span className="history-label">{round}</span>
+                            <span className="history-value">{scoreData[color] ?? 0}</span>
+                        </div>
+                    ))}
+                <div className="total-round-wins">{roundWins[color]}</div>
+            </div>
+        );
+    };
+
+    const getTimeoutStyle = () => {
+        const style = { backgroundColor: "#FFFF00", color: "#000000" };
+        if (isMatchLoaded) {
+            Object.assign(style, { backgroundColor: !isPaused ? "#000000" : "#FFFF00" });
+            if (isPaused) {
+                style.color = "#000000";
+            } else if (!isResting) {
+                style.color = "#000000";
+            }
+        }
+        return style;
+    };
+
+    return (
+        <>
+            <div className="screen" onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}>
+                {/* Top Section: Player Names */}
+                <div className={`top ${isResting ? 'rest-mode' : ''}`} style={{ flexDirection: direction }}>
+                    <div className="red-name red-bg name-font">{redPlayerName}</div>
+                    <div className="blue-name blue-bg name-font">{bluePlayerName}</div>
+                </div>
+
+                {/* Main Section: Scores and Info */}
+                <div className="midbottom" style={{ flexDirection: direction, display: "flex" }}>
+                    {/* Red Side: Gam-jeom and Score */}
+                    <div className="red-log red-bg">
+                        <div className="red-gamjeom red-bg" onClick={() => isMatchLoaded && setShowEdit(true)}>
+                            <div className="gamjeom-number">{redGamJeom}</div>
+                            <div className="gamjeom-font">GAM-JEOM</div>
+                        </div>
+                    </div>
+                    <div className="red-score red-bg">
+                        <div
+                            className={'red-score-text red-score-bg score-font cursor-target'}
+                            style={{ color: redScoreColor }}
+                            onClick={() => isMatchLoaded && setShowEdit(true)}
+                        >
+                            {isResting || isFinal ? renderSideHistory('red') : redTotalScore}
+                        </div>
+                    </div>
+
+                    {/* Center: Match Info */}
+                    <div className="match-info">
+                        <div className="match cursor-target" onClick={toggleDirection}>
+                            <div className="match-font">MATCH</div>
+                            <div className="match-number">{matchNumber}</div>
+                        </div>
+                        <div className="timer cursor-target">
+                            <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: timerColor }}>
+                                {renderTimerContent()}
+                            </div>
+                            <div
+                                className={`time-out match-font ${isMatchLoaded && !isPaused ? "timeout-active" : ""} ${isResting ? 'rest-mode' : ''}`}
+                                onClick={toggleTimer}
+                                style={getTimeoutStyle()}
+                            >
+                                {isResting ? 'REST TIME' : 'Time out'}
+                            </div>
+                        </div>
+                        <div className="round-info">
+                            <div className="round-font">ROUND</div>
+                            <div className="round-number">{currentRound}</div>
+                        </div>
+                    </div>
+
+                    {/* Blue Side: Score and Gam-jeom */}
+                    <div className="blue-score blue-bg">
+                        <div
+                            className={'blue-score-text blue-score-bg score-font cursor-target'}
+                            style={{ color: blueScoreColor }}
+                            onClick={() => isMatchLoaded && setShowEdit(true)}
+                        >
+                            {isResting || isFinal ? renderSideHistory('blue') : blueTotalScore}
+                        </div>
+                    </div>
+                    <div className="blue-log blue-bg">
+                        <div className="blue-gamjeom blue-bg" onClick={() => isMatchLoaded && setShowEdit(true)}>
+                            <div className="gamjeom-number">{blueGamJeom}</div>
+                            <div className="gamjeom-font">GAM-JEOM</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Edit Drawer Modal */}
+            <Edit
+                visible={showEdit}
+                setVisible={setShowEdit}
+                eventName={selectedEvent}
+                matchId={currentMatchId}
+                matchData={matchData}
+                dominantSide={dominantSide}
+                setShowQRCode={setShowQRCode}
+                occupiedRefereesCount={occupiedRefereesCount}
+            />
+
+            {/* Controller Connection QR Code Modal */}
+            <QRCodeDisplay
+                eventId={selectedEvent}
+                courtId={selectedCourt}
+                visible={showQRCode}
+                onClose={() => setShowQRCode(false)}
+                refereesData={refereesData}
+            />
+        </>
+    );
+}
+
+export default Screen;
+</file>
+
+</files>
