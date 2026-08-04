@@ -12,13 +12,18 @@
           ))
         )",
         ".validate": "!newData.exists() || newData.hasChild('createdBy')",
+        "courts": {
+          "$courtId": {
+            "referees": {
+              "$judgeId": {
+                ".write": "auth != null || (!data.exists() || data.val() === newData.val() || newData.val() === null)"
+              }
+            }
+          }
+        },
         "matches": {
           "$matchId": {
-            ".write": "auth != null || (
-              newData.exists() && data.exists() &&
-              newData.child('providedToken').val() === data.child('accessToken').val() &&
-              data.child('tokenExpiresAt').val() > now
-            )"
+            ".write": "auth != null || (newData.exists() && data.exists() && newData.hasChild('providedCourtId') && newData.hasChild('providedDeviceId') && (root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J1').val() === newData.child('providedDeviceId').val() || root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J2').val() === newData.child('providedDeviceId').val() || root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J3').val() === newData.child('providedDeviceId').val()))"
           }
         }
       }

@@ -8,14 +8,15 @@ const getScoreValue = (stats, opponentGamjeom) => {
     return points + (opponentGamjeom || 0);
 };
 
-export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, token = null) => {
+export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, courtId = null, deviceId = null) => {
     const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
 
     runTransaction(matchRef, (matchData) => {
         if (!matchData) return;
         
-        if (token) {
-            matchData.providedToken = token;
+        if (courtId && deviceId) {
+            matchData.providedCourtId = courtId;
+            matchData.providedDeviceId = deviceId;
         }
 
         if (matchData.state.phase === 'REST') return;

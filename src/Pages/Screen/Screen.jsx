@@ -213,9 +213,9 @@ function Screen() {
     // Compute occupied referee count (J1, J2, J3)
     const occupiedRefereesCount = useMemo(() => {
         let count = 0;
-        if (refereesData?.J1?.status === 'occupied') count++;
-        if (refereesData?.J2?.status === 'occupied') count++;
-        if (refereesData?.J3?.status === 'occupied') count++;
+        if (refereesData?.J1) count++;
+        if (refereesData?.J2) count++;
+        if (refereesData?.J3) count++;
         return count;
     }, [refereesData]);
 

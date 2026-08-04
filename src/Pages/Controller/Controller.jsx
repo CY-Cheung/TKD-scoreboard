@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, set, onDisconnect } from "firebase/database";
 import { database } from "../../firebase";
 import { updateScoreAndCheckRules } from "../../Api";
+import { useAuth } from "../../Context/AuthContext";
 import Button from "../../Components/Button/Button";
 import { Wifi, WifiOff, ArrowLeft } from "react-bootstrap-icons";
 import "./Controller.css";
@@ -10,6 +11,7 @@ import "./Controller.css";
 function Controller() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     // Helper to extract query parameter from searchParams, search URL, Hash URL, or localStorage
     const getParam = (key) => {
@@ -33,13 +35,13 @@ function Controller() {
 
     const initialEvent = getParam("event");
     const initialCourt = getParam("court");
-    const initialMatch = getParam("match");
-    const initialToken = getParam("token");
 
     const [eventId, setEventId] = useState(initialEvent);
     const [courtId, setCourtId] = useState(initialCourt);
-    const [currentMatchId, setCurrentMatchId] = useState(initialMatch || null);
-    const [accessToken, setAccessToken] = useState(initialToken || null);
+    const [currentMatchId, setCurrentMatchId] = useState(null);
+    const [deviceId, setDeviceId] = useState("");
+    const [mySeat, setMySeat] = useState(null);
+    const [isFull, setIsFull] = useState(false);
     const [matchData, setMatchData] = useState(null);
     const [lastAction, setLastAction] = useState(null); // { side: 'red'|'blue', text: '...' }
     const [isConnected, setIsConnected] = useState(false);
@@ -58,14 +60,51 @@ function Controller() {
         }
     }, [searchParams]);
 
-    // Listen to currentMatchId on court
+    // Grab Referee Seat (J1, J2, J3) if not logged in
     useEffect(() => {
-        // If a specific match is provided via URL (QR Code scanning), lock to this match
-        if (initialMatch) {
-            setIsConnected(true);
+        if (!eventId || !courtId) return;
+        
+        if (user) {
+            setMySeat("Admin");
             return;
         }
 
+        const newDeviceId = Math.random().toString(36).substring(2, 12);
+        setDeviceId(newDeviceId);
+        setIsFull(false);
+        let grabbedSeat = null;
+
+        const trySeat = async (seatName) => {
+            const seatRef = ref(database, `events/${eventId}/courts/${courtId}/referees/${seatName}`);
+            try {
+                await set(seatRef, newDeviceId);
+                onDisconnect(seatRef).remove();
+                setMySeat(seatName);
+                grabbedSeat = seatName;
+                return true;
+            } catch (e) {
+                return false;
+            }
+        };
+
+        const grabSeat = async () => {
+            if (await trySeat('J1')) return;
+            if (await trySeat('J2')) return;
+            if (await trySeat('J3')) return;
+            setIsFull(true);
+        };
+
+        grabSeat();
+
+        return () => {
+            if (grabbedSeat) {
+                set(ref(database, `events/${eventId}/courts/${courtId}/referees/${grabbedSeat}`), null).catch(() => {});
+            }
+        };
+    }, [eventId, courtId, user]);
+
+    // Listen to currentMatchId on court
+    useEffect(() => {
         if (!eventId || !courtId) {
             setIsConnected(false);
             return;
@@ -126,7 +165,7 @@ function Controller() {
         }
 
         // Call scoring API (+1 point increment for selected point index)
-        updateScoreAndCheckRules(eventId, currentMatchId, side, "pointsStat", index, 1, accessToken);
+        updateScoreAndCheckRules(eventId, currentMatchId, side, "pointsStat", index, 1, courtId, deviceId);
 
         const actionObj = { side, text: `${side.toUpperCase()} ${label}` };
         setLastAction(actionObj);
@@ -142,6 +181,16 @@ function Controller() {
     const currentRound = matchData?.state?.currentRound || 1;
     const isPaused = matchData?.state?.isPaused ?? true;
 
+    if (isFull) {
+        return (
+            <div className="controller" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white', padding: '20px', textAlign: 'center' }}>
+                <h1 style={{ color: '#ff3b30' }}>Court is Full</h1>
+                <p>There are already 3 referees connected to this court.</p>
+                <Button text="Go Back" onClick={() => navigate("/court-setup")} variant="orange" />
+            </div>
+        );
+    }
+
     return (
         <div className="controller" onClick={handleFullscreen}>
             {/* Top Bar Banner for Match & Connection Status */}
@@ -150,7 +199,11 @@ function Controller() {
                     className="ctrl-back-btn" 
                     onClick={(e) => {
                         e.stopPropagation();
-                        navigate("/");
+                        if (user) {
+                            navigate("/");
+                        } else {
+                            navigate("/court-setup");
+                        }
                     }} 
                     aria-label="Back"
                     icon={<ArrowLeft size={18} />}
@@ -161,6 +214,7 @@ function Controller() {
                     <span className="ctrl-badge">{eventId || "No Event"}</span>
                     <span className="ctrl-badge court">{courtId || "No Court"}</span>
                     <span className="ctrl-badge match">Match #{matchNo}</span>
+                    {mySeat && <span className="ctrl-badge" style={{ backgroundColor: '#ffcc00', color: 'black' }}>{mySeat}</span>}
                 </div>
                 <div className="ctrl-conn-status">
                     {isConnected ? (

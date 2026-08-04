@@ -1,32 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, X, Copy, Check, PeopleFill, CheckCircleFill, Globe } from 'react-bootstrap-icons';
-import { ref, onValue, update } from 'firebase/database';
+import { ref, onValue } from 'firebase/database';
 import { database } from '../../firebase';
 import './QRCodeDisplay.css';
 import Button from '../Button/Button';
 
-function QRCodeDisplay({ eventId, courtId, matchId, visible, onClose, refereesData: propRefereesData }) {
+function QRCodeDisplay({ eventId, courtId, visible, onClose, refereesData: propRefereesData }) {
   const [copied, setCopied] = useState(false);
   const [referees, setReferees] = useState(propRefereesData || {});
-  const [accessToken, setAccessToken] = useState('');
-
-  // Generate short-term access token when opened for a specific match
-  useEffect(() => {
-    if (visible && matchId) {
-      const newToken = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const expiresAt = Date.now() + 2 * 60 * 60 * 1000; // 2 hours
-      setAccessToken(newToken);
-      
-      const matchRef = ref(database, `events/${eventId}/matches/${matchId}`);
-      update(matchRef, {
-        accessToken: newToken,
-        tokenExpiresAt: expiresAt
-      }).catch(err => console.error("Failed to set access token:", err));
-    } else if (!visible) {
-      setAccessToken('');
-    }
-  }, [visible, eventId, matchId]);
   
   // Custom Network Host state (for localhost dev environment mobile scans)
   const [customHost, setCustomHost] = useState(() => {
@@ -53,9 +35,9 @@ function QRCodeDisplay({ eventId, courtId, matchId, visible, onClose, refereesDa
   if (!visible) return null;
 
   // Calculate referee slot statuses (J1, J2, J3)
-  const isJ1 = referees?.J1?.status === 'occupied';
-  const isJ2 = referees?.J2?.status === 'occupied';
-  const isJ3 = referees?.J3?.status === 'occupied';
+  const isJ1 = !!referees?.J1;
+  const isJ2 = !!referees?.J2;
+  const isJ3 = !!referees?.J3;
   const occupiedCount = (isJ1 ? 1 : 0) + (isJ2 ? 1 : 0) + (isJ3 ? 1 : 0);
   const isFull = occupiedCount === 3;
 
@@ -79,9 +61,6 @@ function QRCodeDisplay({ eventId, courtId, matchId, visible, onClose, refereesDa
 
   // Build default BrowserRouter controller URL
   let controllerUrl = `${protocol}//${host}${basePath}controller?event=${encodeURIComponent(eventId || '')}&court=${encodeURIComponent(courtId || '')}`;
-  if (matchId && accessToken) {
-    controllerUrl += `&match=${encodeURIComponent(matchId)}&token=${encodeURIComponent(accessToken)}`;
-  }
 
   const handleCopy = () => {
     navigator.clipboard.writeText(controllerUrl);
