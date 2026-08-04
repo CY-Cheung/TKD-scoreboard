@@ -12,8 +12,19 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs
  * - Player name: X > 100, Y within 16px of box start
  */
 const parseCompetitorsFromItems = (textItems) => {
-    const compItems = textItems.filter(it => it.y >= 60 && it.x < 250);
-    const seedItems = compItems.filter(it => it.text.startsWith('<'));
+    // Find all seeds (e.g. <1>, <21>) to establish the left boundary
+    const seedItems = textItems.filter(it => it.y >= 60 && /^<\d+>/.test(it.text));
+    
+    if (seedItems.length === 0) return [];
+    
+    const baseOffsetX = Math.min(...seedItems.map(s => s.x));
+    
+    // Define dynamic X boundaries based on the base offset
+    // This solves issues with brackets that are shifted to the right
+    const clubNameBoundary = baseOffsetX + 50;
+    const competitorMaxX = baseOffsetX + 200;
+
+    const compItems = textItems.filter(it => it.y >= 60 && it.x < competitorMaxX);
     
     return seedItems.map(seedIt => {
         // Collect all text items belonging to this competitor box (within 16px of seedIt.y)
@@ -23,7 +34,7 @@ const parseCompetitorsFromItems = (textItems) => {
         let nameStr = '';
         
         boxItems.forEach(it => {
-            if (it.x > 100) {
+            if (it.x > clubNameBoundary) {
                 nameStr += (nameStr ? ' ' : '') + it.text;
             } else {
                 clubStr += (clubStr ? ' ' : '') + it.text;
@@ -38,11 +49,14 @@ const parseCompetitorsFromItems = (textItems) => {
             seed = parseInt(seedMatch[1], 10);
             club = seedMatch[2].trim();
         }
+        // Remove all spaces from the club name
+        club = club.replace(/\s+/g, '');
         
         return {
             seed,
             club,
             name: nameStr.trim(),
+            x: seedIt.x,
             y: seedIt.y
         };
     });
@@ -135,38 +149,14 @@ export const parsePdfPage = async (page) => {
 
     const parsedMatches = {};
 
-    // Build Bracket Tree Relationships
+    // Initialize parsedMatches
     xClusters.forEach((cluster, colIndex) => {
-        const nextCluster = xClusters[colIndex + 1];
-
         cluster.matches.forEach(m => {
-            let nextMatchId = null;
-            let nextMatchSlot = null;
-
-            if (nextCluster) {
-                let closestNext = null;
-                let minDiff = Infinity;
-
-                nextCluster.matches.forEach(nm => {
-                    const diff = Math.abs(nm.y - m.y);
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        closestNext = nm;
-                    }
-                });
-
-                if (closestNext) {
-                    nextMatchId = closestNext.matchId;
-                    // Top position advances to Blue slot, Bottom position advances to Red slot
-                    nextMatchSlot = m.y <= closestNext.y ? 'blue' : 'red';
-                }
-            }
-
             parsedMatches[m.matchId] = {
                 config: {
                     matchId: m.matchId,
-                    nextMatchId,
-                    nextMatchSlot,
+                    nextMatchId: null,
+                    nextMatchSlot: null,
                     categoryTitle: categoryTitle || '',
                     matchDate: matchDate || '',
                     courtCode: courtId || '',
@@ -188,41 +178,70 @@ export const parsePdfPage = async (page) => {
         });
     });
 
-    // Two-Tier Precision Round-Aware Competitor Assignment
-    // 1. For colIndex 0 (Round 1), maximum vertical search distance is 100px.
-    // 2. For BYE competitors (colIndex > 0), search distance extends to 150px.
-    if (competitors.length > 0) {
-        competitors.forEach((comp) => {
-            let bestMatch = null;
-            let minCol = Infinity;
-            let minDiff = Infinity;
+    // Frontier Merge Algorithm (Left-to-Right Topology Matching)
+    // 解決 Euclidean Distance 在 X 距離過大時導致的誤判 (如 A1006 錯誤連接 A1001)
+    let frontier = competitors.map(comp => ({ type: 'competitor', data: comp, y: comp.y }));
+    frontier.sort((a, b) => a.y - b.y);
 
-            Object.values(parsedMatches).forEach(m => {
-                const diff = Math.abs(m.y - comp.y);
-                const isCol0 = m.colIndex === 0;
-                const maxAllowedDiff = isCol0 ? 100 : 150;
+    for (let c = 0; c < xClusters.length; c++) {
+        const cluster = xClusters[c];
+        
+        cluster.matches.forEach(m => {
+            let bestPairIndex = -1;
+            let minError = Infinity;
 
-                if (diff <= maxAllowedDiff) {
-                    if (m.colIndex < minCol || (m.colIndex === minCol && diff < minDiff)) {
-                        minCol = m.colIndex;
-                        minDiff = diff;
-                        bestMatch = m;
-                    }
+            // 在 Frontier 尋找最匹配的相鄰節點對 (Adjacent Pair)
+            for (let i = 0; i < frontier.length - 1; i++) {
+                const upper = frontier[i];
+                const lower = frontier[i + 1];
+                const midpoint = (upper.y + lower.y) / 2;
+                const error = Math.abs(m.y - midpoint);
+
+                if (error < minError) {
+                    minError = error;
+                    bestPairIndex = i;
                 }
-            });
+            }
 
-            if (bestMatch) {
-                if (comp.y <= bestMatch.y) {
-                    bestMatch.config.competitors.blue = {
-                        name: comp.name,
-                        affiliatedClub: comp.club
+            if (bestPairIndex !== -1 && minError < 40) { // 容差 40px
+                const upperNode = frontier[bestPairIndex];
+                const lowerNode = frontier[bestPairIndex + 1];
+
+                // Assign Blue (Upper)
+                if (upperNode.type === 'competitor') {
+                    parsedMatches[m.matchId].config.competitors.blue = {
+                        name: upperNode.data.name,
+                        affiliatedClub: upperNode.data.club
                     };
-                } else {
-                    bestMatch.config.competitors.red = {
-                        name: comp.name,
-                        affiliatedClub: comp.club
+                } else if (upperNode.type === 'match') {
+                    parsedMatches[m.matchId].config.competitors.blue = {
+                        name: '',
+                        affiliatedClub: '',
+                        previousMatch: upperNode.data.matchId
                     };
+                    parsedMatches[upperNode.data.matchId].config.nextMatchId = m.matchId;
+                    parsedMatches[upperNode.data.matchId].config.nextMatchSlot = 'blue';
                 }
+
+                // Assign Red (Lower)
+                if (lowerNode.type === 'competitor') {
+                    parsedMatches[m.matchId].config.competitors.red = {
+                        name: lowerNode.data.name,
+                        affiliatedClub: lowerNode.data.club
+                    };
+                } else if (lowerNode.type === 'match') {
+                    parsedMatches[m.matchId].config.competitors.red = {
+                        name: '',
+                        affiliatedClub: '',
+                        previousMatch: lowerNode.data.matchId
+                    };
+                    parsedMatches[lowerNode.data.matchId].config.nextMatchId = m.matchId;
+                    parsedMatches[lowerNode.data.matchId].config.nextMatchSlot = 'red';
+                }
+
+                // 合併這對節點為一個新的 Match 節點，更新 Frontier
+                const newNode = { type: 'match', data: m, y: m.y };
+                frontier.splice(bestPairIndex, 2, newNode);
             }
         });
     }
