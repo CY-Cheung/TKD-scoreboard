@@ -7,11 +7,12 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs
  * Robust competitor parsing from PDF text items using geometric box grouping
  * Competitor box structure:
  * - Starts with seed item <number> (e.g. <1>, <9>, <5>, <21>)
+ * - Header Y < 60; Competitors Y >= 60 and X < 250
  * - Club name: X <= 100, Y within 16px of box start
  * - Player name: X > 100, Y within 16px of box start
  */
 const parseCompetitorsFromItems = (textItems) => {
-    const compItems = textItems.filter(it => it.y > 80 && it.x < 250);
+    const compItems = textItems.filter(it => it.y >= 60 && it.x < 250);
     const seedItems = compItems.filter(it => it.text.startsWith('<'));
     
     return seedItems.map(seedIt => {
@@ -67,7 +68,7 @@ export const parsePdfPage = async (page) => {
         };
     }).filter(item => item.text.length > 0);
 
-    // Sort items vertically for header detection (Top Y < 80)
+    // Sort items vertically for header detection (Top Y < 60)
     const sortedY = [...textItems].sort((a, b) => a.y - b.y);
     
     let eventName = '';
@@ -76,7 +77,7 @@ export const parsePdfPage = async (page) => {
     let matchDate = '';
     
     sortedY.forEach(item => {
-        if (item.y < 80) {
+        if (item.y < 60) {
             if (item.text.includes('體育節') || item.text.includes('錦標賽') || item.text.includes('賽20')) {
                 eventName = item.text;
             } else if (item.text.includes('Court:')) {
@@ -100,7 +101,7 @@ export const parsePdfPage = async (page) => {
     // Extract Match IDs (e.g. A1001, A1004, B1034, A2001)
     const matchIds = [];
     textItems.forEach(item => {
-        if (item.y < 80) return;
+        if (item.y < 60) return;
         const matchIdPattern = /^([A-Z]\d{3,4})$/;
         if (matchIdPattern.test(item.text)) {
             matchIds.push({
@@ -187,38 +188,28 @@ export const parsePdfPage = async (page) => {
         });
     });
 
-    // Precision Round-Aware Competitor Assignment
-    // 1. Check if there is a match in Round 1 (colIndex 0) within 30px tolerance.
-    // 2. If not in Round 1, find the match in earliest subsequent round with minimum Y-distance.
+    // Two-Tier Precision Round-Aware Competitor Assignment
+    // 1. For colIndex 0 (Round 1), maximum vertical search distance is 100px.
+    // 2. For BYE competitors (colIndex > 0), search distance extends to 150px.
     if (competitors.length > 0) {
         competitors.forEach((comp) => {
             let bestMatch = null;
+            let minCol = Infinity;
+            let minDiff = Infinity;
 
-            if (xClusters.length > 1 && xClusters[0].matches.length > 0) {
-                let minDiff0 = Infinity;
-                xClusters[0].matches.forEach(m => {
-                    const diff = Math.abs(m.y - comp.y);
-                    if (diff <= 30 && diff < minDiff0) {
-                        minDiff0 = diff;
-                        bestMatch = parsedMatches[m.matchId];
-                    }
-                });
-            }
+            Object.values(parsedMatches).forEach(m => {
+                const diff = Math.abs(m.y - comp.y);
+                const isCol0 = m.colIndex === 0;
+                const maxAllowedDiff = isCol0 ? 100 : 150;
 
-            if (!bestMatch) {
-                let minCol = Infinity;
-                let minDiff = Infinity;
-                Object.values(parsedMatches).forEach(m => {
-                    const diff = Math.abs(m.y - comp.y);
-                    if (diff <= 140) {
-                        if (m.colIndex < minCol || (m.colIndex === minCol && diff < minDiff)) {
-                            minCol = m.colIndex;
-                            minDiff = diff;
-                            bestMatch = m;
-                        }
+                if (diff <= maxAllowedDiff) {
+                    if (m.colIndex < minCol || (m.colIndex === minCol && diff < minDiff)) {
+                        minCol = m.colIndex;
+                        minDiff = diff;
+                        bestMatch = m;
                     }
-                });
-            }
+                }
+            });
 
             if (bestMatch) {
                 if (comp.y <= bestMatch.y) {
