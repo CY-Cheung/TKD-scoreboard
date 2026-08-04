@@ -8,11 +8,15 @@ const getScoreValue = (stats, opponentGamjeom) => {
     return points + (opponentGamjeom || 0);
 };
 
-export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta) => {
+export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, token = null) => {
     const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
 
     runTransaction(matchRef, (matchData) => {
         if (!matchData) return;
+        
+        if (token) {
+            matchData.providedToken = token;
+        }
 
         if (matchData.state.phase === 'REST') return;
 

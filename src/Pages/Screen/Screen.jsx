@@ -378,6 +378,7 @@ function Screen() {
             <QRCodeDisplay
                 eventId={selectedEvent}
                 courtId={selectedCourt}
+                matchId={currentMatchId}
                 visible={showQRCode}
                 onClose={() => setShowQRCode(false)}
                 refereesData={refereesData}

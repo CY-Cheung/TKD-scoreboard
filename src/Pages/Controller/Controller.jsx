@@ -33,10 +33,13 @@ function Controller() {
 
     const initialEvent = getParam("event");
     const initialCourt = getParam("court");
+    const initialMatch = getParam("match");
+    const initialToken = getParam("token");
 
     const [eventId, setEventId] = useState(initialEvent);
     const [courtId, setCourtId] = useState(initialCourt);
-    const [currentMatchId, setCurrentMatchId] = useState(null);
+    const [currentMatchId, setCurrentMatchId] = useState(initialMatch || null);
+    const [accessToken, setAccessToken] = useState(initialToken || null);
     const [matchData, setMatchData] = useState(null);
     const [lastAction, setLastAction] = useState(null); // { side: 'red'|'blue', text: '...' }
     const [isConnected, setIsConnected] = useState(false);
@@ -57,6 +60,12 @@ function Controller() {
 
     // Listen to currentMatchId on court
     useEffect(() => {
+        // If a specific match is provided via URL (QR Code scanning), lock to this match
+        if (initialMatch) {
+            setIsConnected(true);
+            return;
+        }
+
         if (!eventId || !courtId) {
             setIsConnected(false);
             return;
@@ -117,7 +126,7 @@ function Controller() {
         }
 
         // Call scoring API (+1 point increment for selected point index)
-        updateScoreAndCheckRules(eventId, currentMatchId, side, "pointsStat", index, 1);
+        updateScoreAndCheckRules(eventId, currentMatchId, side, "pointsStat", index, 1, accessToken);
 
         const actionObj = { side, text: `${side.toUpperCase()} ${label}` };
         setLastAction(actionObj);
