@@ -95,8 +95,9 @@ export const parsePdfPage = async (page) => {
 
     // Extract Competitors with Geometric Invariant Box Grouping
     const competitors = parseCompetitorsFromItems(textItems);
+    competitors.sort((a, b) => a.y - b.y);
 
-    // Extract Match IDs (e.g. A1001, A1004, B1034)
+    // Extract Match IDs (e.g. A1001, A1004, B1034, A2001)
     const matchIds = [];
     textItems.forEach(item => {
         if (item.y < 80) return;
@@ -179,34 +180,54 @@ export const parsePdfPage = async (page) => {
                         red: { name: '', affiliatedClub: '' }
                     }
                 },
+                x: m.x,
                 y: m.y,
                 colIndex
             };
         });
     });
 
-    // Assign Competitors to Matches (Top = Blue, Bottom = Red)
+    // Precision Round-Aware Competitor Assignment
+    // 1. Check if there is a match in Round 1 (colIndex 0) within 30px tolerance.
+    // 2. If not in Round 1, find the match in earliest subsequent round with minimum Y-distance.
     if (competitors.length > 0) {
         competitors.forEach((comp) => {
-            let matchedMatch = null;
-            let minDiff = Infinity;
+            let bestMatch = null;
 
-            Object.values(parsedMatches).forEach(m => {
-                const diff = Math.abs(m.y - comp.y);
-                if (diff < 75 && diff < minDiff) {
-                    minDiff = diff;
-                    matchedMatch = m;
-                }
-            });
+            if (xClusters.length > 1 && xClusters[0].matches.length > 0) {
+                let minDiff0 = Infinity;
+                xClusters[0].matches.forEach(m => {
+                    const diff = Math.abs(m.y - comp.y);
+                    if (diff <= 30 && diff < minDiff0) {
+                        minDiff0 = diff;
+                        bestMatch = parsedMatches[m.matchId];
+                    }
+                });
+            }
 
-            if (matchedMatch) {
-                if (comp.y <= matchedMatch.y) {
-                    matchedMatch.config.competitors.blue = {
+            if (!bestMatch) {
+                let minCol = Infinity;
+                let minDiff = Infinity;
+                Object.values(parsedMatches).forEach(m => {
+                    const diff = Math.abs(m.y - comp.y);
+                    if (diff <= 140) {
+                        if (m.colIndex < minCol || (m.colIndex === minCol && diff < minDiff)) {
+                            minCol = m.colIndex;
+                            minDiff = diff;
+                            bestMatch = m;
+                        }
+                    }
+                });
+            }
+
+            if (bestMatch) {
+                if (comp.y <= bestMatch.y) {
+                    bestMatch.config.competitors.blue = {
                         name: comp.name,
                         affiliatedClub: comp.club
                     };
                 } else {
-                    matchedMatch.config.competitors.red = {
+                    bestMatch.config.competitors.red = {
                         name: comp.name,
                         affiliatedClub: comp.club
                     };
