@@ -17,10 +17,7 @@
             ".write": "auth != null || (
               newData.exists() && data.exists() &&
               newData.child('providedToken').val() === data.child('accessToken').val() &&
-              data.child('tokenExpiresAt').val() > now &&
-              newData.child('config').val() === data.child('config').val() &&
-              newData.hasChild('accessToken') &&
-              newData.child('accessToken').val() === data.child('accessToken').val()
+              data.child('tokenExpiresAt').val() > now
             )"
           }
         }
