@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
 import { ref, get, set, remove } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
-import { FolderPlus, Trash, ExclamationTriangle, Key } from 'react-bootstrap-icons';
+import { FolderPlus, Trash, ExclamationTriangle, Key, FileEarmarkPdf, FileEarmarkArrowUp } from 'react-bootstrap-icons';
+import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 
 import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
@@ -23,11 +24,19 @@ function CourtSetup() {
   const [newEventId, setNewEventId] = useState('');
   const [newEventName, setNewEventName] = useState('');
   const [newSetupPassword, setNewSetupPassword] = useState('BCB2026');
+  const [newMaxPointGap, setNewMaxPointGap] = useState(12);
+  const [newMaxGamjeom, setNewMaxGamjeom] = useState(5);
+  const [newRoundDuration, setNewRoundDuration] = useState(120);
+  const [newRestDuration, setNewRestDuration] = useState(60);
   const [courtCount, setCourtCount] = useState(4); // Default 4 courts
 
   // Delete Confirmation Modal State
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const fileInputRef = useRef(null);
+  const [isParsingPdf, setIsParsingPdf] = useState(false);
+  const [pdfParseResult, setPdfParseResult] = useState(null);
   
   const navigate = useNavigate();
   const { user, userLoading, googleLogin, googleLogout, login } = useAuth();
@@ -106,6 +115,39 @@ function CourtSetup() {
     }
   };
 
+  // PDF File Upload Handler
+  const handleFileSelect = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+          alert('請選擇有效的 PDF 賽程文件！');
+          return;
+      }
+
+      setIsParsingPdf(true);
+      try {
+          const result = await parseHktkdaPdfFile(file);
+          if (!result || result.matchCount === 0) {
+              alert('未能在 PDF 中解析出有效賽程，請確認格式是否為香港跆拳道協會對陣表。');
+          } else {
+              setPdfParseResult(result);
+              setNewEventName(result.eventName);
+              if (!newEventId) {
+                  setNewEventId('TKD' + Date.now().toString().slice(-6));
+              }
+          }
+      } catch (error) {
+          console.error("PDF Parsing Failed:", error);
+          alert(`解析 PDF 失敗: ${error.message}`);
+      } finally {
+          setIsParsingPdf(false);
+          if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+          }
+      }
+  };
+
   // Create Event Handler
   const handleCreateEvent = async (e) => {
     e.preventDefault();
@@ -122,7 +164,6 @@ function CourtSetup() {
       return;
     }
 
-    // Dynamically generate courts object based on courtCount
     const generatedCourts = {};
     const count = Math.max(1, Math.min(12, parseInt(courtCount, 10) || 4));
     for (let i = 1; i <= count; i++) {
@@ -130,26 +171,131 @@ function CourtSetup() {
     }
 
     try {
-      const eventRef = ref(database, `events/${trimmedId}`);
-      await set(eventRef, {
-        EventName: trimmedName,
-        createdBy: user.uid,
-        createdByEmail: user.email || '',
-        createdAt: Date.now(),
-        settings: {
-          setupPassword: newSetupPassword || 'BCB2026'
-        },
-        courts: generatedCourts,
-        matches: {}
-      });
+        const finalRules = {
+            maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+            maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+            roundDuration: parseInt(newRoundDuration, 10) || 120,
+            restDuration: parseInt(newRestDuration, 10) || 60
+        };
 
-      alert(`✅ 成功建立賽事：${trimmedName} (${trimmedId})，包含 ${count} 個場地！`);
+        if (pdfParseResult) {
+            if (pdfParseResult.dateGroups) {
+                Object.values(pdfParseResult.dateGroups).forEach(group => {
+                    if (group.matches) {
+                        Object.values(group.matches).forEach(m => {
+                            if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
+                        });
+                    }
+                });
+            } else if (pdfParseResult.matches) {
+                Object.values(pdfParseResult.matches).forEach(m => {
+                    if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
+                });
+            }
+
+            if (pdfParseResult.datesList?.length > 1) {
+                let createdCount = 0;
+                let firstCleanDate = '';
+                
+                for (let i = 0; i < pdfParseResult.datesList.length; i++) {
+                    const dateStr = pdfParseResult.datesList[i];
+                    const parts = dateStr.split('/');
+                    let formattedDate = dateStr;
+                    let cleanDate = dateStr.replace(/[^0-9]/g, '');
+                    if (parts.length === 3) {
+                        const [d, m, y] = parts;
+                        formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
+                        cleanDate = `${y}${m.padStart(2, '0')}${d.padStart(2, '0')}`;
+                    }
+                    if (i === 0) firstCleanDate = cleanDate;
+
+                    const subEventId = `${trimmedId}_Day${i + 1}_${cleanDate}`;
+                    const subEventName = `${trimmedName} (Day ${i + 1}) (${formattedDate})`;
+
+                    const eventRef = ref(database, `events/${subEventId}`);
+                    await set(eventRef, {
+                        EventName: subEventName,
+                        createdBy: user.uid,
+                        createdByEmail: user.email || '',
+                        createdAt: Date.now(),
+                        matchDate: formattedDate,
+                        settings: { 
+                            setupPassword: newSetupPassword || 'BCB2026',
+                            maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                            maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+                            roundDuration: parseInt(newRoundDuration, 10) || 120,
+                            restDuration: parseInt(newRestDuration, 10) || 60
+                        },
+                        courts: generatedCourts,
+                        matches: pdfParseResult.dateGroups[dateStr].matches
+                    });
+                    createdCount++;
+                }
+
+                alert(`✅ 成功按 ${pdfParseResult.datesList.length} 個比賽日期拆分並建立 ${createdCount} 個子賽事！`);
+                setSelectedEvent(`${trimmedId}_Day1_${firstCleanDate}`);
+            } else {
+                const dateStr = pdfParseResult.datesList?.[0] || '';
+                let formattedDate = dateStr;
+                if (dateStr) {
+                    const parts = dateStr.split('/');
+                    if (parts.length === 3) {
+                        const [d, m, y] = parts;
+                        formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
+                    }
+                }
+
+                const eventRef = ref(database, `events/${trimmedId}`);
+                await set(eventRef, {
+                    EventName: trimmedName,
+                    createdBy: user.uid,
+                    createdByEmail: user.email || '',
+                    createdAt: Date.now(),
+                    matchDate: formattedDate,
+                    settings: { 
+                        setupPassword: newSetupPassword || 'BCB2026',
+                        maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                        maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+                        roundDuration: parseInt(newRoundDuration, 10) || 120,
+                        restDuration: parseInt(newRestDuration, 10) || 60
+                    },
+                    courts: generatedCourts,
+                    matches: pdfParseResult.matches
+                });
+                alert(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
+                setSelectedEvent(trimmedId);
+            }
+        } else {
+            const eventRef = ref(database, `events/${trimmedId}`);
+            await set(eventRef, {
+                EventName: trimmedName,
+                createdBy: user.uid,
+                createdByEmail: user.email || '',
+                createdAt: Date.now(),
+                settings: { 
+                    setupPassword: newSetupPassword || 'BCB2026',
+                    maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                    maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+                    roundDuration: parseInt(newRoundDuration, 10) || 120,
+                    restDuration: parseInt(newRestDuration, 10) || 60
+                },
+                courts: generatedCourts,
+                matches: {}
+            });
+            alert(`✅ 成功建立賽事：${trimmedName} (${trimmedId})，包含 ${count} 個場地！`);
+            setSelectedEvent(trimmedId);
+        }
+
       setNewEventId('');
       setNewEventName('');
       setNewSetupPassword('BCB2026');
+      setNewMaxPointGap(12);
+      setNewMaxGamjeom(5);
+      setNewRoundDuration(120);
+      setNewRestDuration(60);
       setCourtCount(4);
+      setPdfParseResult(null);
       setShowCreateModal(false);
-      setSelectedEvent(trimmedId);
       fetchEvents();
 
     } catch (err) {
@@ -404,6 +550,35 @@ function CourtSetup() {
               <FolderPlus size={24} /> 建立新賽事 (Create Event)
             </h3>
             <form onSubmit={handleCreateEvent} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <FileEarmarkPdf size={24} color="#34c759" />
+                      <span style={{ color: '#fff', fontWeight: 'bold' }}>上傳 PDF 自動建立 (Optional)</span>
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>上傳對陣表即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。</div>
+                  <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      accept="application/pdf"
+                      style={{ display: 'none' }}
+                      onChange={handleFileSelect}
+                  />
+                  <Button 
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isParsingPdf}
+                      text={isParsingPdf ? '解析中...' : '選擇 PDF 檔案'}
+                      icon={<FileEarmarkArrowUp size={16} />}
+                      fontSize="0.9rem"
+                      angle={60}
+                  />
+                  {pdfParseResult && (
+                      <div style={{ color: '#4CAF50', fontSize: '0.85rem', marginTop: '5px' }}>
+                          ✅ 成功解析：{pdfParseResult.matchCount} 場比賽
+                          {pdfParseResult.datesList?.length > 1 && ` (包含 ${pdfParseResult.datesList.length} 個日期，將自動分拆為多個賽事)`}
+                      </div>
+                  )}
+              </div>
               <div className="form-group">
                 <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Event ID (賽事識別碼)</label>
                 <input 
@@ -436,6 +611,24 @@ function CourtSetup() {
                   required
                   style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
                 />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Point Gap (分差)</label>
+                  <input type="number" value={newMaxPointGap} onChange={e => setNewMaxPointGap(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Max Gam-jeom (犯規上限)</label>
+                  <input type="number" value={newMaxGamjeom} onChange={e => setNewMaxGamjeom(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Round Duration (回合秒數)</label>
+                  <input type="number" value={newRoundDuration} onChange={e => setNewRoundDuration(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Rest Duration (休息秒數)</label>
+                  <input type="number" value={newRestDuration} onChange={e => setNewRestDuration(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                </div>
               </div>
               <div className="form-group">
                 <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Courts Count (場地數量: 1~12)</label>

@@ -24,6 +24,10 @@ const DataImport = () => {
     const { session, user } = useAuth(); 
     const [eventsList, setEventsList] = useState([]);
     const [eventName, setEventName] = useState('');
+    const [newMaxPointGap, setNewMaxPointGap] = useState(12);
+    const [newMaxGamjeom, setNewMaxGamjeom] = useState(5);
+    const [newRoundDuration, setNewRoundDuration] = useState(120);
+    const [newRestDuration, setNewRestDuration] = useState(60);
     const [currentMatches, setCurrentMatches] = useState({});
     const [selectedMatchId, setSelectedMatchId] = useState(null);
 
@@ -44,10 +48,7 @@ const DataImport = () => {
     const fileInputRef = useRef(null);
     const [isParsingPdf, setIsParsingPdf] = useState(false);
     const [pdfParseResult, setPdfParseResult] = useState(null);
-    const [showPdfModal, setShowPdfModal] = useState(false);
-    const [isBatchUploading, setIsBatchUploading] = useState(false);
-    const [importMode, setImportMode] = useState('single'); // 'single' = ALL in target event, 'splitByDate' = split into sub-events by date
-
+    
     // Form state - Default Point Gap set to 15 as per new rules
     const [matchId, setMatchId] = useState('');
     const [nextMatchId, setNextMatchId] = useState('');
@@ -149,7 +150,10 @@ const DataImport = () => {
                 alert('未能在 PDF 中解析出有效賽程，請確認格式是否為香港跆拳道協會對陣表。');
             } else {
                 setPdfParseResult(result);
-                setShowPdfModal(true);
+                setNewEventName(result.eventName);
+                if (!newEventId) {
+                    setNewEventId('TKD' + Date.now().toString().slice(-6));
+                }
             }
         } catch (error) {
             console.error("PDF Parsing Failed:", error);
@@ -162,75 +166,7 @@ const DataImport = () => {
         }
     };
 
-    // Confirm Batch Write Matches to Firebase (supports single event or split sub-events by date)
-    const handleConfirmBatchImport = async () => {
-        if (!eventName) {
-            alert('請先在目標賽事下拉選單中選擇要匯入的賽事！');
-            return;
-        }
-
-        if (!pdfParseResult || !pdfParseResult.matches) return;
-
-        setIsBatchUploading(true);
-        try {
-            if (importMode === 'splitByDate' && pdfParseResult.datesList?.length > 1) {
-                const dateGroups = pdfParseResult.dateGroups;
-                let createdCount = 0;
-
-                for (let i = 0; i < pdfParseResult.datesList.length; i++) {
-                    const dateStr = pdfParseResult.datesList[i];
-                    const cleanDate = dateStr.replace(/[^0-9]/g, '');
-                    const subEventId = `${eventName}_Day${i + 1}_${cleanDate}`;
-                    const subEventName = `${pdfParseResult.eventName} (${dateStr})`;
-
-                    const eventRef = ref(database, `events/${subEventId}`);
-                    await set(eventRef, {
-                        EventName: subEventName,
-                        createdBy: user?.uid || 'system',
-                        createdByEmail: user?.email || '',
-                        createdAt: Date.now(),
-                        matchDate: dateStr,
-                        settings: { setupPassword: 'BCB2026' },
-                        courts: { court1: { name: 'court1', currentMatchId: '' } },
-                        matches: dateGroups[dateStr].matches
-                    });
-                    createdCount++;
-                }
-
-                alert(`🎉 成功按 ${pdfParseResult.datesList.length} 個比賽日期拆分並建立 ${createdCount} 個 Sub-Events 子賽事！`);
-
-            } else {
-                const matchesToUpload = pdfParseResult.matches;
-                const matchIds = Object.keys(matchesToUpload);
-
-                const uploadPromises = matchIds.map(mId => {
-                    const matchRef = ref(database, `events/${eventName}/matches/${mId}`);
-                    return set(matchRef, matchesToUpload[mId]);
-                });
-
-                await Promise.all(uploadPromises);
-                alert(`🎉 成功批量匯入 ${matchIds.length} 場比賽至賽事「${eventName}」！`);
-            }
-
-            setShowPdfModal(false);
-            setPdfParseResult(null);
-            fetchEventsList();
-
-            const matchesRef = ref(database, `events/${eventName}/matches`);
-            const snapshot = await get(matchesRef);
-            if (snapshot.exists()) {
-                setCurrentMatches(snapshot.val());
-            }
-
-        } catch (error) {
-            console.error("Batch Import Failed:", error);
-            alert(`批量寫入 Firebase 失敗: ${error.message}`);
-        } finally {
-            setIsBatchUploading(false);
-        }
-    };
-
-    // Create New Event Handler
+    // Create New Event Handler (Handles PDF auto-import and date splitting)
     const handleCreateEvent = async (e) => {
         e.preventDefault();
         if (!user) {
@@ -247,27 +183,130 @@ const DataImport = () => {
         }
 
         try {
-            const eventRef = ref(database, `events/${trimmedId}`);
-            await set(eventRef, {
-                EventName: trimmedName,
-                createdBy: user.uid,
-                createdByEmail: user.email || '',
-                createdAt: Date.now(),
-                settings: {
-                    setupPassword: newSetupPassword || 'BCB2026'
-                },
-                courts: {
-                    court1: { name: 'court1', currentMatchId: '' }
-                },
-                matches: {}
-            });
+            const finalRules = {
+                maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+                roundDuration: parseInt(newRoundDuration, 10) || 120,
+                restDuration: parseInt(newRestDuration, 10) || 60
+            };
 
-            alert(`✅ 成功建立賽事：${trimmedName} (${trimmedId})`);
+            if (pdfParseResult) {
+                if (pdfParseResult.dateGroups) {
+                    Object.values(pdfParseResult.dateGroups).forEach(group => {
+                        if (group.matches) {
+                            Object.values(group.matches).forEach(m => {
+                                if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
+                            });
+                        }
+                    });
+                } else if (pdfParseResult.matches) {
+                    Object.values(pdfParseResult.matches).forEach(m => {
+                        if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
+                    });
+                }
+
+                if (pdfParseResult.datesList?.length > 1) {
+                    let createdCount = 0;
+                    let firstCleanDate = '';
+                    
+                    for (let i = 0; i < pdfParseResult.datesList.length; i++) {
+                        const dateStr = pdfParseResult.datesList[i];
+                        const parts = dateStr.split('/');
+                        let formattedDate = dateStr;
+                        let cleanDate = dateStr.replace(/[^0-9]/g, '');
+                        if (parts.length === 3) {
+                            const [d, m, y] = parts;
+                            formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
+                            cleanDate = `${y}${m.padStart(2, '0')}${d.padStart(2, '0')}`;
+                        }
+                        if (i === 0) firstCleanDate = cleanDate;
+
+                        const subEventId = `${trimmedId}_Day${i + 1}_${cleanDate}`;
+                        const subEventName = `${trimmedName} (Day ${i + 1}) (${formattedDate})`;
+
+                        const eventRef = ref(database, `events/${subEventId}`);
+                        await set(eventRef, {
+                            EventName: subEventName,
+                            createdBy: user.uid,
+                            createdByEmail: user.email || '',
+                            createdAt: Date.now(),
+                            matchDate: formattedDate,
+                            settings: { 
+                                setupPassword: newSetupPassword || 'BCB2026',
+                                maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                                maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+                                roundDuration: parseInt(newRoundDuration, 10) || 120,
+                                restDuration: parseInt(newRestDuration, 10) || 60
+                            },
+                            courts: { court1: { name: 'court1', currentMatchId: '' } },
+                            matches: pdfParseResult.dateGroups[dateStr].matches
+                        });
+                        createdCount++;
+                    }
+
+                    alert(`✅ 成功按 ${pdfParseResult.datesList.length} 個比賽日期拆分並建立 ${createdCount} 個子賽事！`);
+                    setEventName(`${trimmedId}_Day1_${firstCleanDate}`);
+                } else {
+                    const dateStr = pdfParseResult.datesList?.[0] || '';
+                    let formattedDate = dateStr;
+                    if (dateStr) {
+                        const parts = dateStr.split('/');
+                        if (parts.length === 3) {
+                            const [d, m, y] = parts;
+                            formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
+                        }
+                    }
+
+                    const eventRef = ref(database, `events/${trimmedId}`);
+                    await set(eventRef, {
+                        EventName: trimmedName,
+                        createdBy: user.uid,
+                        createdByEmail: user.email || '',
+                        createdAt: Date.now(),
+                        matchDate: formattedDate,
+                        settings: { 
+                            setupPassword: newSetupPassword || 'BCB2026',
+                            maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                            maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+                            roundDuration: parseInt(newRoundDuration, 10) || 120,
+                            restDuration: parseInt(newRestDuration, 10) || 60
+                        },
+                        courts: { court1: { name: 'court1', currentMatchId: '' } },
+                        matches: pdfParseResult.matches
+                    });
+                    alert(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
+                    setEventName(trimmedId);
+                }
+            } else {
+                const eventRef = ref(database, `events/${trimmedId}`);
+                await set(eventRef, {
+                    EventName: trimmedName,
+                    createdBy: user.uid,
+                    createdByEmail: user.email || '',
+                    createdAt: Date.now(),
+                    settings: { 
+                        setupPassword: newSetupPassword || 'BCB2026',
+                        maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                        maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+                        roundDuration: parseInt(newRoundDuration, 10) || 120,
+                        restDuration: parseInt(newRestDuration, 10) || 60
+                    },
+                    courts: { court1: { name: 'court1', currentMatchId: '' } },
+                    matches: {}
+                });
+                alert(`✅ 成功建立賽事：${trimmedName}`);
+                setEventName(trimmedId);
+            }
+
             setNewEventId('');
             setNewEventName('');
             setNewSetupPassword('BCB2026');
+            setNewMaxPointGap(12);
+            setNewMaxGamjeom(5);
+            setNewRoundDuration(120);
+            setNewRestDuration(60);
+            setPdfParseResult(null);
             setShowCreateEventModal(false);
-            setEventName(trimmedId);
             fetchEventsList();
 
         } catch (error) {
@@ -508,35 +547,7 @@ const DataImport = () => {
                             </div>
                         </div>
 
-                        {/* --- PDF Match Bracket Batch Upload Zone --- */}
-                        <div className="pdf-upload-box">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <FileEarmarkPdf size={32} color="#FFFF00" />
-                                <div>
-                                    <div style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '0.95rem' }}>
-                                        📄 上傳 HKTKDA 賽程 PDF 表格 (PDF Match Bracket Auto-Import)
-                                    </div>
-                                    <div style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8rem' }}>
-                                        自動解析 PDF 中的比賽對陣樹、藍紅雙方選手、會館名稱及多天日期 (Sub-Events)。
-                                    </div>
-                                </div>
-                            </div>
-                            <input 
-                                type="file" 
-                                ref={fileInputRef} 
-                                accept="application/pdf"
-                                style={{ display: 'none' }}
-                                onChange={handleFileSelect}
-                            />
-                            <Button 
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={isParsingPdf}
-                                text={isParsingPdf ? '解析中...' : '選擇 PDF 檔案'}
-                                icon={<FileEarmarkArrowUp size={16} />}
-                                fontSize="0.9rem"
-                                angle={60}
-                            />
-                        </div>
+
 
                         {/* Match Configuration Form */}
                         <div className="match-form">
@@ -712,6 +723,35 @@ const DataImport = () => {
                             <FolderPlus size={24} /> 建立新賽事 (Create New Event)
                         </h3>
                         <form onSubmit={handleCreateEvent} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <FileEarmarkPdf size={24} color="#FFFF00" />
+                                    <span style={{ color: '#fff', fontWeight: 'bold' }}>上傳 PDF 自動建立 (Optional)</span>
+                                </div>
+                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>上傳對陣表即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。</div>
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    accept="application/pdf"
+                                    style={{ display: 'none' }}
+                                    onChange={handleFileSelect}
+                                />
+                                <Button 
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isParsingPdf}
+                                    text={isParsingPdf ? '解析中...' : '選擇 PDF 檔案'}
+                                    icon={<FileEarmarkArrowUp size={16} />}
+                                    fontSize="0.9rem"
+                                    angle={60}
+                                />
+                                {pdfParseResult && (
+                                    <div style={{ color: '#4CAF50', fontSize: '0.85rem', marginTop: '5px' }}>
+                                        ✅ 成功解析：{pdfParseResult.matchCount} 場比賽
+                                        {pdfParseResult.datesList?.length > 1 && ` (包含 ${pdfParseResult.datesList.length} 個日期，將自動分拆為多個賽事)`}
+                                    </div>
+                                )}
+                            </div>
                             <div className="form-group">
                                 <label style={{ color: '#ccc' }}>Event ID (賽事識別碼)</label>
                                 <input 
@@ -741,6 +781,24 @@ const DataImport = () => {
                                     onChange={e => setNewSetupPassword(e.target.value)}
                                     required
                                 />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Point Gap (分差)</label>
+                                    <input type="number" value={newMaxPointGap} onChange={e => setNewMaxPointGap(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Max Gam-jeom (犯規上限)</label>
+                                    <input type="number" value={newMaxGamjeom} onChange={e => setNewMaxGamjeom(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Round Duration (回合秒數)</label>
+                                    <input type="number" value={newRoundDuration} onChange={e => setNewRoundDuration(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Rest Duration (休息秒數)</label>
+                                    <input type="number" value={newRestDuration} onChange={e => setNewRestDuration(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                                </div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
                                 <Button 
@@ -813,181 +871,7 @@ const DataImport = () => {
                 </div>
             )}
 
-            {/* --- PDF Batch Import Preview Modal --- */}
-            {showPdfModal && pdfParseResult && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                    zIndex: 1200,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}>
-                    <div style={{
-                        backgroundColor: '#1a1a24',
-                        border: '1px solid rgba(255, 255, 0, 0.5)',
-                        borderRadius: '12px',
-                        padding: '25px',
-                        width: '92%',
-                        maxWidth: '920px',
-                        maxHeight: '88vh',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        color: '#fff',
-                        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.7)'
-                    }}>
-                        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.15)', paddingBottom: '12px', marginBottom: '12px' }}>
-                            <h3 style={{ margin: 0, color: '#FFFF00', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <CheckCircleFill size={26} /> HKTKDA PDF 賽程解析成功 (Parsed Matches Preview)
-                            </h3>
-                            <div style={{ margin: '6px 0 0 0', color: '#ccc', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                <span>識別賽事：<strong style={{ color: '#FFFF00' }}>{pdfParseResult.eventName}</strong></span>
-                                <span>共解析：<strong style={{ color: '#FFFF00' }}>{pdfParseResult.matchCount}</strong> 場比賽</span>
-                            </div>
 
-                            {/* Multi-Date Notification Badges */}
-                            {pdfParseResult.datesList?.length > 1 && (
-                                <div style={{ 
-                                    marginTop: '10px', 
-                                    backgroundColor: 'rgba(255, 255, 0, 0.12)', 
-                                    border: '1px solid rgba(255, 255, 0, 0.4)',
-                                    borderRadius: '6px',
-                                    padding: '8px 12px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '6px'
-                                }}>
-                                    <div style={{ color: '#FFFF00', fontWeight: 'bold', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <Calendar3 size={16} /> 檢測到跨日賽事 (多於 1 個比賽日期)：
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                        {pdfParseResult.datesList.map((dStr, idx) => (
-                                            <span key={dStr} style={{ 
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)', 
-                                                padding: '3px 8px', 
-                                                borderRadius: '4px', 
-                                                fontSize: '0.8rem',
-                                                color: '#fff'
-                                            }}>
-                                                📅 Day {idx + 1}: <strong>{dStr}</strong> ({Object.keys(pdfParseResult.dateGroups[dStr].matches).length} 場)
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Sub Event / Date Split Import Mode Selector */}
-                        {pdfParseResult.datesList?.length > 1 && (
-                            <div style={{ 
-                                backgroundColor: 'rgba(0, 0, 0, 0.3)', 
-                                padding: '10px 14px', 
-                                borderRadius: '6px', 
-                                marginBottom: '12px',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between'
-                            }}>
-                                <span style={{ fontSize: '0.88rem', color: '#ddd', fontWeight: 'bold' }}>匯入模式 (Import Mode):</span>
-                                <div style={{ display: 'flex', gap: '20px' }}>
-                                    <label style={{ fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: importMode === 'single' ? '#FFFF00' : '#ccc' }}>
-                                        <input 
-                                            type="radio" 
-                                            name="importMode" 
-                                            value="single" 
-                                            checked={importMode === 'single'} 
-                                            onChange={() => setImportMode('single')}
-                                        />
-                                        統一寫入當前賽事 ({eventName})
-                                    </label>
-                                    <label style={{ fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: importMode === 'splitByDate' ? '#FFFF00' : '#ccc' }}>
-                                        <input 
-                                            type="radio" 
-                                            name="importMode" 
-                                            value="splitByDate" 
-                                            checked={importMode === 'splitByDate'} 
-                                            onChange={() => setImportMode('splitByDate')}
-                                        />
-                                        ⚡ 按日期建立 {pdfParseResult.datesList.length} 個 Sub-Events (子賽事)
-                                    </label>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Preview Table */}
-                        <div className="pdf-preview-table-wrapper">
-                            <table className="pdf-preview-table">
-                                <thead>
-                                    <tr>
-                                        <th>Match ID</th>
-                                        <th>日期 (Date)</th>
-                                        <th>藍方 (Blue Competitor)</th>
-                                        <th>紅方 (Red Competitor)</th>
-                                        <th>下輪 Match ID</th>
-                                        <th>下輪位置</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {Object.keys(pdfParseResult.matches).map(mId => {
-                                        const m = pdfParseResult.matches[mId];
-                                        const blue = m.config.competitors.blue;
-                                        const red = m.config.competitors.red;
-                                        return (
-                                            <tr key={mId}>
-                                                <td style={{ fontWeight: 'bold', color: '#FFFF00' }}>{mId}</td>
-                                                <td style={{ color: '#aaa', fontSize: '0.8rem' }}>{m.config.matchDate || '--'}</td>
-                                                <td>
-                                                    {blue.name ? (
-                                                        <span><strong style={{ color: '#4285F4' }}>[藍]</strong> {blue.name} <small style={{ color: '#aaa' }}>({blue.affiliatedClub || '無會館'})</small></span>
-                                                    ) : (
-                                                        <span style={{ color: '#777', fontStyle: 'italic' }}>-- (TBD / 由前場勝出)</span>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    {red.name ? (
-                                                        <span><strong style={{ color: '#ff3b30' }}>[紅]</strong> {red.name} <small style={{ color: '#aaa' }}>({red.affiliatedClub || '無會館'})</small></span>
-                                                    ) : (
-                                                        <span style={{ color: '#777', fontStyle: 'italic' }}>-- (TBD / 由前場勝出)</span>
-                                                    )}
-                                                </td>
-                                                <td style={{ color: '#FFFF00' }}>{m.config.nextMatchId || '決賽 (Final)'}</td>
-                                                <td style={{ textTransform: 'uppercase', color: m.config.nextMatchSlot === 'blue' ? '#4285F4' : m.config.nextMatchSlot === 'red' ? '#ff3b30' : '#aaa' }}>
-                                                    {m.config.nextMatchSlot || '--'}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Action Bar */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
-                            <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
-                                目標賽事: <strong>{eventName || '請先選擇賽事'}</strong>
-                            </span>
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <Button 
-                                    onClick={() => setShowPdfModal(false)}
-                                    disabled={isBatchUploading}
-                                    text="取消"
-                                    fontSize="0.95rem"
-                                    angle={0}
-                                />
-                                <Button 
-                                    onClick={handleConfirmBatchImport}
-                                    disabled={isBatchUploading || !eventName}
-                                    text={isBatchUploading ? '寫入中...' : importMode === 'splitByDate' ? `🚀 自動建立 ${pdfParseResult.datesList?.length} 個 Sub-Events` : '🚀 批量寫入 Firebase (Batch Import)'}
-                                    fontSize="0.95rem"
-                                    angle={60}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

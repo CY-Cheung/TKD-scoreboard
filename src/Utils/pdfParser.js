@@ -90,11 +90,28 @@ export const parsePdfPage = async (page) => {
     let courtId = '';
     let matchDate = '';
     
+    // Group header items by approximate Y
+    const headerGroups = {};
     sortedY.forEach(item => {
         if (item.y < 60) {
-            if (item.text.includes('體育節') || item.text.includes('錦標賽') || item.text.includes('賽20')) {
-                eventName = item.text;
-            } else if (item.text.includes('Court:')) {
+            // Group by 10px height slices
+            const yKey = Math.floor(item.y / 10) * 10;
+            if (!headerGroups[yKey]) headerGroups[yKey] = [];
+            headerGroups[yKey].push(item);
+        }
+    });
+
+    const headerYKeys = Object.keys(headerGroups).map(Number).sort((a, b) => a - b);
+    if (headerYKeys.length > 0) {
+        // The topmost line is the event name
+        const firstLineItems = headerGroups[headerYKeys[0]].sort((a, b) => a.x - b.x);
+        eventName = firstLineItems.map(i => i.text).join(' ');
+    }
+
+    // Still parse Court and Category from all header items
+    sortedY.forEach(item => {
+        if (item.y < 60) {
+            if (item.text.includes('Court:')) {
                 const match = item.text.match(/Court:\s*([A-Z0-9]+)(?:\(\s*([^)]+)\))?/i);
                 if (match) {
                     courtId = match[1];
@@ -102,7 +119,7 @@ export const parsePdfPage = async (page) => {
                         matchDate = match[2].trim();
                     }
                 }
-            } else if (item.text.includes('級') || item.text.includes('男子') || item.text.includes('女子')) {
+            } else if (item.text.includes('級') || item.text.includes('男子') || item.text.includes('女子') || item.text.includes('組')) {
                 categoryTitle = item.text;
             }
         }

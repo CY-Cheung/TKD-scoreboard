@@ -196,7 +196,7 @@ function Screen() {
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [isMatchLoaded, selectedEvent, currentMatchId]);
+    }, [isMatchLoaded, selectedEvent, currentMatchId, matchData]);
 
     const { state = {}, config = {}, stats = {} } = matchData || {};
     const { phase = 'ROUND', currentRound: matchCurrentRound, winReason, isFinished, isPaused = true } = state;
@@ -232,13 +232,15 @@ function Screen() {
     const roundWins = { red: matchRoundWins.red || 0, blue: matchRoundWins.blue || 0 };
     const isFinal = roundWins.red === 2 || roundWins.blue === 2;
 
-    const getDisplayName = (c) => {
-        if (!c || !c.name) return " ";
-        return c.affiliatedClub ? `${c.name} (${c.affiliatedClub})` : c.name;
+    const renderPlayerName = (c) => {
+        if (!c || !c.name) return <div className="name-only"> </div>;
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', lineHeight: '1.2' }}>
+                <div style={{ fontSize: '1em' }}>{c.name}</div>
+                {c.affiliatedClub && <div style={{ fontSize: '0.45em', opacity: 0.85, marginTop: '2px' }}>({c.affiliatedClub})</div>}
+            </div>
+        );
     };
-
-    const bluePlayerName = getDisplayName(config.competitors?.blue);
-    const redPlayerName = getDisplayName(config.competitors?.red);
 
     const redGamJeom = stats.red?.gamjeom ?? 0;
     const blueGamJeom = stats.blue?.gamjeom ?? 0;
@@ -294,8 +296,8 @@ function Screen() {
             <div className="screen" onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}>
                 {/* Top Section: Player Names */}
                 <div className={`top ${isResting ? 'rest-mode' : ''}`} style={{ flexDirection: direction }}>
-                    <div className="red-name red-bg name-font">{redPlayerName}</div>
-                    <div className="blue-name blue-bg name-font">{bluePlayerName}</div>
+                    <div className="red-name red-bg name-font">{renderPlayerName(config.competitors?.red)}</div>
+                    <div className="blue-name blue-bg name-font">{renderPlayerName(config.competitors?.blue)}</div>
                 </div>
 
                 {/* Main Section: Scores and Info */}
