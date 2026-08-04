@@ -1,152 +1,63 @@
-# 🥋 WT 跆拳道即時計分與賽程管理系統 (Taekwondo Scoreboard & Tournament System)
+# Taekwondo Scoreboard System (跆拳道計分系統)
 
-本系統為專為跆拳道賽事設計之現代化 Web 實時記分與賽程管理平台。系統採用 **Serverless Realtime Architecture (無伺服器實時架構)**，結合前端智能解析技術，支援一鍵導入 HKTKDA (香港跆拳道協會) 官方 PDF 對陣表賽程，支援多台裝置實時同步。
+一個用 React (前端框架) 同 Firebase (雲端資料庫) 寫成嘅現代化、Real-time (實時) 跆拳道比賽計分系統。專為觀眾、賽事管理員同 Corner Judges (邊線裁判) 提供 Seamless (無縫) 嘅體驗。
 
----
+## 🌟 Key Features (主要功能)
 
-## 🚀 測試與起動指南 (Quick Start Guide)
+### 📺 Live Scoreboard (實時計分板 - Screen)
+* **Real-time Sync (實時同步)**: 透過 Firebase Realtime Database (實時資料庫) 做到分數秒速更新。
+* **Smart Match Resolution (智能賽事解析)**: 利用 Reverse Tracing (反向追蹤) 同 Midpoint Matching (中點配對) Algorithm (演算法) 解析官方 PDF (可攜式文件格式) 賽程表，自動提取 Match IDs (比賽編號)、選手名、屬會同重量級別。
+* **Dynamic QR Code (動態二維碼)**: 大屏幕會顯示專屬 QR Code (二維碼)，最多允許 3 位裁判用手機直接連接並控制目前嘅 Court (場地)。
 
-### 第一步：啟動系統 (Frontend & Firebase)
-在終端機中執行以下指令啟動本地開發伺服器：
-```powershell
-npm run dev
-```
-啟動成功後，瀏覽器開啟 `http://localhost:5173/TKD-scoreboard/`。
+### 📱 Mobile Controller (手機遙控器 - Remote)
+* **No-App Installation (免安裝應用程式)**: 裁判只需掃描 QR Code (二維碼) 即可喺 Mobile Browser (手機瀏覽器) 操作，無須下載任何 App。
+* **Smart Seat Locking (智能座位鎖定)**: 採用 Distributed Locking (分散式鎖定) 機制，自動將裁判分配去 `J1`, `J2`, 或 `J3` 席位。每個 Court (場地) 嚴格限制最多 3 人連接，斷線會自動讓座。
+* **Haptic Feedback (觸覺回饋)**: 激烈撳分時，手機會提供即時震動回饋，提升操作手感。
+* **Secure Access (安全存取)**: Firebase Security Rules (保安規則) 會嚴格驗證發送指令嘅 Device ID (裝置識別碼)。就算裁判無登入 Google Account (Google 帳戶)，亦能有效防止未經授權嘅亂改分行為。
 
-### 第二步：多螢幕角色模擬
-在瀏覽器開啟多個分頁或視窗，體驗零延遲實時同步：
+### ⚙️ Event Management (賽事管理 - Admin)
+* **PDF Data Import (PDF 資料匯入)**: 強大嘅樹狀結構解析器，完美還原淘汰賽賽程。
+* **Court Setup (場地設定)**: 管理員透過 Google Authentication (Google 身份驗證) 安全登入，初始化場地及切換比賽。
+* **Admin Override (管理員覆寫)**: 擁有權限嘅管理員可以無視座位限制，自由修改分數及比賽狀態。
 
-| 頁面角色 | 網址 / 路徑 | 功能說明 |
-| :--- | :--- | :--- |
-| **主頁 (Home)** | `/` | 賽事狀態卡片、Google 登入/登出重定向、選單導航 |
-| **場地設定 (Court Setup)** | `/court-setup` | 設定當前裝置對應之場地 (Court ID) 與目標賽事 |
-| **數據匯入 (Data Import)** | `/import` | 上傳 HKTKDA PDF 賽程、幾何解析、Sub-Events 拆分、賽事寫入 Firebase |
-| **實時記分板 (Scoreboard)** | `/scoreboard` | 裁判與觀眾大螢幕，實時同步分數、犯規 (Gam-jeom)、Timer 與回合勝負 |
-| **裁判控制台 (Controller)** | `/controller` | 場上主審或手掣控制介面，即時手動加減分與比賽控制 |
+## 🚀 Tech Stack (技術棧)
 
----
+* **Frontend Framework (前端框架)**: React 18 (Vite)
+* **Routing (路由)**: React Router v6
+* **Database & Auth (資料庫與身份驗證)**: Firebase Realtime Database (實時資料庫), Firebase Authentication (身份驗證)
+* **Styling (樣式)**: Vanilla CSS (原生級聯樣式表) 配合動態網格動畫 (Glassmorphism & CSS Grid)
+* **PDF Parsing (PDF 解析)**: pdfjs-dist
 
-## 🛠️ 技術架構 (Technical Architecture)
+## 🛠️ Setup & Installation (安裝與設定)
 
-```mermaid
-graph TD
-    A[使用者上傳 HKTKDA PDF 對陣表] -->|pdfParser.js 幾何解析| B[Data Import 頁面]
-    B -->|批次寫入 Batch Import| C[(Firebase Realtime Database)]
-    C -->|實時 WebSocket 訂閱| D[Scoreboard 記分板屏]
-    C -->|實時 WebSocket 訂閱| E[Controller 裁判控制台]
-    F[Google OAuth 2.0] -->|AuthContext 安全驗證| B
-    F -->|Session 管理| G[Court Setup & Home]
-```
+1. **Clone the repository (複製儲存庫):**
+   ```bash
+   git clone <your-repo-url>
+   cd TKD-scoreboard
+   ```
 
-### 技術棧 (Technology Stack)
-- **前端框架 (Frontend Framework)**: React 18 + Vite
-- **實時數據庫 (Realtime Database)**: Firebase Realtime Database (RTDB)
-- **身份驗證 (Authentication)**: Google OAuth 2.0 (`@react-oauth/google` + Firebase Auth)
-- **PDF 解析引擎 (PDF Parser)**: `pdfjs-dist` (幾何方框聚類算法)
-- **視覺與動效 (Styling & Design)**: Vanilla CSS + Pure Yellow `#FFFF00` 主題 + Dynamic Canvas Grid (`Squares.jsx`)
+2. **Install dependencies (安裝依賴套件):**
+   ```bash
+   npm install
+   ```
 
----
+3. **Firebase Configuration (Firebase 設定):**
+   * 建立一個 Firebase Project (專案)，並啟用 **Realtime Database (實時資料庫)** 同 **Google Authentication (Google 身份驗證)**。
+   * 將你嘅專案憑證取代 `src/firebase.js` 內嘅設定。
+   * 部署保安規則：
+     ```bash
+     npx firebase-tools deploy --only database
+     ```
 
-## 🗄️ Firebase 數據庫結構 (Realtime Database Schemas)
+4. **Run the development server (啟動開發伺服器):**
+   ```bash
+   npm run dev
+   ```
 
-數據庫以 `events` 為根節點，結構規範如下：
+## 📐 Database Rules Architecture (資料庫規則架構)
 
-```json
-{
-  "events": {
-    "{eventId}": {
-      "EventName": "2026 全港跆拳道錦標賽",
-      "createdBy": "user_uid_123456",
-      "createdByEmail": "admin@example.com",
-      "createdAt": 1785828600000,
-      "matchDate": "16/5/2026",
-      "settings": {
-        "setupPassword": "BCB2026"
-      },
-      "courts": {
-        "{courtId}": {
-          "name": "court1",
-          "currentMatchId": "A1001"
-        }
-      },
-      "matches": {
-        "{matchId}": {
-          "config": {
-            "matchId": "A1001",
-            "nextMatchId": "A1005",
-            "nextMatchSlot": "blue",
-            "categoryTitle": "男子 FEATHER 羽量級 男子組 B組 51-55公斤",
-            "matchDate": "16/5/2026",
-            "courtCode": "A1",
-            "rules": {
-              "maxGamjeom": 5,
-              "maxPointGap": 15,
-              "roundDuration": 120,
-              "restDuration": 60
-            },
-            "competitors": {
-              "blue": {
-                "name": "何頌賢",
-                "affiliatedClub": "香港胡氏跆拳道會",
-                "previousMatch": null
-              },
-              "red": {
-                "name": "李承浩",
-                "affiliatedClub": "香港胡氏跆拳道會",
-                "previousMatch": null
-              }
-            }
-          },
-          "state": {
-            "isStarted": false,
-            "isPaused": true,
-            "isFinished": false,
-            "currentRound": 1,
-            "timer": 120,
-            "winnerSide": null,
-            "phase": "ROUND",
-            "winReason": null
-          },
-          "stats": {
-            "roundWins": { "red": 0, "blue": 0 },
-            "blue": { "pointsStat": [0, 0, 0, 0, 0], "gamjeom": 0 },
-            "red": { "pointsStat": [0, 0, 0, 0, 0], "gamjeom": 0 }
-          }
-        }
-      }
-    }
-  }
-}
-```
+本系統採用先進嘅 Court-level Locking (場地層級鎖定) 機制。當裁判掃描 QR Code 時，其裝置會產生一個獨立嘅 Device ID (裝置識別碼) 並嘗試搶佔該場地空置嘅席位 (`J1`, `J2`, 或 `J3`)。Firebase Security Rules (保安規則) 嚴格規定，只有目前佔據該席位嘅裝置，先可以修改該場地進行中比賽嘅分數。若裁判斷線，`onDisconnect()` 觸發器會自動清空其席位，供下一位候補。
 
----
+## 📄 License (授權條款)
 
-## 📄 HKTKDA PDF 賽程解析引擎 (PDF Parsing Engine)
-
-[pdfParser.js](file:///c:/Users/cyche/Document/TKD-scoreboard/src/Utils/pdfParser.js) 使用 **Geometric Box Grouping (幾何方框聚類算法)** 解析香港跆拳道協會 PDF 表格：
-
-1. **人名與屬會精確分離 (Name & Club Separation)**:
-   - 屬會名稱位置：`X <= 100` (如 `香港胡氏跆拳道會` 或多行換行 `國際跆拳道香港總` + `會`)
-   - 選手姓名位置：`X > 100` (如 `何頌賢` 或英文姓名 `THAPA, NISHCHAL`)
-2. **藍紅方位置判定 (Top = Blue, Bottom = Red)**:
-   - 比賽編號 (如 `A1004`) Y 座標為 `MatchY`
-   - 選手 Y 座標 `<= MatchY` 判定為 **Blue (藍方)**
-   - 選手 Y 座標 `> MatchY` 判定為 **Red (紅方)**
-3. **跨日賽事拆分 (Multi-Day Sub-Events)**:
-   - 自動提取每頁右上角日期 (如 `16/5/2026`, `31/5/2026`)，支援依據日期自動拆分建立多個 Sub-Events 子賽事。
-
----
-
-## ⚖️ 2026 最新跆拳道規則與邏輯 (Rules & Enforcement)
-
-- **得分分差門檻 (Max Point Gap / PTG)**: 15 分 (單局分差達 15 分自動結束該局)。
-- **犯規門檻 (Max Gam-jeom / PUN)**: 5 次 (單局犯規達 5 次判定該局落敗)。
-- **回合時間 (Round Duration)**: 120 秒 (2 分鐘)。
-- **局間休息 (Rest Duration)**: 60 秒 (1 分鐘)。
-- **得分價值 (Point Values)**:
-  - 正拳 (Punch) = 1 分
-  - 軀幹 Kick (Body Kick) = 2 分
-  - 轉身軀幹 Kick (Turning Body Kick) = 4 分
-  - 頭部 Kick (Head Kick) = 3 分
-  - 轉身頭部 Kick (Turning Head Kick) = 6 分
-  - 對方 Gam-jeom (Penalty) = 1 分
+This project is licensed under the MIT License.
