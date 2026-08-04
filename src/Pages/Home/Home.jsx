@@ -55,6 +55,18 @@ function Home() {
         navigate('/court-setup');
     };
 
+    // Google Sign Out & Clear Session with Redirect to Court Setup
+    const handleGoogleLogout = async () => {
+        try {
+            await googleLogout();
+        } catch (err) {
+            console.error("Google logout error:", err);
+        } finally {
+            logout();
+            navigate('/court-setup');
+        }
+    };
+
     return (
         <div className="home">
             <Squares
@@ -87,8 +99,8 @@ function Home() {
                             </div>
                         </div>
                         <Button 
-                            onClick={googleLogout}
-                            title="Sign Out of Google Account"
+                            onClick={handleGoogleLogout}
+                            title="Sign Out of Google Account & Redirect to Court Setup"
                             fontSize="1.1dvh"
                             variant="orange"
                             icon={<BoxArrowRight size={12} />}
@@ -119,7 +131,7 @@ function Home() {
                 />
             </div>
 
-            {/* --- 中間 2x2 網格佈局 (帶有專屬動態 Glow 特效) --- */}
+            {/* --- 中間 2x2 網格佈局 (帶有對應 Button 顏色的發光 Glow 特效) --- */}
             <div className="home-grid">
                 {/* Screen Card */}
                 <div className="home-card screen-card" onClick={() => navigate("/screen")}>
