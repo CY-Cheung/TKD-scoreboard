@@ -390,7 +390,7 @@ function CourtSetup() {
     <div className="cs-container">
       <Squares
         speed={0.5}
-        squareSize={"10dvw"}
+        squareSize={100}
         direction="diagonal"
         borderColor="hsla(270, 50%, 50%, 0.25)"
         hoverFillColor="hsla(60, 50%, 50%, 0.25)"
