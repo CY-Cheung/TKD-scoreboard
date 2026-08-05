@@ -181,7 +181,7 @@ export const parsePdfPage = async (page) => {
                         maxGamjeom: 5,
                         maxPointGap: 15,
                         restDuration: 60,
-                        roundDuration: 120
+                        roundDuration: 90
                     },
                     competitors: {
                         blue: { name: '', affiliatedClub: '' },

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
 import { ref, get, set, remove } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
-import { FolderPlus, Trash, ExclamationTriangle, Key, FileEarmarkPdf, FileEarmarkArrowUp } from 'react-bootstrap-icons';
+import { FolderPlus, Trash, ExclamationTriangle, Key, FileEarmarkPdf, FileEarmarkArrowUp, BoxArrowRight, CheckCircle, House, XCircle } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 
 import './CourtSetup.css';
@@ -23,10 +23,10 @@ function CourtSetup() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newEventId, setNewEventId] = useState('');
   const [newEventName, setNewEventName] = useState('');
-  const [newSetupPassword, setNewSetupPassword] = useState('BCB2026');
-  const [newMaxPointGap, setNewMaxPointGap] = useState(12);
+  const [newSetupPassword, setNewSetupPassword] = useState('');
+  const [newMaxPointGap, setNewMaxPointGap] = useState(15);
   const [newMaxGamjeom, setNewMaxGamjeom] = useState(5);
-  const [newRoundDuration, setNewRoundDuration] = useState(120);
+  const [newRoundDuration, setNewRoundDuration] = useState(90);
   const [newRestDuration, setNewRestDuration] = useState(60);
   const [courtCount, setCourtCount] = useState(4); // Default 4 courts
 
@@ -172,9 +172,9 @@ function CourtSetup() {
 
     try {
         const finalRules = {
-            maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+            maxPointGap: parseInt(newMaxPointGap, 10) || 15,
             maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-            roundDuration: parseInt(newRoundDuration, 10) || 120,
+            roundDuration: parseInt(newRoundDuration, 10) || 90,
             restDuration: parseInt(newRestDuration, 10) || 60
         };
 
@@ -220,10 +220,10 @@ function CourtSetup() {
                         createdAt: Date.now(),
                         matchDate: formattedDate,
                         settings: { 
-                            setupPassword: newSetupPassword || 'BCB2026',
-                            maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                            setupPassword: newSetupPassword,
+                            maxPointGap: parseInt(newMaxPointGap, 10) || 15,
                             maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                            roundDuration: parseInt(newRoundDuration, 10) || 120,
+                            roundDuration: parseInt(newRoundDuration, 10) || 90,
                             restDuration: parseInt(newRestDuration, 10) || 60
                         },
                         courts: generatedCourts,
@@ -253,10 +253,10 @@ function CourtSetup() {
                     createdAt: Date.now(),
                     matchDate: formattedDate,
                     settings: { 
-                        setupPassword: newSetupPassword || 'BCB2026',
-                        maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                        setupPassword: newSetupPassword,
+                        maxPointGap: parseInt(newMaxPointGap, 10) || 15,
                         maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                        roundDuration: parseInt(newRoundDuration, 10) || 120,
+                        roundDuration: parseInt(newRoundDuration, 10) || 90,
                         restDuration: parseInt(newRestDuration, 10) || 60
                     },
                     courts: generatedCourts,
@@ -273,10 +273,10 @@ function CourtSetup() {
                 createdByEmail: user.email || '',
                 createdAt: Date.now(),
                 settings: { 
-                    setupPassword: newSetupPassword || 'BCB2026',
-                    maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                    setupPassword: newSetupPassword,
+                    maxPointGap: parseInt(newMaxPointGap, 10) || 15,
                     maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                    roundDuration: parseInt(newRoundDuration, 10) || 120,
+                    roundDuration: parseInt(newRoundDuration, 10) || 90,
                     restDuration: parseInt(newRestDuration, 10) || 60
                 },
                 courts: generatedCourts,
@@ -288,10 +288,10 @@ function CourtSetup() {
 
       setNewEventId('');
       setNewEventName('');
-      setNewSetupPassword('BCB2026');
-      setNewMaxPointGap(12);
+      setNewSetupPassword('');
+      setNewMaxPointGap(15);
       setNewMaxGamjeom(5);
-      setNewRoundDuration(120);
+      setNewRoundDuration(90);
       setNewRestDuration(60);
       setCourtCount(4);
       setPdfParseResult(null);
@@ -304,7 +304,6 @@ function CourtSetup() {
     }
   };
 
-  // Trigger Delete Event Confirmation Modal
   const promptDeleteEvent = () => {
     if (!selectedEvent) {
       alert('請先選擇要刪除的賽事。');
@@ -314,6 +313,13 @@ function CourtSetup() {
       alert('🔒 請先登入 Google 帳號！');
       return;
     }
+
+    const eventData = events.find(e => e.id === selectedEvent);
+    if (eventData && eventData.createdByEmail && eventData.createdByEmail !== user.email) {
+        alert('❌ 只有賽事的建立者可以刪除此賽事！');
+        return;
+    }
+
     setShowDeleteModal(true);
   };
 
@@ -351,6 +357,38 @@ function CourtSetup() {
       return;
     }
 
+    const performLogin = async () => {
+        const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
+        await set(courtRef, {
+            name: courtId,
+            currentMatchId: '' 
+        });
+
+        const selectedEventData = events.find(evt => evt.id === selectedEvent);
+        const eventDisplayName = selectedEventData?.displayName || selectedEvent;
+
+        login({ 
+            eventId: selectedEvent,
+            courtId: courtId,
+            eventName: eventDisplayName
+        });
+
+        navigate('/'); 
+    };
+
+    const selectedEventData = events.find(evt => evt.id === selectedEvent);
+    const isCreator = user && selectedEventData && (user.email === selectedEventData.createdByEmail || user.uid === selectedEventData.createdBy);
+
+    if (isCreator) {
+        try {
+            await performLogin();
+        } catch (err) {
+            setError('An error occurred during login.');
+            console.error("Error during setup:", err);
+        }
+        return;
+    }
+
     const settingsRef = ref(database, `events/${selectedEvent}/settings/setupPassword`);
     
     try {
@@ -358,22 +396,7 @@ function CourtSetup() {
       if (snapshot.exists()) {
         const correctPassword = snapshot.val();
         if (password === correctPassword) {
-          const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
-          await set(courtRef, {
-            name: courtId,
-            currentMatchId: '' 
-          });
-
-          const selectedEventData = events.find(e => e.id === selectedEvent);
-          const eventDisplayName = selectedEventData?.displayName || selectedEvent;
-
-          login({ 
-            eventId: selectedEvent,
-            courtId: courtId,
-            eventName: eventDisplayName
-          });
-
-          navigate('/'); 
+            await performLogin();
         } else {
           setError('Incorrect password, please try again.');
         }
@@ -388,6 +411,32 @@ function CourtSetup() {
 
   return (
     <div className="cs-container">
+      {user && (
+        <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 50, backgroundColor: 'rgba(255,255,255,0.05)', padding: '10px 15px', borderRadius: '15px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {user.photoURL ? (
+                    <img src={user.photoURL} alt="User Avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#6c5ce7', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
+                        {user.displayName?.[0] || 'U'}
+                    </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', lineHeight: '1.2' }}>{user.displayName || 'User'}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', lineHeight: '1.2' }}>{user.email}</div>
+                </div>
+            </div>
+            <Button 
+                onClick={googleLogout}
+                title="Sign Out of Google Account"
+                fontSize="0.85rem"
+                variant="orange"
+                icon={<BoxArrowRight size={14} />}
+                text="Log Out"
+                style={{ padding: '6px 12px', minWidth: 'auto', margin: 0 }}
+            />
+        </div>
+      )}
       <Squares
         speed={0.5}
         squareSize={100}
@@ -396,7 +445,7 @@ function CourtSetup() {
         hoverFillColor="hsla(60, 50%, 50%, 0.25)"
       />
       <div className="cs-content">
-        <h1>Court Setup</h1>
+        <h1 style={{ fontSize: '2.2rem', margin: '0 0 15px 0' }}>Court Setup</h1>
 
         {userLoading ? (
           <p>Loading authentication state...</p>
@@ -410,7 +459,7 @@ function CourtSetup() {
             <div style={{ display: 'flex', justifyContent: 'center', margin: '2dvh 0' }}>
               <Button 
                 onClick={handleGoogleSignIn}
-                text="使用 Google 帳號登入 (Sign in with Google)"
+                text="Sign in with Google"
                 icon={<Key size={20} />}
                 fontSize="1.6dvw"
                 variant="gemini"
@@ -421,57 +470,16 @@ function CourtSetup() {
             </p>
           </div>
         ) : (
-          /* Authenticated User Setup Form */
           <form onSubmit={handleSubmit} className="cs-form">
-            <div style={{ 
-              display: 'flex', 
-              justify: 'space-between', 
-              alignItems: 'center', 
-              backgroundColor: 'rgba(255,255,255,0.08)',
-              padding: '0.8dvw 1.2dvw',
-              borderRadius: '0.6dvw',
-              marginBottom: '1dvh'
-            }}>
-              <span style={{ fontSize: '1.2dvw', color: '#4cd964' }}>
-                ✅ 已登入：<strong>{user.displayName || user.email}</strong>
-              </span>
-              <Button 
-                onClick={googleLogout}
-                text="登出 Google"
-                fontSize="1dvw"
-                variant="orange"
-              />
-            </div>
-
-            <p>Select the event, court, and enter the Setup Password to connect this device.</p>
-            
             <div className="form-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '0.5dvh' }}>
-                <label htmlFor="event-select" style={{ margin: 0 }}>Select Event</label>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <Button
-                    onClick={() => setShowCreateModal(true)}
-                    title="Create New Event"
-                    fontSize="1dvw"
-                    angle={120}
-                    icon={<FolderPlus size={14} />}
-                    text="建立賽事"
-                  />
-                  <Button
-                    onClick={promptDeleteEvent}
-                    disabled={!selectedEvent}
-                    title="Delete Selected Event"
-                    fontSize="1dvw"
-                    angle={350}
-                    icon={<Trash size={14} />}
-                    text="刪除賽事"
-                  />
-                </div>
+                <label htmlFor="event-select" style={{ margin: 0, fontSize: '1.1rem' }}>Select Event</label>
               </div>
 
               <select
                 id="event-select"
                 className="datalist-input"
+                style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%' }}
                 value={selectedEvent}
                 onChange={(e) => setSelectedEvent(e.target.value)}
                 required
@@ -486,10 +494,11 @@ function CourtSetup() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="court-select">Select Court</label>
+              <label htmlFor="court-select" style={{ fontSize: '1.1rem' }}>Select Court</label>
               <select
                 id="court-select"
                 className="datalist-input"
+                style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%' }}
                 value={courtId}
                 onChange={(e) => setCourtId(e.target.value)}
                 disabled={!selectedEvent || courtOptions.length === 0}
@@ -502,23 +511,27 @@ function CourtSetup() {
               </select>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="setup-password">Setup Password</label>
-              <input
-                id="setup-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter setup password"
-                required
-                disabled={!selectedEvent || !courtId}
-              />
-            </div>
+            {(!user || (selectedEvent && events.find(e => e.id === selectedEvent) && events.find(e => e.id === selectedEvent).createdByEmail !== user?.email)) && (
+                <div className="form-group">
+                <label htmlFor="setup-password" style={{ fontSize: '1.1rem' }}>Setup Password</label>
+                <input
+                    id="setup-password"
+                    type="password"
+                    style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#fff' }}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter setup password"
+                    required
+                />
+                </div>
+            )}
             
             {error && <p className="cs-error-message">{error}</p>}
-            <div className="cs-action-buttons">
-              <Button type="submit" text="Confirm Settings" fontSize="1.5dvw" angle={30} disabled={!selectedEvent || !courtId} />
-              <Button text="Back to Home" fontSize="1.5dvw" angle={150} onClick={() => navigate('/')} />
+            <div className="cs-action-buttons" style={{ marginTop: '20px' }}>
+              <Button type="submit" text="Confirm Settings" fontSize="1.1dvw" angle={30} disabled={!selectedEvent || !courtId} icon={<CheckCircle size={18} />} />
+              <Button type="button" onClick={() => setShowCreateModal(true)} text="Create Event" fontSize="1.1dvw" angle={120} icon={<FolderPlus size={18} />} />
+              <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} text="Delete Event" fontSize="1.1dvw" angle={350} icon={<Trash size={18} />} />
+              <Button type="button" text="Back to Home" fontSize="1.1dvw" angle={150} onClick={() => navigate('/')} icon={<House size={18} />} />
             </div>
           </form>
         )}
@@ -540,8 +553,10 @@ function CourtSetup() {
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '12px',
             padding: '25px',
-            width: '90%',
-            maxWidth: '450px',
+            width: '95%',
+            maxWidth: '850px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
             color: '#fff',
             boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
             textAlign: 'left'
@@ -567,7 +582,7 @@ function CourtSetup() {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isParsingPdf}
-                      text={isParsingPdf ? '解析中...' : '選擇 PDF 檔案'}
+                      text={isParsingPdf ? 'Parsing...' : 'Select PDF'}
                       icon={<FileEarmarkArrowUp size={16} />}
                       fontSize="0.9rem"
                       angle={60}
@@ -579,40 +594,42 @@ function CourtSetup() {
                       </div>
                   )}
               </div>
-              <div className="form-group">
-                <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Event ID (賽事識別碼)</label>
-                <input 
-                  type="text" 
-                  placeholder="例如: TKD2026 (不可重複)" 
-                  value={newEventId}
-                  onChange={e => setNewEventId(e.target.value)}
-                  required
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Event ID (賽事識別碼)</label>
+                  <input 
+                    type="text" 
+                    placeholder="例如: TKD2026 (不可重複)" 
+                    value={newEventId}
+                    onChange={e => setNewEventId(e.target.value)}
+                    required
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Event Name (賽事全稱)</label>
+                  <input 
+                    type="text" 
+                    placeholder="例如: 2026 全港跆拳道錦標賽" 
+                    value={newEventName}
+                    onChange={e => setNewEventName(e.target.value)}
+                    required
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Setup Password (設定密碼)</label>
+                  <input 
+                    type="text" 
+                    placeholder="例如: BCB2026" 
+                    value={newSetupPassword}
+                    onChange={e => setNewSetupPassword(e.target.value)}
+                    required
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                  />
+                </div>
               </div>
-              <div className="form-group">
-                <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Event Name (賽事全稱)</label>
-                <input 
-                  type="text" 
-                  placeholder="例如: 2026 全港跆拳道錦標賽" 
-                  value={newEventName}
-                  onChange={e => setNewEventName(e.target.value)}
-                  required
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
-                />
-              </div>
-              <div className="form-group">
-                <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Setup Password (設定密碼)</label>
-                <input 
-                  type="text" 
-                  placeholder="例如: BCB2026" 
-                  value={newSetupPassword}
-                  onChange={e => setNewSetupPassword(e.target.value)}
-                  required
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
-                />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Point Gap (分差)</label>
                   <input type="number" value={newMaxPointGap} onChange={e => setNewMaxPointGap(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
@@ -629,31 +646,25 @@ function CourtSetup() {
                   <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Rest Duration (休息秒數)</label>
                   <input type="number" value={newRestDuration} onChange={e => setNewRestDuration(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
                 </div>
-              </div>
-              <div className="form-group">
-                <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Courts Count (場地數量: 1~12)</label>
-                <input 
-                  type="number"
-                  min="1"
-                  max="12"
-                  value={courtCount}
-                  onChange={e => setCourtCount(e.target.value)}
-                  required
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
-                />
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Courts Count (1~12)</label>
+                  <input type="number" min="1" max="12" value={courtCount} onChange={e => setCourtCount(e.target.value)} required style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
                 <Button 
                   onClick={() => setShowCreateModal(false)}
-                  text="取消"
+                  text="Cancel"
                   fontSize="0.9rem"
                   angle={0}
+                  icon={<XCircle size={16} />}
                 />
                 <Button 
                   type="submit"
-                  text="確認建立"
+                  text="Confirm"
                   fontSize="0.9rem"
                   angle={120}
+                  icon={<CheckCircle size={16} />}
                 />
               </div>
             </form>
@@ -696,14 +707,15 @@ function CourtSetup() {
               <Button 
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                text="取消"
+                text="Cancel"
                 fontSize="0.9rem"
                 angle={0}
+                icon={<XCircle size={16} />}
               />
               <Button 
                 onClick={confirmDeleteEvent}
                 disabled={isDeleting}
-                text={isDeleting ? '刪除中...' : '確認刪除'}
+                text={isDeleting ? 'Deleting...' : 'Confirm Delete'}
                 icon={<Trash size={16} />}
                 fontSize="0.9rem"
                 angle={350}

@@ -157,7 +157,7 @@ export const startNextRound = (eventName, matchId) => {
 
         matchData.state.currentRound = (matchData.state.currentRound || 1) + 1;
         matchData.state.phase = "ROUND";
-        matchData.state.timer = matchData.config?.rules?.roundDuration || 120;
+        matchData.state.timer = matchData.config?.rules?.roundDuration || 90;
         matchData.state.isPaused = true;
         matchData.state.lastStartTime = null;
         matchData.state.isFinished = false;

@@ -6,7 +6,7 @@ import Squares from '../../Components/Squares/Squares';
 import Button from '../../Components/Button/Button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
-import { PlusCircle, Trash, FolderPlus, ExclamationTriangle, FileEarmarkArrowUp, FileEarmarkPdf, CheckCircleFill, Calendar3, Funnel } from 'react-bootstrap-icons';
+import { PlusCircle, Trash, FolderPlus, ExclamationTriangle, FileEarmarkArrowUp, FileEarmarkPdf, CheckCircleFill, Calendar3, Funnel, House, XCircle, CheckCircle, Display } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 
 // A helper function to parse name and club from old format
@@ -24,9 +24,9 @@ const DataImport = () => {
     const { session, user } = useAuth(); 
     const [eventsList, setEventsList] = useState([]);
     const [eventName, setEventName] = useState('');
-    const [newMaxPointGap, setNewMaxPointGap] = useState(12);
+    const [newMaxPointGap, setNewMaxPointGap] = useState(15);
     const [newMaxGamjeom, setNewMaxGamjeom] = useState(5);
-    const [newRoundDuration, setNewRoundDuration] = useState(120);
+    const [newRoundDuration, setNewRoundDuration] = useState(90);
     const [newRestDuration, setNewRestDuration] = useState(60);
     const [currentMatches, setCurrentMatches] = useState({});
     const [selectedMatchId, setSelectedMatchId] = useState(null);
@@ -38,7 +38,7 @@ const DataImport = () => {
     const [showCreateEventModal, setShowCreateEventModal] = useState(false);
     const [newEventId, setNewEventId] = useState('');
     const [newEventName, setNewEventName] = useState('');
-    const [newSetupPassword, setNewSetupPassword] = useState('BCB2026');
+    const [newSetupPassword, setNewSetupPassword] = useState('');
 
     // Delete Event Confirmation Modal State
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -55,7 +55,7 @@ const DataImport = () => {
     const [nextMatchSlot, setNextMatchSlot] = useState('');
     const [maxPointGap, setMaxPointGap] = useState(15);
     const [maxGamjeom, setMaxGamjeom] = useState(5);
-    const [roundDuration, setRoundDuration] = useState(120);
+    const [roundDuration, setRoundDuration] = useState(90);
     const [restDuration, setRestDuration] = useState(60);
     const [blueName, setBlueName] = useState('');
     const [blueAffiliatedClub, setBlueAffiliatedClub] = useState('');
@@ -184,9 +184,9 @@ const DataImport = () => {
 
         try {
             const finalRules = {
-                maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                maxPointGap: parseInt(newMaxPointGap, 10) || 15,
                 maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                roundDuration: parseInt(newRoundDuration, 10) || 120,
+                roundDuration: parseInt(newRoundDuration, 10) || 90,
                 restDuration: parseInt(newRestDuration, 10) || 60
             };
 
@@ -232,10 +232,10 @@ const DataImport = () => {
                             createdAt: Date.now(),
                             matchDate: formattedDate,
                             settings: { 
-                                setupPassword: newSetupPassword || 'BCB2026',
-                                maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                                setupPassword: newSetupPassword,
+                                maxPointGap: parseInt(newMaxPointGap, 10) || 15,
                                 maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                                roundDuration: parseInt(newRoundDuration, 10) || 120,
+                                roundDuration: parseInt(newRoundDuration, 10) || 90,
                                 restDuration: parseInt(newRestDuration, 10) || 60
                             },
                             courts: { court1: { name: 'court1', currentMatchId: '' } },
@@ -265,10 +265,10 @@ const DataImport = () => {
                         createdAt: Date.now(),
                         matchDate: formattedDate,
                         settings: { 
-                            setupPassword: newSetupPassword || 'BCB2026',
-                            maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                            setupPassword: newSetupPassword,
+                            maxPointGap: parseInt(newMaxPointGap, 10) || 15,
                             maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                            roundDuration: parseInt(newRoundDuration, 10) || 120,
+                            roundDuration: parseInt(newRoundDuration, 10) || 90,
                             restDuration: parseInt(newRestDuration, 10) || 60
                         },
                         courts: { court1: { name: 'court1', currentMatchId: '' } },
@@ -285,10 +285,10 @@ const DataImport = () => {
                     createdByEmail: user.email || '',
                     createdAt: Date.now(),
                     settings: { 
-                        setupPassword: newSetupPassword || 'BCB2026',
-                        maxPointGap: parseInt(newMaxPointGap, 10) || 12,
+                        setupPassword: newSetupPassword,
+                        maxPointGap: parseInt(newMaxPointGap, 10) || 15,
                         maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                        roundDuration: parseInt(newRoundDuration, 10) || 120,
+                        roundDuration: parseInt(newRoundDuration, 10) || 90,
                         restDuration: parseInt(newRestDuration, 10) || 60
                     },
                     courts: { court1: { name: 'court1', currentMatchId: '' } },
@@ -300,10 +300,10 @@ const DataImport = () => {
 
             setNewEventId('');
             setNewEventName('');
-            setNewSetupPassword('BCB2026');
-            setNewMaxPointGap(12);
+            setNewSetupPassword('');
+            setNewMaxPointGap(15);
             setNewMaxGamjeom(5);
-            setNewRoundDuration(120);
+            setNewRoundDuration(90);
             setNewRestDuration(60);
             setPdfParseResult(null);
             setShowCreateEventModal(false);
@@ -362,7 +362,7 @@ const DataImport = () => {
             
             setMaxPointGap(rules.maxPointGap || 15);
             setMaxGamjeom(rules.maxGamjeom || 5);
-            setRoundDuration(rules.roundDuration || 120);
+            setRoundDuration(rules.roundDuration || 90);
             setRestDuration(rules.restDuration || 60);
     
             const blueCompetitor = competitors.blue;
@@ -503,15 +503,15 @@ const DataImport = () => {
                         <h2>Import Event Data</h2>
 
                         {/* --- Event Selection & Management Bar --- */}
-                        <div className="form-group" style={{ 
+                        <div style={{ 
                             backgroundColor: 'rgba(255,255,255,0.06)', 
-                            padding: '10px', 
-                            borderRadius: '6px',
+                            padding: '10px 15px', 
+                            borderRadius: '8px',
                             border: '1px solid rgba(255,255,255,0.15)',
                             marginBottom: '15px'
                         }}>
-                            <label htmlFor="eventName-select" style={{ color: '#FFFF00', fontWeight: 'bold' }}>
-                                Target Event (目標賽事)
+                            <label htmlFor="eventName-select" style={{ color: '#fff', fontWeight: 'bold' }}>
+                                Target Event
                             </label>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 <select 
@@ -523,27 +523,10 @@ const DataImport = () => {
                                     <option value="" disabled>-- 請選擇賽事 --</option>
                                     {eventsList.map(evt => (
                                         <option key={evt.id} value={evt.id}>
-                                            {evt.displayName !== evt.id ? `${evt.displayName} (${evt.id})` : evt.id}
+                                            {evt.displayName || evt.id}
                                         </option>
                                     ))}
                                 </select>
-                                <Button 
-                                    onClick={() => setShowCreateEventModal(true)}
-                                    title="Create New Event"
-                                    fontSize="0.9rem"
-                                    angle={120}
-                                    icon={<FolderPlus size={16} />}
-                                    text="建立賽事"
-                                />
-                                <Button 
-                                    onClick={promptDeleteEvent}
-                                    disabled={!eventName}
-                                    title="Delete Current Event"
-                                    fontSize="0.9rem"
-                                    angle={350}
-                                    icon={<Trash size={16} />}
-                                    text="刪除賽事"
-                                />
                             </div>
                         </div>
 
@@ -637,16 +620,28 @@ const DataImport = () => {
                             </fieldset>
                         </div>
                         <div className="di-action-buttons">
-                            <Button text="Add Match" fontSize="1.5dvw" angle={260} onClick={handleAddMatch} />
-                            <Button text="Load to Screen" fontSize="1.5dvw" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} />
-                            <Button text="Back to Home" fontSize="1.5dvw" angle={150} onClick={() => navigate('/')} />
+                            <Button text="Add Match" fontSize="0.95rem" angle={260} onClick={handleAddMatch} icon={<PlusCircle size={16} />} style={{ flex: 1 }} />
+                            <Button text="Load to Screen" fontSize="0.95rem" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size={16} />} style={{ flex: 1 }} />
+                            <Button text="Back to Home" fontSize="0.95rem" angle={150} onClick={() => navigate('/')} icon={<House size={16} />} style={{ flex: 1 }} />
                         </div>
                     </div>
 
                     <div className="di-matches-section">
                         <div className="matches-list">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.15)', paddingBottom: '6px' }}>
-                                <h3 style={{ margin: 0, border: 'none', padding: 0 }}>Matches in {eventName || 'Event'}</h3>
+                                {(() => {
+                                    const rawName = eventsList.find(e => e.id === eventName)?.displayName || eventName || 'Event';
+                                    const dayMatch = rawName.match(/^(.*?)\s*(\(Day\s+\d+\))\s*(\(.*\))$/);
+                                    if (dayMatch) {
+                                        return (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <h3 style={{ margin: 0, border: 'none', padding: 0, color: '#fff', fontSize: '1.2rem' }}>{dayMatch[1]}</h3>
+                                                <span style={{ fontSize: '0.9rem', color: '#ccc' }}>{dayMatch[2].replace(/[()]/g, '')} - {dayMatch[3].replace(/[()]/g, '')}</span>
+                                            </div>
+                                        );
+                                    }
+                                    return <h3 style={{ margin: 0, border: 'none', padding: 0, color: '#fff' }}>{rawName}</h3>;
+                                })()}
                                 {availableDates.length > 1 && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <Funnel size={12} color="#FFFF00" />
@@ -662,7 +657,7 @@ const DataImport = () => {
                                                 fontSize: '0.8rem' 
                                             }}
                                         >
-                                            <option value="all">📅 所有日期</option>
+                                            <option value="all">📅 All Dates</option>
                                             {availableDates.map(dStr => (
                                                 <option key={dStr} value={dStr}>📅 {dStr}</option>
                                             ))}
@@ -677,17 +672,22 @@ const DataImport = () => {
                                     const matchDate = currentMatches[mId].config.matchDate;
 
                                     const getDisplayText = (competitor) => {
+                                        if (!competitor.name && !competitor.affiliatedClub && competitor.previousMatch) {
+                                            return `${competitor.previousMatch} Winner`;
+                                        }
                                         if (competitor.affiliatedClub) {
                                             return `${competitor.name} (${competitor.affiliatedClub})`;
                                         }
-                                        return competitor.name;
+                                        return competitor.name || '';
                                     };
 
                                     return (
-                                        <li key={mId} onClick={() => setSelectedMatchId(mId)} className={selectedMatchId === mId ? 'selected' : ''}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span><strong>{mId}:</strong> {`${getDisplayText(blue)} vs ${getDisplayText(red)}`}</span>
-                                                {matchDate && <small style={{ color: '#aaa', fontSize: '0.75rem', marginLeft: '6px' }}>{matchDate}</small>}
+                                        <li key={mId} onClick={() => setSelectedMatchId(mId)} className={selectedMatchId === mId ? 'selected' : ''} style={{ padding: '8px 10px' }}>
+                                            <div style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                <strong style={{ color: '#fff', marginRight: '4px' }}>{mId}:</strong> 
+                                                <span style={{ color: '#3399ff' }}>{getDisplayText(blue)}</span> 
+                                                <span style={{ color: '#fff', margin: '0 6px', fontSize: '0.75rem' }}>VS</span> 
+                                                <span style={{ color: '#ff3b30' }}>{getDisplayText(red)}</span>
                                             </div>
                                         </li>
                                     );
@@ -720,7 +720,7 @@ const DataImport = () => {
                         boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
                     }}>
                         <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#FFFF00' }}>
-                            <FolderPlus size={24} /> 建立新賽事 (Create New Event)
+                            <FolderPlus size={24} /> Create New Event
                         </h3>
                         <form onSubmit={handleCreateEvent} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -740,7 +740,7 @@ const DataImport = () => {
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
                                     disabled={isParsingPdf}
-                                    text={isParsingPdf ? '解析中...' : '選擇 PDF 檔案'}
+                                    text={isParsingPdf ? 'Parsing...' : 'Select PDF'}
                                     icon={<FileEarmarkArrowUp size={16} />}
                                     fontSize="0.9rem"
                                     angle={60}
@@ -803,15 +803,17 @@ const DataImport = () => {
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
                                 <Button 
                                     onClick={() => setShowCreateEventModal(false)}
-                                    text="取消"
+                                    text="Cancel"
                                     fontSize="0.9rem"
                                     angle={0}
+                                    icon={<XCircle size={16} />}
                                 />
                                 <Button 
                                     type="submit"
-                                    text="確認建立"
+                                    text="Confirm"
                                     fontSize="0.9rem"
                                     angle={60}
+                                    icon={<CheckCircle size={16} />}
                                 />
                             </div>
                         </form>
@@ -854,14 +856,15 @@ const DataImport = () => {
                             <Button 
                                 onClick={() => setShowDeleteModal(false)}
                                 disabled={isDeleting}
-                                text="取消"
+                                text="Cancel"
                                 fontSize="0.9rem"
                                 angle={0}
+                                icon={<XCircle size={16} />}
                             />
                             <Button 
                                 onClick={confirmDeleteEvent}
                                 disabled={isDeleting}
-                                text={isDeleting ? '刪除中...' : '確認刪除'}
+                                text={isDeleting ? 'Deleting...' : 'Confirm Delete'}
                                 icon={<Trash size={16} />}
                                 fontSize="0.9rem"
                                 angle={350}

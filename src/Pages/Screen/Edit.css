@@ -74,11 +74,13 @@
     display: flex;
     align-items: center;
     margin: 0 5px;
+    font-size: 1.5dvw;
 }
 
 .time-selects select {
     width: auto; /* Override the global 100% width */
     margin: 0 5px;
+    font-size: 1.5dvw;
 }
 
 /* Aligning the Done button */

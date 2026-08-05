@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { database } from '../../firebase';
 import { ref, get, update } from "firebase/database";
-import { QrCode, PeopleFill } from "react-bootstrap-icons";
+import { QrCode, PeopleFill, Trophy, PersonFill, CheckCircle } from "react-bootstrap-icons";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
 import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner } from '../../Api';
@@ -71,7 +71,7 @@ const Edit = ({
             get(configRef).then((snapshot) => {
                 if (!snapshot.exists()) return;
                 const config = snapshot.val();
-                const defaultMatchSec = config.rules?.roundDuration || 120;
+                const defaultMatchSec = config.rules?.roundDuration || 90;
                 const defaultRestSec = config.rules?.restDuration || 60;
 
                 if (activePhase === 'ROUND') {
@@ -221,6 +221,7 @@ const Edit = ({
                         text={`QR Code (${occupiedRefereesCount}/3)`}
                         fontSize="1.6vw"
                         angle={300}
+                        icon={<QrCode size={16} />}
                         onClick={() => {
                             setVisible(false);
                             setShowQRCode(true);
@@ -247,20 +248,20 @@ const Edit = ({
                 )}
 
                  {showDeclareWinnerButton && (
-                    <Button text="Declare Round Winner" fontSize="1.8vw" onClick={handleDeclareWinner} angle={50} />
+                    <Button text="Declare Round Winner" fontSize="1.8vw" onClick={handleDeclareWinner} angle={50} icon={<Trophy size={16} />} />
                 )}
                 
                 {showSuperiorityVote && (
                     <div className="superiority-vote time-control-group">
                         <h2>Woo-se-girok</h2>
                         <div className="buttons">
-                            <Button text="Blue" fontSize="1.8vw" onClick={() => handleWinDeclaration('blue')} angle={220} />
-                            <Button text="Red" fontSize="1.8vw" onClick={() => handleWinDeclaration('red')} angle={0} />
+                            <Button text="Blue" fontSize="1.8vw" onClick={() => handleWinDeclaration('blue')} angle={220} icon={<PersonFill size={16} />} />
+                            <Button text="Red" fontSize="1.8vw" onClick={() => handleWinDeclaration('red')} angle={0} icon={<PersonFill size={16} />} />
                         </div>
                     </div>
                 )}
 
-                <Button text="Done" fontSize="2vw" onClick={() => setVisible(false)} />
+                <Button text="Done" fontSize="1.6vw" onClick={() => setVisible(false)} icon={<CheckCircle size={16} />} />
             </div>
         </div>
     );

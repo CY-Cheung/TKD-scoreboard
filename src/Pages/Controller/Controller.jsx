@@ -159,6 +159,10 @@ function Controller() {
     const handleScore = (side, index, label) => {
         if (!eventId || !currentMatchId) return;
 
+        // Block remote input when timer is not running
+        const isCurrentlyPaused = matchData?.state?.isPaused ?? true;
+        if (isCurrentlyPaused) return;
+
         // Mobile haptic vibration feedback
         if (navigator.vibrate) {
             navigator.vibrate(60);

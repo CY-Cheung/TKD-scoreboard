@@ -10,7 +10,7 @@ import Squares from '../../Components/Squares/Squares';
 import QRCodeDisplay from '../../Components/QRCodeDisplay/QRCodeDisplay';
 
 // 引入 Bootstrap Icons
-import { Display, Controller, Diagram2, PersonBadge, BoxArrowRight } from 'react-bootstrap-icons';
+import { Display, Controller, Diagram2, PersonBadge, BoxArrowRight, ArrowLeftRight } from 'react-bootstrap-icons';
 
 function Home() {
     const navigate = useNavigate();
@@ -128,6 +128,7 @@ function Home() {
                     fontSize="1.4dvh"
                     angle={0}
                     className="change-session-btn"
+                    icon={<ArrowLeftRight size={14} />}
                 />
             </div>
 
