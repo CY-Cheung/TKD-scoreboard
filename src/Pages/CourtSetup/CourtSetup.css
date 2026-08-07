@@ -25,7 +25,10 @@
 }
 
 .cs-left-panel {
-    flex: 1;
+    flex: 1 1 50%;
+    width: 50%;
+    max-width: 50%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -33,11 +36,17 @@
     text-align: left;
 }
 
-.cs-app-intro {
+.cs-app-intro-list {
     font-size: 1.5cqi;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
     margin-top: 2cqi;
     line-height: 1.6;
+    padding-left: 1.5vw;
+    list-style-type: disc;
+}
+
+.cs-app-intro-list li {
+    margin-bottom: 0.5vw;
 }
 
 .cs-divider {
@@ -52,7 +61,10 @@
 }
 
 .cs-right-panel {
-    flex: 1;
+    flex: 1 1 50%;
+    width: 50%;
+    max-width: 50%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -96,6 +108,8 @@
     display: flex;
     flex-direction: column;
     gap: 1.042vw;
+    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
 }
 
 .cs-form p {
@@ -199,7 +213,7 @@
     display: flex;
     justify-content: flex-start; /* Align left */
     gap: 1.042vw;
-    font-size: 0.708vw;
+    font-size: 1.1vw;
     color: rgba(255, 255, 255, 0.5);
 }
 

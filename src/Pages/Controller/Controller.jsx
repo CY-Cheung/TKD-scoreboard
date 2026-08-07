@@ -13,7 +13,7 @@ function Controller() {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    // Helper to extract query parameter from searchParams, search URL, Hash URL, or localStorage
+    // Helper to extract query parameter from searchParams, search URL, Hash URL, or sessionStorage
     const getParam = (key) => {
         const fromSearch = searchParams.get(key);
         if (fromSearch) return fromSearch;
@@ -27,8 +27,8 @@ function Controller() {
             if (hashParams.get(key)) return hashParams.get(key);
         }
 
-        if (key === "event") return localStorage.getItem("selectedEvent") || "";
-        if (key === "court") return localStorage.getItem("selectedCourt") || "";
+        if (key === "event") return sessionStorage.getItem("selectedEvent") || "";
+        if (key === "court") return sessionStorage.getItem("selectedCourt") || "";
 
         return "";
     };
@@ -54,11 +54,11 @@ function Controller() {
         const ct = getParam("court");
         if (ev) {
             setEventId(ev);
-            localStorage.setItem("selectedEvent", ev);
+            sessionStorage.setItem("selectedEvent", ev);
         }
         if (ct) {
             setCourtId(ct);
-            localStorage.setItem("selectedCourt", ct);
+            sessionStorage.setItem("selectedCourt", ct);
         }
     }, [searchParams]);
 

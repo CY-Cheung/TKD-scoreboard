@@ -9,11 +9,11 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  // Synchronously initialize session state from localStorage
+  // Synchronously initialize session state from sessionStorage
   const [session, setSession] = useState(() => {
-    const savedEvent = localStorage.getItem('selectedEvent');
-    const savedCourt = localStorage.getItem('selectedCourt');
-    const savedEventName = localStorage.getItem('selectedEventName');
+    const savedEvent = sessionStorage.getItem('selectedEvent');
+    const savedCourt = sessionStorage.getItem('selectedCourt');
+    const savedEventName = sessionStorage.getItem('selectedEventName');
     if (savedEvent && savedCourt) {
       return { 
         eventId: savedEvent, 
@@ -46,18 +46,18 @@ export function AuthProvider({ children }) {
   };
 
   const login = (sessionData) => {
-    localStorage.setItem('selectedEvent', sessionData.eventId);
-    localStorage.setItem('selectedCourt', sessionData.courtId);
+    sessionStorage.setItem('selectedEvent', sessionData.eventId);
+    sessionStorage.setItem('selectedCourt', sessionData.courtId);
     if (sessionData.eventName) {
-      localStorage.setItem('selectedEventName', sessionData.eventName);
+      sessionStorage.setItem('selectedEventName', sessionData.eventName);
     }
     setSession(sessionData);
   };
 
   const logout = () => {
-    localStorage.removeItem('selectedEvent');
-    localStorage.removeItem('selectedCourt');
-    localStorage.removeItem('selectedEventName');
+    sessionStorage.removeItem('selectedEvent');
+    sessionStorage.removeItem('selectedCourt');
+    sessionStorage.removeItem('selectedEventName');
     setSession(null);
   };
 

@@ -69,9 +69,9 @@ function Screen() {
     const [showQRCode, setShowQRCode] = useState(false);
     const [displayTime, setDisplayTime] = useState(0);
 
-    const [selectedEvent, setSelectedEvent] = useState(localStorage.getItem('selectedEvent'));
+    const [selectedEvent, setSelectedEvent] = useState(sessionStorage.getItem('selectedEvent'));
     const [eventName, setEventName] = useState("");
-    const [selectedCourt, setSelectedCourt] = useState(localStorage.getItem('selectedCourt'));
+    const [selectedCourt, setSelectedCourt] = useState(sessionStorage.getItem('selectedCourt'));
     const [currentMatchId, setCurrentMatchId] = useState(null);
     const [refereesData, setRefereesData] = useState({});
     

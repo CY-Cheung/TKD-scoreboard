@@ -19,6 +19,8 @@
     flex-direction: column;
     z-index: 1;
     container-type: inline-size;
+    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
 }
 
 .di-form-and-list-container {
@@ -207,7 +209,8 @@ legend {
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.form-group input:focus, .form-group select:focus {
+.form-group input:focus, .form-group select:focus,
+.form-group input:hover, .form-group select:hover {
     outline: none;
     border-color: #FFFF00;
     box-shadow: 0 0 0.417vw rgba(255, 255, 0, 0.4);
@@ -215,13 +218,17 @@ legend {
 }
 
 .competitor-group.blue .form-group input:focus,
-.competitor-group.blue .form-group select:focus {
+.competitor-group.blue .form-group select:focus,
+.competitor-group.blue .form-group input:hover,
+.competitor-group.blue .form-group select:hover {
     border-color: #4285F4;
     box-shadow: 0 0 0.417vw rgba(66, 133, 244, 0.4);
 }
 
 .competitor-group.red .form-group input:focus,
-.competitor-group.red .form-group select:focus {
+.competitor-group.red .form-group select:focus,
+.competitor-group.red .form-group input:hover,
+.competitor-group.red .form-group select:hover {
     border-color: #ff3b30;
     box-shadow: 0 0 0.417vw rgba(255, 59, 48, 0.4);
 }
@@ -231,4 +238,15 @@ legend {
     gap: 0.781vw;
     width: 100%;
     margin-top: 0.521vw;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(1.562vw);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

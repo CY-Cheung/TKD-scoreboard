@@ -9,7 +9,7 @@ import Button from '../../Components/Button/Button';
 import QRCodeDisplay from '../../Components/QRCodeDisplay/QRCodeDisplay';
 
 // 引入 Bootstrap Icons
-import { Display, Controller, Diagram2, PersonBadge, BoxArrowRight, ArrowLeftRight } from 'react-bootstrap-icons';
+import { Display, Controller, Diagram2, PersonBadge, BoxArrowRight, ArrowLeftRight, Github } from 'react-bootstrap-icons';
 
 function Home() {
     const navigate = useNavigate();
@@ -97,54 +97,73 @@ function Home() {
                 </div>
             )}
 
-            {/* --- Bottom Right Session Info Card --- */}
-            <div style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 50, backgroundColor: 'rgba(20, 20, 25, 0.78)', padding: '15px 20px', borderRadius: '12px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)', display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '250px', textAlign: 'left' }}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)', textTransform: 'uppercase' }}>Event Name</span>
-                    <span style={{ color: 'white', fontWeight: 'bold' }}>{session?.eventName || eventName || session?.eventId || 'N/A'}</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)', textTransform: 'uppercase' }}>Event ID</span>
-                    <span style={{ color: 'white', fontWeight: 'bold' }}>{session?.eventId || 'N/A'}</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)', textTransform: 'uppercase' }}>Court ID</span>
-                    <span style={{ color: 'white', fontWeight: 'bold' }}>{session?.courtId || 'N/A'}</span>
-                </div>
-                <Button
-                    text="Change Court Session"
-                    onClick={handleSessionLogout}
-                    fontSize="0.85rem"
-                    angle={0}
-                    icon={<ArrowLeftRight size={14} />}
-                    style={{ marginTop: '5px' }}
-                />
-            </div>
-
-            {/* --- 中間 2x2 網格佈局 (帶有對應 Button 顏色的發光 Glow 特效) --- */}
-            <div className="home-grid">
-                {/* Screen Card */}
-                <div className="home-card screen-card" onClick={() => navigate("/screen")}>
-                    <Display className="home-card-icon" />
-                    <Button text="Screen" fontSize="2.2dvh" angle={50} readOnly />
+            <div className="home-content glass-card split-layout">
+                <div className="home-left-panel">
+                    <div className="home-title-container">
+                        <h1 style={{fontSize: '3.5vw', lineHeight: '1.1'}}>Taekwondo<br/>Scoreboard</h1>
+                        <div style={{fontSize: '1.5vw', color: '#fbc531', margin: '0.3vw 0 0 0', fontWeight: '700', letterSpacing: '0.3vw', textTransform: 'uppercase'}}>Kyorugi</div>
+                        <h2 style={{fontSize: '1.5vw', color: 'rgba(255,255,255,0.9)', margin: '0.8vw 0 0 0', fontWeight: 'normal', letterSpacing: '0.1vw'}}>跆拳道搏擊比賽計分系統</h2>
+                        <ul className="home-app-intro-list">
+                            <li>全網頁端運行，無須安裝 App。</li>
+                            <li>支援手機掃描 QR Code 即時化身裁判遙控器。</li>
+                            <li>具備智能席位鎖定與分數防撞機制。</li>
+                            <li>支援一鍵匯入官方 PDF 賽程表，輕鬆實現多場地同步計分與賽事管理。</li>
+                        </ul>
+                    </div>
+                    <div className="home-footer-links">
+                        <a href="https://github.com/CY-Cheung/TKD-scoreboard" target="_blank" rel="noopener noreferrer">
+                            <Github size={16} /> GitHub Repository
+                        </a>
+                    </div>
                 </div>
 
-                {/* Controller Card */}
-                <div className="home-card controller-card" onClick={() => navigate("/controller")}>
-                    <Controller className="home-card-icon" />
-                    <Button text="Controller" fontSize="2.2dvh" angle={270} readOnly />
-                </div>
+                <div className="home-divider"></div>
 
-                {/* Data Import Card */}
-                <div className="home-card import-card" onClick={() => navigate("/import")}>
-                    <Diagram2 className="home-card-icon" />
-                    <Button text="Data Import" fontSize="2.2dvh" angle={90} readOnly />
-                </div>
+                <div className="home-right-panel">
+                    <div style={{ width: '100%', textAlign: 'left', marginBottom: '1.5vw' }}>
+                        {(() => {
+                            const fullEventName = session?.eventName || eventName || session?.eventId || 'N/A';
+                            let mainEventName = fullEventName;
+                            let eventDateStr = '';
+                            
+                            // 嘗試解析帶有多個括號嘅複雜字串，例如 "Event Name (Day 1) (2023/10/10)"
+                            const matchDouble = fullEventName.match(/^(.*?)\s*\((Day[^)]+)\)\s*\(([^)]+)\)\s*$/i);
+                            if (matchDouble) {
+                                mainEventName = matchDouble[1].trim();
+                                eventDateStr = `${matchDouble[2].trim()} - ${matchDouble[3].trim()}`;
+                            } else {
+                                // Fallback 解析 "Event Name (Day 1 - 2023/10/10)" 或者其他單一括號結尾嘅情況
+                                const matchSingle = fullEventName.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+                                if (matchSingle) {
+                                    mainEventName = matchSingle[1].trim();
+                                    eventDateStr = matchSingle[2].trim();
+                                }
+                            }
+                            
+                            return (
+                                <>
+                                    <h3 style={{ fontSize: '1.6vw', color: 'white', margin: '0 0 0.5vw 0', fontWeight: 'bold', lineHeight: '1.2', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {mainEventName}
+                                    </h3>
+                                    {eventDateStr && (
+                                        <div style={{ fontSize: '1.6vw', color: '#fff', marginBottom: '0.5vw' }}>
+                                            {eventDateStr}
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
+                        <div style={{ fontSize: '1.6vw', color: 'rgba(255,255,255,0.9)', marginTop: '0.5vw' }}>
+                            Court: <strong style={{ color: '#fff' }}>{session?.courtId || 'N/A'}</strong>
+                        </div>
+                    </div>
 
-                {/* Referee Register Card */}
-                <div className="home-card referee-card" onClick={() => setShowQRCode(true)}>
-                    <PersonBadge className="home-card-icon" />
-                    <Button text="Referee Register" fontSize="2.2dvh" angle={180} readOnly />
+                    <div className="home-nav-container">
+                        <Button onClick={handleSessionLogout} text="Change Court Session" icon={<ArrowLeftRight size={24} />} fontSize="1.35vw" angle={0} style={{ padding: '0.8vw 1.5vw', width: '100%' }} />
+                        <Button onClick={() => navigate("/screen")} text="Screen" icon={<Display size={24} />} fontSize="1.35vw" angle={50} style={{ padding: '0.8vw 1.5vw', width: '100%' }} />
+                        <Button onClick={() => navigate("/import")} text="Admin" icon={<Diagram2 size={24} />} fontSize="1.35vw" angle={90} style={{ padding: '0.8vw 1.5vw', width: '100%' }} />
+                        <Button onClick={() => setShowQRCode(true)} text="Referee" icon={<PersonBadge size={24} />} fontSize="1.35vw" angle={180} style={{ padding: '0.8vw 1.5vw', width: '100%' }} />
+                    </div>
                 </div>
             </div>
 

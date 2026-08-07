@@ -7,7 +7,7 @@ import { useAuth } from '../../Context/AuthContext';
  * Guards routes that require an active Event ID and Court ID session.
  * Automatically checks:
  * 1. AuthContext session state
- * 2. localStorage fallback
+ * 2. sessionStorage fallback
  * 3. URL query parameters (for direct QR Code scan access like /controller?event=X&court=Y)
  */
 function ProtectedRoute({ children }) {
@@ -28,11 +28,11 @@ function ProtectedRoute({ children }) {
     return false;
   };
 
-  const hasLocalStorage = () => {
-    return !!(localStorage.getItem('selectedEvent') && localStorage.getItem('selectedCourt'));
+  const hasSessionStorage = () => {
+    return !!(sessionStorage.getItem('selectedEvent') && sessionStorage.getItem('selectedCourt'));
   };
 
-  const isAuthenticated = !!session || hasLocalStorage() || hasUrlParams();
+  const isAuthenticated = !!session || hasSessionStorage() || hasUrlParams();
 
   if (!isAuthenticated) {
     return <Navigate to="/court-setup" replace />;

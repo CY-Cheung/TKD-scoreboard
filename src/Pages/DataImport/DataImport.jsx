@@ -532,36 +532,6 @@ const DataImport = () => {
                     <div className="di-form-section">
                         <h2>Import Event Data</h2>
 
-                        {/* --- Event Selection & Management Bar --- */}
-                        <div style={{ 
-                            backgroundColor: 'rgba(255,255,255,0.06)', 
-                            padding: '10px 15px', 
-                            borderRadius: '8px',
-                            border: '1px solid rgba(255,255,255,0.15)',
-                            marginBottom: '15px'
-                        }}>
-                            <label htmlFor="eventName-select" style={{ color: '#fff', fontWeight: 'bold' }}>
-                                Target Event
-                            </label>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                <select 
-                                    id="eventName-select"
-                                    value={eventName}
-                                    onChange={(e) => setEventName(e.target.value)}
-                                    style={{ flex: 1 }}
-                                >
-                                    <option value="" disabled>-- 請選擇賽事 --</option>
-                                    {eventsList.map(evt => (
-                                        <option key={evt.id} value={evt.id}>
-                                            {evt.displayName || evt.id}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-
-
                         {/* Match Configuration Form */}
                         <div className="match-form">
                             <fieldset>
@@ -650,6 +620,11 @@ const DataImport = () => {
                             </fieldset>
                         </div>
                         
+                        <div className="di-action-buttons">
+                            <Button text="Add Match" angle={260} onClick={handleAddMatch} icon={<PlusCircle size={16} />} style={{ flex: 1, whiteSpace: "nowrap", padding: "8px 4px", fontSize: "0.85rem" }} />
+                            <Button text="Load to Screen" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size={16} />} style={{ flex: 1, whiteSpace: "nowrap", padding: "8px 4px", fontSize: "0.85rem" }} />
+                            <Button text="Back to Home" angle={150} onClick={() => navigate('/')} icon={<House size={16} />} style={{ flex: 1, whiteSpace: "nowrap", padding: "8px 4px", fontSize: "0.85rem" }} />
+                        </div>
                     </div>
 
                     <div className="di-matches-section">
@@ -726,11 +701,6 @@ const DataImport = () => {
                                     );
                                 })}
                             </ul>
-                        </div>
-                        <div className="di-action-buttons">
-                            <Button text="Add Match" angle={260} onClick={handleAddMatch} icon={<PlusCircle size={16} />} style={{ flex: 1, whiteSpace: "nowrap", padding: "8px 4px", fontSize: "0.85rem" }} />
-                            <Button text="Load to Screen" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size={16} />} style={{ flex: 1, whiteSpace: "nowrap", padding: "8px 4px", fontSize: "0.85rem" }} />
-                            <Button text="Back to Home" angle={150} onClick={() => navigate('/')} icon={<House size={16} />} style={{ flex: 1, whiteSpace: "nowrap", padding: "8px 4px", fontSize: "0.85rem" }} />
                         </div>
                     </div>
                 </div>

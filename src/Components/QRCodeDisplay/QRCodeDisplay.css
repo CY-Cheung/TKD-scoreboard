@@ -23,7 +23,8 @@
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
   container-type: inline-size;
 }
 
@@ -302,9 +303,15 @@
   to { opacity: 1; }
 }
 
-@keyframes slideUp {
-  from { transform: translateY(1.042vw); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+@keyframes fadeUp {
+  from {
+      opacity: 0;
+      transform: translateY(1.562vw);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
 }
 .referee-mode-selector {
   background: rgba(255,255,255,0.05);

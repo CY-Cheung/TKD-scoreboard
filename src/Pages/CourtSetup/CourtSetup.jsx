@@ -14,7 +14,7 @@ function CourtSetup() {
   const [error, setError] = useState('');
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState('');
-  const [courtId, setCourtId] = useState(''); 
+  const [courtId, setCourtId] = useState('');
   const [courtOptions, setCourtOptions] = useState([]);
   const [authError, setAuthError] = useState('');
 
@@ -32,11 +32,11 @@ function CourtSetup() {
   // Delete Confirmation Modal State
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const fileInputRef = useRef(null);
   const [isParsingPdf, setIsParsingPdf] = useState(false);
   const [pdfParseResult, setPdfParseResult] = useState(null);
-  
+
   const navigate = useNavigate();
   const { user, userLoading, googleLogin, googleLogout, login } = useAuth();
 
@@ -56,8 +56,8 @@ function CourtSetup() {
             return { id: key, displayName, createdBy: item?.createdBy || null };
           });
           setEvents(eventList);
-          
-          const lastEvent = localStorage.getItem('selectedEvent');
+
+          const lastEvent = sessionStorage.getItem('selectedEvent');
           const validIds = eventList.map(e => e.id);
           if (selectedEvent && validIds.includes(selectedEvent)) {
             // Keep current selection
@@ -87,7 +87,7 @@ function CourtSetup() {
       get(courtsRef).then((snapshot) => {
         if (snapshot.exists()) {
           setCourtOptions(Object.keys(snapshot.val()));
-          const lastCourt = localStorage.getItem('selectedCourt');
+          const lastCourt = sessionStorage.getItem('selectedCourt');
           if (lastCourt && Object.keys(snapshot.val()).includes(lastCourt)) {
             setCourtId(lastCourt);
           } else {
@@ -116,35 +116,35 @@ function CourtSetup() {
 
   // PDF File Upload Handler
   const handleFileSelect = async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-      if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
-          alert('請選擇有效的 PDF 賽程文件！');
-          return;
-      }
+    if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+      alert('請選擇有效的 PDF 賽程文件！');
+      return;
+    }
 
-      setIsParsingPdf(true);
-      try {
-          const result = await parseHktkdaPdfFile(file);
-          if (!result || result.matchCount === 0) {
-              alert('未能在 PDF 中解析出有效賽程，請確認格式是否為香港跆拳道協會對陣表。');
-          } else {
-              setPdfParseResult(result);
-              setNewEventName(result.eventName);
-              if (!newEventId) {
-                  setNewEventId('TKD' + Date.now().toString().slice(-6));
-              }
-          }
-      } catch (error) {
-          console.error("PDF Parsing Failed:", error);
-          alert(`解析 PDF 失敗: ${error.message}`);
-      } finally {
-          setIsParsingPdf(false);
-          if (fileInputRef.current) {
-              fileInputRef.current.value = '';
-          }
+    setIsParsingPdf(true);
+    try {
+      const result = await parseHktkdaPdfFile(file);
+      if (!result || result.matchCount === 0) {
+        alert('未能在 PDF 中解析出有效賽程，請確認格式是否為香港跆拳道協會對陣表。');
+      } else {
+        setPdfParseResult(result);
+        setNewEventName(result.eventName);
+        if (!newEventId) {
+          setNewEventId('TKD' + Date.now().toString().slice(-6));
+        }
       }
+    } catch (error) {
+      console.error("PDF Parsing Failed:", error);
+      alert(`解析 PDF 失敗: ${error.message}`);
+    } finally {
+      setIsParsingPdf(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   // Create Event Handler
@@ -170,120 +170,120 @@ function CourtSetup() {
     }
 
     try {
-        const finalRules = {
+      const finalRules = {
+        maxPointGap: parseInt(newMaxPointGap, 10) || 15,
+        maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+        roundDuration: parseInt(newRoundDuration, 10) || 90,
+        restDuration: parseInt(newRestDuration, 10) || 60
+      };
+
+      if (pdfParseResult) {
+        if (pdfParseResult.dateGroups) {
+          Object.values(pdfParseResult.dateGroups).forEach(group => {
+            if (group.matches) {
+              Object.values(group.matches).forEach(m => {
+                if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
+              });
+            }
+          });
+        } else if (pdfParseResult.matches) {
+          Object.values(pdfParseResult.matches).forEach(m => {
+            if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
+          });
+        }
+
+        if (pdfParseResult.datesList?.length > 1) {
+          let createdCount = 0;
+          let firstCleanDate = '';
+
+          for (let i = 0; i < pdfParseResult.datesList.length; i++) {
+            const dateStr = pdfParseResult.datesList[i];
+            const parts = dateStr.split('/');
+            let formattedDate = dateStr;
+            let cleanDate = dateStr.replace(/[^0-9]/g, '');
+            if (parts.length === 3) {
+              const [d, m, y] = parts;
+              formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
+              cleanDate = `${y}${m.padStart(2, '0')}${d.padStart(2, '0')}`;
+            }
+            if (i === 0) firstCleanDate = cleanDate;
+
+            const subEventId = `${trimmedId}_Day${i + 1}_${cleanDate}`;
+            const subEventName = `${trimmedName} (Day ${i + 1}) (${formattedDate})`;
+
+            const eventRef = ref(database, `events/${subEventId}`);
+            await set(eventRef, {
+              EventName: subEventName,
+              createdBy: user.uid,
+              createdByEmail: user.email || '',
+              createdAt: Date.now(),
+              matchDate: formattedDate,
+              settings: {
+                setupPassword: newSetupPassword,
+                maxPointGap: parseInt(newMaxPointGap, 10) || 15,
+                maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+                roundDuration: parseInt(newRoundDuration, 10) || 90,
+                restDuration: parseInt(newRestDuration, 10) || 60
+              },
+              courts: generatedCourts,
+              matches: pdfParseResult.dateGroups[dateStr].matches
+            });
+            createdCount++;
+          }
+
+          alert(`✅ 成功按 ${pdfParseResult.datesList.length} 個比賽日期拆分並建立 ${createdCount} 個子賽事！`);
+          setSelectedEvent(`${trimmedId}_Day1_${firstCleanDate}`);
+        } else {
+          const dateStr = pdfParseResult.datesList?.[0] || '';
+          let formattedDate = dateStr;
+          if (dateStr) {
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+              const [d, m, y] = parts;
+              formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
+            }
+          }
+
+          const eventRef = ref(database, `events/${trimmedId}`);
+          await set(eventRef, {
+            EventName: trimmedName,
+            createdBy: user.uid,
+            createdByEmail: user.email || '',
+            createdAt: Date.now(),
+            matchDate: formattedDate,
+            settings: {
+              setupPassword: newSetupPassword,
+              maxPointGap: parseInt(newMaxPointGap, 10) || 15,
+              maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+              roundDuration: parseInt(newRoundDuration, 10) || 90,
+              restDuration: parseInt(newRestDuration, 10) || 60
+            },
+            courts: generatedCourts,
+            matches: pdfParseResult.matches
+          });
+          alert(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
+          setSelectedEvent(trimmedId);
+        }
+      } else {
+        const eventRef = ref(database, `events/${trimmedId}`);
+        await set(eventRef, {
+          EventName: trimmedName,
+          createdBy: user.uid,
+          createdByEmail: user.email || '',
+          createdAt: Date.now(),
+          settings: {
+            setupPassword: newSetupPassword,
             maxPointGap: parseInt(newMaxPointGap, 10) || 15,
             maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
             roundDuration: parseInt(newRoundDuration, 10) || 90,
             restDuration: parseInt(newRestDuration, 10) || 60
-        };
-
-        if (pdfParseResult) {
-            if (pdfParseResult.dateGroups) {
-                Object.values(pdfParseResult.dateGroups).forEach(group => {
-                    if (group.matches) {
-                        Object.values(group.matches).forEach(m => {
-                            if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
-                        });
-                    }
-                });
-            } else if (pdfParseResult.matches) {
-                Object.values(pdfParseResult.matches).forEach(m => {
-                    if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
-                });
-            }
-
-            if (pdfParseResult.datesList?.length > 1) {
-                let createdCount = 0;
-                let firstCleanDate = '';
-                
-                for (let i = 0; i < pdfParseResult.datesList.length; i++) {
-                    const dateStr = pdfParseResult.datesList[i];
-                    const parts = dateStr.split('/');
-                    let formattedDate = dateStr;
-                    let cleanDate = dateStr.replace(/[^0-9]/g, '');
-                    if (parts.length === 3) {
-                        const [d, m, y] = parts;
-                        formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
-                        cleanDate = `${y}${m.padStart(2, '0')}${d.padStart(2, '0')}`;
-                    }
-                    if (i === 0) firstCleanDate = cleanDate;
-
-                    const subEventId = `${trimmedId}_Day${i + 1}_${cleanDate}`;
-                    const subEventName = `${trimmedName} (Day ${i + 1}) (${formattedDate})`;
-
-                    const eventRef = ref(database, `events/${subEventId}`);
-                    await set(eventRef, {
-                        EventName: subEventName,
-                        createdBy: user.uid,
-                        createdByEmail: user.email || '',
-                        createdAt: Date.now(),
-                        matchDate: formattedDate,
-                        settings: { 
-                            setupPassword: newSetupPassword,
-                            maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-                            maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                            roundDuration: parseInt(newRoundDuration, 10) || 90,
-                            restDuration: parseInt(newRestDuration, 10) || 60
-                        },
-                        courts: generatedCourts,
-                        matches: pdfParseResult.dateGroups[dateStr].matches
-                    });
-                    createdCount++;
-                }
-
-                alert(`✅ 成功按 ${pdfParseResult.datesList.length} 個比賽日期拆分並建立 ${createdCount} 個子賽事！`);
-                setSelectedEvent(`${trimmedId}_Day1_${firstCleanDate}`);
-            } else {
-                const dateStr = pdfParseResult.datesList?.[0] || '';
-                let formattedDate = dateStr;
-                if (dateStr) {
-                    const parts = dateStr.split('/');
-                    if (parts.length === 3) {
-                        const [d, m, y] = parts;
-                        formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
-                    }
-                }
-
-                const eventRef = ref(database, `events/${trimmedId}`);
-                await set(eventRef, {
-                    EventName: trimmedName,
-                    createdBy: user.uid,
-                    createdByEmail: user.email || '',
-                    createdAt: Date.now(),
-                    matchDate: formattedDate,
-                    settings: { 
-                        setupPassword: newSetupPassword,
-                        maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-                        maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                        roundDuration: parseInt(newRoundDuration, 10) || 90,
-                        restDuration: parseInt(newRestDuration, 10) || 60
-                    },
-                    courts: generatedCourts,
-                    matches: pdfParseResult.matches
-                });
-                alert(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
-                setSelectedEvent(trimmedId);
-            }
-        } else {
-            const eventRef = ref(database, `events/${trimmedId}`);
-            await set(eventRef, {
-                EventName: trimmedName,
-                createdBy: user.uid,
-                createdByEmail: user.email || '',
-                createdAt: Date.now(),
-                settings: { 
-                    setupPassword: newSetupPassword,
-                    maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-                    maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                    roundDuration: parseInt(newRoundDuration, 10) || 90,
-                    restDuration: parseInt(newRestDuration, 10) || 60
-                },
-                courts: generatedCourts,
-                matches: {}
-            });
-            alert(`✅ 成功建立賽事：${trimmedName} (${trimmedId})，包含 ${count} 個場地！`);
-            setSelectedEvent(trimmedId);
-        }
+          },
+          courts: generatedCourts,
+          matches: {}
+        });
+        alert(`✅ 成功建立賽事：${trimmedName} (${trimmedId})，包含 ${count} 個場地！`);
+        setSelectedEvent(trimmedId);
+      }
 
       setNewEventId('');
       setNewEventName('');
@@ -315,8 +315,8 @@ function CourtSetup() {
 
     const eventData = events.find(e => e.id === selectedEvent);
     if (eventData && eventData.createdByEmail && eventData.createdByEmail !== user.email) {
-        alert('❌ 只有賽事的建立者可以刪除此賽事！');
-        return;
+      alert('❌ 只有賽事的建立者可以刪除此賽事！');
+      return;
     }
 
     setShowDeleteModal(true);
@@ -351,51 +351,51 @@ function CourtSetup() {
       return;
     }
 
-    if (!courtId) { 
+    if (!courtId) {
       setError('Please select a court.');
       return;
     }
 
     const performLogin = async () => {
-        const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
-        await set(courtRef, {
-            name: courtId,
-            currentMatchId: '' 
-        });
+      const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
+      await set(courtRef, {
+        name: courtId,
+        currentMatchId: ''
+      });
 
-        const selectedEventData = events.find(evt => evt.id === selectedEvent);
-        const eventDisplayName = selectedEventData?.displayName || selectedEvent;
+      const selectedEventData = events.find(evt => evt.id === selectedEvent);
+      const eventDisplayName = selectedEventData?.displayName || selectedEvent;
 
-        login({ 
-            eventId: selectedEvent,
-            courtId: courtId,
-            eventName: eventDisplayName
-        });
+      login({
+        eventId: selectedEvent,
+        courtId: courtId,
+        eventName: eventDisplayName
+      });
 
-        navigate('/'); 
+      navigate('/');
     };
 
     const selectedEventData = events.find(evt => evt.id === selectedEvent);
     const isCreator = user && selectedEventData && (user.email === selectedEventData.createdByEmail || user.uid === selectedEventData.createdBy);
 
     if (isCreator) {
-        try {
-            await performLogin();
-        } catch (err) {
-            setError('An error occurred during login.');
-            console.error("Error during setup:", err);
-        }
-        return;
+      try {
+        await performLogin();
+      } catch (err) {
+        setError('An error occurred during login.');
+        console.error("Error during setup:", err);
+      }
+      return;
     }
 
     const settingsRef = ref(database, `events/${selectedEvent}/settings/setupPassword`);
-    
+
     try {
       const snapshot = await get(settingsRef);
       if (snapshot.exists()) {
         const correctPassword = snapshot.val();
         if (password === correctPassword) {
-            await performLogin();
+          await performLogin();
         } else {
           setError('Incorrect password, please try again.');
         }
@@ -412,140 +412,143 @@ function CourtSetup() {
     <div className="cs-container aurora-bg">
       {user && (
         <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 50, backgroundColor: 'rgba(255,255,255,0.05)', padding: '10px 15px', borderRadius: '15px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                {user.photoURL ? (
-                    <img src={user.photoURL} alt="User Avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
-                ) : (
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#6c5ce7', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
-                        {user.displayName?.[0] || 'U'}
-                    </div>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', lineHeight: '1.2' }}>{user.displayName || 'User'}</div>
-                    <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', lineHeight: '1.2' }}>{user.email}</div>
-                </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {user.photoURL ? (
+              <img src={user.photoURL} alt="User Avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#6c5ce7', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
+                {user.displayName?.[0] || 'U'}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', lineHeight: '1.2' }}>{user.displayName || 'User'}</div>
+              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', lineHeight: '1.2' }}>{user.email}</div>
             </div>
-            <Button 
-                onClick={googleLogout}
-                title="Sign Out of Google Account"
-                fontSize="0.85rem"
-                variant="orange"
-                icon={<BoxArrowRight size={14} />}
-                text="Log Out"
-                style={{ padding: '6px 12px', minWidth: 'auto', margin: 0 }}
-            />
+          </div>
+          <Button
+            onClick={googleLogout}
+            title="Sign Out of Google Account"
+            fontSize="0.85rem"
+            variant="orange"
+            icon={<BoxArrowRight size={14} />}
+            text="Log Out"
+            style={{ padding: '6px 12px', minWidth: 'auto', margin: 0 }}
+          />
         </div>
       )}
       <div className="cs-content glass-card split-layout">
         <div className="cs-left-panel">
-            <div className="cs-title-container">
-                <h1 style={{fontSize: '3.5vw', lineHeight: '1.1'}}>Taekwondo<br/>Scoreboard</h1>
-                <h2 style={{fontSize: '1.5vw', color: 'rgba(255,255,255,0.9)', margin: '0.8vw 0 0 0', fontWeight: 'normal', letterSpacing: '0.1vw'}}>跆拳道賽事計分板</h2>
-                <p className="cs-app-intro">
-                    專業嘅跆拳道賽事計分及管理系統。<br />
-                    支援多場地同步管理，提供清晰直觀嘅即時比賽分數顯示，讓賽事流程更加順暢。
-                </p>
-            </div>
-            <div className="cs-footer-links">
-                <a href="https://github.com/CY-Cheung/TKD-scoreboard" target="_blank" rel="noopener noreferrer">
-                    <Github size={16} /> GitHub Repository
-                </a>
-            </div>
+          <div className="cs-title-container">
+            <h1 style={{ fontSize: '3.5vw', lineHeight: '1.1' }}>Taekwondo<br />Scoreboard</h1>
+            <div style={{ fontSize: '1.5vw', color: '#fbc531', margin: '0.3vw 0 0 0', fontWeight: '700', letterSpacing: '0.3vw', textTransform: 'uppercase' }}>Kyorugi</div>
+            <h2 style={{ fontSize: '1.5vw', color: 'rgba(255,255,255,0.9)', margin: '0.8vw 0 0 0', fontWeight: 'normal', letterSpacing: '0.1vw' }}>跆拳道搏擊比賽計分系統</h2>
+            <ul className="cs-app-intro-list">
+              <li>全網頁端運行，無須安裝 App。</li>
+              <li>支援手機掃描 QR Code 即時化身裁判遙控器。</li>
+              <li>具備智能席位鎖定與分數防撞機制。</li>
+              <li>支援一鍵匯入官方 PDF 賽程表，輕鬆實現多場地同步計分與賽事管理。</li>
+            </ul>
+          </div>
+          <div className="cs-footer-links">
+            <a href="https://github.com/CY-Cheung/TKD-scoreboard" target="_blank" rel="noopener noreferrer">
+              <Github size={20} /> GitHub Repository
+            </a>
+          </div>
         </div>
 
         <div className="cs-divider"></div>
 
         <div className="cs-right-panel">
-            {userLoading ? (
+          {userLoading ? (
             <p>Loading authentication state...</p>
-            ) : !user ? (
+          ) : !user ? (
             /* Google Sign-in Login Required Block */
             <div className="cs-form" style={{ textAlign: 'center' }}>
-                <p style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '1.3vw', marginBottom: '1.5vw', lineHeight: '1.6' }}>
-                毋須額外註冊，<br/>只需登入 Google 帳號即可。
-                </p>
-                {authError && <p className="cs-error-message">{authError}</p>}
-                <div className="google-btn-wrapper">
-                <Button 
-                    onClick={handleGoogleSignIn}
-                    text="Continue with Google"
-                    icon={<Key size={24} />}
-                    fontSize="1vw"
-                    variant="gemini"
+              <p style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '1.3vw', marginBottom: '1.5vw', lineHeight: '1.6' }}>
+                毋須額外註冊，<br />只需登入 Google 帳號即可。
+              </p>
+              {authError && <p className="cs-error-message">{authError}</p>}
+              <div className="google-btn-wrapper">
+                <Button
+                  onClick={handleGoogleSignIn}
+                  text="Continue with Google"
+                  icon={<Key size={24} />}
+                  fontSize="1vw"
+                  variant="gemini"
                 />
-                </div>
-                <p style={{ fontSize: '0.85vw', color: 'rgba(255, 255, 255, 0.4)', marginTop: '1vw' }}>
+              </div>
+              <p style={{ fontSize: '0.85vw', color: 'rgba(255, 255, 255, 0.4)', marginTop: '1vw' }}>
                 系統將會驗證您的身分並載入賽事場地數據
-                </p>
+              </p>
             </div>
-            ) : (
+          ) : (
             <form onSubmit={handleSubmit} className="cs-form">
-                <div className="form-group">
+              <div className="form-group">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '0.5dvh' }}>
-                    <label htmlFor="event-select" style={{ margin: 0, fontSize: '1.1rem' }}>Select Event</label>
+                  <label htmlFor="event-select" style={{ margin: 0, fontSize: '1.1rem' }}>Select Event</label>
                 </div>
 
                 <select
-                    id="event-select"
-                    className="datalist-input"
-                    style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%' }}
-                    value={selectedEvent}
-                    onChange={(e) => setSelectedEvent(e.target.value)}
-                    required
+                  id="event-select"
+                  className="datalist-input"
+                  style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%' }}
+                  value={selectedEvent}
+                  onChange={(e) => setSelectedEvent(e.target.value)}
+                  required
                 >
-                    <option value="" disabled>-- Please select an event --</option>
-                    {events.map(event => (
+                  <option value="" disabled>-- Please select an event --</option>
+                  {events.map(event => (
                     <option key={event.id} value={event.id}>
-                        {event.displayName || event.id}
+                      {event.displayName || event.id}
                     </option>
-                    ))}
+                  ))}
                 </select>
-                
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                    <Button type="button" onClick={() => setShowCreateModal(true)} text="Create Event" fontSize="0.9rem" angle={120} icon={<FolderPlus size={16} />} style={{ flex: 1, whiteSpace: 'nowrap' }} />
-                    <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} text="Delete Event" fontSize="0.9rem" angle={350} icon={<Trash size={16} />} style={{ flex: 1, whiteSpace: 'nowrap' }} />
-                </div>
-                </div>
 
-                <div className="form-group">
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                  <Button type="button" onClick={() => setShowCreateModal(true)} text="Create Event" fontSize="0.9rem" angle={120} icon={<FolderPlus size={16} />} style={{ flex: 1, whiteSpace: 'nowrap' }} />
+                  <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} text="Delete Event" fontSize="0.9rem" angle={350} icon={<Trash size={16} />} style={{ flex: 1, whiteSpace: 'nowrap' }} />
+                </div>
+              </div>
+
+              <div className="form-group">
                 <label htmlFor="court-select" style={{ fontSize: '1.1rem' }}>Select Court</label>
                 <select
-                    id="court-select"
-                    className="datalist-input"
-                    style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%' }}
-                    value={courtId}
-                    onChange={(e) => setCourtId(e.target.value)}
-                    disabled={!selectedEvent || courtOptions.length === 0}
-                    required
+                  id="court-select"
+                  className="datalist-input"
+                  style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%' }}
+                  value={courtId}
+                  onChange={(e) => setCourtId(e.target.value)}
+                  disabled={!selectedEvent || courtOptions.length === 0}
+                  required
                 >
-                    <option value="" disabled>-- Please select a court --</option>
-                    {courtOptions.map(court => (
+                  <option value="" disabled>-- Please select a court --</option>
+                  {courtOptions.map(court => (
                     <option key={court} value={court}>{court}</option>
-                    ))}
+                  ))}
                 </select>
-                </div>
+              </div>
 
-                {(!user || (selectedEvent && events.find(e => e.id === selectedEvent) && events.find(e => e.id === selectedEvent).createdByEmail !== user?.email)) && (
-                    <div className="form-group">
-                    <label htmlFor="setup-password" style={{ fontSize: '1.1rem' }}>Setup Password</label>
-                    <input
-                        id="setup-password"
-                        type="password"
-                        style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#fff' }}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter setup password"
-                        required
-                    />
-                    </div>
-                )}
-                
-                {error && <p className="cs-error-message">{error}</p>}
-                <div className="cs-action-buttons">
-                <Button type="submit" text="Confirm Settings" fontSize="1rem" angle={30} disabled={!selectedEvent || !courtId} icon={<CheckCircle size={16} />} style={{ whiteSpace: 'nowrap', padding: '10px 40px' }} />
+              {(!user || (selectedEvent && events.find(e => e.id === selectedEvent) && events.find(e => e.id === selectedEvent).createdByEmail !== user?.email)) && (
+                <div className="form-group">
+                  <label htmlFor="setup-password" style={{ fontSize: '1.1rem' }}>Setup Password</label>
+                  <input
+                    id="setup-password"
+                    type="password"
+                    style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#fff' }}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter setup password"
+                    required
+                  />
                 </div>
+              )}
+
+              {error && <p className="cs-error-message">{error}</p>}
+              <div className="cs-action-buttons">
+                <Button type="submit" text="Confirm Settings" fontSize="1rem" angle={30} disabled={!selectedEvent || !courtId} icon={<CheckCircle size={16} />} style={{ whiteSpace: 'nowrap', padding: '10px 40px' }} />
+              </div>
             </form>
-            )}
+          )}
         </div>
       </div>
 
@@ -578,40 +581,40 @@ function CourtSetup() {
             </h3>
             <form onSubmit={handleCreateEvent} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <FileEarmarkPdf size={24} color="#34c759" />
-                      <span style={{ color: '#fff', fontWeight: 'bold' }}>上傳 PDF 自動建立 (Optional)</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <FileEarmarkPdf size={24} color="#34c759" />
+                  <span style={{ color: '#fff', fontWeight: 'bold' }}>上傳 PDF 自動建立 (Optional)</span>
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>上傳對陣表即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。</div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="application/pdf"
+                  style={{ display: 'none' }}
+                  onChange={handleFileSelect}
+                />
+                <Button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isParsingPdf}
+                  text={isParsingPdf ? 'Parsing...' : 'Select PDF'}
+                  icon={<FileEarmarkArrowUp size={16} />}
+                  fontSize="0.9rem"
+                  angle={60}
+                />
+                {pdfParseResult && (
+                  <div style={{ color: '#4CAF50', fontSize: '0.85rem', marginTop: '5px' }}>
+                    ✅ 成功解析：{pdfParseResult.matchCount} 場比賽
+                    {pdfParseResult.datesList?.length > 1 && ` (包含 ${pdfParseResult.datesList.length} 個日期，將自動分拆為多個賽事)`}
                   </div>
-                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>上傳對陣表即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。</div>
-                  <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      accept="application/pdf"
-                      style={{ display: 'none' }}
-                      onChange={handleFileSelect}
-                  />
-                  <Button 
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isParsingPdf}
-                      text={isParsingPdf ? 'Parsing...' : 'Select PDF'}
-                      icon={<FileEarmarkArrowUp size={16} />}
-                      fontSize="0.9rem"
-                      angle={60}
-                  />
-                  {pdfParseResult && (
-                      <div style={{ color: '#4CAF50', fontSize: '0.85rem', marginTop: '5px' }}>
-                          ✅ 成功解析：{pdfParseResult.matchCount} 場比賽
-                          {pdfParseResult.datesList?.length > 1 && ` (包含 ${pdfParseResult.datesList.length} 個日期，將自動分拆為多個賽事)`}
-                      </div>
-                  )}
+                )}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Event ID (賽事識別碼)</label>
-                  <input 
-                    type="text" 
-                    placeholder="例如: TKD2026 (不可重複)" 
+                  <input
+                    type="text"
+                    placeholder="例如: TKD2026 (不可重複)"
                     value={newEventId}
                     onChange={e => setNewEventId(e.target.value)}
                     required
@@ -620,9 +623,9 @@ function CourtSetup() {
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Event Name (賽事全稱)</label>
-                  <input 
-                    type="text" 
-                    placeholder="例如: 2026 全港跆拳道錦標賽" 
+                  <input
+                    type="text"
+                    placeholder="例如: 2026 全港跆拳道錦標賽"
                     value={newEventName}
                     onChange={e => setNewEventName(e.target.value)}
                     required
@@ -631,9 +634,9 @@ function CourtSetup() {
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Setup Password (設定密碼)</label>
-                  <input 
-                    type="text" 
-                    placeholder="例如: BCB2026" 
+                  <input
+                    type="text"
+                    placeholder="例如: BCB2026"
                     value={newSetupPassword}
                     onChange={e => setNewSetupPassword(e.target.value)}
                     required
@@ -664,14 +667,14 @@ function CourtSetup() {
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-                <Button 
+                <Button
                   onClick={() => setShowCreateModal(false)}
                   text="Cancel"
                   fontSize="0.9rem"
                   angle={0}
                   icon={<XCircle size={16} />}
                 />
-                <Button 
+                <Button
                   type="submit"
                   text="Confirm"
                   fontSize="0.9rem"
@@ -716,7 +719,7 @@ function CourtSetup() {
               ⚠️ 此操作會將該賽事下的所有比賽數據、場地設定及賽程永久刪除，無法復原！
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' }}>
-              <Button 
+              <Button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
                 text="Cancel"
@@ -724,7 +727,7 @@ function CourtSetup() {
                 angle={0}
                 icon={<XCircle size={16} />}
               />
-              <Button 
+              <Button
                 onClick={confirmDeleteEvent}
                 disabled={isDeleting}
                 text={isDeleting ? 'Deleting...' : 'Confirm Delete'}
