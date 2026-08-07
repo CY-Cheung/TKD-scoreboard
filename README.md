@@ -18,7 +18,11 @@
 * **Secure Access (安全存取)**: Firebase Security Rules (保安規則) 會嚴格驗證發送指令嘅 Device ID (裝置識別碼)。就算裁判無登入 Google Account (Google 帳戶)，亦能有效防止未經授權嘅亂改分行為。
 
 ### ⚙️ Event Management (賽事管理 - Admin)
-* **PDF Data Import (PDF 資料匯入)**: 強大嘅樹狀結構解析器，完美還原淘汰賽賽程。
+* **PDF Data Import (PDF 資料匯入)**: 強大嘅樹狀結構解析器，完美還原官方跆拳道淘汰賽賽程。
+* **Interactive Tournament Bracket (互動式對戰表)**: 支援動態生成二元樹狀對戰表 (Binary Tree Bracket)。
+  * **Smart Layout (智能排版)**: 採用 CSS Grid 技術，完美處理非對稱 (Unbalanced) 嘅賽程（例如首輪輪空 BYE），確保晉級線精準對齊。
+  * **Dynamic Glow Effect (動態發光特效)**: 與資料庫實時連動，當比賽分出勝負後，勝方嘅晉級路徑會即時亮起螢光黃色，實時反映賽事進度。
+  * **Zoom Controls (縮放控制)**: 內建放大/縮小功能，方便管理員總覽及尋找超大型賽事嘅對戰組合。
 * **Court Setup (場地設定)**: 管理員透過 Google Authentication (Google 身份驗證) 安全登入，初始化場地及切換比賽。
 * **Admin Override (管理員覆寫)**: 擁有權限嘅管理員可以無視座位限制，自由修改分數及比賽狀態。
 
