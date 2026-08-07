@@ -38,6 +38,7 @@ function Controller() {
 
     const [eventId, setEventId] = useState(initialEvent);
     const [courtId, setCourtId] = useState(initialCourt);
+    const [eventName, setEventName] = useState("");
     const [currentMatchId, setCurrentMatchId] = useState(null);
     const [deviceId, setDeviceId] = useState("");
     const [mySeat, setMySeat] = useState(null);
@@ -70,6 +71,21 @@ function Controller() {
         });
         return () => unsubscribe();
     }, [eventId, courtId]);
+
+    // Fetch Event Name
+    useEffect(() => {
+        if (!eventId) return;
+        const eventRef = ref(database, `events/${eventId}`);
+        const unsubscribe = onValue(eventRef, (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                setEventName(val.EventName || val.eventName || val.name || eventId);
+            } else {
+                setEventName(eventId);
+            }
+        });
+        return () => unsubscribe();
+    }, [eventId]);
 
     // Grab Referee Seat (J1, J2, J3) if not logged in
     useEffect(() => {
@@ -208,7 +224,7 @@ function Controller() {
     }
 
     return (
-        <div className="controller" onClick={handleFullscreen}>
+        <div className="controller aurora-bg" onClick={handleFullscreen}>
             {/* Top Bar Banner for Match & Connection Status */}
             <div className="ctrl-top-bar">
                 <Button 
@@ -222,12 +238,12 @@ function Controller() {
                         }
                     }} 
                     aria-label="Back"
-                    icon={<ArrowLeft size={18} />}
-                    fontSize="1rem"
+                    icon={<ArrowLeft size={'1.5vw'} />}
+                    fontSize="1vw"
                     angle={180}
                 />
                 <div className="ctrl-info-badges">
-                    <span className="ctrl-badge">{eventId || "No Event"}</span>
+                    <span className="ctrl-badge">{eventName || eventId || "No Event"}</span>
                     <span className="ctrl-badge court">{courtId || "No Court"}</span>
                     <span className="ctrl-badge match">Match #{matchNo}</span>
                     {mySeat && <span className="ctrl-badge" style={{ backgroundColor: '#ffcc00', color: 'black' }}>{mySeat}</span>}
@@ -251,21 +267,24 @@ function Controller() {
             {/* Column 1: Red 6, Red 4, Red 1 */}
             <div className="col red-col">
                 <Button 
+                    className="neon-btn red-btn"
                     text="Red 6" 
                     angle={350} 
-                    fontSize="4vw" 
+                    fontSize="2.5vw" 
                     onClick={() => handleScore("red", 4, "+6 Turn Head")} 
                 />
                 <Button 
+                    className="neon-btn red-btn"
                     text="Red 4" 
                     angle={350} 
-                    fontSize="4vw" 
+                    fontSize="2.5vw" 
                     onClick={() => handleScore("red", 3, "+4 Turn Body")} 
                 />
                 <Button 
+                    className="neon-btn red-btn"
                     text="Red 1" 
                     angle={350} 
-                    fontSize="4vw" 
+                    fontSize="2.5vw" 
                     onClick={() => handleScore("red", 0, "+1 Punch")} 
                 />
             </div>
@@ -273,15 +292,17 @@ function Controller() {
             {/* Column 2: Red 3, Red 2 */}
             <div className="col red-col">
                 <Button 
+                    className="neon-btn red-btn"
                     text="Red 3" 
                     angle={350} 
-                    fontSize="4vw" 
+                    fontSize="2.5vw" 
                     onClick={() => handleScore("red", 2, "+3 Head")} 
                 />
                 <Button 
+                    className="neon-btn red-btn"
                     text="Red 2" 
                     angle={350} 
-                    fontSize="4vw" 
+                    fontSize="2.5vw" 
                     onClick={() => handleScore("red", 1, "+2 Body")} 
                 />
             </div>
@@ -301,15 +322,17 @@ function Controller() {
             {/* Column 4: Blue 3, Blue 2 */}
             <div className="col blue-col">
                 <Button 
+                    className="neon-btn blue-btn"
                     text="Blue 3" 
                     angle={210} 
-                    fontSize="4vw" 
+                    fontSize="2.5vw" 
                     onClick={() => handleScore("blue", 2, "+3 Head")} 
                 />
                 <Button 
+                    className="neon-btn blue-btn"
                     text="Blue 2" 
                     angle={210} 
-                    fontSize="4vw" 
+                    fontSize="2.5vw" 
                     onClick={() => handleScore("blue", 1, "+2 Body")} 
                 />
             </div>
@@ -317,21 +340,24 @@ function Controller() {
             {/* Column 5: Blue 6, Blue 4, Blue 1 */}
             <div className="col blue-col">
                 <Button 
+                    className="neon-btn blue-btn"
                     text="Blue 6" 
                     angle={210} 
-                    fontSize="4vw" 
+                    fontSize="2.5vw" 
                     onClick={() => handleScore("blue", 4, "+6 Turn Head")} 
                 />
                 <Button 
+                    className="neon-btn blue-btn"
                     text="Blue 4" 
                     angle={210} 
-                    fontSize="4vw" 
+                    fontSize="2.5vw" 
                     onClick={() => handleScore("blue", 3, "+4 Turn Body")} 
                 />
                 <Button 
+                    className="neon-btn blue-btn"
                     text="Blue 1" 
                     angle={210} 
-                    fontSize="4vw" 
+                    fontSize="2.5vw" 
                     onClick={() => handleScore("blue", 0, "+1 Punch")} 
                 />
             </div>

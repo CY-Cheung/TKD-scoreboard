@@ -2,11 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ref, set, get, remove } from "firebase/database";
 import { database } from '../../firebase';
 import './DataImport.css';
-import Squares from '../../Components/Squares/Squares';
 import Button from '../../Components/Button/Button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
-import { PlusCircle, Trash, FolderPlus, ExclamationTriangle, FileEarmarkArrowUp, FileEarmarkPdf, CheckCircleFill, Calendar3, Funnel, House, XCircle, CheckCircle, Display, Diagram3, X } from 'react-bootstrap-icons';
+import { PlusCircle, Trash, FolderPlus, ExclamationTriangle, FileEarmarkArrowUp, FileEarmarkPdf, CheckCircleFill, Calendar3, Funnel, House, XCircle, CheckCircle, Display, Diagram3, X, ArrowLeft } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 import TournamentBracket from '../../Components/TournamentBracket/TournamentBracket';
 
@@ -491,17 +490,45 @@ const DataImport = () => {
     };
 
     return (
-        <div className="di-container">
-            <Squares
-				speed={0.5}
-				squareSize={100}
-				direction="diagonal"
-				borderColor="hsla(270, 50%, 50%, 0.25)"
-				hoverFillColor="hsla(60, 50%, 50%, 0.25)"
-			/>
-            <div className="di-content-wrapper">
+        <div className="di-container aurora-bg">
+            <div className="di-content-wrapper glass-card">
 
-                <div className="di-form-and-list-container">
+                
+                {showBracketModal ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+                        <div style={{ padding: '10px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <Button 
+                                    onClick={() => { setShowBracketModal(false); setBracketZoom(1); }}
+                                    text="Back"
+                                    icon={<ArrowLeft size={16} />}
+                                    fontSize="0.9rem"
+                                    angle={180}
+                                />
+                                <h2 style={{ margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.4rem' }}>
+                                    <Diagram3 size={32} color="#FFFF00" /> {eventsList.find(e => e.id === eventName)?.displayName || eventName || 'Event'}
+                                </h2>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <Button onClick={() => setBracketZoom(z => Math.max(0.1, z - 0.1))} text="-" angle={0} style={{ padding: '2px 10px', minWidth: '40px' }} fontSize="1.2rem" />
+                                <span style={{ color: '#fff', minWidth: '50px', textAlign: 'center', fontWeight: 'bold' }}>{Math.round(bracketZoom * 100)}%</span>
+                                <Button onClick={() => setBracketZoom(z => Math.min(3, z + 0.1))} text="+" angle={180} style={{ padding: '2px 10px', minWidth: '40px' }} fontSize="1.2rem" />
+                                <Button onClick={() => setBracketZoom(1)} text="Reset" angle={90} style={{ padding: '4px 15px', marginLeft: '10px' }} fontSize="0.9rem" />
+                            </div>
+                        </div>
+                        <div style={{ flex: 1, overflow: 'auto', padding: '20px 0' }}>
+                            {Object.keys(currentMatches).length > 0 ? (
+                                <div style={{ zoom: bracketZoom }}>
+                                    <TournamentBracket matches={currentMatches} />
+                                </div>
+                            ) : (
+                                <div style={{ color: '#ccc', textAlign: 'center', marginTop: '50px' }}>No matches available to display bracket.</div>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="di-form-and-list-container">
+
                     <div className="di-form-section">
                         <h2>Import Event Data</h2>
 
@@ -622,28 +649,23 @@ const DataImport = () => {
                                 </div>
                             </fieldset>
                         </div>
-                        <div className="di-action-buttons">
-                            <Button text="Add Match" fontSize="0.95rem" angle={260} onClick={handleAddMatch} icon={<PlusCircle size={16} />} style={{ flex: 1 }} />
-                            <Button text="Load to Screen" fontSize="0.95rem" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size={16} />} style={{ flex: 1 }} />
-                            <Button text="Back to Home" fontSize="0.95rem" angle={150} onClick={() => navigate('/')} icon={<House size={16} />} style={{ flex: 1 }} />
-                        </div>
+                        
                     </div>
 
                     <div className="di-matches-section">
-                        <div className="matches-list">
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.15)', paddingBottom: '6px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.15)', paddingBottom: '6px' }}>
                                 {(() => {
                                     const rawName = eventsList.find(e => e.id === eventName)?.displayName || eventName || 'Event';
                                     const dayMatch = rawName.match(/^(.*?)\s*(\(Day\s+\d+\))\s*(\(.*\))$/);
                                     if (dayMatch) {
                                         return (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                <h3 style={{ margin: 0, border: 'none', padding: 0, color: '#fff', fontSize: '1.2rem' }}>{dayMatch[1]}</h3>
-                                                <span style={{ fontSize: '0.9rem', color: '#ccc' }}>{dayMatch[2].replace(/[()]/g, '')} - {dayMatch[3].replace(/[()]/g, '')}</span>
+                                                <h3 style={{ margin: 0, border: 'none', padding: 0, color: '#fff', fontSize: '1.4rem' }}>{dayMatch[1]}</h3>
+                                                <span style={{ fontSize: '1.1rem', color: '#ccc' }}>{dayMatch[2].replace(/[()]/g, '')} - {dayMatch[3].replace(/[()]/g, '')}</span>
                                             </div>
                                         );
                                     }
-                                    return <h3 style={{ margin: 0, border: 'none', padding: 0, color: '#fff' }}>{rawName}</h3>;
+                                    return <h3 style={{ margin: 0, border: 'none', padding: 0, color: '#fff', fontSize: '1.4rem' }}>{rawName}</h3>;
                                 })()}
                                 {availableDates.length > 1 && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -669,12 +691,13 @@ const DataImport = () => {
                                 )}
                                 <Button 
                                     text="View Bracket" 
-                                    icon={<Diagram3 size={14} />} 
+                                    icon={<Diagram3 size={16} />} 
                                     onClick={() => setShowBracketModal(true)}
-                                    fontSize="0.8rem"
-                                    style={{ padding: '4px 8px' }}
+                                    fontSize="0.95rem"
+                                    style={{ padding: '6px 12px' }}
                                 />
                             </div>
+                        <div className="matches-list">
                             <ul>
                                 {filteredMatchIds.map(mId => {
                                     const blue = currentMatches[mId].config.competitors.blue;
@@ -704,8 +727,14 @@ const DataImport = () => {
                                 })}
                             </ul>
                         </div>
+                        <div className="di-action-buttons">
+                            <Button text="Add Match" angle={260} onClick={handleAddMatch} icon={<PlusCircle size={16} />} style={{ flex: 1, whiteSpace: "nowrap", padding: "8px 4px", fontSize: "0.85rem" }} />
+                            <Button text="Load to Screen" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size={16} />} style={{ flex: 1, whiteSpace: "nowrap", padding: "8px 4px", fontSize: "0.85rem" }} />
+                            <Button text="Back to Home" angle={150} onClick={() => navigate('/')} icon={<House size={16} />} style={{ flex: 1, whiteSpace: "nowrap", padding: "8px 4px", fontSize: "0.85rem" }} />
+                        </div>
                     </div>
                 </div>
+                )}
             </div>
 
             {/* --- Create Event Modal Overlay --- */}
@@ -880,43 +909,6 @@ const DataImport = () => {
                                 angle={350}
                             />
                         </div>
-                    </div>
-                </div>
-            )}
-
-
-            {/* --- Tournament Bracket Modal --- */}
-            {showBracketModal && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.85)', zIndex: 1000,
-                    display: 'flex', flexDirection: 'column'
-                }}>
-                    <div style={{ padding: '15px 25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#111', borderBottom: '1px solid #333' }}>
-                        <h2 style={{ margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <Diagram3 size={24} color="#FFFF00" /> Tournament Bracket
-                        </h2>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <button onClick={() => setBracketZoom(z => Math.max(0.1, z - 0.1))} style={{ background: '#333', border: 'none', color: '#fff', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>-</button>
-                            <span style={{ color: '#fff', minWidth: '50px', textAlign: 'center', fontWeight: 'bold' }}>{Math.round(bracketZoom * 100)}%</span>
-                            <button onClick={() => setBracketZoom(z => Math.min(3, z + 0.1))} style={{ background: '#333', border: 'none', color: '#fff', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>+</button>
-                            <button onClick={() => setBracketZoom(1)} style={{ background: '#4CAF50', border: 'none', color: '#fff', padding: '6px 15px', borderRadius: '4px', cursor: 'pointer', marginLeft: '10px', fontWeight: 'bold' }}>Reset</button>
-                            <button 
-                                onClick={() => { setShowBracketModal(false); setBracketZoom(1); }}
-                                style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', marginLeft: '20px' }}
-                            >
-                                <X size={32} />
-                            </button>
-                        </div>
-                    </div>
-                    <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
-                        {Object.keys(currentMatches).length > 0 ? (
-                            <div style={{ zoom: bracketZoom }}>
-                                <TournamentBracket matches={currentMatches} />
-                            </div>
-                        ) : (
-                            <div style={{ color: '#ccc', textAlign: 'center', marginTop: '50px' }}>No matches available to display bracket.</div>
-                        )}
                     </div>
                 </div>
             )}

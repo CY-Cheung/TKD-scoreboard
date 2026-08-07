@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
 .cs-container {
     position: relative;
     height: 100dvh;
@@ -5,82 +7,213 @@
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    font-family: 'Inter', sans-serif;
 }
 
 .cs-content {
-    position: relative;
-    z-index: 1;
-    background-color: rgba(0, 0, 0, 0.7);
-    padding: 3dvw;
-    border-radius: 1.5dvw;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1.042vw;
     width: 90%;
-    max-width: 60dvw; /* 限制最大寬度 */
-    text-align: center;
+    max-width: 75vw; /* Further enlarge to 75vw */
+    aspect-ratio: 16 / 9;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+    padding: 0;
+    container-type: inline-size;
 }
 
-.cs-content h1 {
-    font-size: 3dvw;
+.cs-left-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2.604vw 2.083vw;
+    text-align: left;
+}
+
+.cs-app-intro {
+    font-size: 1.5cqi;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 2cqi;
+    line-height: 1.6;
+}
+
+.cs-divider {
+    width: 0.052vw;
+    background: linear-gradient(
+        to bottom, 
+        rgba(255,255,255,0) 0%, 
+        rgba(255,255,255,0.2) 50%, 
+        rgba(255,255,255,0) 100%
+    );
+    margin: 2.083vw 0;
+}
+
+.cs-right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2.604vw 2.083vw;
+}
+
+@keyframes fadeUp {
+    0% {
+        opacity: 0;
+        transform: translateY(2.083vw);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cs-title-container {
+    margin-bottom: 1.042vw;
+    width: 100%;
+}
+
+.cs-title-container h1 {
+    font-size: 2.667vw; /* Make it slightly bigger for split layout */
+    margin: 0;
+    color: #ffffff;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: 0.026vw;
+}
+
+.cs-subtitle {
+    font-size: 0.917vw;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 0.781vw;
+    font-weight: 400;
+    letter-spacing: 0.026vw;
 }
 
 .cs-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5dvh;
+    gap: 1.042vw;
 }
 
 .cs-form p {
-    margin-bottom: 1dvh;
     color: rgba(255, 255, 255, 0.8);
+    font-size: 0.792vw;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    align-items: flex-start; /* Label靠左 */
+    align-items: flex-start;
 }
 
 .form-group label {
-    margin-bottom: 0.5dvh;
-    font-size: 1.5dvw;
+    margin-bottom: 0.8cqi;
+    font-size: 1.5cqi;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 400;
 }
 
-/* Styling for the new datalist inputs */
 .datalist-input, 
 .form-group input[type="password"] {
     width: 100%;
-    padding: 0.8dvw;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 0.5dvw;
+    padding: 1.5cqi 2cqi;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 0.1cqi solid rgba(255, 255, 255, 0.15);
+    border-radius: 1cqi;
     color: white;
-    font-size: 1.5dvw;
+    font-size: 1.8cqi;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.3s ease;
 }
 
 .datalist-input:focus, 
 .form-group input[type="password"]:focus {
     outline: none;
-    border-color: var(--yellow-primary);
+    border-color: #3498db;
+    background-color: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 0 0.156vw rgba(52, 152, 219, 0.25);
 }
 
 .datalist-input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.4);
 }
 
-.form-group input:disabled {
-    background-color: rgba(255, 255, 255, 0.05);
+.form-group input:disabled,
+.datalist-input:disabled {
+    background-color: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.3);
     cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.05);
 }
 
 .cs-action-buttons {
     display: flex;
-    justify-content: space-around;
-    margin-top: 1dvh;
+    justify-content: center;
+    gap: 0.625vw;
+    margin-top: 0.521vw;
+}
+
+.cs-action-buttons > * {
+    width: 100%;
 }
 
 .cs-error-message {
-    color: var(--red-primary);
-    margin-top: -0.5dvh;
-    margin-bottom: 0.5dvh;
-    min-height: 1.2em; /* 避免沒錯誤時佈局跳動 */
+    color: #ff4757;
+    font-size: 0.75vw;
+    margin: 0.26vw 0;
+    text-align: left;
+    background: rgba(255, 71, 87, 0.1);
+    padding: 0.417vw 0.625vw;
+    border-radius: 0.417vw;
+    border-left: 0.156vw solid #ff4757;
 }
+
+/* Custom Google Button Wrapper for extra styling */
+.google-btn-wrapper {
+    position: relative;
+    margin: 1.562vw auto;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Use native Button component but override border width to be thinner */
+.google-btn-wrapper button {
+    border-width: 0.104vw !important; 
+    font-weight: 700 !important;
+    font-size: 0.833vw !important;
+    padding: 0.625vw 1.562vw !important;
+    box-shadow: 0 0 0.781vw rgba(0, 0, 0, 0.4) !important;
+}
+
+.google-btn-wrapper button:hover {
+    box-shadow: 0 0 1.042vw rgba(0, 0, 0, 0.6) !important;
+}
+
+.cs-footer-links {
+    margin-top: auto;
+    width: 100%;
+    display: flex;
+    justify-content: flex-start; /* Align left */
+    gap: 1.042vw;
+    font-size: 0.708vw;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.cs-footer-links a {
+    display: flex;
+    align-items: center;
+    gap: 0.312vw;
+    cursor: pointer;
+    transition: color 0.2s;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.cs-footer-links a:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+

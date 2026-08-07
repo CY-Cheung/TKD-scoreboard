@@ -5,6 +5,8 @@ import "./Screen.css";
 import "../../App.css";
 import Edit from "./Edit";
 import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
+import Button from "../../Components/Button/Button";
+import { ArrowLeft } from "react-bootstrap-icons";
 
 const formatTime = (totalSeconds) => {
     if (typeof totalSeconds !== 'number' || isNaN(totalSeconds)) {
@@ -68,6 +70,7 @@ function Screen() {
     const [displayTime, setDisplayTime] = useState(0);
 
     const [selectedEvent, setSelectedEvent] = useState(localStorage.getItem('selectedEvent'));
+    const [eventName, setEventName] = useState("");
     const [selectedCourt, setSelectedCourt] = useState(localStorage.getItem('selectedCourt'));
     const [currentMatchId, setCurrentMatchId] = useState(null);
     const [refereesData, setRefereesData] = useState({});
@@ -88,6 +91,21 @@ function Screen() {
         });
         return () => unsubscribe();
     }, [selectedEvent, selectedCourt]);
+
+    // Fetch Event Name
+    useEffect(() => {
+        if (!selectedEvent) return;
+        const eventRef = ref(database, `events/${selectedEvent}`);
+        const unsubscribe = onValue(eventRef, (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                setEventName(val.EventName || val.eventName || val.name || selectedEvent);
+            } else {
+                setEventName(selectedEvent);
+            }
+        });
+        return () => unsubscribe();
+    }, [selectedEvent]);
 
     // Clear toasts after 4 seconds
     useEffect(() => {
@@ -348,6 +366,22 @@ function Screen() {
     return (
         <>
             <div className="screen" onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}>
+                <div className="screen-floating-top-bar" style={{ position: 'absolute', bottom: '100%', left: 0, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'calc(var(--screen-height) * 0.03) calc(var(--screen-width) * 0.03)', zIndex: 100, boxSizing: 'border-box', color: 'rgba(255,255,255,0.5)', fontFamily: 'Outfit, sans-serif' }}>
+                    <div style={{ position: 'absolute', left: 'calc(var(--screen-width) * 0.03)' }}>
+                        <Button 
+                            onClick={(e) => { e.stopPropagation(); window.history.back(); }} 
+                            text="Back" 
+                            icon={<ArrowLeft style={{ width: 'calc(var(--screen-width) * 0.015)', height: 'calc(var(--screen-width) * 0.015)' }} />} 
+                            fontSize="calc(var(--screen-width) * 0.012)" 
+                            angle={180}
+                            variant="gray"
+                        />
+                    </div>
+                    <div style={{ fontSize: 'calc(var(--screen-width) * 0.018)', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase' }}>
+                        {eventName || selectedEvent || "No Event Selected"}
+                    </div>
+                </div>
+
                 {/* Top Section: Player Names */}
                 <div className={`top ${isResting ? 'rest-mode' : ''}`} style={{ flexDirection: direction }}>
                     <div className="red-name red-bg name-font">{renderPlayerName(config.competitors?.red)}</div>

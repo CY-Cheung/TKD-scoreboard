@@ -6,8 +6,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.3);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -15,40 +14,75 @@
   animation: fadeIn 0.25s ease-out;
 }
 
-.qrcode-modal-card {
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
+.qrcode-split-card {
   width: 90%;
-  max-width: 440px;
-  padding: 24px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  max-width: 65vw; /* Enlarged from 54.165vw */
+  aspect-ratio: 16 / 9;
+  padding: 0;
   color: #ffffff;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  animation: slideUp 0.25s ease-out;
+  flex-direction: row;
+  align-items: stretch;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  container-type: inline-size;
 }
+
+.qrcode-close-corner-btn {
+  position: absolute;
+  top: 0.781vw;
+  right: 0.781vw;
+  z-index: 10;
+  padding: 0.26vw;
+  border-radius: 50%;
+}
+
+.qrcode-left-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 2.083vw;
+  text-align: left;
+}
+
+.qrcode-right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 2.083vw;
+  justify-content: space-between;
+}
+
+.qrcode-divider {
+  width: 1px;
+  background: linear-gradient(
+      to bottom, 
+      rgba(255,255,255,0) 0%, 
+      rgba(255,255,255,0.2) 50%, 
+      rgba(255,255,255,0) 100%
+  );
+  margin: 1.562vw 0;
+}
+
 
 .qrcode-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 12px;
+  padding-bottom: 0.625vw;
 }
 
 .qrcode-title {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 1.2rem;
+  gap: 1cqi;
+  font-size: 2.2cqi;
   font-weight: 700;
   color: #e0e0e0;
 }
 
 .qrcode-icon {
-  font-size: 1.4rem;
+  font-size: 1.5vw;
   color: #ff0055;
 }
 
@@ -57,7 +91,7 @@
   border: none;
   color: #aaa;
   cursor: pointer;
-  padding: 4px;
+  padding: 0.208vw;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -74,21 +108,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 0.833vw;
 }
 
 .qrcode-info {
   display: flex;
-  gap: 10px;
+  gap: 0.521vw;
 }
 
 .qrcode-badge {
   background: rgba(0, 85, 255, 0.2);
   border: 1px solid rgba(0, 85, 255, 0.4);
   color: #66a3ff;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
+  padding: 0.5cqi 1.2cqi;
+  border-radius: 1.2cqi;
+  font-size: 1.5cqi;
   font-weight: 600;
 }
 
@@ -103,18 +137,18 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.312vw;
   background: rgba(255, 170, 0, 0.08);
   border: 1px solid rgba(255, 170, 0, 0.25);
-  border-radius: 10px;
-  padding: 10px 12px;
+  border-radius: 0.521vw;
+  padding: 0.521vw 0.625vw;
 }
 
 .qrcode-host-label {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
+  gap: 0.5cqi;
+  font-size: 1.2cqi;
   font-weight: 600;
   color: #fbbf24;
 }
@@ -123,10 +157,10 @@
   width: 100%;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-  padding: 6px 10px;
-  color: #ffffff;
-  font-size: 0.85rem;
+  border-radius: 0.5cqi;
+  padding: 0.5cqi 0.8cqi;
+  color: #fff;
+  font-size: 1.5cqi;
   outline: none;
   font-family: monospace;
   transition: border-color 0.2s;
@@ -137,7 +171,7 @@
 }
 
 .qrcode-host-warning {
-  font-size: 0.75rem;
+  font-size: 0.625vw;
   color: #fca5a5;
   line-height: 1.3;
 }
@@ -147,11 +181,11 @@
   width: 100%;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 10px 14px;
+  border-radius: 0.625vw;
+  padding: 0.521vw 0.729vw;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.417vw;
   transition: all 0.3s ease;
 }
 
@@ -163,8 +197,8 @@
 .referee-status-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
+  gap: 0.417vw;
+  font-size: 1.5cqi;
   font-weight: 600;
   color: #cbd5e1;
 }
@@ -177,15 +211,15 @@
 .referee-badges-row {
   display: flex;
   justify-content: space-between;
-  gap: 6px;
+  gap: 0.312vw;
 }
 
 .ref-slot-pill {
   flex: 1;
   text-align: center;
-  padding: 4px 6px;
-  border-radius: 6px;
-  font-size: 0.78rem;
+  padding: 0.5cqi 0.8cqi;
+  border-radius: 0.8cqi;
+  font-size: 1.3cqi;
   font-weight: 600;
   transition: all 0.25s ease;
 }
@@ -203,18 +237,18 @@
 }
 
 .qrcode-wrapper {
-  background: #ffffff;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.625vw;
+  border-radius: 0.833vw;
+  box-shadow: 0 0.417vw 1.667vw rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.2);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .qrcode-instructions {
-  font-size: 0.9rem;
-  color: #b0b0c0;
+  font-size: 1.4cqi;
+  color: rgba(255, 255, 255, 0.7);
   text-align: center;
   margin: 0;
   line-height: 1.4;
@@ -228,11 +262,11 @@
 .qrcode-url-box {
   display: flex;
   width: 100%;
-  gap: 8px;
+  gap: 0.417vw;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 4px 8px;
+  border-radius: 0.417vw;
+  padding: 0.208vw 0.417vw;
 }
 
 .qrcode-url-input {
@@ -240,7 +274,7 @@
   background: transparent;
   border: none;
   color: #ddd;
-  font-size: 0.8rem;
+  font-size: 0.667vw;
   outline: none;
 }
 
@@ -248,14 +282,14 @@
   background: #334155;
   border: none;
   color: #fff;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  padding: 0.312vw 0.625vw;
+  border-radius: 0.312vw;
+  font-size: 0.667vw;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.312vw;
   transition: background 0.2s;
 }
 
@@ -269,6 +303,12 @@
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
+  from { transform: translateY(1.042vw); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+.referee-mode-selector {
+  background: rgba(255,255,255,0.05);
+  padding: 1.042vw;
+  border-radius: 0.625vw;
+  border: 1px solid rgba(255,255,255,0.1);
 }

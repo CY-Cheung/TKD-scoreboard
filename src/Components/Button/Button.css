@@ -7,8 +7,8 @@
   align-items: center;
   gap: 0.5em;
   position: relative;
-  border-radius: 9999px;
-  border: 2.5px solid transparent;
+  border-radius: 520.76vw;
+  border: 0.13vw solid transparent;
   background: 
     linear-gradient(#18181c, #18181c) padding-box,
     var(--button-gradient, linear-gradient(135deg, #3b82f6, #ec4899)) border-box;
@@ -21,15 +21,15 @@
   outline: none;
   box-sizing: border-box;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0.208vw 0.625vw rgba(0, 0, 0, 0.35);
   font-family: inherit;
   line-height: 1.2;
 }
 
 .tkd-btn:hover {
   filter: brightness(1.25);
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  transform: translateY(-0.078vw);
+  box-shadow: 0 0.312vw 0.937vw rgba(0, 0, 0, 0.5);
 }
 
 .tkd-btn:active {

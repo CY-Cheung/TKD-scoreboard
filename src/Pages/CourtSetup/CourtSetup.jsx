@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
 import { ref, get, set, remove } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
-import { FolderPlus, Trash, ExclamationTriangle, Key, FileEarmarkPdf, FileEarmarkArrowUp, BoxArrowRight, CheckCircle, House, XCircle } from 'react-bootstrap-icons';
+import { FolderPlus, Trash, ExclamationTriangle, Key, FileEarmarkPdf, FileEarmarkArrowUp, BoxArrowRight, CheckCircle, House, XCircle, Github } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 
 import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
-import Squares from '../../Components/Squares/Squares';
 
 function CourtSetup() {
   const [password, setPassword] = useState('');
@@ -410,7 +409,7 @@ function CourtSetup() {
   };
 
   return (
-    <div className="cs-container">
+    <div className="cs-container aurora-bg">
       {user && (
         <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 50, backgroundColor: 'rgba(255,255,255,0.05)', padding: '10px 15px', borderRadius: '15px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -437,104 +436,117 @@ function CourtSetup() {
             />
         </div>
       )}
-      <Squares
-        speed={0.5}
-        squareSize={100}
-        direction="diagonal"
-        borderColor="hsla(270, 50%, 50%, 0.25)"
-        hoverFillColor="hsla(60, 50%, 50%, 0.25)"
-      />
-      <div className="cs-content">
-        <h1 style={{ fontSize: '2.2rem', margin: '0 0 15px 0' }}>Court Setup</h1>
-
-        {userLoading ? (
-          <p>Loading authentication state...</p>
-        ) : !user ? (
-          /* Google Sign-in Login Required Block */
-          <div className="cs-form" style={{ marginTop: '2dvh', textAlign: 'center' }}>
-            <p style={{ fontSize: '1.4dvw', color: '#ffcc00', marginBottom: '2dvh' }}>
-              🔒 您需要先登入 Google 帳號，方可存取賽事資料庫！
-            </p>
-            {authError && <p className="cs-error-message">{authError}</p>}
-            <div style={{ display: 'flex', justifyContent: 'center', margin: '2dvh 0' }}>
-              <Button 
-                onClick={handleGoogleSignIn}
-                text="Sign in with Google"
-                icon={<Key size={20} />}
-                fontSize="1.6dvw"
-                variant="gemini"
-              />
+      <div className="cs-content glass-card split-layout">
+        <div className="cs-left-panel">
+            <div className="cs-title-container">
+                <h1 style={{fontSize: '3.5vw', lineHeight: '1.1'}}>Taekwondo<br/>Scoreboard</h1>
+                <h2 style={{fontSize: '1.5vw', color: 'rgba(255,255,255,0.9)', margin: '0.8vw 0 0 0', fontWeight: 'normal', letterSpacing: '0.1vw'}}>跆拳道賽事計分板</h2>
+                <p className="cs-app-intro">
+                    專業嘅跆拳道賽事計分及管理系統。<br />
+                    支援多場地同步管理，提供清晰直觀嘅即時比賽分數顯示，讓賽事流程更加順暢。
+                </p>
             </div>
-            <p style={{ fontSize: '1dvw', color: 'rgba(255, 255, 255, 0.6)' }}>
-              登入後系統即可向 Firebase Database 驗證您的身分並載入賽事場地數據。
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="cs-form">
-            <div className="form-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '0.5dvh' }}>
-                <label htmlFor="event-select" style={{ margin: 0, fontSize: '1.1rem' }}>Select Event</label>
-              </div>
-
-              <select
-                id="event-select"
-                className="datalist-input"
-                style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%' }}
-                value={selectedEvent}
-                onChange={(e) => setSelectedEvent(e.target.value)}
-                required
-              >
-                <option value="" disabled>-- Please select an event --</option>
-                {events.map(event => (
-                  <option key={event.id} value={event.id}>
-                    {event.displayName !== event.id ? `${event.displayName} (${event.id})` : event.id}
-                  </option>
-                ))}
-              </select>
+            <div className="cs-footer-links">
+                <a href="https://github.com/CY-Cheung/TKD-scoreboard" target="_blank" rel="noopener noreferrer">
+                    <Github size={16} /> GitHub Repository
+                </a>
             </div>
+        </div>
 
-            <div className="form-group">
-              <label htmlFor="court-select" style={{ fontSize: '1.1rem' }}>Select Court</label>
-              <select
-                id="court-select"
-                className="datalist-input"
-                style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%' }}
-                value={courtId}
-                onChange={(e) => setCourtId(e.target.value)}
-                disabled={!selectedEvent || courtOptions.length === 0}
-                required
-              >
-                <option value="" disabled>-- Please select a court --</option>
-                {courtOptions.map(court => (
-                  <option key={court} value={court}>{court}</option>
-                ))}
-              </select>
-            </div>
+        <div className="cs-divider"></div>
 
-            {(!user || (selectedEvent && events.find(e => e.id === selectedEvent) && events.find(e => e.id === selectedEvent).createdByEmail !== user?.email)) && (
-                <div className="form-group">
-                <label htmlFor="setup-password" style={{ fontSize: '1.1rem' }}>Setup Password</label>
-                <input
-                    id="setup-password"
-                    type="password"
-                    style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#fff' }}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter setup password"
-                    required
+        <div className="cs-right-panel">
+            {userLoading ? (
+            <p>Loading authentication state...</p>
+            ) : !user ? (
+            /* Google Sign-in Login Required Block */
+            <div className="cs-form" style={{ textAlign: 'center' }}>
+                <p style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '1.3vw', marginBottom: '1.5vw', lineHeight: '1.6' }}>
+                毋須額外註冊，<br/>只需登入 Google 帳號即可。
+                </p>
+                {authError && <p className="cs-error-message">{authError}</p>}
+                <div className="google-btn-wrapper">
+                <Button 
+                    onClick={handleGoogleSignIn}
+                    text="Continue with Google"
+                    icon={<Key size={24} />}
+                    fontSize="1vw"
+                    variant="gemini"
                 />
                 </div>
-            )}
-            
-            {error && <p className="cs-error-message">{error}</p>}
-            <div className="cs-action-buttons" style={{ marginTop: '20px' }}>
-              <Button type="submit" text="Confirm Settings" fontSize="1.1dvw" angle={30} disabled={!selectedEvent || !courtId} icon={<CheckCircle size={18} />} />
-              <Button type="button" onClick={() => setShowCreateModal(true)} text="Create Event" fontSize="1.1dvw" angle={120} icon={<FolderPlus size={18} />} />
-              <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} text="Delete Event" fontSize="1.1dvw" angle={350} icon={<Trash size={18} />} />
-              <Button type="button" text="Back to Home" fontSize="1.1dvw" angle={150} onClick={() => navigate('/')} icon={<House size={18} />} />
+                <p style={{ fontSize: '0.85vw', color: 'rgba(255, 255, 255, 0.4)', marginTop: '1vw' }}>
+                系統將會驗證您的身分並載入賽事場地數據
+                </p>
             </div>
-          </form>
-        )}
+            ) : (
+            <form onSubmit={handleSubmit} className="cs-form">
+                <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '0.5dvh' }}>
+                    <label htmlFor="event-select" style={{ margin: 0, fontSize: '1.1rem' }}>Select Event</label>
+                </div>
+
+                <select
+                    id="event-select"
+                    className="datalist-input"
+                    style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%' }}
+                    value={selectedEvent}
+                    onChange={(e) => setSelectedEvent(e.target.value)}
+                    required
+                >
+                    <option value="" disabled>-- Please select an event --</option>
+                    {events.map(event => (
+                    <option key={event.id} value={event.id}>
+                        {event.displayName || event.id}
+                    </option>
+                    ))}
+                </select>
+                
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                    <Button type="button" onClick={() => setShowCreateModal(true)} text="Create Event" fontSize="0.9rem" angle={120} icon={<FolderPlus size={16} />} style={{ flex: 1, whiteSpace: 'nowrap' }} />
+                    <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} text="Delete Event" fontSize="0.9rem" angle={350} icon={<Trash size={16} />} style={{ flex: 1, whiteSpace: 'nowrap' }} />
+                </div>
+                </div>
+
+                <div className="form-group">
+                <label htmlFor="court-select" style={{ fontSize: '1.1rem' }}>Select Court</label>
+                <select
+                    id="court-select"
+                    className="datalist-input"
+                    style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%' }}
+                    value={courtId}
+                    onChange={(e) => setCourtId(e.target.value)}
+                    disabled={!selectedEvent || courtOptions.length === 0}
+                    required
+                >
+                    <option value="" disabled>-- Please select a court --</option>
+                    {courtOptions.map(court => (
+                    <option key={court} value={court}>{court}</option>
+                    ))}
+                </select>
+                </div>
+
+                {(!user || (selectedEvent && events.find(e => e.id === selectedEvent) && events.find(e => e.id === selectedEvent).createdByEmail !== user?.email)) && (
+                    <div className="form-group">
+                    <label htmlFor="setup-password" style={{ fontSize: '1.1rem' }}>Setup Password</label>
+                    <input
+                        id="setup-password"
+                        type="password"
+                        style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#fff' }}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter setup password"
+                        required
+                    />
+                    </div>
+                )}
+                
+                {error && <p className="cs-error-message">{error}</p>}
+                <div className="cs-action-buttons">
+                <Button type="submit" text="Confirm Settings" fontSize="1rem" angle={30} disabled={!selectedEvent || !courtId} icon={<CheckCircle size={16} />} style={{ whiteSpace: 'nowrap', padding: '10px 40px' }} />
+                </div>
+            </form>
+            )}
+        </div>
       </div>
 
       {/* --- Create Event Modal Overlay --- */}

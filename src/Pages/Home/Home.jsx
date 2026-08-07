@@ -6,7 +6,6 @@ import { ref, get } from 'firebase/database';
 
 import './Home.css';
 import Button from '../../Components/Button/Button';
-import Squares from '../../Components/Squares/Squares';
 import QRCodeDisplay from '../../Components/QRCodeDisplay/QRCodeDisplay';
 
 // 引入 Bootstrap Icons
@@ -68,67 +67,57 @@ function Home() {
     };
 
     return (
-        <div className="home">
-            <Squares
-                speed={0.5}
-                squareSize={100}
-                direction="diagonal"
-                borderColor="hsla(270, 50%, 50%, 0.25)"
-                hoverFillColor="hsla(60, 50%, 50%, 0.25)"
-            />
+        <div className="home aurora-bg">
 
-            {/* --- Top Right Session & User Profile Info Card --- */}
-            <div className="session-info-form">
-                {user && (
-                    <div className="user-profile-header">
-                        <div className="user-info-group">
-                            {user.photoURL ? (
-                                <img 
-                                    src={user.photoURL} 
-                                    alt="User Avatar" 
-                                    className="user-avatar-img"
-                                />
-                            ) : (
-                                <div className="user-avatar-fallback">
-                                    {user.displayName?.[0] || 'U'}
-                                </div>
-                            )}
-                            <div className="user-text-details">
-                                <div className="user-display-name">{user.displayName || 'User'}</div>
-                                <div className="user-email-text" title={user.email}>{user.email}</div>
+            {/* --- Top Right User Profile Info Card --- */}
+            {user && (
+                <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 50, backgroundColor: 'rgba(255,255,255,0.05)', padding: '10px 15px', borderRadius: '15px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {user.photoURL ? (
+                            <img src={user.photoURL} alt="User Avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+                        ) : (
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#6c5ce7', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
+                                {user.displayName?.[0] || 'U'}
                             </div>
+                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', lineHeight: '1.2' }}>{user.displayName || 'User'}</div>
+                            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', lineHeight: '1.2' }}>{user.email}</div>
                         </div>
-                        <Button 
-                            onClick={handleGoogleLogout}
-                            title="Sign Out of Google Account & Redirect to Court Setup"
-                            fontSize="1.1dvh"
-                            variant="orange"
-                            icon={<BoxArrowRight size={12} />}
-                            text="Log Out"
-                            style={{ padding: '0.4dvh 0.8dvw', minWidth: 'auto' }}
-                        />
                     </div>
-                )}
+                    <Button 
+                        onClick={handleGoogleLogout}
+                        title="Sign Out of Google Account & Redirect to Court Setup"
+                        fontSize="0.85rem"
+                        variant="orange"
+                        icon={<BoxArrowRight size={14} />}
+                        text="Log Out"
+                        style={{ padding: '6px 12px', minWidth: 'auto', margin: 0 }}
+                    />
+                </div>
+            )}
 
-                <div className="form-group">
-                    <label>Event Name</label>
-                    <div className="form-value">{session?.eventName || eventName || session?.eventId || 'N/A'}</div>
+            {/* --- Bottom Right Session Info Card --- */}
+            <div style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 50, backgroundColor: 'rgba(20, 20, 25, 0.78)', padding: '15px 20px', borderRadius: '12px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)', display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '250px', textAlign: 'left' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)', textTransform: 'uppercase' }}>Event Name</span>
+                    <span style={{ color: 'white', fontWeight: 'bold' }}>{session?.eventName || eventName || session?.eventId || 'N/A'}</span>
                 </div>
-                <div className="form-group">
-                    <label>Event ID</label>
-                    <div className="form-value">{session?.eventId || 'N/A'}</div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)', textTransform: 'uppercase' }}>Event ID</span>
+                    <span style={{ color: 'white', fontWeight: 'bold' }}>{session?.eventId || 'N/A'}</span>
                 </div>
-                <div className="form-group">
-                    <label>Court ID</label>
-                    <div className="form-value">{session?.courtId || 'N/A'}</div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)', textTransform: 'uppercase' }}>Court ID</span>
+                    <span style={{ color: 'white', fontWeight: 'bold' }}>{session?.courtId || 'N/A'}</span>
                 </div>
                 <Button
                     text="Change Court Session"
                     onClick={handleSessionLogout}
-                    fontSize="1.4dvh"
+                    fontSize="0.85rem"
                     angle={0}
-                    className="change-session-btn"
                     icon={<ArrowLeftRight size={14} />}
+                    style={{ marginTop: '5px' }}
                 />
             </div>
 
@@ -162,6 +151,7 @@ function Home() {
             {/* QR Code Overlay Modal */}
             <QRCodeDisplay
                 eventId={session?.eventId}
+                eventName={eventName}
                 courtId={session?.courtId}
                 visible={showQRCode}
                 onClose={() => setShowQRCode(false)}
