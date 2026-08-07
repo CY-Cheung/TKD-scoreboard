@@ -23,32 +23,14 @@
 * **Court Setup (場地設定)**: 透過 Google Authentication 安全登入，管理場地及比賽。
 * **Admin Override (管理員覆寫)**: 管理員可自由修改分數及狀態。
 
+## 📐 Database Rules Architecture (規則架構)
+採用 Court-level Locking (場地層級鎖定) 機制。掃描 QR Code 時產生獨立 Device ID 搶佔空置席位。Firebase 嚴格規定只有佔據該席位嘅裝置可修改分數。斷線時 `onDisconnect()` 自動清空席位。
+
 ## 🚀 Tech Stack (技術棧)
 * **Frontend**: React 18 (Vite), React Router v6
 * **Backend & Auth**: Firebase Realtime Database, Firebase Authentication
 * **Styling**: Vanilla CSS, Glassmorphism, CSS Grid
 * **PDF Parsing**: pdfjs-dist
-
-## 🛠️ Setup & Installation (安裝與設定)
-
-```bash
-git clone <your-repo-url>
-cd TKD-scoreboard
-npm install
-```
-
-**Firebase Configuration (Firebase 設定):**
-1. 建立 Firebase Project，啟用 **Realtime Database** 同 **Google Authentication**。
-2. 將憑證寫入 `src/firebase.js`。
-3. 部署保安規則：`npx firebase-tools deploy --only database`
-
-**Run Development Server:**
-```bash
-npm run dev
-```
-
-## 📐 Database Rules Architecture (規則架構)
-採用 Court-level Locking (場地層級鎖定) 機制。掃描 QR Code 時產生獨立 Device ID 搶佔空置席位。Firebase 嚴格規定只有佔據該席位嘅裝置可修改分數。斷線時 `onDisconnect()` 自動清空席位。
 
 ## 📄 License
 This project is licensed under the MIT License.
