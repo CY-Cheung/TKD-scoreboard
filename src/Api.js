@@ -227,6 +227,11 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
             affiliatedClub: winnerData.affiliatedClub || ""
         });
 
+        // ALSO update the current match's state to record the winner!
+        await update(ref(database, `${matchRoot}/${currentMatchId}/state`), {
+            winnerSide: winnerSide
+        });
+
         alert(`已成功晉級：\n${winnerData.name} -> ${nextMatchId} (${nextMatchSlot})`);
 
     } catch (e) {

@@ -1,0 +1,159 @@
+.tournament-bracket-container {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    padding: 40px;
+    background-color: #1a1a1a;
+    min-width: max-content;
+    min-height: max-content;
+}
+
+.bracket-tree-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    overflow-x: auto;
+}
+
+.bracket-node {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.bracket-children {
+    display: grid;
+    grid-auto-rows: 1fr; /* This forces implicitly created rows to be exactly equal height based on the tallest item! */
+}
+
+.bracket-child {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end; /* CRITICAL: Align right to fix unbalanced bracket columns! */
+    position: relative;
+    padding: 5px 80px 5px 0; /* Reduced top/bottom padding to 5px to decrease vertical spacing */
+}
+
+/* Connecting Lines */
+.bracket-child.blue-slot::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    bottom: 0;
+    width: 80px; /* Increased line length */
+    border-top: 3px solid #FFFFFF; /* White by default */
+    border-right: 3px solid #FFFFFF;
+}
+
+.bracket-child.red-slot::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 50%;
+    width: 80px; /* Increased line length */
+    border-bottom: 3px solid #FFFFFF;
+    border-right: 3px solid #FFFFFF;
+}
+
+.bracket-match {
+    position: relative;
+    margin-left: 80px; /* Matches increased line length */
+}
+
+.bracket-match.has-children::before {
+    content: '';
+    position: absolute;
+    left: -80px;
+    top: 50%;
+    width: 80px;
+    border-top: 3px solid #FFFFFF;
+}
+
+/* Glowing lines for winners / ready paths */
+.bracket-child.is-finished::after {
+    border-color: #FFFF00 !important;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 0, 0.8));
+    z-index: 1; /* Bring to front if overlapping */
+}
+
+.bracket-match.is-ready.has-children::before {
+    border-color: #FFFF00 !important;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 0, 0.8));
+}
+
+/* Hide line if the slot is a BYE (empty) */
+.bracket-child.is-empty::after {
+    display: none;
+}
+
+.bracket-node.placeholder {
+    visibility: hidden;
+}
+
+/* Match Card Styling */
+.match-card {
+    background: #2a2a2a;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    width: 200px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    overflow: hidden;
+    margin: 5px 0;
+}
+
+.match-card.empty-card {
+    border: 1px dashed rgba(255,255,255,0.2);
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70px;
+}
+
+.match-card-header {
+    background-color: #111;
+    color: #FFFFFF;
+    padding: 5px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    border-bottom: 1px solid #333;
+}
+
+.match-id {
+    color: #ffd700;
+}
+
+.match-competitors {
+    display: flex;
+    flex-direction: column;
+}
+
+.competitor {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+
+.competitor.blue-side {
+    background: linear-gradient(90deg, rgba(0, 122, 255, 0.8) 0%, rgba(0, 122, 255, 0.4) 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.competitor.red-side {
+    background: linear-gradient(90deg, rgba(255, 59, 48, 0.8) 0%, rgba(255, 59, 48, 0.4) 100%);
+}
+
+.tournament-bracket-empty {
+    color: #ccc;
+    padding: 20px;
+    text-align: center;
+    font-style: italic;
+}

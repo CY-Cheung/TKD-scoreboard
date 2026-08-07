@@ -6,8 +6,9 @@ import Squares from '../../Components/Squares/Squares';
 import Button from '../../Components/Button/Button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
-import { PlusCircle, Trash, FolderPlus, ExclamationTriangle, FileEarmarkArrowUp, FileEarmarkPdf, CheckCircleFill, Calendar3, Funnel, House, XCircle, CheckCircle, Display } from 'react-bootstrap-icons';
+import { PlusCircle, Trash, FolderPlus, ExclamationTriangle, FileEarmarkArrowUp, FileEarmarkPdf, CheckCircleFill, Calendar3, Funnel, House, XCircle, CheckCircle, Display, Diagram3, X } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
+import TournamentBracket from '../../Components/TournamentBracket/TournamentBracket';
 
 // A helper function to parse name and club from old format
 const parseName = (fullName) => {
@@ -36,6 +37,8 @@ const DataImport = () => {
 
     // Create Event Modal State
     const [showCreateEventModal, setShowCreateEventModal] = useState(false);
+    const [showBracketModal, setShowBracketModal] = useState(false);
+    const [bracketZoom, setBracketZoom] = useState(1);
     const [newEventId, setNewEventId] = useState('');
     const [newEventName, setNewEventName] = useState('');
     const [newSetupPassword, setNewSetupPassword] = useState('');
@@ -664,6 +667,13 @@ const DataImport = () => {
                                         </select>
                                     </div>
                                 )}
+                                <Button 
+                                    text="View Bracket" 
+                                    icon={<Diagram3 size={14} />} 
+                                    onClick={() => setShowBracketModal(true)}
+                                    fontSize="0.8rem"
+                                    style={{ padding: '4px 8px' }}
+                                />
                             </div>
                             <ul>
                                 {filteredMatchIds.map(mId => {
@@ -875,8 +885,43 @@ const DataImport = () => {
             )}
 
 
+            {/* --- Tournament Bracket Modal --- */}
+            {showBracketModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.85)', zIndex: 1000,
+                    display: 'flex', flexDirection: 'column'
+                }}>
+                    <div style={{ padding: '15px 25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#111', borderBottom: '1px solid #333' }}>
+                        <h2 style={{ margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Diagram3 size={24} color="#FFFF00" /> Tournament Bracket
+                        </h2>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <button onClick={() => setBracketZoom(z => Math.max(0.1, z - 0.1))} style={{ background: '#333', border: 'none', color: '#fff', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>-</button>
+                            <span style={{ color: '#fff', minWidth: '50px', textAlign: 'center', fontWeight: 'bold' }}>{Math.round(bracketZoom * 100)}%</span>
+                            <button onClick={() => setBracketZoom(z => Math.min(3, z + 0.1))} style={{ background: '#333', border: 'none', color: '#fff', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>+</button>
+                            <button onClick={() => setBracketZoom(1)} style={{ background: '#4CAF50', border: 'none', color: '#fff', padding: '6px 15px', borderRadius: '4px', cursor: 'pointer', marginLeft: '10px', fontWeight: 'bold' }}>Reset</button>
+                            <button 
+                                onClick={() => { setShowBracketModal(false); setBracketZoom(1); }}
+                                style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', marginLeft: '20px' }}
+                            >
+                                <X size={32} />
+                            </button>
+                        </div>
+                    </div>
+                    <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
+                        {Object.keys(currentMatches).length > 0 ? (
+                            <div style={{ zoom: bracketZoom }}>
+                                <TournamentBracket matches={currentMatches} />
+                            </div>
+                        ) : (
+                            <div style={{ color: '#ccc', textAlign: 'center', marginTop: '50px' }}>No matches available to display bracket.</div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
-};
+}
 
 export default DataImport;
