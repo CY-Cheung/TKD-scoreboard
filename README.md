@@ -1,24 +1,54 @@
 # Taekwondo Scoreboard System (跆拳道計分系統)
 
-本專案為一個專為跆拳道賽事設計嘅 Cloud-based (雲端) 計分及賽事管理系統。系統旨在取代傳統且昂貴嘅專用計分硬件。大會只需準備一部連接大屏幕嘅電腦，而 Corner Judges (邊線裁判) 則可直接使用個人 Smartphone (智能手機) 掃描 QR Code 連線計分。所有賽事數據與比分均會實時同步，大幅降低舉辦賽事嘅硬件門檻與技術成本。
+一個用 React 同 Firebase 寫成嘅現代化 Real-time (實時) 跆拳道比賽計分系統，為觀眾、賽事管理員同 Corner Judges (邊線裁判) 提供 Seamless (無縫) 體驗。
 
-## 1. Features (主要功能)
+## 🌟 Key Features (主要功能)
 
-本系統具備多項為跆拳道賽事量身訂造嘅核心功能，兼具靈活性及專業性：
+### 📺 Live Scoreboard (實時計分板 - Screen)
+* **Real-time Sync (實時同步)**: 透過 Firebase Realtime Database 做到分數秒速更新。
+* **Smart Match Resolution (智能賽事解析)**: 解析官方 PDF 賽程表，自動提取 Match IDs (比賽編號) 及選手資料。
+* **Dynamic QR Code (動態二維碼)**: 顯示專屬 QR Code，畀最多 3 位裁判用手機連接 Court (場地)。
+* **Auto-Downgrade & Connection Alert (自動降級與斷線提示)**: 實時監測連線，斷線即時警示；人數不足會自動降級為單一裁判模式。
 
-* **免安裝控制器 (No-App Controller)**：Corner Judges (邊線裁判) 無須下載任何應用程式，經掃描大屏幕上嘅 QR Code 即可於 Mobile Browser (手機瀏覽器) 存取計分介面。
-* **智能文件解析 (Smart Document Parsing)**：支援直接上傳官方賽程表 PDF 或 Excel 檔案，系統會自動提取比賽編號及選手名單。
-* **互動式對戰圖表 (Interactive Binary Tree)**：系統會將抽籤結果轉化為動態嘅 Binary Tree (二元樹狀圖)，清晰顯示各級別嘅晉級情況 (Advancement Status)，並支援縮放及拖曳。
-* **自動晉級系統 (Auto-Advancement)**：與計分板實時連動，當比賽完結並分出勝負後，勝方選手會自動於對戰圖表中晉級，晉級路線會實時亮起。
-* **多場地管理 (Multi-Court Management)**：支援同時設定及管理多達 12 個 Court (場地)，管理員可隨時切換並載入不同賽事。
-* **分散式座位鎖定 (Distributed Seat Locking)**：透過 Firebase 嚴格控制每個場地最多 3 位裁判連線，自動分配 `J1`、`J2` 及 `J3` 席位，並支援斷線自動釋出座位。
-* **原子操作投票機制 (Atomic Transactions for Voting)**：支援多位裁判模式。確保必須有 2 位或以上裁判於 1000 毫秒 (1秒) 內提交相同分數，該得分才會生效，徹底解決 Race Condition (競爭危害) 問題。
-* **觸覺回饋 (Haptic Feedback)**：裁判於手機按下計分按鈕時會觸發即時震動回饋，提升盲按時嘅準確度與手感。
+### 📱 Mobile Controller (手機遙控器 - Remote)
+* **No-App Installation (免安裝)**: 掃描 QR Code 即可喺 Mobile Browser (手機瀏覽器) 操作，無須下載 App。
+* **Smart Seat Locking (智能座位鎖定)**: 採用 Distributed Locking 機制，自動分配 `J1`, `J2`, `J3` 席位，斷線自動讓座。
+* **Valid Point System (有效得分機制)**: 支援 Multiple Referee 模式，2 位以上裁判喺 1秒內投出相同分數，先會透過 `runTransaction` 正式加分，杜絕 Double Scoring (重複加分)。
+* **Haptic Feedback (觸覺回饋)**: 撳分時手機提供即時震動回饋。
+* **Secure Access (安全存取)**: Firebase Security Rules 嚴格驗證 Device ID，防止未經授權改分。
 
-## 2. Contributing (參與貢獻)
+### ⚙️ Event Management (賽事管理 - Admin)
+* **PDF Data Import (資料匯入)**: 完美還原官方跆拳道淘汰賽賽程。
+* **Interactive Tournament Bracket (互動式對戰表)**: 動態生成 Binary Tree Bracket，自動處理首輪輪空 (BYE) 排版；勝出者路徑即時亮起，並內建縮放功能。
+* **Court Setup (場地設定)**: 透過 Google Authentication 安全登入，管理場地及比賽。
+* **Admin Override (管理員覆寫)**: 管理員可自由修改分數及狀態。
 
-我們歡迎任何形式嘅貢獻！喺提交 Pull Request (拉取請求) 前，請確保你嘅程式碼符合本專案嘅編碼規範。如有任何問題或功能建議，歡迎開啟 Issue (議題) 進行討論。
+## 🚀 Tech Stack (技術棧)
+* **Frontend**: React 18 (Vite), React Router v6
+* **Backend & Auth**: Firebase Realtime Database, Firebase Authentication
+* **Styling**: Vanilla CSS, Glassmorphism, CSS Grid
+* **PDF Parsing**: pdfjs-dist
 
-## 3. License (授權條款)
+## 🛠️ Setup & Installation (安裝與設定)
 
-本專案採用 [MIT License](LICENSE) 進行開源授權。
+```bash
+git clone <your-repo-url>
+cd TKD-scoreboard
+npm install
+```
+
+**Firebase Configuration (Firebase 設定):**
+1. 建立 Firebase Project，啟用 **Realtime Database** 同 **Google Authentication**。
+2. 將憑證寫入 `src/firebase.js`。
+3. 部署保安規則：`npx firebase-tools deploy --only database`
+
+**Run Development Server:**
+```bash
+npm run dev
+```
+
+## 📐 Database Rules Architecture (規則架構)
+採用 Court-level Locking (場地層級鎖定) 機制。掃描 QR Code 時產生獨立 Device ID 搶佔空置席位。Firebase 嚴格規定只有佔據該席位嘅裝置可修改分數。斷線時 `onDisconnect()` 自動清空席位。
+
+## 📄 License
+This project is licensed under the MIT License.
