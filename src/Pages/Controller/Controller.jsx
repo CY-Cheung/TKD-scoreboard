@@ -176,7 +176,8 @@ function Controller() {
 
         // Mobile haptic vibration feedback
         if (navigator.vibrate) {
-            navigator.vibrate(60);
+            // Using array format and slightly longer duration (70ms) to ensure modern Samsung LRA motors trigger correctly
+            navigator.vibrate([70]);
         }
 
         // Call scoring API (+1 point increment for selected point index)
