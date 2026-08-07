@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, X, Copy, Check, PeopleFill, CheckCircleFill, Globe } from 'react-bootstrap-icons';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, update } from 'firebase/database';
 import { database } from '../../firebase';
 import './QRCodeDisplay.css';
 import Button from '../Button/Button';
 
-function QRCodeDisplay({ eventId, courtId, visible, onClose, refereesData: propRefereesData }) {
+function QRCodeDisplay({ eventId, courtId, visible, onClose, refereesData: propRefereesData, refereeMode = 'single' }) {
   const [copied, setCopied] = useState(false);
   const [referees, setReferees] = useState(propRefereesData || {});
   
@@ -74,6 +74,11 @@ function QRCodeDisplay({ eventId, courtId, visible, onClose, refereesData: propR
     localStorage.setItem('qrCustomHost', value);
   };
 
+  const handleModeChange = (mode) => {
+    if (mode === 'multiple' && occupiedCount < 2) return;
+    update(ref(database, `events/${eventId}/courts/${courtId}/config`), { refereeMode: mode });
+  };
+
   return (
     <div className="qrcode-modal-overlay" onClick={onClose}>
       <div className="qrcode-modal-card" onClick={(e) => e.stopPropagation()}>
@@ -138,6 +143,31 @@ function QRCodeDisplay({ eventId, courtId, visible, onClose, refereesData: propR
                 J3 {isJ3 ? '• Online' : '• Vacant'}
               </span>
             </div>
+          </div>
+
+          {/* Referee Mode Selection */}
+          <div className="referee-mode-selector" style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '15px 0', background: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '8px' }}>
+            <span style={{ fontSize: '0.9rem', color: '#ccc', fontWeight: 'bold' }}>Scoring Mode</span>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <Button 
+                text="Single Referee" 
+                variant={refereeMode === 'single' ? 'orange' : 'gray'} 
+                onClick={() => handleModeChange('single')}
+                fontSize="0.9rem"
+                style={{ flex: 1 }}
+              />
+              <Button 
+                text="Multiple Referees (2+)" 
+                variant={refereeMode === 'multiple' ? 'orange' : 'gray'} 
+                onClick={() => handleModeChange('multiple')}
+                disabled={occupiedCount < 2}
+                fontSize="0.9rem"
+                style={{ flex: 1, opacity: occupiedCount < 2 ? 0.5 : 1 }}
+                title={occupiedCount < 2 ? "Requires at least 2 referees" : "2 or more referees must agree within 1 second to score"}
+              />
+            </div>
+            {refereeMode === 'multiple' && <div style={{ fontSize: '0.8rem', color: '#ffcc00', marginTop: '5px' }}>✓ Valid Point Mode: 2+ judges must agree within 1 second.</div>}
+            {occupiedCount < 2 && <div style={{ fontSize: '0.8rem', color: '#ff3b30', marginTop: '5px' }}>⚠️ Multiple Referees mode requires at least 2 connected judges.</div>}
           </div>
 
           {/* QR Code Container */}

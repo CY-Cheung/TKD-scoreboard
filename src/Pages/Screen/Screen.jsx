@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { ref, onValue, update } from "firebase/database";
+import { ref, onValue, update, get } from "firebase/database";
 import { database } from "../../firebase";
 import "./Screen.css";
 import "../../App.css";
@@ -71,16 +71,70 @@ function Screen() {
     const [selectedCourt, setSelectedCourt] = useState(localStorage.getItem('selectedCourt'));
     const [currentMatchId, setCurrentMatchId] = useState(null);
     const [refereesData, setRefereesData] = useState({});
+    
+    const [refereeMode, setRefereeMode] = useState('single');
+    const [toastMessages, setToastMessages] = useState([]);
+    const prevRefereesRef = useRef({});
 
     const animationFrameRef = useRef();
     const isMatchLoaded = !!matchData;
+
+    // Listen to refereeMode
+    useEffect(() => {
+        if (!selectedEvent || !selectedCourt) return;
+        const modeRef = ref(database, `events/${selectedEvent}/courts/${selectedCourt}/config/refereeMode`);
+        const unsubscribe = onValue(modeRef, (snapshot) => {
+            setRefereeMode(snapshot.val() || 'single');
+        });
+        return () => unsubscribe();
+    }, [selectedEvent, selectedCourt]);
+
+    // Clear toasts after 4 seconds
+    useEffect(() => {
+        if (toastMessages.length > 0) {
+            const timer = setTimeout(() => {
+                setToastMessages(prev => prev.slice(1));
+            }, 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [toastMessages]);
 
     // Listen to referees status on current court
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
         const refereesRef = ref(database, `events/${selectedEvent}/courts/${selectedCourt}/referees`);
         const unsubscribe = onValue(refereesRef, (snapshot) => {
-            setRefereesData(snapshot.val() || {});
+            const currentData = snapshot.val() || {};
+            const prevData = prevRefereesRef.current;
+            
+            // Check for disconnections
+            const disconnections = [];
+            let occupiedCount = 0;
+            ['J1', 'J2', 'J3'].forEach(seat => {
+                if (currentData[seat]) occupiedCount++;
+                if (prevData[seat] && !currentData[seat]) {
+                    disconnections.push(seat);
+                }
+            });
+
+            if (disconnections.length > 0) {
+                const msg = `⚠️ Referee ${disconnections.join(', ')} disconnected!`;
+                setToastMessages(prev => [...prev, { id: Date.now(), text: msg }]);
+            }
+
+            // Auto-downgrade check
+            if (occupiedCount < 2) {
+                const modeRef = ref(database, `events/${selectedEvent}/courts/${selectedCourt}/config/refereeMode`);
+                get(modeRef).then(snap => {
+                    if (snap.val() === 'multiple') {
+                        update(ref(database, `events/${selectedEvent}/courts/${selectedCourt}/config`), { refereeMode: 'single' });
+                        setToastMessages(prev => [...prev, { id: Date.now() + 1, text: "Only 1 referee remaining. Auto-downgraded to Single Referee Mode." }]);
+                    }
+                });
+            }
+
+            setRefereesData(currentData);
+            prevRefereesRef.current = currentData;
         });
         return () => unsubscribe();
     }, [selectedEvent, selectedCourt]);
@@ -382,7 +436,17 @@ function Screen() {
                 visible={showQRCode}
                 onClose={() => setShowQRCode(false)}
                 refereesData={refereesData}
+                refereeMode={refereeMode}
             />
+
+            {/* Toast Notifications */}
+            <div className="toast-container" style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '10px', pointerEvents: 'none' }}>
+                {toastMessages.map(toast => (
+                    <div key={toast.id} style={{ backgroundColor: 'rgba(255, 60, 48, 0.95)', color: 'white', padding: '15px 30px', borderRadius: '12px', fontSize: '1.4vw', fontWeight: 'bold', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', textAlign: 'center', border: '2px solid rgba(255,255,255,0.2)' }}>
+                        {toast.text}
+                    </div>
+                ))}
+            </div>
         </>
     );
 }

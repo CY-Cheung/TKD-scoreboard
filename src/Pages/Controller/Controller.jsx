@@ -45,6 +45,7 @@ function Controller() {
     const [matchData, setMatchData] = useState(null);
     const [lastAction, setLastAction] = useState(null); // { side: 'red'|'blue', text: '...' }
     const [isConnected, setIsConnected] = useState(false);
+    const [refereeMode, setRefereeMode] = useState('single');
 
     // Sync state if URL changes
     useEffect(() => {
@@ -59,6 +60,16 @@ function Controller() {
             localStorage.setItem("selectedCourt", ct);
         }
     }, [searchParams]);
+
+    // Listen to refereeMode
+    useEffect(() => {
+        if (!eventId || !courtId) return;
+        const modeRef = ref(database, `events/${eventId}/courts/${courtId}/config/refereeMode`);
+        const unsubscribe = onValue(modeRef, (snapshot) => {
+            setRefereeMode(snapshot.val() || 'single');
+        });
+        return () => unsubscribe();
+    }, [eventId, courtId]);
 
     // Grab Referee Seat (J1, J2, J3) if not logged in
     useEffect(() => {
@@ -169,7 +180,7 @@ function Controller() {
         }
 
         // Call scoring API (+1 point increment for selected point index)
-        updateScoreAndCheckRules(eventId, currentMatchId, side, "pointsStat", index, 1, courtId, deviceId);
+        updateScoreAndCheckRules(eventId, currentMatchId, side, "pointsStat", index, 1, courtId, deviceId, mySeat, refereeMode);
 
         const actionObj = { side, text: `${side.toUpperCase()} ${label}` };
         setLastAction(actionObj);

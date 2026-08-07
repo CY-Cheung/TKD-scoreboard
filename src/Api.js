@@ -8,7 +8,7 @@ const getScoreValue = (stats, opponentGamjeom) => {
     return points + (opponentGamjeom || 0);
 };
 
-export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, courtId = null, deviceId = null) => {
+export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, courtId = null, deviceId = null, seatName = null, mode = 'single') => {
     const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
 
     runTransaction(matchRef, (matchData) => {
@@ -35,15 +35,52 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
             targetSide.gamjeom = (targetSide.gamjeom || 0) + delta;
             if (targetSide.gamjeom < 0) targetSide.gamjeom = 0;
         } else if (type === 'pointsStat') {
-            if (!targetSide.pointsStat || targetSide.pointsStat.length < 5) {
-                 const oldStats = targetSide.pointsStat || [];
-                 targetSide.pointsStat = [
-                    oldStats[0] || 0, oldStats[1] || 0, oldStats[2] || 0,
-                    oldStats[3] || 0, oldStats[4] || 0
-                 ];
+            if (mode === 'multiple' && seatName) {
+                // Handle Valid Point Voting Mechanism
+                if (!matchData.votes) matchData.votes = [];
+                const now = Date.now();
+                
+                // Add the new vote
+                matchData.votes.push({ side, index, seatName, deviceId, timestamp: now });
+                
+                // Keep only votes from the last 1000ms
+                matchData.votes = matchData.votes.filter(v => now - v.timestamp <= 1000);
+                
+                // Check if there are 2 or more UNIQUE referees who voted for the exact same side & index
+                const matchingVotes = matchData.votes.filter(v => v.side === side && v.index === index);
+                const uniqueSeats = new Set(matchingVotes.map(v => v.seatName));
+                
+                if (uniqueSeats.size >= 2) {
+                    // Valid Point achieved!
+                    // Add score
+                    if (!targetSide.pointsStat || targetSide.pointsStat.length < 5) {
+                        const oldStats = targetSide.pointsStat || [];
+                        targetSide.pointsStat = [
+                            oldStats[0] || 0, oldStats[1] || 0, oldStats[2] || 0,
+                            oldStats[3] || 0, oldStats[4] || 0
+                        ];
+                    }
+                    targetSide.pointsStat[index] = (targetSide.pointsStat[index] || 0) + delta;
+                    if (targetSide.pointsStat[index] < 0) targetSide.pointsStat[index] = 0;
+                    
+                    // Clear the votes for this specific score to prevent double-scoring
+                    matchData.votes = matchData.votes.filter(v => !(v.side === side && v.index === index));
+                } else {
+                    // Not enough votes yet, just return and save the vote array
+                    return matchData;
+                }
+            } else {
+                // Single mode or direct score
+                if (!targetSide.pointsStat || targetSide.pointsStat.length < 5) {
+                     const oldStats = targetSide.pointsStat || [];
+                     targetSide.pointsStat = [
+                        oldStats[0] || 0, oldStats[1] || 0, oldStats[2] || 0,
+                        oldStats[3] || 0, oldStats[4] || 0
+                     ];
+                }
+                targetSide.pointsStat[index] = (targetSide.pointsStat[index] || 0) + delta;
+                if (targetSide.pointsStat[index] < 0) targetSide.pointsStat[index] = 0;
             }
-            targetSide.pointsStat[index] = (targetSide.pointsStat[index] || 0) + delta;
-            if (targetSide.pointsStat[index] < 0) targetSide.pointsStat[index] = 0;
         }
 
         const redGamjeom = matchData.stats.red.gamjeom;

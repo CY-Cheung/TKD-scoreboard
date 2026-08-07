@@ -8,10 +8,12 @@
 * **Real-time Sync (實時同步)**: 透過 Firebase Realtime Database (實時資料庫) 做到分數秒速更新。
 * **Smart Match Resolution (智能賽事解析)**: 利用 Reverse Tracing (反向追蹤) 同 Midpoint Matching (中點配對) Algorithm (演算法) 解析官方 PDF (可攜式文件格式) 賽程表，自動提取 Match IDs (比賽編號)、選手名、屬會同重量級別。
 * **Dynamic QR Code (動態二維碼)**: 大屏幕會顯示專屬 QR Code (二維碼)，最多允許 3 位裁判用手機直接連接並控制目前嘅 Court (場地)。
+* **Auto-Downgrade & Connection Alert (自動降級與斷線提示)**: 系統實時監測裁判連線狀態，當裁判意外斷線會即時彈出警示 (Toast Notification)；若多位裁判模式下連線人數不足 2 人，系統更會自動降級回單一裁判模式以保證賽事順利進行。
 
 ### 📱 Mobile Controller (手機遙控器 - Remote)
 * **No-App Installation (免安裝應用程式)**: 裁判只需掃描 QR Code (二維碼) 即可喺 Mobile Browser (手機瀏覽器) 操作，無須下載任何 App。
 * **Smart Seat Locking (智能座位鎖定)**: 採用 Distributed Locking (分散式鎖定) 機制，自動將裁判分配去 `J1`, `J2`, 或 `J3` 席位。每個 Court (場地) 嚴格限制最多 3 人連接，斷線會自動讓座。
+* **Valid Point System (有效得分投票機制)**: 支援「Multiple Referee (多位裁判)」模式，當 2 位或以上裁判喺 1000 毫秒 (1秒) 內投出相同分數時，系統先會判定為有效並透過 `runTransaction` 原子操作正式加分，完美杜絕重複加分 (Double Scoring)。
 * **Haptic Feedback (觸覺回饋)**: 激烈撳分時，手機會提供即時震動回饋，提升操作手感。
 * **Secure Access (安全存取)**: Firebase Security Rules (保安規則) 會嚴格驗證發送指令嘅 Device ID (裝置識別碼)。就算裁判無登入 Google Account (Google 帳戶)，亦能有效防止未經授權嘅亂改分行為。
 
