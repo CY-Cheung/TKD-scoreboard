@@ -2,10 +2,10 @@
 import { ref, runTransaction, update, get } from "firebase/database";
 import { database } from './firebase';
 
-const getScoreValue = (stats, opponentGamjeom) => {
+const getScoreValue = (stats, opponentStats) => {
     const p = stats?.pointsStat || [0,0,0,0,0];
     const points = (p[0]*1) + (p[1]*2) + (p[2]*3) + (p[3]*4) + (p[4]*6);
-    return points + (opponentGamjeom || 0);
+    return points + (opponentStats?.gamjeom || 0) + (opponentStats?.gamjeomAvoiding || 0);
 };
 
 export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, courtId = null, deviceId = null, seatName = null, mode = 'single') => {
@@ -34,6 +34,11 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
         if (type === 'gamjeom') {
             targetSide.gamjeom = (targetSide.gamjeom || 0) + delta;
             if (targetSide.gamjeom < 0) targetSide.gamjeom = 0;
+        } else if (type === 'gamjeomAvoiding') {
+            targetSide.gamjeom = (targetSide.gamjeom || 0) + delta;
+            if (targetSide.gamjeom < 0) targetSide.gamjeom = 0;
+            targetSide.gamjeomAvoiding = (targetSide.gamjeomAvoiding || 0) + delta;
+            if (targetSide.gamjeomAvoiding < 0) targetSide.gamjeomAvoiding = 0;
         } else if (type === 'pointsStat') {
             if (mode === 'multiple' && seatName) {
                 // Handle Valid Point Voting Mechanism
@@ -85,8 +90,8 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
 
         const redGamjeom = matchData.stats.red.gamjeom;
         const blueGamjeom = matchData.stats.blue.gamjeom;
-        const redScore = getScoreValue(matchData.stats.red, blueGamjeom);
-        const blueScore = getScoreValue(matchData.stats.blue, redGamjeom);
+        const redScore = getScoreValue(matchData.stats.red, matchData.stats.blue);
+        const blueScore = getScoreValue(matchData.stats.blue, matchData.stats.red);
 
         const pauseTimerForEvent = () => {
             if (!matchData.state.isPaused && matchData.state.lastStartTime) {
@@ -143,8 +148,8 @@ export const declareRoundWinner = (eventName, matchId, winnerSide) => {
 
         const currentRound = matchData.state.currentRound || 1;
         matchData.stats.roundScores[`R${currentRound}`] = {
-            red: getScoreValue(matchData.stats.red, matchData.stats.blue.gamjeom),
-            blue: getScoreValue(matchData.stats.blue, matchData.stats.red.gamjeom)
+            red: getScoreValue(matchData.stats.red, matchData.stats.blue),
+            blue: getScoreValue(matchData.stats.blue, matchData.stats.red)
         };
 
         if (winnerSide === 'red') {

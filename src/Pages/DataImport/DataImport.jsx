@@ -412,7 +412,7 @@ const DataImport = () => {
 
     const handleAddMatch = async () => {
         if (!eventName || !matchId) {
-            alert('Please provide an Event Name and a Match ID.');
+            showToast('Please provide an Event Name and a Match ID.');
             return;
         }
 
@@ -457,7 +457,7 @@ const DataImport = () => {
             const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
             await set(matchRef, newMatch);
             
-            alert(`Match ${matchId} added to event ${eventName} in Firebase!`);
+            showToast(`Match ${matchId} added to event ${eventName} in Firebase!`);
             setCurrentMatches(prev => ({...prev, [matchId]: newMatch}));
 
             setMatchId('');
@@ -472,7 +472,7 @@ const DataImport = () => {
 
         } catch (error) {
             console.error("Error writing to Firebase:", error);
-            alert(`Failed to add match to Firebase. See console for details.`);
+            showToast(`Failed to add match to Firebase. See console for details.`);
         }
     };
 

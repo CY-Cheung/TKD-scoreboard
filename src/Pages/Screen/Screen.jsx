@@ -17,9 +17,9 @@ const formatTime = (totalSeconds) => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
-const calculateScore = (stats, opponentGamjeom) => {
+const calculateScore = (stats, opponentStats) => {
     const p = stats?.pointsStat || [0, 0, 0, 0, 0];
-    return (p[0] * 1) + (p[1] * 2) + (p[2] * 3) + (p[3] * 4) + (p[4] * 6) + (opponentGamjeom || 0);
+    return (p[0] * 1) + (p[1] * 2) + (p[2] * 3) + (p[3] * 4) + (p[4] * 6) + (opponentStats?.gamjeom || 0) + (opponentStats?.gamjeomAvoiding || 0);
 };
 
 const determineDominantSide = (redStats, blueStats) => {
@@ -32,8 +32,8 @@ const determineDominantSide = (redStats, blueStats) => {
     const rP = redStats?.pointsStat || [0, 0, 0, 0, 0];
     const bP = blueStats?.pointsStat || [0, 0, 0, 0, 0];
 
-    const redTotal = calculateScore({ pointsStat: rP }, bG);
-    const blueTotal = calculateScore({ pointsStat: bP }, rG);
+    const redTotal = calculateScore(redStats, blueStats);
+    const blueTotal = calculateScore(blueStats, redStats);
 
     if (redTotal > blueTotal) return 'red';
     if (blueTotal > redTotal) return 'blue';
@@ -317,8 +317,8 @@ function Screen() {
     const redGamJeom = stats.red?.gamjeom ?? 0;
     const blueGamJeom = stats.blue?.gamjeom ?? 0;
 
-    const redTotalScore = isMatchLoaded ? calculateScore(stats.red, blueGamJeom) : 0;
-    const blueTotalScore = isMatchLoaded ? calculateScore(stats.blue, redGamJeom) : 0;
+    const redTotalScore = isMatchLoaded ? calculateScore(stats.red, stats.blue) : 0;
+    const blueTotalScore = isMatchLoaded ? calculateScore(stats.blue, stats.red) : 0;
 
     const matchNumber = config.matchId ?? "000";
     const currentRound = matchCurrentRound ?? 1;

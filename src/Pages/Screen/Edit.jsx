@@ -23,6 +23,8 @@ const Edit = ({
     const [restMin, setRestMin] = useState(0);
     const [restSec, setRestSec] = useState(0);
     const [showSuperiorityVote, setShowSuperiorityVote] = useState(false);
+    const [showAvoidingPopup, setShowAvoidingPopup] = useState(false);
+    const [avoidingSide, setAvoidingSide] = useState(null);
     const navigate = useNavigate();
 
     const handleWinDeclaration = (winnerSide) => {
@@ -48,12 +50,32 @@ const Edit = ({
 
     const handleAction = (side, type, index, delta) => {
         if (!matchData) return;
+        
+        const currentTimer = matchData.state?.timer || 0;
+        if (type === 'gamjeom' && delta === 1 && currentTimer > 0 && currentTimer <= 10) {
+            setAvoidingSide(side);
+            setShowAvoidingPopup(true);
+            return;
+        }
+
         updateScoreAndCheckRules(eventName, matchId, side, type, index, delta);
+    };
+
+    const handleAvoidingDecision = (penaltyValue) => {
+        if (penaltyValue === 1) {
+            updateScoreAndCheckRules(eventName, matchId, avoidingSide, 'gamjeom', null, 1);
+        } else if (penaltyValue === 2) {
+            updateScoreAndCheckRules(eventName, matchId, avoidingSide, 'gamjeomAvoiding', null, 1);
+        }
+        setShowAvoidingPopup(false);
+        setAvoidingSide(null);
     };
 
     useEffect(() => {
         if (!visible) {
             setShowSuperiorityVote(false);
+            setShowAvoidingPopup(false);
+            setAvoidingSide(null);
             return;
         }
 
@@ -290,6 +312,39 @@ const Edit = ({
 
                 <Button text="Done (完成)" fontSize="1.4cqi" onClick={() => setVisible(false)} icon={<CheckCircle size="1.4cqi" />} />
             </div>
+
+            {showAvoidingPopup && (
+                <div style={{
+                    position: 'absolute',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 2000,
+                    backdropFilter: 'blur(5px)'
+                }}>
+                    <div className="glass-panel" style={{
+                        padding: '3cqi 4cqi',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '2cqi',
+                        border: '2px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '2cqi',
+                        background: 'rgba(30, 30, 40, 0.85)'
+                    }}>
+                        <h2 style={{ margin: 0, fontSize: '2.2cqi', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                            Penalty in last 10s
+                        </h2>
+                        <div style={{ display: 'flex', gap: '2cqi', marginTop: '1cqi' }}>
+                            <Button text="1-Jeom" fontSize="1.6cqi" onClick={() => handleAvoidingDecision(1)} angle={avoidingSide === 'blue' ? 220 : 0} style={{ padding: '1cqi 2cqi' }} />
+                            <Button text="2-Jeom" fontSize="1.6cqi" onClick={() => handleAvoidingDecision(2)} angle={avoidingSide === 'blue' ? 220 : 0} style={{ padding: '1cqi 2cqi' }} />
+                        </div>
+                        <Button text="Cancel" fontSize="1.2cqi" variant="cancel" onClick={() => setShowAvoidingPopup(false)} style={{ marginTop: '1cqi', padding: '0.5cqi 2cqi' }} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
