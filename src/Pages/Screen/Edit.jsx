@@ -25,6 +25,7 @@ const Edit = ({
     const [showSuperiorityVote, setShowSuperiorityVote] = useState(false);
     const [showAvoidingPopup, setShowAvoidingPopup] = useState(false);
     const [avoidingSide, setAvoidingSide] = useState(null);
+    const [avoidingAction, setAvoidingAction] = useState(1);
     const navigate = useNavigate();
 
     const handleWinDeclaration = (winnerSide) => {
@@ -52,10 +53,24 @@ const Edit = ({
         if (!matchData) return;
         
         const currentTimer = matchData.state?.timer || 0;
+        
+        // Handle adding penalty in last 10s
         if (type === 'gamjeom' && delta === 1 && currentTimer > 0 && currentTimer <= 10) {
             setAvoidingSide(side);
+            setAvoidingAction(1);
             setShowAvoidingPopup(true);
             return;
+        }
+
+        // Handle removing penalty
+        if (type === 'gamjeom' && delta === -1) {
+            const sideStats = matchData.stats[side];
+            if (sideStats && sideStats.gamjeomAvoiding && sideStats.gamjeomAvoiding > 0) {
+                setAvoidingSide(side);
+                setAvoidingAction(-1);
+                setShowAvoidingPopup(true);
+                return;
+            }
         }
 
         updateScoreAndCheckRules(eventName, matchId, side, type, index, delta);
@@ -63,9 +78,9 @@ const Edit = ({
 
     const handleAvoidingDecision = (penaltyValue) => {
         if (penaltyValue === 1) {
-            updateScoreAndCheckRules(eventName, matchId, avoidingSide, 'gamjeom', null, 1);
+            updateScoreAndCheckRules(eventName, matchId, avoidingSide, 'gamjeom', null, avoidingAction);
         } else if (penaltyValue === 2) {
-            updateScoreAndCheckRules(eventName, matchId, avoidingSide, 'gamjeomAvoiding', null, 1);
+            updateScoreAndCheckRules(eventName, matchId, avoidingSide, 'gamjeomAvoiding', null, avoidingAction);
         }
         setShowAvoidingPopup(false);
         setAvoidingSide(null);
@@ -335,11 +350,11 @@ const Edit = ({
                         background: 'rgba(30, 30, 40, 0.85)'
                     }}>
                         <h2 style={{ margin: 0, fontSize: '2.2cqi', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                            Penalty in last 10s
+                            {avoidingAction === 1 ? "Penalty in last 10s" : "Remove Penalty"}
                         </h2>
                         <div style={{ display: 'flex', gap: '2cqi', marginTop: '1cqi' }}>
-                            <Button text="1-Jeom" fontSize="1.6cqi" onClick={() => handleAvoidingDecision(1)} angle={avoidingSide === 'blue' ? 220 : 0} style={{ padding: '1cqi 2cqi' }} />
-                            <Button text="2-Jeom" fontSize="1.6cqi" onClick={() => handleAvoidingDecision(2)} angle={avoidingSide === 'blue' ? 220 : 0} style={{ padding: '1cqi 2cqi' }} />
+                            <Button text={avoidingAction === 1 ? "1-Jeom" : "-1 Jeom"} fontSize="1.6cqi" onClick={() => handleAvoidingDecision(1)} angle={avoidingSide === 'blue' ? 220 : 0} style={{ padding: '1cqi 2cqi' }} />
+                            <Button text={avoidingAction === 1 ? "2-Jeom" : "-2 Jeom"} fontSize="1.6cqi" onClick={() => handleAvoidingDecision(2)} angle={avoidingSide === 'blue' ? 220 : 0} style={{ padding: '1cqi 2cqi' }} />
                         </div>
                         <Button text="Cancel" fontSize="1.2cqi" variant="cancel" onClick={() => setShowAvoidingPopup(false)} style={{ marginTop: '1cqi', padding: '0.5cqi 2cqi' }} />
                     </div>
