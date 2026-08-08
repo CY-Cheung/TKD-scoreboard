@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
-import { ref, get, set, remove } from "firebase/database";
+import { ref, get, set, remove, update } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
 import { FolderPlus, Trash, ExclamationTriangle, Key, FileEarmarkPdf, FileEarmarkArrowUp, BoxArrowRight, CheckCircle, House, XCircle, Github } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
@@ -358,9 +358,9 @@ function CourtSetup() {
 
     const performLogin = async () => {
       const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
-      await set(courtRef, {
-        name: courtId,
-        currentMatchId: ''
+      // 只更新 name，避免覆蓋正在進行的比賽狀態 (currentMatchId)
+      await update(courtRef, {
+        name: courtId
       });
 
       const selectedEventData = events.find(evt => evt.id === selectedEvent);
