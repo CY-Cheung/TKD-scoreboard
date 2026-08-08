@@ -475,8 +475,8 @@ function CourtSetup() {
             /* Google Sign-in Login Required Block */
             <div className="cs-form" style={{ textAlign: 'center', padding: '2cqi' }}>
               <div style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: '1.5cqi', marginBottom: '2.5cqi', lineHeight: '1.8', fontWeight: '500', whiteSpace: 'nowrap' }}>
-                <div>No signup required! (無須繁複註冊！)</div>
-                <div>Login with Google to start. (一鍵登入即可開賽。)</div>
+                <div>無需繁瑣註冊！</div>
+                <div>一鍵登入即可開賽。</div>
               </div>
               {authError && <p className="cs-error-message">{authError}</p>}
               <div className="google-btn-wrapper" style={{ display: 'flex', justifyContent: 'center' }}>
@@ -490,8 +490,7 @@ function CourtSetup() {
                 />
               </div>
               <div style={{ fontSize: '1.05cqi', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2cqi', whiteSpace: 'nowrap', lineHeight: '1.6' }}>
-                <div>Verifying identity & loading events...</div>
-                <div>(系統將驗證身分並載入賽事)</div>
+                <div>系統將驗證身分並載入賽事</div>
               </div>
             </div>
           ) : (
