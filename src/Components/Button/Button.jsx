@@ -5,7 +5,7 @@ function Button({
     text,
     children,
     icon,
-    fontSize = "1vw",
+    fontSize = "1cqi",
     angle = 270,
     step = 40,
     gradient,

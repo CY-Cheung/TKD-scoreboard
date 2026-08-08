@@ -219,9 +219,9 @@ const Edit = ({
                 {setShowQRCode && (
                     <Button 
                         text={`QR Code (${occupiedRefereesCount}/3)`}
-                        fontSize="1.6vw"
+                        fontSize="1.6cqi"
                         angle={300}
-                        icon={<QrCode size={16} />}
+                        icon={<QrCode size="0.83cqi" />}
                         onClick={() => {
                             setVisible(false);
                             setShowQRCode(true);
@@ -232,7 +232,7 @@ const Edit = ({
                 {phase === 'REST' && !isFinished && (
                     <Button 
                         text={`Start Round ${(matchData?.state?.currentRound || 1) + 1}`} 
-                        fontSize="1.8vw" 
+                        fontSize="1.8cqi" 
                         onClick={handleStartNextRound} 
                         angle={50} 
                     />
@@ -242,26 +242,26 @@ const Edit = ({
                      <Button 
                         onClick={() => promoteWinner(eventName, matchId, finalWinner)}
                         text="Promote Winner"
-                        fontSize="1.8vw" 
+                        fontSize="1.8cqi" 
                         angle={50}
                     />
                 )}
 
                  {showDeclareWinnerButton && (
-                    <Button text="Declare Round Winner" fontSize="1.8vw" onClick={handleDeclareWinner} angle={50} icon={<Trophy size={16} />} />
+                    <Button text="Winner (判定勝負)" fontSize="1.8cqi" onClick={handleDeclareWinner} angle={50} icon={<Trophy size="0.83cqi" />} />
                 )}
                 
                 {showSuperiorityVote && (
                     <div className="superiority-vote time-control-group">
                         <h2>Woo-se-girok</h2>
                         <div className="buttons">
-                            <Button text="Blue" fontSize="1.8vw" onClick={() => handleWinDeclaration('blue')} angle={220} icon={<PersonFill size={16} />} />
-                            <Button text="Red" fontSize="1.8vw" onClick={() => handleWinDeclaration('red')} angle={0} icon={<PersonFill size={16} />} />
+                            <Button text="Blue" fontSize="1.8cqi" onClick={() => handleWinDeclaration('blue')} angle={220} icon={<PersonFill size="0.83cqi" />} />
+                            <Button text="Red" fontSize="1.8cqi" onClick={() => handleWinDeclaration('red')} angle={0} icon={<PersonFill size="0.83cqi" />} />
                         </div>
                     </div>
                 )}
 
-                <Button text="Done" fontSize="1.6vw" onClick={() => setVisible(false)} icon={<CheckCircle size={16} />} />
+                <Button text="Done (完成)" fontSize="1.6cqi" onClick={() => setVisible(false)} icon={<CheckCircle size="0.83cqi" />} />
             </div>
         </div>
     );

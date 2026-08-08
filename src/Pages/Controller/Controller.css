@@ -10,7 +10,7 @@
 	justify-content: center;
 	height: 100dvh;
 	width: 100dvw;
-	max-width: 100vw;
+	max-width: 100cqi;
 	position: relative;
 	background-color: #0f172a;
 	overflow: hidden;
@@ -24,17 +24,17 @@
 	top: 0;
 	left: 0;
 	width: 100%;
-	max-width: 100vw;
+	max-width: 100cqi;
 	box-sizing: border-box;
-	height: 4vw; /* Thickened from 2.083vw */
+	height: 4cqi; /* Thickened from 2.083cqi */
 	background-color: rgba(255, 255, 255, 0.03);
-	backdrop-filter: blur(0.781vw);
+	backdrop-filter: blur(0.781cqi);
 	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	box-shadow: 0 0.208vw 1.562vw rgba(0, 0, 0, 0.1);
+	box-shadow: 0 0.208cqi 1.562cqi rgba(0, 0, 0, 0.1);
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 0 1vw;
+	padding: 0 1cqi;
 	z-index: 50;
 	overflow: hidden;
 }
@@ -43,8 +43,8 @@
 	background: transparent;
 	border: 1px solid rgba(255, 255, 255, 0.2);
 	color: #94a3b8;
-	padding: 0.3vw 0.6vw;
-	border-radius: 0.5vw;
+	padding: 0.3cqi 0.6cqi;
+	border-radius: 0.5cqi;
 	cursor: pointer;
 	display: flex;
 	align-items: center;
@@ -53,7 +53,7 @@
 
 .ctrl-info-badges {
 	display: flex;
-	gap: 0.6vw;
+	gap: 0.6cqi;
 	align-items: center;
 	flex-shrink: 1;
 }
@@ -61,11 +61,11 @@
 .ctrl-badge {
 	background: rgba(255, 255, 255, 0.05);
 	border: 1px solid rgba(255, 255, 255, 0.2);
-	box-shadow: 0 0 0.521vw rgba(255, 255, 255, 0.05);
+	box-shadow: 0 0 0.521cqi rgba(255, 255, 255, 0.05);
 	color: #cbd5e1;
-	font-size: 1.1vw;
-	padding: 0.2vw 0.6vw;
-	border-radius: 0.4vw;
+	font-size: 1.1cqi;
+	padding: 0.2cqi 0.6cqi;
+	border-radius: 0.4cqi;
 	font-weight: 600;
 	white-space: nowrap;
 }
@@ -81,7 +81,7 @@
 }
 
 .ctrl-conn-status {
-	font-size: 1vw;
+	font-size: 1cqi;
 	font-weight: 600;
 	white-space: nowrap;
 	flex-shrink: 0;
@@ -91,44 +91,44 @@
 	color: #4ade80;
 	display: flex;
 	align-items: center;
-	gap: 0.208vw;
+	gap: 0.208cqi;
 }
 
 .conn-disconnected {
 	color: #f87171;
 	display: flex;
 	align-items: center;
-	gap: 0.208vw;
+	gap: 0.208cqi;
 }
 
 /* Action Toast Banner with Side Color */
 .ctrl-action-banner {
 	position: absolute;
-	top: 3.125vw;
+	top: 3.125cqi;
 	left: 50%;
 	transform: translateX(-50%);
-	padding: 0.417vw 1.042vw;
-	border-radius: 0.625vw;
+	padding: 0.417cqi 1.042cqi;
+	border-radius: 0.625cqi;
 	font-weight: 800;
-	font-size: 0.833vw;
-	box-shadow: 0 0.417vw 1.667vw rgba(0, 0, 0, 0.5);
+	font-size: 0.833cqi;
+	box-shadow: 0 0.417cqi 1.667cqi rgba(0, 0, 0, 0.5);
 	z-index: 100;
 	color: #ffffff;
 	animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 	white-space: nowrap;
-	backdrop-filter: blur(0.521vw);
+	backdrop-filter: blur(0.521cqi);
 }
 
 .ctrl-action-banner.red-banner {
 	background: rgba(220, 38, 38, 0.4);
 	border: 1px solid rgba(248, 113, 113, 0.8);
-	box-shadow: 0 0 1.042vw rgba(220, 38, 38, 0.6);
+	box-shadow: 0 0 1.042cqi rgba(220, 38, 38, 0.6);
 }
 
 .ctrl-action-banner.blue-banner {
 	background: rgba(37, 99, 235, 0.4);
 	border: 1px solid rgba(96, 165, 250, 0.8);
-	box-shadow: 0 0 1.042vw rgba(37, 99, 235, 0.6);
+	box-shadow: 0 0 1.042cqi rgba(37, 99, 235, 0.6);
 }
 
 .col {
@@ -138,9 +138,9 @@
 	justify-content: center;
 	height: 100dvh;
 	width: 20dvw;
-	padding: 4.5vw 0.521vw 0.521vw 0.521vw; /* Increased top padding from 2.604vw to 4.5vw */
+	padding: 4.5cqi 0.521cqi 0.521cqi 0.521cqi; /* Increased top padding from 2.604cqi to 4.5cqi */
 	box-sizing: border-box;
-	gap: 0.521vw;
+	gap: 0.521cqi;
 }
 
 .col.red-col {
@@ -167,8 +167,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding-inline: 0.312vw;
-	backdrop-filter: blur(0.521vw);
+	padding-inline: 0.312cqi;
+	backdrop-filter: blur(0.521cqi);
 }
 
 .center-match-details-horizontal {
@@ -177,13 +177,13 @@
 	align-items: center;
 	justify-content: space-between;
 	width: 100%;
-	gap: 0.208vw;
+	gap: 0.208cqi;
 	overflow: hidden;
 }
 
 .competitor-side {
 	flex: 1;
-	font-size: 1.1vw;
+	font-size: 1.1cqi;
 	font-weight: 800;
 	text-align: center;
 	white-space: nowrap;
@@ -204,26 +204,26 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 0.104vw;
+	gap: 0.104cqi;
 	flex-shrink: 0;
 }
 
 .vs-badge {
-	font-size: 1.1vw;
+	font-size: 1.1cqi;
 	font-weight: 900;
 	color: #fbbf24;
 	letter-spacing: 1px;
-	text-shadow: 0 0 0.521vw rgba(251, 191, 36, 0.8);
+	text-shadow: 0 0 0.521cqi rgba(251, 191, 36, 0.8);
 }
 
 .round-pill {
-	font-size: 0.75vw;
+	font-size: 0.75cqi;
 	background: rgba(255, 255, 255, 0.05);
 	border: 1px solid rgba(255, 255, 255, 0.2);
-	box-shadow: 0 0 0.417vw rgba(255, 255, 255, 0.1);
+	box-shadow: 0 0 0.417cqi rgba(255, 255, 255, 0.1);
 	color: #e2e8f0;
-	padding: 0.208vw 0.417vw;
-	border-radius: 0.625vw;
+	padding: 0.208cqi 0.417cqi;
+	border-radius: 0.625cqi;
 	font-weight: 600;
 	white-space: nowrap;
 }
@@ -233,59 +233,59 @@
 	background: rgba(30, 0, 10, 0.6) !important;
 	border: 1px solid rgba(255, 0, 80, 0.4) !important;
 	color: #ff3b30 !important;
-	text-shadow: 0 0 0.417vw rgba(255, 59, 48, 0.6);
-	box-shadow: inset 0 0 0.781vw rgba(255, 0, 80, 0.1), 0 0.208vw 0.781vw rgba(0, 0, 0, 0.3) !important;
+	text-shadow: 0 0 0.417cqi rgba(255, 59, 48, 0.6);
+	box-shadow: inset 0 0 0.781cqi rgba(255, 0, 80, 0.1), 0 0.208cqi 0.781cqi rgba(0, 0, 0, 0.3) !important;
 }
 
 .neon-btn.red-btn:active {
 	background: rgba(255, 0, 80, 0.3) !important;
 	border-color: #ff3b30 !important;
-	box-shadow: inset 0 0 1.042vw rgba(255, 0, 80, 0.5), 0 0 1.042vw rgba(255, 0, 80, 0.6) !important;
+	box-shadow: inset 0 0 1.042cqi rgba(255, 0, 80, 0.5), 0 0 1.042cqi rgba(255, 0, 80, 0.6) !important;
 	color: #ffffff !important;
-	text-shadow: 0 0 0.521vw #ffffff;
+	text-shadow: 0 0 0.521cqi #ffffff;
 }
 
 .neon-btn.blue-btn {
 	background: rgba(0, 10, 30, 0.6) !important;
 	border: 1px solid rgba(0, 150, 255, 0.4) !important;
 	color: #38bdf8 !important;
-	text-shadow: 0 0 0.417vw rgba(56, 189, 248, 0.6);
-	box-shadow: inset 0 0 0.781vw rgba(0, 150, 255, 0.1), 0 0.208vw 0.781vw rgba(0, 0, 0, 0.3) !important;
+	text-shadow: 0 0 0.417cqi rgba(56, 189, 248, 0.6);
+	box-shadow: inset 0 0 0.781cqi rgba(0, 150, 255, 0.1), 0 0.208cqi 0.781cqi rgba(0, 0, 0, 0.3) !important;
 }
 
 .neon-btn.blue-btn:active {
 	background: rgba(0, 150, 255, 0.3) !important;
 	border-color: #38bdf8 !important;
-	box-shadow: inset 0 0 1.042vw rgba(0, 150, 255, 0.5), 0 0 1.042vw rgba(0, 150, 255, 0.6) !important;
+	box-shadow: inset 0 0 1.042cqi rgba(0, 150, 255, 0.5), 0 0 1.042cqi rgba(0, 150, 255, 0.6) !important;
 	color: #ffffff !important;
-	text-shadow: 0 0 0.521vw #ffffff;
+	text-shadow: 0 0 0.521cqi #ffffff;
 }
 
 @keyframes popIn {
-	from { transform: translate(-50%, -0.521vw); opacity: 0; }
+	from { transform: translate(-50%, -0.521cqi); opacity: 0; }
 	to { transform: translate(-50%, 0); opacity: 1; }
 }
 
-@media (max-width: 40vw) {
+@media (max-width: 40cqi) {
 	.ctrl-top-bar {
-		padding: 0 0.417vw;
-		height: 1.875vw;
+		padding: 0 0.417cqi;
+		height: 1.875cqi;
 	}
 	.ctrl-badge {
-		font-size: 0.542vw;
-		padding: 1px 0.208vw;
-		max-width: 3.646vw;
+		font-size: 0.542cqi;
+		padding: 1px 0.208cqi;
+		max-width: 3.646cqi;
 	}
 	.ctrl-conn-status {
-		font-size: 0.583vw;
+		font-size: 0.583cqi;
 	}
 	.competitor-side {
-		font-size: 0.625vw;
+		font-size: 0.625cqi;
 	}
 	.vs-badge {
-		font-size: 0.667vw;
+		font-size: 0.667cqi;
 	}
 	.round-pill {
-		font-size: 0.5vw;
+		font-size: 0.5cqi;
 	}
 }

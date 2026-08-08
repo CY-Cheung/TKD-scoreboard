@@ -8,7 +8,7 @@
     display: flex;
     flex-direction: column; /* Changed to column */
     align-items: center;
-    padding: 0.781vw;
+    padding: 0.781cqi;
     transition: bottom 0.3s ease-in-out;
     z-index: 1001;
 }
@@ -20,16 +20,16 @@
 .edit-grid {
     display: grid;
     grid-template-columns: auto repeat(6, 1fr); /* 1 label column + 6 content columns */
-    gap: 0.521vw;
+    gap: 0.521cqi;
     width: 95%;
-    margin-bottom: 1.042vw; /* Space between grid and time bar */
+    margin-bottom: 1.042cqi; /* Space between grid and time bar */
 }
 
 .grid-cell {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0.26vw;
+    padding: 0.26cqi;
 }
 
 .grid-cell.header {
@@ -55,35 +55,35 @@
     justify-content: center;
     align-items: center;
     width: 100%;
-    padding-top: 0.781vw;
+    padding-top: 0.781cqi;
     border-top: 1px solid #444;
 }
 
 .time-control-group {
     display: flex;
     align-items: center;
-    margin: 0 1.042vw;
+    margin: 0 1.042cqi;
 }
 
 .time-control-group h2 {
-    margin-right: 0.521vw;
+    margin-right: 0.521cqi;
     font-size: 1.5dvw;
 }
 
 .time-selects {
     display: flex;
     align-items: center;
-    margin: 0 0.26vw;
+    margin: 0 0.26cqi;
     font-size: 1.5dvw;
 }
 
 .time-selects select {
     width: auto; /* Override the global 100% width */
-    margin: 0 0.26vw;
+    margin: 0 0.26cqi;
     font-size: 1.5dvw;
 }
 
 /* Aligning the Done button */
 .time-bar > .btn-wrapper {
-    margin-left: 2.083vw; /* Add some space before the Done button */
+    margin-left: 2.083cqi; /* Add some space before the Done button */
 }

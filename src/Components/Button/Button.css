@@ -1,14 +1,14 @@
 /* Button.css - Modern Pill-shaped Gradient Border Button (Matching Gemini & DB Button style) */
 
 .tkd-btn {
-  --font-size: 1vw;
+  --font-size: 1cqi;
   display: inline-flex;
   justify-content: center;
   align-items: center;
   gap: 0.5em;
   position: relative;
-  border-radius: 520.76vw;
-  border: 0.13vw solid transparent;
+  border-radius: 520.76cqi;
+  border: 0.13cqi solid transparent;
   background: 
     linear-gradient(#18181c, #18181c) padding-box,
     var(--button-gradient, linear-gradient(135deg, #3b82f6, #ec4899)) border-box;
@@ -16,20 +16,20 @@
   font-size: var(--font-size);
   font-weight: 600;
   padding: 0.55em 1.5em;
-  margin: 0.35vw;
+  margin: 0.35cqi;
   cursor: pointer;
   outline: none;
   box-sizing: border-box;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0.208vw 0.625vw rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0.208cqi 0.625cqi rgba(0, 0, 0, 0.35);
   font-family: inherit;
   line-height: 1.2;
 }
 
 .tkd-btn:hover {
   filter: brightness(1.25);
-  transform: translateY(-0.078vw);
-  box-shadow: 0 0.312vw 0.937vw rgba(0, 0, 0, 0.5);
+  transform: translateY(-0.078cqi);
+  box-shadow: 0 0.312cqi 0.937cqi rgba(0, 0, 0, 0.5);
 }
 
 .tkd-btn:active {

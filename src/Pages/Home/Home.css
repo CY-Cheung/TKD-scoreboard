@@ -11,18 +11,19 @@
 
 /* --- 中間 16:9 大卡片佈局 --- */
 .home-content {
-    border-radius: 1.042vw;
+    position: relative;
+    border-radius: 1.04cqi;
     width: 90%;
-    max-width: 75vw;
+    max-width: 75cqi;
     aspect-ratio: 16 / 9;
     display: flex;
     flex-direction: row;
     align-items: stretch;
     background-color: rgba(25, 25, 35, 0.45);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(1.042vw);
-    -webkit-backdrop-filter: blur(1.042vw);
-    box-shadow: 0 0.833vw 2.5vw rgba(0, 0, 0, 0.5), inset 0 0 0 0.052vw rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(1.04cqi);
+    -webkit-backdrop-filter: blur(1.04cqi);
+    box-shadow: 0 0.83cqi 2.5cqi rgba(0, 0, 0, 0.5), inset 0 0 0 0.05cqi rgba(255, 255, 255, 0.2);
     animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
     padding: 0;
@@ -31,7 +32,7 @@
 @keyframes fadeUp {
     0% {
         opacity: 0;
-        transform: translateY(2.083vw);
+        transform: translateY(2.08cqi);
     }
     100% {
         opacity: 1;
@@ -46,55 +47,58 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: 3vw;
+    justify-content: center;
+    gap: 2cqi;
+    padding: 6cqi;
     text-align: left;
 }
 
 .home-title-container h1 {
-    font-size: 3.5vw;
+    font-size: 3.5cqi;
     margin: 0;
     color: #ffffff;
     font-weight: 800;
     line-height: 1.1;
-    letter-spacing: 0.026vw;
+    letter-spacing: 0.03cqi;
 }
 
 .home-title-container h2 {
-    font-size: 1.5vw;
+    font-size: 1.5cqi;
     color: rgba(255,255,255,0.9);
-    margin: 0.8vw 0 0 0;
+    margin: 0.8cqi 0 0 0;
     font-weight: normal;
-    letter-spacing: 0.1vw;
+    letter-spacing: 0.1cqi;
 }
 
 .home-app-intro-list {
-    font-size: 1.1vw;
+    font-size: 1.1cqi;
     color: rgba(255, 255, 255, 0.85);
-    margin-top: 2vw;
+    margin-top: 2cqi;
     line-height: 1.6;
-    padding-left: 1.5vw;
+    padding-left: 1.5cqi;
     list-style-type: disc;
 }
 
 .home-app-intro-list li {
-    margin-bottom: 0.5vw;
+    margin-bottom: 0.5cqi;
 }
 
 .home-footer-links {
-    margin-top: auto;
-    width: 100%;
+    position: absolute;
+    bottom: 1.5cqi;
+    left: 1.5cqi;
+    width: auto;
     display: flex;
     justify-content: flex-start;
-    gap: 1.042vw;
-    font-size: 1.1vw;
+    gap: 1.04cqi;
+    font-size: 1.1cqi;
     color: rgba(255, 255, 255, 0.5);
 }
 
 .home-footer-links a {
     display: flex;
     align-items: center;
-    gap: 0.312vw;
+    gap: 0.31cqi;
     cursor: pointer;
     transition: color 0.2s;
     text-decoration: none;
@@ -106,14 +110,14 @@
 }
 
 .home-divider {
-    width: 0.052vw;
+    width: 0.05cqi;
     background: linear-gradient(
         to bottom, 
         rgba(255,255,255,0) 0%, 
         rgba(255,255,255,0.2) 50%, 
         rgba(255,255,255,0) 100%
     );
-    margin: 3vw 0;
+    margin: 3cqi 0;
 }
 
 .home-right-panel {
@@ -124,13 +128,13 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 3vw;
+    padding: 6cqi;
 }
 
 .home-nav-container {
     display: flex;
     flex-direction: column;
-    gap: 1.5vw;
+    gap: 1.5cqi;
     width: 100%;
 }
 
@@ -138,22 +142,24 @@
 /* --- 右上角資訊卡樣式 --- */
 .session-info-form {
     position: absolute;
-    top: 2dvh;
-    right: 1.5dvw;
+    bottom: 1.5cqi;
+    right: 2cqi;
+    top: auto;
+    left: auto;
     background-color: rgba(20, 20, 25, 0.78);
-    backdrop-filter: blur(0.833vw);
-    -webkit-backdrop-filter: blur(0.833vw);
+    backdrop-filter: blur(0.83cqi);
+    -webkit-backdrop-filter: blur(0.83cqi);
     padding: 1.5dvh 1.2dvw;
     border-radius: 1.2dvh;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0.417vw 1.667vw rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0.42cqi 1.67cqi rgba(0, 0, 0, 0.5);
     z-index: 2;
     display: flex;
     flex-direction: column;
     gap: 1dvh;
     width: 20dvw;
-    min-width: 12.5vw;
-    max-width: 16.667vw;
+    min-width: 12.5cqi;
+    max-width: 16.67cqi;
     box-sizing: border-box;
 }
 
@@ -166,29 +172,29 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     padding-bottom: 0.8dvh;
     margin-bottom: 0.3dvh;
-    gap: 0.417vw;
+    gap: 0.42cqi;
 }
 
 .user-info-group {
     display: flex;
     align-items: center;
-    gap: 0.417vw;
+    gap: 0.42cqi;
     min-width: 0;
     flex: 1;
 }
 
 .user-avatar-img {
-    width: 1.667vw;
-    height: 1.667vw;
+    width: 1.67cqi;
+    height: 1.67cqi;
     border-radius: 50%;
-    border: 0.104vw solid #4cd964;
+    border: 0.1cqi solid #4cd964;
     flex-shrink: 0;
     object-fit: cover;
 }
 
 .user-avatar-fallback {
-    width: 1.667vw;
-    height: 1.667vw;
+    width: 1.67cqi;
+    height: 1.67cqi;
     border-radius: 50%;
     background-color: #4285F4;
     display: flex;
@@ -197,7 +203,7 @@
     font-weight: bold;
     color: #fff;
     flex-shrink: 0;
-    font-size: 0.75vw;
+    font-size: 0.75cqi;
 }
 
 .user-text-details {
@@ -236,7 +242,7 @@
     color: rgba(255, 255, 255, 0.6);
     margin-bottom: 0.2dvh;
     text-transform: uppercase;
-    letter-spacing: 0.026vw;
+    letter-spacing: 0.03cqi;
 }
 
 .session-info-form .form-group .form-value {

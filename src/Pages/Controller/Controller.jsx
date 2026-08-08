@@ -218,7 +218,7 @@ function Controller() {
             <div className="controller" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white', padding: '20px', textAlign: 'center' }}>
                 <h1 style={{ color: '#ff3b30' }}>Court is Full</h1>
                 <p>There are already 3 referees connected to this court.</p>
-                <Button text="Go Back" onClick={() => navigate("/court-setup")} variant="orange" />
+                <Button text="Back (返回)" onClick={() => navigate("/court-setup")} variant="orange" />
             </div>
         );
     }
@@ -238,8 +238,8 @@ function Controller() {
                         }
                     }} 
                     aria-label="Back"
-                    icon={<ArrowLeft size={'1.5vw'} />}
-                    fontSize="1vw"
+                    icon={<ArrowLeft size={'1.5cqi'} />}
+                    fontSize="1cqi"
                     angle={180}
                 />
                 <div className="ctrl-info-badges">
@@ -270,21 +270,21 @@ function Controller() {
                     className="neon-btn red-btn"
                     text="Red 6" 
                     angle={350} 
-                    fontSize="2.5vw" 
+                    fontSize="2.5cqi" 
                     onClick={() => handleScore("red", 4, "+6 Turn Head")} 
                 />
                 <Button 
                     className="neon-btn red-btn"
                     text="Red 4" 
                     angle={350} 
-                    fontSize="2.5vw" 
+                    fontSize="2.5cqi" 
                     onClick={() => handleScore("red", 3, "+4 Turn Body")} 
                 />
                 <Button 
                     className="neon-btn red-btn"
                     text="Red 1" 
                     angle={350} 
-                    fontSize="2.5vw" 
+                    fontSize="2.5cqi" 
                     onClick={() => handleScore("red", 0, "+1 Punch")} 
                 />
             </div>
@@ -295,14 +295,14 @@ function Controller() {
                     className="neon-btn red-btn"
                     text="Red 3" 
                     angle={350} 
-                    fontSize="2.5vw" 
+                    fontSize="2.5cqi" 
                     onClick={() => handleScore("red", 2, "+3 Head")} 
                 />
                 <Button 
                     className="neon-btn red-btn"
                     text="Red 2" 
                     angle={350} 
-                    fontSize="2.5vw" 
+                    fontSize="2.5cqi" 
                     onClick={() => handleScore("red", 1, "+2 Body")} 
                 />
             </div>
@@ -325,14 +325,14 @@ function Controller() {
                     className="neon-btn blue-btn"
                     text="Blue 3" 
                     angle={210} 
-                    fontSize="2.5vw" 
+                    fontSize="2.5cqi" 
                     onClick={() => handleScore("blue", 2, "+3 Head")} 
                 />
                 <Button 
                     className="neon-btn blue-btn"
                     text="Blue 2" 
                     angle={210} 
-                    fontSize="2.5vw" 
+                    fontSize="2.5cqi" 
                     onClick={() => handleScore("blue", 1, "+2 Body")} 
                 />
             </div>
@@ -343,21 +343,21 @@ function Controller() {
                     className="neon-btn blue-btn"
                     text="Blue 6" 
                     angle={210} 
-                    fontSize="2.5vw" 
+                    fontSize="2.5cqi" 
                     onClick={() => handleScore("blue", 4, "+6 Turn Head")} 
                 />
                 <Button 
                     className="neon-btn blue-btn"
                     text="Blue 4" 
                     angle={210} 
-                    fontSize="2.5vw" 
+                    fontSize="2.5cqi" 
                     onClick={() => handleScore("blue", 3, "+4 Turn Body")} 
                 />
                 <Button 
                     className="neon-btn blue-btn"
                     text="Blue 1" 
                     angle={210} 
-                    fontSize="2.5vw" 
+                    fontSize="2.5cqi" 
                     onClick={() => handleScore("blue", 0, "+1 Punch")} 
                 />
             </div>

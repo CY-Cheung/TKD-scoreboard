@@ -99,7 +99,7 @@ function Screen() {
         const unsubscribe = onValue(eventRef, (snapshot) => {
             const val = snapshot.val();
             if (val) {
-                setEventName(val.EventName || val.eventName || val.name || selectedEvent);
+                setEventName(val?.EventName || val?.eventName || val?.settings?.eventName || val?.name || selectedEvent);
             } else {
                 setEventName(selectedEvent);
             }
@@ -370,7 +370,7 @@ function Screen() {
                     <div style={{ position: 'absolute', left: 'calc(var(--screen-width) * 0.03)' }}>
                         <Button 
                             onClick={(e) => { e.stopPropagation(); window.history.back(); }} 
-                            text="Back" 
+                            text="Back (返回)" 
                             icon={<ArrowLeft style={{ width: 'calc(var(--screen-width) * 0.015)', height: 'calc(var(--screen-width) * 0.015)' }} />} 
                             fontSize="calc(var(--screen-width) * 0.012)" 
                             angle={180}
@@ -465,6 +465,7 @@ function Screen() {
             {/* Controller Connection QR Code Modal */}
             <QRCodeDisplay
                 eventId={selectedEvent}
+        eventName={eventName}
                 courtId={selectedCourt}
                 matchId={currentMatchId}
                 visible={showQRCode}
@@ -474,9 +475,9 @@ function Screen() {
             />
 
             {/* Toast Notifications */}
-            <div className="toast-container" style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '10px', pointerEvents: 'none' }}>
+            <div className="toast-container" style={{ position: 'fixed', top: '1.04cqi', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '0.52cqi', pointerEvents: 'none' }}>
                 {toastMessages.map(toast => (
-                    <div key={toast.id} style={{ backgroundColor: 'rgba(255, 60, 48, 0.95)', color: 'white', padding: '15px 30px', borderRadius: '12px', fontSize: '1.4vw', fontWeight: 'bold', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', textAlign: 'center', border: '2px solid rgba(255,255,255,0.2)' }}>
+                    <div key={toast.id} style={{ backgroundColor: 'rgba(255, 60, 48, 0.95)', color: 'white', padding: '0.78cqi 1.56cqi', borderRadius: '0.62cqi', fontSize: '1.4cqi', fontWeight: 'bold', boxShadow: '0 0.42cqi 1.25cqi rgba(0,0,0,0.5)', textAlign: 'center', border: '2px solid rgba(255,255,255,0.2)' }}>
                         {toast.text}
                     </div>
                 ))}

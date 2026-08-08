@@ -1,9 +1,9 @@
 .card {
 	height: auto;
-	width: calc(var(--card-width, 75) * 1vw);
+	width: calc(var(--card-width, 75) * 1cqi);
 	width: calc(var(--card-width, 75) * 1dvw);
 	background: hsl(0, 0%, 5%);
-	border-radius: calc(var(--card-width, 75) / 10 * 1vw);
+	border-radius: calc(var(--card-width, 75) / 10 * 1cqi);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -12,12 +12,12 @@
 
 .card::after,
 .card:hover::before {
-	--inset: -0.25vw;
+	--inset: -0.25cqi;
 	content: "";
 	position: absolute;
 	z-index: -1;
 	inset: var(--inset);
-	border-radius: calc(var(--card-width, 75) / 10 * 1vw - var(--inset));
+	border-radius: calc(var(--card-width, 75) / 10 * 1cqi - var(--inset));
 	background: conic-gradient(
 		from var(--angle),
 		#000000,
@@ -28,12 +28,12 @@
 		var(--card-color-2),
 		#000000
 	);
-	border: hsl(0, 0%, 10%) solid 0.125vw;
+	border: hsl(0, 0%, 10%) solid 0.125cqi;
 }
 
 .card:hover::before {
 	z-index: -2;
-	filter: blur(1vw);
+	filter: blur(1cqi);
 	opacity: 0.75;
 	animation: glowing-border 3.14s linear infinite;
 }

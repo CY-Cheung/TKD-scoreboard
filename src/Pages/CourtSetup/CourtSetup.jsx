@@ -408,50 +408,60 @@ function CourtSetup() {
     }
   };
 
+
+    const toggleFullScreen = (e) => {
+        if (e.target === e.currentTarget) {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            } else {
+                document.exitFullscreen();
+            }
+        }
+    };
   return (
-    <div className="cs-container aurora-bg">
+    <div className="cs-container aurora-bg" onDoubleClick={toggleFullScreen}>
+      <div className="cs-content glass-card split-layout">
       {user && (
-        <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 50, backgroundColor: 'rgba(255,255,255,0.05)', padding: '10px 15px', borderRadius: '15px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ position: 'absolute', bottom: '1.5cqi', right: '1.5cqi', zIndex: 50, backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.52cqi 0.78cqi', borderRadius: '0.78cqi', backdropFilter: 'blur(0.52cqi)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '0.62cqi', textAlign: 'left' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.52cqi' }}>
             {user.photoURL ? (
-              <img src={user.photoURL} alt="User Avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+              <img src={user.photoURL} alt="User Avatar" style={{ width: '1.66cqi', height: '1.66cqi', borderRadius: '50%', objectFit: 'cover' }} />
             ) : (
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#6c5ce7', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
+              <div style={{ width: '1.66cqi', height: '1.66cqi', borderRadius: '50%', backgroundColor: '#6c5ce7', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.85cqi' }}>
                 {user.displayName?.[0] || 'U'}
               </div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', lineHeight: '1.2' }}>{user.displayName || 'User'}</div>
-              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', lineHeight: '1.2' }}>{user.email}</div>
+              <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.77cqi', lineHeight: '1.2' }}>{user.displayName || 'User'}</div>
+              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.64cqi', lineHeight: '1.2' }}>{user.email}</div>
             </div>
           </div>
           <Button
             onClick={googleLogout}
             title="Sign Out of Google Account"
-            fontSize="0.85rem"
+            fontSize="0.72cqi"
             variant="orange"
-            icon={<BoxArrowRight size={14} />}
-            text="Log Out"
-            style={{ padding: '6px 12px', minWidth: 'auto', margin: 0 }}
+            icon={<BoxArrowRight size="0.73cqi" />}
+            text="Logout (登出)"
+            style={{ padding: '0.31cqi 0.62cqi', minWidth: 'auto', margin: 0 }}
           />
         </div>
       )}
-      <div className="cs-content glass-card split-layout">
         <div className="cs-left-panel">
           <div className="cs-title-container">
-            <h1 style={{ fontSize: '3.5vw', lineHeight: '1.1' }}>Taekwondo<br />Scoreboard</h1>
-            <div style={{ fontSize: '1.5vw', color: '#fbc531', margin: '0.3vw 0 0 0', fontWeight: '700', letterSpacing: '0.3vw', textTransform: 'uppercase' }}>Kyorugi</div>
-            <h2 style={{ fontSize: '1.5vw', color: 'rgba(255,255,255,0.9)', margin: '0.8vw 0 0 0', fontWeight: 'normal', letterSpacing: '0.1vw' }}>跆拳道搏擊比賽計分系統</h2>
+            <h1 style={{ fontSize: '3.5cqi', lineHeight: '1.1' }}>Taekwondo<br />Scoreboard</h1>
+            <div style={{ fontSize: '1.5cqi', color: '#fbc531', margin: '0.3cqi 0 0 0', fontWeight: '700', letterSpacing: '0.3cqi', textTransform: 'uppercase' }}>Kyorugi</div>
+            <h2 style={{ fontSize: '1.5cqi', color: 'rgba(255,255,255,0.9)', margin: '0.8cqi 0 0 0', fontWeight: 'normal', letterSpacing: '0.1cqi' }}>跆拳道搏擊比賽計分系統</h2>
             <ul className="cs-app-intro-list">
-              <li>全網頁端運行，無須安裝 App。</li>
-              <li>支援手機掃描 QR Code 即時化身裁判遙控器。</li>
-              <li>具備智能席位鎖定與分數防撞機制。</li>
-              <li>支援一鍵匯入官方 PDF 賽程表，輕鬆實現多場地同步計分與賽事管理。</li>
-            </ul>
+                            <li><strong>無須安裝 App</strong>：手機掃描 QR Code 即刻化身遙控器，隨時隨地開始計分。</li>
+                            <li><strong>防重複加分機制</strong>：多裁判模式下需於 1 秒內一致畀分先算有效，確保計分公平。</li>
+                            <li><strong>智能動態對戰表</strong>：一鍵匯入官方 PDF 賽程，自動生成實時更新嘅淘汰賽晉級圖。</li>
+                            <li><strong>自動連線監控</strong>：智能鎖定裁判席位，斷線即時警示並自動調整模式，比賽絕不中斷。</li>
+                        </ul>
           </div>
           <div className="cs-footer-links">
             <a href="https://github.com/CY-Cheung/TKD-scoreboard" target="_blank" rel="noopener noreferrer">
-              <Github size={20} /> GitHub Repository
+              <Github size="1.04cqi" /> GitHub Repository
             </a>
           </div>
         </div>
@@ -463,21 +473,22 @@ function CourtSetup() {
             <p>Loading authentication state...</p>
           ) : !user ? (
             /* Google Sign-in Login Required Block */
-            <div className="cs-form" style={{ textAlign: 'center' }}>
-              <p style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '1.3vw', marginBottom: '1.5vw', lineHeight: '1.6' }}>
+            <div className="cs-form" style={{ textAlign: 'center', padding: '2cqi' }}>
+              <p style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: '1.8cqi', marginBottom: '2.5cqi', lineHeight: '1.6', fontWeight: '500' }}>
                 毋須額外註冊，<br />只需登入 Google 帳號即可。
               </p>
               {authError && <p className="cs-error-message">{authError}</p>}
-              <div className="google-btn-wrapper">
+              <div className="google-btn-wrapper" style={{ display: 'flex', justifyContent: 'center' }}>
                 <Button
                   onClick={handleGoogleSignIn}
-                  text="Continue with Google"
-                  icon={<Key size={24} />}
-                  fontSize="1vw"
+                  text="Google (登入)"
+                  icon={<Key size="1.6cqi" />}
+                  fontSize="1.3cqi"
                   variant="gemini"
+                  style={{ padding: '1cqi 2cqi' }}
                 />
               </div>
-              <p style={{ fontSize: '0.85vw', color: 'rgba(255, 255, 255, 0.4)', marginTop: '1vw' }}>
+              <p style={{ fontSize: '1.05cqi', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2cqi' }}>
                 系統將會驗證您的身分並載入賽事場地數據
               </p>
             </div>
@@ -485,13 +496,13 @@ function CourtSetup() {
             <form onSubmit={handleSubmit} className="cs-form">
               <div className="form-group">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '0.5dvh' }}>
-                  <label htmlFor="event-select" style={{ margin: 0, fontSize: '1.1rem' }}>Select Event</label>
+                  <label htmlFor="event-select" style={{ margin: 0, fontSize: '1cqi' }}>Select Event</label>
                 </div>
 
                 <select
                   id="event-select"
                   className="datalist-input"
-                  style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%' }}
+                  style={{ padding: '0 0.62cqi', fontSize: '0.85cqi', height: '2.34cqi', boxSizing: 'border-box', width: '100%' }}
                   value={selectedEvent}
                   onChange={(e) => setSelectedEvent(e.target.value)}
                   required
@@ -504,18 +515,18 @@ function CourtSetup() {
                   ))}
                 </select>
 
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                  <Button type="button" onClick={() => setShowCreateModal(true)} text="Create Event" fontSize="0.9rem" angle={120} icon={<FolderPlus size={16} />} style={{ flex: 1, whiteSpace: 'nowrap' }} />
-                  <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} text="Delete Event" fontSize="0.9rem" angle={350} icon={<Trash size={16} />} style={{ flex: 1, whiteSpace: 'nowrap' }} />
+                <div style={{ display: 'flex', gap: '0.52cqi', marginTop: '0.52cqi' }}>
+                  <Button type="button" onClick={() => setShowCreateModal(true)} text="Create (新增)" fontSize="0.77cqi" angle={120} icon={<FolderPlus size="0.83cqi" />} style={{ flex: 1, whiteSpace: 'nowrap' }} />
+                  <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} text="Delete (刪除)" fontSize="0.77cqi" angle={350} icon={<Trash size="0.83cqi" />} style={{ flex: 1, whiteSpace: 'nowrap' }} />
                 </div>
               </div>
 
               <div className="form-group">
-                <label htmlFor="court-select" style={{ fontSize: '1.1rem' }}>Select Court</label>
+                <label htmlFor="court-select" style={{ fontSize: '1cqi' }}>Select Court</label>
                 <select
                   id="court-select"
                   className="datalist-input"
-                  style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%' }}
+                  style={{ padding: '0 0.62cqi', fontSize: '0.85cqi', height: '2.34cqi', boxSizing: 'border-box', width: '100%' }}
                   value={courtId}
                   onChange={(e) => setCourtId(e.target.value)}
                   disabled={!selectedEvent || courtOptions.length === 0}
@@ -530,11 +541,11 @@ function CourtSetup() {
 
               {(!user || (selectedEvent && events.find(e => e.id === selectedEvent) && events.find(e => e.id === selectedEvent).createdByEmail !== user?.email)) && (
                 <div className="form-group">
-                  <label htmlFor="setup-password" style={{ fontSize: '1.1rem' }}>Setup Password</label>
+                  <label htmlFor="setup-password" style={{ fontSize: '1cqi' }}>Setup Password</label>
                   <input
                     id="setup-password"
                     type="password"
-                    style={{ padding: '0 12px', fontSize: '1rem', height: '45px', boxSizing: 'border-box', width: '100%', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#fff' }}
+                    className="datalist-input"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter setup password"
@@ -545,7 +556,7 @@ function CourtSetup() {
 
               {error && <p className="cs-error-message">{error}</p>}
               <div className="cs-action-buttons">
-                <Button type="submit" text="Confirm Settings" fontSize="1rem" angle={30} disabled={!selectedEvent || !courtId} icon={<CheckCircle size={16} />} style={{ whiteSpace: 'nowrap', padding: '10px 40px' }} />
+                <Button type="submit" text="Confirm (確認)" fontSize="0.85cqi" angle={30} disabled={!selectedEvent || !courtId} icon={<CheckCircle size="0.83cqi" />} style={{ whiteSpace: 'nowrap', padding: '0.52cqi 2.08cqi' }} />
               </div>
             </form>
           )}
@@ -566,26 +577,26 @@ function CourtSetup() {
           <div style={{
             backgroundColor: '#1e1e1e',
             border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '12px',
-            padding: '25px',
+            borderRadius: '0.62cqi',
+            padding: '1.3cqi',
             width: '95%',
-            maxWidth: '850px',
+            maxWidth: '44.2cqi',
             maxHeight: '90vh',
             overflowY: 'auto',
             color: '#fff',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+            boxShadow: '0 0.42cqi 1.66cqi rgba(0,0,0,0.6)',
             textAlign: 'left'
           }}>
-            <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#34c759', fontSize: '1.4rem' }}>
-              <FolderPlus size={24} /> 建立新賽事 (Create Event)
+            <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.42cqi', color: '#34c759', fontSize: '1.19cqi' }}>
+              <FolderPlus size="1.25cqi" /> 建立新賽事 (Create Event)
             </h3>
-            <form onSubmit={handleCreateEvent} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <FileEarmarkPdf size={24} color="#34c759" />
+            <form onSubmit={handleCreateEvent} style={{ display: 'flex', flexDirection: 'column', gap: '0.78cqi' }}>
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.78cqi', borderRadius: '0.42cqi', display: 'flex', flexDirection: 'column', gap: '0.52cqi', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.52cqi' }}>
+                  <FileEarmarkPdf size="1.25cqi" color="#34c759" />
                   <span style={{ color: '#fff', fontWeight: 'bold' }}>上傳 PDF 自動建立 (Optional)</span>
                 </div>
-                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>上傳對陣表即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。</div>
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.68cqi' }}>上傳對陣表即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。</div>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -598,88 +609,88 @@ function CourtSetup() {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isParsingPdf}
                   text={isParsingPdf ? 'Parsing...' : 'Select PDF'}
-                  icon={<FileEarmarkArrowUp size={16} />}
-                  fontSize="0.9rem"
+                  icon={<FileEarmarkArrowUp size="0.83cqi" />}
+                  fontSize="0.77cqi"
                   angle={60}
                 />
                 {pdfParseResult && (
-                  <div style={{ color: '#4CAF50', fontSize: '0.85rem', marginTop: '5px' }}>
+                  <div style={{ color: '#4CAF50', fontSize: '0.72cqi', marginTop: '0.26cqi' }}>
                     ✅ 成功解析：{pdfParseResult.matchCount} 場比賽
                     {pdfParseResult.datesList?.length > 1 && ` (包含 ${pdfParseResult.datesList.length} 個日期，將自動分拆為多個賽事)`}
                   </div>
                 )}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(10.4cqi, 1fr))', gap: '0.78cqi' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Event ID (賽事識別碼)</label>
+                  <label style={{ color: '#ccc', fontSize: '0.77cqi' }}>Event ID (賽事識別碼)</label>
                   <input
                     type="text"
                     placeholder="例如: TKD2026 (不可重複)"
                     value={newEventId}
                     onChange={e => setNewEventId(e.target.value)}
                     required
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
                   />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Event Name (賽事全稱)</label>
+                  <label style={{ color: '#ccc', fontSize: '0.77cqi' }}>Event Name (賽事全稱)</label>
                   <input
                     type="text"
                     placeholder="例如: 2026 全港跆拳道錦標賽"
                     value={newEventName}
                     onChange={e => setNewEventName(e.target.value)}
                     required
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
                   />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Setup Password (設定密碼)</label>
+                  <label style={{ color: '#ccc', fontSize: '0.77cqi' }}>Setup Password (設定密碼)</label>
                   <input
                     type="text"
                     placeholder="例如: BCB2026"
                     value={newSetupPassword}
                     onChange={e => setNewSetupPassword(e.target.value)}
                     required
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
                   />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(7.8cqi, 1fr))', gap: '0.52cqi' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Point Gap (分差)</label>
-                  <input type="number" value={newMaxPointGap} onChange={e => setNewMaxPointGap(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                  <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Point Gap (分差)</label>
+                  <input type="number" value={newMaxPointGap} onChange={e => setNewMaxPointGap(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Max Gam-jeom (犯規上限)</label>
-                  <input type="number" value={newMaxGamjeom} onChange={e => setNewMaxGamjeom(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                  <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Max Gam-jeom (犯規上限)</label>
+                  <input type="number" value={newMaxGamjeom} onChange={e => setNewMaxGamjeom(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Round Duration (回合秒數)</label>
-                  <input type="number" value={newRoundDuration} onChange={e => setNewRoundDuration(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                  <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Round Duration (回合秒數)</label>
+                  <input type="number" value={newRoundDuration} onChange={e => setNewRoundDuration(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Rest Duration (休息秒數)</label>
-                  <input type="number" value={newRestDuration} onChange={e => setNewRestDuration(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                  <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Rest Duration (休息秒數)</label>
+                  <input type="number" value={newRestDuration} onChange={e => setNewRestDuration(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Courts Count (1~12)</label>
-                  <input type="number" min="1" max="12" value={courtCount} onChange={e => setCourtCount(e.target.value)} required style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                  <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Courts Count (1~12)</label>
+                  <input type="number" min="1" max="12" value={courtCount} onChange={e => setCourtCount(e.target.value)} required style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.52cqi', marginTop: '0.52cqi' }}>
                 <Button
                   onClick={() => setShowCreateModal(false)}
-                  text="Cancel"
-                  fontSize="0.9rem"
+                  text="Cancel (取消)"
+                  fontSize="0.77cqi"
                   angle={0}
-                  icon={<XCircle size={16} />}
+                  icon={<XCircle size="0.83cqi" />}
                 />
                 <Button
                   type="submit"
-                  text="Confirm"
-                  fontSize="0.9rem"
+                  text="Confirm (確認)"
+                  fontSize="0.77cqi"
                   angle={120}
-                  icon={<CheckCircle size={16} />}
+                  icon={<CheckCircle size="0.83cqi" />}
                 />
               </div>
             </form>
@@ -701,38 +712,38 @@ function CourtSetup() {
           <div style={{
             backgroundColor: '#221515',
             border: '1px solid rgba(255, 59, 48, 0.5)',
-            borderRadius: '12px',
-            padding: '25px',
+            borderRadius: '0.62cqi',
+            padding: '1.3cqi',
             width: '90%',
-            maxWidth: '440px',
+            maxWidth: '22.88cqi',
             color: '#fff',
-            boxShadow: '0 10px 40px rgba(255, 59, 48, 0.3)',
+            boxShadow: '0 0.52cqi 2.08cqi rgba(255, 59, 48, 0.3)',
             textAlign: 'left'
           }}>
-            <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px', color: '#ff3b30', fontSize: '1.4rem' }}>
-              <ExclamationTriangle size={28} /> 刪除賽事確認 (Confirm Delete)
+            <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.52cqi', color: '#ff3b30', fontSize: '1.19cqi' }}>
+              <ExclamationTriangle size="1.46cqi" /> 刪除賽事確認 (Confirm Delete)
             </h3>
-            <p style={{ fontSize: '1rem', lineHeight: '1.5', color: '#ddd' }}>
+            <p style={{ fontSize: '0.85cqi', lineHeight: '1.5', color: '#ddd' }}>
               您確定要刪除整個賽事「<strong style={{ color: '#ffcc00' }}>{selectedEvent}</strong>」嗎？
             </p>
-            <p style={{ fontSize: '0.85rem', color: '#ff6b6b', backgroundColor: 'rgba(255, 59, 48, 0.1)', padding: '10px', borderRadius: '6px' }}>
+            <p style={{ fontSize: '0.72cqi', color: '#ff6b6b', backgroundColor: 'rgba(255, 59, 48, 0.1)', padding: '0.52cqi', borderRadius: '0.31cqi' }}>
               ⚠️ 此操作會將該賽事下的所有比賽數據、場地設定及賽程永久刪除，無法復原！
             </p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.62cqi', marginTop: '1.04cqi' }}>
               <Button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                text="Cancel"
-                fontSize="0.9rem"
+                text="Cancel (取消)"
+                fontSize="0.77cqi"
                 angle={0}
-                icon={<XCircle size={16} />}
+                icon={<XCircle size="0.83cqi" />}
               />
               <Button
                 onClick={confirmDeleteEvent}
                 disabled={isDeleting}
                 text={isDeleting ? 'Deleting...' : 'Confirm Delete'}
-                icon={<Trash size={16} />}
-                fontSize="0.9rem"
+                icon={<Trash size="0.83cqi" />}
+                fontSize="0.77cqi"
                 angle={350}
               />
             </div>

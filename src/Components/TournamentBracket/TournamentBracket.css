@@ -1,8 +1,8 @@
 .tournament-bracket-container {
     display: flex;
     flex-direction: column;
-    gap: 2.604vw;
-    padding: 2.083vw;
+    gap: 2.604cqi;
+    padding: 2.083cqi;
     background-color: transparent;
     min-width: max-content;
     min-height: max-content;
@@ -31,7 +31,7 @@
     align-items: center;
     justify-content: flex-end; /* CRITICAL: Align right to fix unbalanced bracket columns! */
     position: relative;
-    padding: 0.104vw 2.083vw 0.104vw 0; /* Tighter vertical spacing */
+    padding: 0.104cqi 2.083cqi 0.104cqi 0; /* Tighter vertical spacing */
 }
 
 /* Connecting Lines */
@@ -41,9 +41,9 @@
     right: 0;
     top: 50%;
     bottom: 0;
-    width: 2.083vw; /* Shortened line length */
-    border-top: 0.156vw solid #FFFFFF; /* White by default */
-    border-right: 0.156vw solid #FFFFFF;
+    width: 2.083cqi; /* Shortened line length */
+    border-top: 0.156cqi solid #FFFFFF; /* White by default */
+    border-right: 0.156cqi solid #FFFFFF;
 }
 
 .bracket-child.red-slot::after {
@@ -52,35 +52,35 @@
     right: 0;
     top: 0;
     bottom: 50%;
-    width: 2.083vw; /* Shortened line length */
-    border-bottom: 0.156vw solid #FFFFFF;
-    border-right: 0.156vw solid #FFFFFF;
+    width: 2.083cqi; /* Shortened line length */
+    border-bottom: 0.156cqi solid #FFFFFF;
+    border-right: 0.156cqi solid #FFFFFF;
 }
 
 .bracket-match {
     position: relative;
-    margin-left: 2.083vw; /* Matches shortened line length */
+    margin-left: 2.083cqi; /* Matches shortened line length */
 }
 
 .bracket-match.has-children::before {
     content: '';
     position: absolute;
-    left: -2.083vw;
+    left: -2.083cqi;
     top: 50%;
-    width: 2.083vw;
-    border-top: 0.156vw solid #FFFFFF;
+    width: 2.083cqi;
+    border-top: 0.156cqi solid #FFFFFF;
 }
 
 /* Glowing lines for winners / ready paths */
 .bracket-child.is-finished::after {
     border-color: #FFFF00 !important;
-    filter: drop-shadow(0 0 0.312vw rgba(255, 255, 0, 0.8));
+    filter: drop-shadow(0 0 0.312cqi rgba(255, 255, 0, 0.8));
     z-index: 1; /* Bring to front if overlapping */
 }
 
 .bracket-match.is-ready.has-children::before {
     border-color: #FFFF00 !important;
-    filter: drop-shadow(0 0 0.312vw rgba(255, 255, 0, 0.8));
+    filter: drop-shadow(0 0 0.312cqi rgba(255, 255, 0, 0.8));
 }
 
 /* Hide line if the slot is a BYE (empty) */
@@ -96,11 +96,11 @@
 .match-card {
     background: #2a2a2a;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 0.417vw;
-    width: 10.417vw;
-    box-shadow: 0 0.208vw 0.312vw rgba(0,0,0,0.3);
+    border-radius: 0.417cqi;
+    width: 10.417cqi;
+    box-shadow: 0 0.208cqi 0.312cqi rgba(0,0,0,0.3);
     overflow: hidden;
-    margin: 0.104vw 0;
+    margin: 0.104cqi 0;
 }
 
 .match-card.empty-card {
@@ -110,15 +110,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.604vw;
+    min-height: 2.604cqi;
 }
 
 .match-card-header {
     background-color: #111;
     color: #FFFFFF;
-    padding: 0.26vw;
+    padding: 0.26cqi;
     text-align: center;
-    font-size: 0.729vw;
+    font-size: 0.729cqi;
     font-weight: bold;
     border-bottom: 1px solid #333;
 }
@@ -133,8 +133,8 @@
 }
 
 .competitor {
-    padding: 0.208vw 0.417vw;
-    font-size: 0.708vw;
+    padding: 0.208cqi 0.417cqi;
+    font-size: 0.708cqi;
     color: white;
     white-space: nowrap;
     overflow: hidden;
@@ -153,7 +153,7 @@
 
 .tournament-bracket-empty {
     color: #ccc;
-    padding: 1.042vw;
+    padding: 1.042cqi;
     text-align: center;
     font-style: italic;
 }

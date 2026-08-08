@@ -112,7 +112,7 @@ function QRCodeDisplay({
           className="qrcode-close-corner-btn"
           onClick={onClose}
           aria-label="Close"
-          icon={<X size={28} />}
+          icon={<X size="1.46cqi" />}
           variant="orange"
           angle={45}
         />
@@ -126,37 +126,17 @@ function QRCodeDisplay({
             </div>
           </div>
 
-          <div className="qrcode-info" style={{ marginTop: "10px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            <span className="qrcode-badge">
-              {(() => {
-                const full = eventName || eventId || "N/A";
-                const dayMatch = full.match(/(.*?)\s*(\(Day \d+\)\s*\(\d{4}\/\d{2}\/\d{2}\))/i);
-                if (dayMatch) {
-                  return (
-                    <>
-                      Event:<br/>
-                      <span style={{ fontSize: '1.05em', display: 'inline-block', margin: '3px 0' }}>{dayMatch[1].trim()}</span><br/>
-                      <span style={{ fontSize: '0.85em', opacity: 0.8 }}>{dayMatch[2].trim()}</span>
-                    </>
-                  );
-                }
-                return `Event: ${full}`;
-              })()}
-            </span>
-            <span className="qrcode-badge court" style={{ height: "fit-content" }}>
-              Court: {courtId || "N/A"}
-            </span>
-          </div>
+
 
           {/* Real-time Referee Connection Status Badge Panel */}
           <div
             className={`referee-status-box ${isFull ? "full" : ""}`}
-            style={{ marginTop: "auto", marginBottom: "auto" }}
+            
           >
-            <div className="referee-status-title" style={{ fontSize: "1.1rem" }}>
-              <PeopleFill size={20} />
+            <div className="referee-status-title" style={{ fontSize: "0.94cqi" }}>
+              <PeopleFill size="1.04cqi" />
               <span>Referees Connected: {occupiedCount}/3</span>
-              {isFull && <CheckCircleFill size={20} className="full-icon" />}
+              {isFull && <CheckCircleFill size="1.04cqi" className="full-icon" />}
             </div>
             <div className="referee-badges-row">
               <span className={`ref-slot-pill ${isJ1 ? "online" : "vacant"}`}>
@@ -178,16 +158,16 @@ function QRCodeDisplay({
             >
               Scoring Mode
             </span>
-            <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.52cqi", marginTop: "0.52cqi" }}>
               <Button
-                text="Single Referee"
+                text="Single (單裁判)"
                 variant={refereeMode === "single" ? "orange" : "gray"}
                 onClick={() => handleModeChange("single")}
                 fontSize="1.2cqi"
                 style={{ flex: 1 }}
               />
               <Button
-                text="Multiple Referees"
+                text="Multiple (多裁判)"
                 variant={refereeMode === "multiple" ? "orange" : "gray"}
                 onClick={() => handleModeChange("multiple")}
                 disabled={occupiedCount < 2}
@@ -203,9 +183,9 @@ function QRCodeDisplay({
             {refereeMode === "multiple" && (
               <div
                 style={{
-                  fontSize: "0.85rem",
+                  fontSize: "0.72cqi",
                   color: "#ffcc00",
-                  marginTop: "10px",
+                  marginTop: "0.52cqi",
                 }}
               >
                 ✓ Valid Point Mode: 2+ judges must agree within 1 second.
@@ -214,9 +194,9 @@ function QRCodeDisplay({
             {occupiedCount < 2 && (
               <div
                 style={{
-                  fontSize: "0.85rem",
+                  fontSize: "0.72cqi",
                   color: "#ff3b30",
-                  marginTop: "10px",
+                  marginTop: "0.52cqi",
                 }}
               >
                 ⚠️ Multiple mode requires at least 2 connected judges.
@@ -238,13 +218,36 @@ function QRCodeDisplay({
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              gap: "15px",
+              gap: "0.78cqi",
             }}
           >
-            <div className="qrcode-wrapper">
+            <div style={{ textAlign: "center", marginBottom: "1.5cqi" }}>
+              {(() => {
+                const full = eventName || eventId || "N/A";
+                const dayMatch = full.match(/(.*?)\s*\(Day (\d+)\)\s*\((\d{4}\/\d{2}\/\d{2})\)/i);
+                const formatCourt = (cid) => cid ? cid.toString().replace(/court\s*/i, '').trim() : "N/A";
+                
+                if (dayMatch) {
+                  return (
+                    <>
+                      <div style={{ fontSize: '1.6cqi', fontWeight: 'bold', color: '#fff' }}>{dayMatch[1].trim()}</div>
+                      <div style={{ fontSize: '1.6cqi', fontWeight: 'bold', color: '#fff', marginTop: '0.4cqi' }}>Day {dayMatch[2]} - {dayMatch[3]} - Court {formatCourt(courtId)}</div>
+                    </>
+                  );
+                }
+                return (
+                    <>
+                      <div style={{ fontSize: '1.6cqi', fontWeight: 'bold', color: '#fff' }}>{full}</div>
+                      <div style={{ fontSize: '1.6cqi', fontWeight: 'bold', color: '#fff', marginTop: '0.4cqi' }}>Court {formatCourt(courtId)}</div>
+                    </>
+                );
+              })()}
+            </div>
+            
+            <div className="qrcode-wrapper" style={{ width: "55%", aspectRatio: "1" }}>
               <QRCodeSVG
                 value={controllerUrl}
-                size={220}
+                size="100%" style={{ width: '100%', height: '100%' }}
                 bgColor="transparent"
                 fgColor="#000000"
                 level="H"
@@ -262,30 +265,7 @@ function QRCodeDisplay({
             </p>
           </div>
 
-          <div className="qrcode-url-box">
-            <input
-              type="text"
-              readOnly
-              value={controllerUrl}
-              className="qrcode-url-input cursor-target"
-            />
-            <Button
-              className="qrcode-copy-btn"
-              onClick={handleCopy}
-              icon={
-                copied ? (
-                  <Check size={18} color="#4cd964" />
-                ) : (
-                  <Copy size={18} />
-                )
-              }
-              text={copied ? "已複製" : "複製"}
-              fontSize="0.9rem"
-              angle={120}
-              style={{ padding: "6px 15px" }}
-            />
           </div>
-        </div>
       </div>
     </div>
   );

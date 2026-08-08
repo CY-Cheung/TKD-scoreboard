@@ -11,9 +11,10 @@
 }
 
 .cs-content {
-    border-radius: 1.042vw;
+    position: relative;
+    border-radius: 1.04cqi;
     width: 90%;
-    max-width: 75vw; /* Further enlarge to 75vw */
+    max-width: 75cqi; /* Further enlarge to 75cqi */
     aspect-ratio: 16 / 9;
     display: flex;
     flex-direction: row;
@@ -21,7 +22,7 @@
     animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
     padding: 0;
-    container-type: inline-size;
+    
 }
 
 .cs-left-panel {
@@ -31,33 +32,34 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: 2.604vw 2.083vw;
+    justify-content: center;
+    gap: 2cqi;
+    padding: 6cqi;
     text-align: left;
 }
 
 .cs-app-intro-list {
-    font-size: 1.5cqi;
+    font-size: 1.12cqi;
     color: rgba(255, 255, 255, 0.85);
-    margin-top: 2cqi;
+    margin-top: 1.5cqi;
     line-height: 1.6;
-    padding-left: 1.5vw;
+    padding-left: 1.5cqi;
     list-style-type: disc;
 }
 
 .cs-app-intro-list li {
-    margin-bottom: 0.5vw;
+    margin-bottom: 0.5cqi;
 }
 
 .cs-divider {
-    width: 0.052vw;
+    width: 0.1cqi;
     background: linear-gradient(
         to bottom, 
         rgba(255,255,255,0) 0%, 
-        rgba(255,255,255,0.2) 50%, 
+        rgba(255,255,255,0.15) 50%, 
         rgba(255,255,255,0) 100%
     );
-    margin: 2.083vw 0;
+    margin: 3cqi 0;
 }
 
 .cs-right-panel {
@@ -68,13 +70,13 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 2.604vw 2.083vw;
+    padding: 6cqi;
 }
 
 @keyframes fadeUp {
     0% {
         opacity: 0;
-        transform: translateY(2.083vw);
+        transform: translateY(2.08cqi);
     }
     100% {
         opacity: 1;
@@ -83,38 +85,38 @@
 }
 
 .cs-title-container {
-    margin-bottom: 1.042vw;
+    margin-bottom: 1.04cqi;
     width: 100%;
 }
 
 .cs-title-container h1 {
-    font-size: 2.667vw; /* Make it slightly bigger for split layout */
+    font-size: 2.67cqi; /* Make it slightly bigger for split layout */
     margin: 0;
     color: #ffffff;
     font-weight: 800;
     line-height: 1.1;
-    letter-spacing: 0.026vw;
+    letter-spacing: 0.03cqi;
 }
 
 .cs-subtitle {
-    font-size: 0.917vw;
+    font-size: 0.92cqi;
     color: rgba(255, 255, 255, 0.8);
-    margin-top: 0.781vw;
+    margin-top: 0.78cqi;
     font-weight: 400;
-    letter-spacing: 0.026vw;
+    letter-spacing: 0.03cqi;
 }
 
 .cs-form {
     display: flex;
     flex-direction: column;
-    gap: 1.042vw;
+    gap: 1.04cqi;
     animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
 }
 
 .cs-form p {
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.792vw;
+    font-size: 0.79cqi;
 }
 
 .form-group {
@@ -124,8 +126,8 @@
 }
 
 .form-group label {
-    margin-bottom: 0.8cqi;
-    font-size: 1.5cqi;
+    margin-bottom: 0.6cqi;
+    font-size: 1.12cqi;
     color: rgba(255, 255, 255, 0.9);
     font-weight: 400;
 }
@@ -133,22 +135,26 @@
 .datalist-input, 
 .form-group input[type="password"] {
     width: 100%;
-    padding: 1.5cqi 2cqi;
-    background-color: rgba(0, 0, 0, 0.2);
-    border: 0.1cqi solid rgba(255, 255, 255, 0.15);
-    border-radius: 1cqi;
+    padding: 0 1cqi;
+    height: 3cqi;
+    box-sizing: border-box;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 0.1cqi solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.6cqi;
     color: white;
-    font-size: 1.8cqi;
+    font-size: 1.2cqi;
     font-family: 'Outfit', sans-serif;
     transition: all 0.3s ease;
 }
 
 .datalist-input:focus, 
-.form-group input[type="password"]:focus {
+.form-group input[type="password"]:focus,
+.datalist-input:hover, 
+.form-group input[type="password"]:hover {
     outline: none;
-    border-color: #3498db;
-    background-color: rgba(0, 0, 0, 0.4);
-    box-shadow: 0 0 0 0.156vw rgba(52, 152, 219, 0.25);
+    border-color: #FFFF00 !important;
+    background-color: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 0.8cqi rgba(255, 255, 0, 0.9) !important;
 }
 
 .datalist-input::placeholder {
@@ -166,8 +172,8 @@
 .cs-action-buttons {
     display: flex;
     justify-content: center;
-    gap: 0.625vw;
-    margin-top: 0.521vw;
+    gap: 0.62cqi;
+    margin-top: 0.52cqi;
 }
 
 .cs-action-buttons > * {
@@ -176,19 +182,19 @@
 
 .cs-error-message {
     color: #ff4757;
-    font-size: 0.75vw;
-    margin: 0.26vw 0;
+    font-size: 0.75cqi;
+    margin: 0.26cqi 0;
     text-align: left;
     background: rgba(255, 71, 87, 0.1);
-    padding: 0.417vw 0.625vw;
-    border-radius: 0.417vw;
-    border-left: 0.156vw solid #ff4757;
+    padding: 0.42cqi 0.62cqi;
+    border-radius: 0.42cqi;
+    border-left: 0.16cqi solid #ff4757;
 }
 
 /* Custom Google Button Wrapper for extra styling */
 .google-btn-wrapper {
     position: relative;
-    margin: 1.562vw auto;
+    margin: 1.56cqi auto;
     display: inline-flex;
     justify-content: center;
     align-items: center;
@@ -196,31 +202,33 @@
 
 /* Use native Button component but override border width to be thinner */
 .google-btn-wrapper button {
-    border-width: 0.104vw !important; 
+    border-width: 0.1cqi !important; 
     font-weight: 700 !important;
-    font-size: 0.833vw !important;
-    padding: 0.625vw 1.562vw !important;
-    box-shadow: 0 0 0.781vw rgba(0, 0, 0, 0.4) !important;
+    font-size: 0.83cqi !important;
+    padding: 0.62cqi 1.56cqi !important;
+    box-shadow: 0 0 0.78cqi rgba(0, 0, 0, 0.4) !important;
 }
 
 .google-btn-wrapper button:hover {
-    box-shadow: 0 0 1.042vw rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 0 0 1.04cqi rgba(0, 0, 0, 0.6) !important;
 }
 
 .cs-footer-links {
-    margin-top: auto;
-    width: 100%;
+    position: absolute;
+    bottom: 1.5cqi;
+    left: 1.5cqi;
+    width: auto;
     display: flex;
     justify-content: flex-start; /* Align left */
-    gap: 1.042vw;
-    font-size: 1.1vw;
+    gap: 1.04cqi;
+    font-size: 1.1cqi;
     color: rgba(255, 255, 255, 0.5);
 }
 
 .cs-footer-links a {
     display: flex;
     align-items: center;
-    gap: 0.312vw;
+    gap: 0.31cqi;
     cursor: pointer;
     transition: color 0.2s;
     text-decoration: none;
@@ -231,3 +239,12 @@
     color: rgba(255, 255, 255, 0.9);
 }
 
+
+/* FORCED UNIFICATION */
+.datalist-input, .form-group input[type="password"] {
+    height: 2.6cqi !important;
+    padding: 0 0.8cqi !important;
+    line-height: 2.6cqi !important;
+    box-sizing: border-box !important;
+    font-size: 1cqi !important;
+}

@@ -489,40 +489,50 @@ const DataImport = () => {
         }
     };
 
+
+    const toggleFullScreen = (e) => {
+        if (e.target === e.currentTarget) {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            } else {
+                document.exitFullscreen();
+            }
+        }
+    };
     return (
-        <div className="di-container aurora-bg">
+        <div className="di-container aurora-bg" onDoubleClick={toggleFullScreen}>
             <div className="di-content-wrapper glass-card">
 
                 
                 {showBracketModal ? (
                     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
-                        <div style={{ padding: '10px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{ padding: '0.52cqi 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.78cqi' }}>
                                 <Button 
                                     onClick={() => { setShowBracketModal(false); setBracketZoom(1); }}
-                                    text="Back"
-                                    icon={<ArrowLeft size={16} />}
-                                    fontSize="0.9rem"
+                                    text="Back (返回)"
+                                    icon={<ArrowLeft size="0.83cqi" />}
+                                    fontSize="0.77cqi"
                                     angle={180}
                                 />
-                                <h2 style={{ margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.4rem' }}>
-                                    <Diagram3 size={32} color="#FFFF00" /> {eventsList.find(e => e.id === eventName)?.displayName || eventName || 'Event'}
+                                <h2 style={{ margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.52cqi', fontSize: '1.19cqi' }}>
+                                    <Diagram3 size="1.66cqi" color="#FFFF00" /> {eventsList.find(e => e.id === eventName)?.displayName || eventName || 'Event'}
                                 </h2>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <Button onClick={() => setBracketZoom(z => Math.max(0.1, z - 0.1))} text="-" angle={0} style={{ padding: '2px 10px', minWidth: '40px' }} fontSize="1.2rem" />
-                                <span style={{ color: '#fff', minWidth: '50px', textAlign: 'center', fontWeight: 'bold' }}>{Math.round(bracketZoom * 100)}%</span>
-                                <Button onClick={() => setBracketZoom(z => Math.min(3, z + 0.1))} text="+" angle={180} style={{ padding: '2px 10px', minWidth: '40px' }} fontSize="1.2rem" />
-                                <Button onClick={() => setBracketZoom(1)} text="Reset" angle={90} style={{ padding: '4px 15px', marginLeft: '10px' }} fontSize="0.9rem" />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.52cqi' }}>
+                                <Button onClick={() => setBracketZoom(z => Math.max(0.1, z - 0.1))} text="-" angle={0} style={{ padding: '2px 0.52cqi', minWidth: '2.08cqi' }} fontSize="0.8cqi" />
+                                <span style={{ color: '#fff', minWidth: '2.6cqi', textAlign: 'center', fontWeight: 'bold', fontSize: '0.8cqi' }}>{Math.round(bracketZoom * 100)}%</span>
+                                <Button onClick={() => setBracketZoom(z => Math.min(3, z + 0.1))} text="+" angle={180} style={{ padding: '2px 0.52cqi', minWidth: '2.08cqi' }} fontSize="0.8cqi" />
+                                <Button onClick={() => setBracketZoom(1)} text="Reset (重置)" angle={90} style={{ padding: '0.21cqi 0.78cqi', marginLeft: '0.52cqi' }} fontSize="0.77cqi" />
                             </div>
                         </div>
-                        <div style={{ flex: 1, overflow: 'auto', padding: '20px 0' }}>
+                        <div style={{ flex: 1, overflow: 'auto', padding: '1.04cqi 0' }}>
                             {Object.keys(currentMatches).length > 0 ? (
                                 <div style={{ zoom: bracketZoom }}>
                                     <TournamentBracket matches={currentMatches} />
                                 </div>
                             ) : (
-                                <div style={{ color: '#ccc', textAlign: 'center', marginTop: '50px' }}>No matches available to display bracket.</div>
+                                <div style={{ color: '#ccc', textAlign: 'center', marginTop: '2.6cqi' }}>No matches available to display bracket.</div>
                             )}
                         </div>
                     </div>
@@ -530,7 +540,7 @@ const DataImport = () => {
                     <div className="di-form-and-list-container">
 
                     <div className="di-form-section">
-                        <h2>Import Event Data</h2>
+                        <h2 style={{ fontSize: '1.5cqi', margin: '0 0 0.5cqi 0', color: '#ffffff', fontWeight: '800', lineHeight: '1.1', letterSpacing: '0.026cqi' }}>Import Event Data</h2>
 
                         {/* Match Configuration Form */}
                         <div className="match-form">
@@ -573,11 +583,11 @@ const DataImport = () => {
                                         <input type="number" value={maxGamjeom} onChange={e => setMaxGamjeom(e.target.value)} />
                                     </div>
                                     <div className="form-group">
-                                        <label>Round Duration (s)</label>
+                                        <label>Round Time (s)</label>
                                         <input type="number" value={roundDuration} onChange={e => setRoundDuration(e.target.value)} />
                                     </div>
                                     <div className="form-group">
-                                        <label>Rest Duration (s)</label>
+                                        <label>Rest Time (s)</label>
                                         <input type="number" value={restDuration} onChange={e => setRestDuration(e.target.value)} />
                                     </div>
                                 </div>
@@ -621,40 +631,33 @@ const DataImport = () => {
                         </div>
                         
                         <div className="di-action-buttons">
-                            <Button text="Add Match" angle={260} onClick={handleAddMatch} icon={<PlusCircle size={16} />} style={{ flex: 1, whiteSpace: "nowrap", padding: "8px 4px", fontSize: "0.85rem" }} />
-                            <Button text="Load to Screen" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size={16} />} style={{ flex: 1, whiteSpace: "nowrap", padding: "8px 4px", fontSize: "0.85rem" }} />
-                            <Button text="Back to Home" angle={150} onClick={() => navigate('/')} icon={<House size={16} />} style={{ flex: 1, whiteSpace: "nowrap", padding: "8px 4px", fontSize: "0.85rem" }} />
+                            <Button text="Add Match (新增賽事)" angle={260} onClick={handleAddMatch} icon={<PlusCircle size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi" }} />
+                            <Button text="Load (載入)" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi" }} />
+                            <Button text="Home (主頁)" angle={150} onClick={() => navigate('/')} icon={<House size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi" }} />
                         </div>
                     </div>
 
                     <div className="di-matches-section">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.15)', paddingBottom: '6px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: '0.42cqi', borderBottom: '1px solid rgba(255,255,255,0.15)', paddingBottom: '0.31cqi' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 {(() => {
                                     const rawName = eventsList.find(e => e.id === eventName)?.displayName || eventName || 'Event';
                                     const dayMatch = rawName.match(/^(.*?)\s*(\(Day\s+\d+\))\s*(\(.*\))$/);
-                                    if (dayMatch) {
-                                        return (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                <h3 style={{ margin: 0, border: 'none', padding: 0, color: '#fff', fontSize: '1.4rem' }}>{dayMatch[1]}</h3>
-                                                <span style={{ fontSize: '1.1rem', color: '#ccc' }}>{dayMatch[2].replace(/[()]/g, '')} - {dayMatch[3].replace(/[()]/g, '')}</span>
-                                            </div>
-                                        );
-                                    }
-                                    return <h3 style={{ margin: 0, border: 'none', padding: 0, color: '#fff', fontSize: '1.4rem' }}>{rawName}</h3>;
+                                    return <h3 style={{ margin: 0, border: 'none', padding: 0, color: '#fff', fontSize: '1.19cqi' }}>{dayMatch ? dayMatch[1] : rawName}</h3>;
                                 })()}
                                 {availableDates.length > 1 && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <Funnel size={12} color="#FFFF00" />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.21cqi' }}>
+                                        <Funnel size="0.62cqi" color="#FFFF00" />
                                         <select 
                                             value={selectedDateFilter} 
                                             onChange={e => setSelectedDateFilter(e.target.value)}
                                             style={{ 
-                                                padding: '2px 6px', 
-                                                borderRadius: '4px', 
+                                                padding: '2px 0.31cqi', 
+                                                borderRadius: '0.21cqi', 
                                                 border: '1px solid rgba(255,255,0,0.5)', 
                                                 backgroundColor: '#111', 
                                                 color: '#FFFF00', 
-                                                fontSize: '0.8rem' 
+                                                fontSize: '0.68cqi' 
                                             }}
                                         >
                                             <option value="all">📅 All Dates</option>
@@ -664,14 +667,25 @@ const DataImport = () => {
                                         </select>
                                     </div>
                                 )}
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.21cqi' }}>
+                                {(() => {
+                                    const rawName = eventsList.find(e => e.id === eventName)?.displayName || eventName || 'Event';
+                                    const dayMatch = rawName.match(/^(.*?)\s*(\(Day\s+\d+\))\s*(\(.*\))$/);
+                                    if (dayMatch) {
+                                        return <span style={{ fontSize: '1cqi', color: '#ccc' }}>{dayMatch[2].replace(/[()]/g, '')} - {dayMatch[3].replace(/[()]/g, '')}</span>;
+                                    }
+                                    return <span />;
+                                })()}
                                 <Button 
-                                    text="View Bracket" 
-                                    icon={<Diagram3 size={16} />} 
+                                    text="Bracket (賽程表)" 
+                                    icon={<Diagram3 size="0.83cqi" />} 
                                     onClick={() => setShowBracketModal(true)}
-                                    fontSize="0.95rem"
-                                    style={{ padding: '6px 12px' }}
+                                    fontSize="0.81cqi"
+                                    style={{ padding: '0.31cqi 0.62cqi' }}
                                 />
                             </div>
+                        </div>
                         <div className="matches-list">
                             <ul>
                                 {filteredMatchIds.map(mId => {
@@ -690,11 +704,11 @@ const DataImport = () => {
                                     };
 
                                     return (
-                                        <li key={mId} onClick={() => setSelectedMatchId(mId)} className={selectedMatchId === mId ? 'selected' : ''} style={{ padding: '8px 10px' }}>
-                                            <div style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                <strong style={{ color: '#fff', marginRight: '4px' }}>{mId}:</strong> 
+                                        <li key={mId} onClick={() => setSelectedMatchId(mId)} className={selectedMatchId === mId ? 'selected' : ''}>
+                                            <div style={{ fontSize: '1cqi', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                <strong style={{ color: '#fff', marginRight: '0.21cqi' }}>{mId}:</strong> 
                                                 <span style={{ color: '#3399ff' }}>{getDisplayText(blue)}</span> 
-                                                <span style={{ color: '#fff', margin: '0 6px', fontSize: '0.75rem' }}>VS</span> 
+                                                <span style={{ color: '#fff', margin: '0 0.5cqi', fontSize: '1cqi' }}>VS</span> 
                                                 <span style={{ color: '#ff3b30' }}>{getDisplayText(red)}</span>
                                             </div>
                                         </li>
@@ -721,23 +735,23 @@ const DataImport = () => {
                     <div style={{
                         backgroundColor: '#222',
                         border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '12px',
-                        padding: '25px',
+                        borderRadius: '0.62cqi',
+                        padding: '1.3cqi',
                         width: '90%',
-                        maxWidth: '450px',
+                        maxWidth: '23.4cqi',
                         color: '#fff',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
+                        boxShadow: '0 0.42cqi 1.66cqi rgba(0,0,0,0.5)'
                     }}>
-                        <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#FFFF00' }}>
-                            <FolderPlus size={24} /> Create New Event
+                        <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.42cqi', color: '#FFFF00' }}>
+                            <FolderPlus size="1.25cqi" /> Create New Event
                         </h3>
-                        <form onSubmit={handleCreateEvent} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <FileEarmarkPdf size={24} color="#FFFF00" />
+                        <form onSubmit={handleCreateEvent} style={{ display: 'flex', flexDirection: 'column', gap: '0.78cqi' }}>
+                            <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.78cqi', borderRadius: '0.42cqi', display: 'flex', flexDirection: 'column', gap: '0.52cqi', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.52cqi' }}>
+                                    <FileEarmarkPdf size="1.25cqi" color="#FFFF00" />
                                     <span style={{ color: '#fff', fontWeight: 'bold' }}>上傳 PDF 自動建立 (Optional)</span>
                                 </div>
-                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>上傳對陣表即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。</div>
+                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.68cqi' }}>上傳對陣表即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。</div>
                                 <input 
                                     type="file" 
                                     ref={fileInputRef} 
@@ -750,12 +764,12 @@ const DataImport = () => {
                                     onClick={() => fileInputRef.current?.click()}
                                     disabled={isParsingPdf}
                                     text={isParsingPdf ? 'Parsing...' : 'Select PDF'}
-                                    icon={<FileEarmarkArrowUp size={16} />}
-                                    fontSize="0.9rem"
+                                    icon={<FileEarmarkArrowUp size="0.83cqi" />}
+                                    fontSize="0.77cqi"
                                     angle={60}
                                 />
                                 {pdfParseResult && (
-                                    <div style={{ color: '#4CAF50', fontSize: '0.85rem', marginTop: '5px' }}>
+                                    <div style={{ color: '#4CAF50', fontSize: '0.72cqi', marginTop: '0.26cqi' }}>
                                         ✅ 成功解析：{pdfParseResult.matchCount} 場比賽
                                         {pdfParseResult.datesList?.length > 1 && ` (包含 ${pdfParseResult.datesList.length} 個日期，將自動分拆為多個賽事)`}
                                     </div>
@@ -791,38 +805,38 @@ const DataImport = () => {
                                     required
                                 />
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.52cqi' }}>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Point Gap (分差)</label>
-                                    <input type="number" value={newMaxPointGap} onChange={e => setNewMaxPointGap(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                                    <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Point Gap (分差)</label>
+                                    <input type="number" value={newMaxPointGap} onChange={e => setNewMaxPointGap(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Max Gam-jeom (犯規上限)</label>
-                                    <input type="number" value={newMaxGamjeom} onChange={e => setNewMaxGamjeom(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                                    <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Max Gam-jeom (犯規上限)</label>
+                                    <input type="number" value={newMaxGamjeom} onChange={e => setNewMaxGamjeom(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Round Duration (回合秒數)</label>
-                                    <input type="number" value={newRoundDuration} onChange={e => setNewRoundDuration(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                                    <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Round Time (回合秒數)</label>
+                                    <input type="number" value={newRoundDuration} onChange={e => setNewRoundDuration(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label style={{ color: '#ccc', fontSize: '0.85rem' }}>Rest Duration (休息秒數)</label>
-                                    <input type="number" value={newRestDuration} onChange={e => setNewRestDuration(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                                    <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Rest Time (休息秒數)</label>
+                                    <input type="number" value={newRestDuration} onChange={e => setNewRestDuration(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.52cqi', marginTop: '0.52cqi' }}>
                                 <Button 
                                     onClick={() => setShowCreateEventModal(false)}
-                                    text="Cancel"
-                                    fontSize="0.9rem"
+                                    text="Cancel (取消)"
+                                    fontSize="0.77cqi"
                                     angle={0}
-                                    icon={<XCircle size={16} />}
+                                    icon={<XCircle size="0.83cqi" />}
                                 />
                                 <Button 
                                     type="submit"
-                                    text="Confirm"
-                                    fontSize="0.9rem"
+                                    text="Confirm (確認)"
+                                    fontSize="0.77cqi"
                                     angle={60}
-                                    icon={<CheckCircle size={16} />}
+                                    icon={<CheckCircle size="0.83cqi" />}
                                 />
                             </div>
                         </form>
@@ -844,38 +858,38 @@ const DataImport = () => {
                     <div style={{
                         backgroundColor: '#221515',
                         border: '1px solid rgba(255, 59, 48, 0.5)',
-                        borderRadius: '12px',
-                        padding: '25px',
+                        borderRadius: '0.62cqi',
+                        padding: '1.3cqi',
                         width: '90%',
-                        maxWidth: '440px',
+                        maxWidth: '22.88cqi',
                         color: '#fff',
-                        boxShadow: '0 10px 40px rgba(255, 59, 48, 0.3)',
+                        boxShadow: '0 0.52cqi 2.08cqi rgba(255, 59, 48, 0.3)',
                         textAlign: 'left'
                     }}>
-                        <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px', color: '#ff3b30', fontSize: '1.4rem' }}>
-                            <ExclamationTriangle size={28} /> 刪除賽事確認 (Confirm Delete)
+                        <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.52cqi', color: '#ff3b30', fontSize: '1.19cqi' }}>
+                            <ExclamationTriangle size="1.46cqi" /> 刪除賽事確認 (Confirm Delete)
                         </h3>
-                        <p style={{ fontSize: '1rem', lineHeight: '1.5', color: '#ddd' }}>
+                        <p style={{ fontSize: '0.85cqi', lineHeight: '1.5', color: '#ddd' }}>
                             您確定要刪除整個賽事「<strong style={{ color: '#FFFF00' }}>{eventName}</strong>」嗎？
                         </p>
-                        <p style={{ fontSize: '0.85rem', color: '#ff6b6b', backgroundColor: 'rgba(255, 59, 48, 0.1)', padding: '10px', borderRadius: '6px' }}>
+                        <p style={{ fontSize: '0.72cqi', color: '#ff6b6b', backgroundColor: 'rgba(255, 59, 48, 0.1)', padding: '0.52cqi', borderRadius: '0.31cqi' }}>
                             ⚠️ 此操作會將該賽事下的所有比賽數據、場地設定及賽程永久刪除，無法復原！
                         </p>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.62cqi', marginTop: '1.04cqi' }}>
                             <Button 
                                 onClick={() => setShowDeleteModal(false)}
                                 disabled={isDeleting}
-                                text="Cancel"
-                                fontSize="0.9rem"
+                                text="Cancel (取消)"
+                                fontSize="0.77cqi"
                                 angle={0}
-                                icon={<XCircle size={16} />}
+                                icon={<XCircle size="0.83cqi" />}
                             />
                             <Button 
                                 onClick={confirmDeleteEvent}
                                 disabled={isDeleting}
                                 text={isDeleting ? 'Deleting...' : 'Confirm Delete'}
-                                icon={<Trash size={16} />}
-                                fontSize="0.9rem"
+                                icon={<Trash size="0.83cqi" />}
+                                fontSize="0.77cqi"
                                 angle={350}
                             />
                         </div>
