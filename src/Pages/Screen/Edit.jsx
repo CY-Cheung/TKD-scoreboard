@@ -7,16 +7,18 @@ import "./Edit.css";
 import Button from "../../Components/Button/Button";
 import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner } from '../../Api';
 
-const Edit = ({ 
-    visible, 
-    setVisible, 
-    eventName, 
-    matchId, 
-    matchData, 
-    dominantSide, 
-    setShowQRCode, 
+const Edit = ({
+    visible,
+    setVisible,
+    eventName,
+    matchId,
+    matchData,
+    dominantSide,
+    setShowQRCode,
     occupiedRefereesCount = 0,
-    toggleDirection 
+    toggleDirection,
+    toggleKyeShi,
+    kyeShiActive
 }) => {
     const [matchMin, setMatchMin] = useState(0);
     const [matchSec, setMatchSec] = useState(0);
@@ -51,9 +53,9 @@ const Edit = ({
 
     const handleAction = (side, type, index, delta) => {
         if (!matchData) return;
-        
+
         const currentTimer = matchData.state?.timer || 0;
-        
+
         // Handle adding penalty in last 10s
         if (type === 'gamjeom' && delta === 1 && currentTimer > 0 && currentTimer <= 10) {
             setAvoidingSide(side);
@@ -152,7 +154,7 @@ const Edit = ({
             }
         });
     };
-    
+
     const handleMatchMinChange = (value) => {
         setMatchMin(value);
         handleTimeUpdate('match', value, matchSec);
@@ -188,7 +190,7 @@ const Edit = ({
     const { phase, isFinished, winReason } = state || {};
     const { roundWins } = stats || {};
     const { rules = {} } = config;
-    
+
     const roundsToWin = rules.roundsToWin || 2;
 
     const getFinalWinner = () => {
@@ -207,7 +209,7 @@ const Edit = ({
     return (
         <div className={`edit-bar ${visible ? 'visible' : ''}`}>
             <div className="edit-grid">
-                 <div className="grid-cell header"></div>
+                <div className="grid-cell header"></div>
                 {pointTypes.map(pt => (
                     <div className="grid-cell header" key={pt.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {pt.icon && <pt.icon size="1.3cqi" style={{ marginRight: pt.secondIcon ? '0.1cqi' : '0.4cqi', color: 'white' }} />}
@@ -238,22 +240,34 @@ const Edit = ({
             </div>
 
             <div className="time-bar">
-                <Button 
-                    onClick={() => navigate(-1)} 
-                    text="Back (返回)" 
-                    icon={<ArrowLeft size="1.2cqi" />} 
-                    fontSize="1.4cqi" 
+                <Button
+                    onClick={() => navigate(-1)}
+                    text="Back (返回)"
+                    icon={<ArrowLeft size="1.2cqi" />}
+                    fontSize="1.4cqi"
                     angle={180}
                     variant="gray"
                     style={{ marginRight: '0.5cqi' }}
                 />
                 {toggleDirection && (
-                    <Button 
-                        text="Swap (⇄)" 
-                        fontSize="1.4cqi" 
-                        onClick={toggleDirection} 
-                        angle={135} 
+                    <Button
+                        text="Swap (⇄)"
+                        fontSize="1.4cqi"
+                        onClick={toggleDirection}
+                        gradient={['#ef4444', '#ef4444', '#ef4444', '#3b82f6', '#3b82f6', '#3b82f6']}
                         style={{ marginRight: '1cqi' }}
+                    />
+                )}
+                {toggleKyeShi && (
+                    <Button
+                        text={kyeShiActive ? "Stop Kye-shi" : "Kye-shi"}
+                        fontSize="1.4cqi"
+                        onClick={toggleKyeShi}
+                        style={{ 
+                            marginRight: '1cqi', 
+                            color: kyeShiActive ? '#ef4444' : '#FFFF00',
+                            '--button-gradient': kyeShiActive ? '#ef4444' : '#FFFF00'
+                        }}
                     />
                 )}
                 <div className='time-control-group'>
@@ -267,54 +281,43 @@ const Edit = ({
                         </select> sec
                     </div>
                 </div>
-                <div className='time-control-group'>
-                    <h2>Rest Time</h2>
-                    <div className="time-selects">
-                        <select value={restMin} onChange={(e) => handleRestMinChange(e.target.value)} disabled={!matchData}>
-                            {[0, 1].map(min => <option key={min} value={min}>{min}</option>)}
-                        </select> min
-                        <select value={restSec} onChange={(e) => handleRestSecChange(e.target.value)} disabled={!matchData}>
-                            {Array.from({ length: 60 }, (_, i) => i).map(sec => <option key={sec} value={sec}>{sec}</option>)}
-                        </select> sec
-                    </div>
-                </div>
 
                 {/* QR Code Controller Toggle Button inside Edit Drawer */}
                 {setShowQRCode && (
-                    <Button 
+                    <Button
                         text={`QR Code (${occupiedRefereesCount}/3)`}
                         fontSize="1.4cqi"
-                        angle={300}
                         icon={<QrCode size="1.4cqi" />}
                         onClick={() => {
                             setVisible(false);
                             setShowQRCode(true);
                         }}
+                        style={{ '--button-gradient': '#38bdf8' }}
                     />
                 )}
 
                 {phase === 'REST' && !isFinished && (
-                    <Button 
-                        text={`Start Round ${(matchData?.state?.currentRound || 1) + 1}`} 
-                        fontSize="1.8cqi" 
-                        onClick={handleStartNextRound} 
-                        angle={50} 
-                    />
-                )}
-
-                {showPromoteWinnerButton && (
-                     <Button 
-                        onClick={() => promoteWinner(eventName, matchId, finalWinner)}
-                        text="Promote Winner"
-                        fontSize="1.4cqi" 
+                    <Button
+                        text={`Start Round ${(matchData?.state?.currentRound || 1) + 1}`}
+                        fontSize="1.8cqi"
+                        onClick={handleStartNextRound}
                         angle={50}
                     />
                 )}
 
-                 {showDeclareWinnerButton && (
+                {showPromoteWinnerButton && (
+                    <Button
+                        onClick={() => promoteWinner(eventName, matchId, finalWinner)}
+                        text="Promote Winner"
+                        fontSize="1.4cqi"
+                        angle={50}
+                    />
+                )}
+
+                {showDeclareWinnerButton && (
                     <Button text="Winner (判定勝負)" fontSize="1.4cqi" onClick={handleDeclareWinner} angle={50} icon={<Trophy size="1.4cqi" />} />
                 )}
-                
+
                 {showSuperiorityVote && (
                     <div className="superiority-vote time-control-group">
                         <h2>Woo-se-girok</h2>

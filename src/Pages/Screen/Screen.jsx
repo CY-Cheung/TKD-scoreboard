@@ -74,9 +74,10 @@ function Screen() {
     const [selectedCourt, setSelectedCourt] = useState(sessionStorage.getItem('selectedCourt'));
     const [currentMatchId, setCurrentMatchId] = useState(null);
     const [refereesData, setRefereesData] = useState({});
-    
+
     const [refereeMode, setRefereeMode] = useState('single');
     const [toastMessages, setToastMessages] = useState([]);
+    const [kyeShiTimer, setKyeShiTimer] = useState(null);
     const prevRefereesRef = useRef({});
 
     const animationFrameRef = useRef();
@@ -117,6 +118,17 @@ function Screen() {
         }
     }, [toastMessages]);
 
+    useEffect(() => {
+        if (kyeShiTimer === null) return;
+        const interval = setInterval(() => {
+            setKyeShiTimer(prev => {
+                if (prev <= 1) return null;
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [kyeShiTimer]);
+
     // Listen to referees status on current court
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
@@ -124,7 +136,7 @@ function Screen() {
         const unsubscribe = onValue(refereesRef, (snapshot) => {
             const currentData = snapshot.val() || {};
             const prevData = prevRefereesRef.current;
-            
+
             // Check for disconnections
             const disconnections = [];
             let occupiedCount = 0;
@@ -237,8 +249,9 @@ function Screen() {
 
     const toggleDirection = () => setDirection((prev) => (prev === "row" ? "row-reverse" : "row"));
 
-    const toggleTimer = async () => {
+    const toggleTimer = async (force = false) => {
         if (!isMatchLoaded) return;
+        if (kyeShiTimer !== null && !force) return; // Block timer toggling during Kye-shi
         const stateRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}/state`);
         const currentState = matchData?.state || {};
         const isPaused = currentState.isPaused ?? true;
@@ -259,12 +272,22 @@ function Screen() {
         }
     };
 
+    const toggleKyeShi = () => {
+        setKyeShiTimer(prev => prev === null ? 60 : null);
+        if (matchData && !matchData.state.isPaused) {
+            toggleTimer(true);
+        }
+    };
+
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.code === "Space") { e.preventDefault(); toggleTimer(); }
             if (e.key === "\\") { toggleDirection(); }
             if (e.key === "e" || e.key === "E") { setShowEdit(prev => !prev); }
             if (e.key === "q" || e.key === "Q") { setShowQRCode(prev => !prev); }
+            if (e.key === "k" || e.key === "K") { 
+                toggleKyeShi();
+            }
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
@@ -404,16 +427,33 @@ function Screen() {
                             <div className="match-number">{matchNumber}</div>
                         </div>
                         <div className="timer cursor-target">
-                            <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: timerColor }}>
-                                {renderTimerContent()}
-                            </div>
-                            <div
-                                className={`time-out match-font ${isMatchLoaded && !isPaused ? "timeout-active" : ""} ${isResting ? 'rest-mode' : ''}`}
-                                onClick={toggleTimer}
-                                style={getTimeoutStyle()}
-                            >
-                                {isResting ? 'REST TIME' : 'Time out'}
-                            </div>
+                            {kyeShiTimer !== null ? (
+                                <>
+                                    <div
+                                        className="time-out match-font timeout-active"
+                                        onClick={toggleTimer}
+                                        style={{ backgroundColor: '#FFFF00', color: '#000000' }}
+                                    >
+                                        Kye-shi
+                                    </div>
+                                    <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: '#FFFF00' }}>
+                                        {`${Math.floor(kyeShiTimer / 60)}:${(kyeShiTimer % 60).toString().padStart(2, '0')}`}
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: timerColor }}>
+                                        {renderTimerContent()}
+                                    </div>
+                                    <div
+                                        className={`time-out match-font ${isMatchLoaded && !isPaused ? "timeout-active" : ""} ${isResting ? 'rest-mode' : ''}`}
+                                        onClick={toggleTimer}
+                                        style={getTimeoutStyle()}
+                                    >
+                                        {isResting ? 'REST TIME' : 'Time out'}
+                                    </div>
+                                </>
+                            )}
                         </div>
                         <div className="round-info">
                             <div className="round-font">ROUND</div>
@@ -451,12 +491,14 @@ function Screen() {
                 setShowQRCode={setShowQRCode}
                 occupiedRefereesCount={occupiedRefereesCount}
                 toggleDirection={toggleDirection}
+                toggleKyeShi={toggleKyeShi}
+                kyeShiActive={kyeShiTimer !== null}
             />
 
             {/* Controller Connection QR Code Modal */}
             <QRCodeDisplay
                 eventId={selectedEvent}
-        eventName={eventName}
+                eventName={eventName}
                 courtId={selectedCourt}
                 matchId={currentMatchId}
                 visible={showQRCode}
