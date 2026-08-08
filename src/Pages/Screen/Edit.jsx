@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
 import { ref, get, update } from "firebase/database";
-import { QrCode, PeopleFill, Trophy, PersonFill, CheckCircle } from "react-bootstrap-icons";
+import { QrCode, PeopleFill, Trophy, PersonFill, CheckCircle, ArrowLeft, ExclamationTriangle, LightningCharge, Shield, PersonCircle, ArrowRepeat } from "react-bootstrap-icons";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
 import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner } from '../../Api';
@@ -14,13 +15,15 @@ const Edit = ({
     matchData, 
     dominantSide, 
     setShowQRCode, 
-    occupiedRefereesCount = 0 
+    occupiedRefereesCount = 0,
+    toggleDirection 
 }) => {
     const [matchMin, setMatchMin] = useState(0);
     const [matchSec, setMatchSec] = useState(0);
     const [restMin, setRestMin] = useState(0);
     const [restSec, setRestSec] = useState(0);
     const [showSuperiorityVote, setShowSuperiorityVote] = useState(false);
+    const navigate = useNavigate();
 
     const handleWinDeclaration = (winnerSide) => {
         if (!eventName || !matchId || !winnerSide) return;
@@ -44,6 +47,7 @@ const Edit = ({
     };
 
     const handleAction = (side, type, index, delta) => {
+        if (!matchData) return;
         updateScoreAndCheckRules(eventName, matchId, side, type, index, delta);
     };
 
@@ -132,19 +136,18 @@ const Edit = ({
         handleTimeUpdate('rest', restMin, value);
     };
 
-    const buttonFontSize = '1.5dvw';
+    const buttonFontSize = '2cqi';
     const pointTypes = [
-        { name: "Gam-jeom", type: "gamjeom", index: null },
-        { name: "Punch", type: "pointsStat", index: 0 },
-        { name: "Body", type: "pointsStat", index: 1 },
-        { name: "Head", type: "pointsStat", index: 2 },
-        { name: "Body(Turn)", type: "pointsStat", index: 3 },
-        { name: "Head(Turn)", type: "pointsStat", index: 4 }
+        { name: "Gam-jeom", type: "gamjeom", index: null, icon: ExclamationTriangle },
+        { name: "Punch", type: "pointsStat", index: 0, icon: LightningCharge },
+        { name: "Body", type: "pointsStat", index: 1, icon: Shield },
+        { name: "Head", type: "pointsStat", index: 2, icon: PersonCircle },
+        { name: "Body(Turn)", type: "pointsStat", index: 3, icon: ArrowRepeat },
+        { name: "Head(Turn)", type: "pointsStat", index: 4, icon: ArrowRepeat }
     ];
 
-    if (!matchData) return null;
-
-    const { config = {}, state = {}, stats = {} } = matchData;
+    // Remove early return to allow rendering empty state
+    const { config = {}, state = {}, stats = {} } = matchData || {};
     const { phase, isFinished, winReason } = state || {};
     const { roundWins } = stats || {};
     const { rules = {} } = config;
@@ -168,14 +171,19 @@ const Edit = ({
         <div className={`edit-bar ${visible ? 'visible' : ''}`}>
             <div className="edit-grid">
                  <div className="grid-cell header"></div>
-                {pointTypes.map(pt => <div className="grid-cell header" key={pt.name}>{pt.name}</div>)}
+                {pointTypes.map(pt => (
+                    <div className="grid-cell header" key={pt.name}>
+                        {pt.icon && <pt.icon size="1.3cqi" style={{ marginRight: '0.4cqi', color: 'white' }} />}
+                        {pt.name}
+                    </div>
+                ))}
 
                 <div className="grid-cell side-label blue">Blue</div>
                 {pointTypes.map(pt => (
                     <div className="grid-cell" key={`blue-${pt.name}`}>
                         <div className="buttons">
-                            <Button text="+" fontSize={buttonFontSize} onClick={() => handleAction('blue', pt.type, pt.index, 1)} angle={220} />
-                            <Button text="−" fontSize={buttonFontSize} onClick={() => handleAction('blue', pt.type, pt.index, -1)} angle={220} />
+                            <Button text="+" fontSize={buttonFontSize} style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }} onClick={() => handleAction('blue', pt.type, pt.index, 1)} angle={220} disabled={!matchData} />
+                            <Button text="−" fontSize={buttonFontSize} style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }} onClick={() => handleAction('blue', pt.type, pt.index, -1)} angle={220} disabled={!matchData} />
                         </div>
                     </div>
                 ))}
@@ -184,21 +192,39 @@ const Edit = ({
                 {pointTypes.map(pt => (
                     <div className="grid-cell" key={`red-${pt.name}`}>
                         <div className="buttons">
-                            <Button text="+" fontSize={buttonFontSize} onClick={() => handleAction('red', pt.type, pt.index, 1)} angle={0} />
-                            <Button text="−" fontSize={buttonFontSize} onClick={() => handleAction('red', pt.type, pt.index, -1)} angle={0} />
+                            <Button text="+" fontSize={buttonFontSize} style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }} onClick={() => handleAction('red', pt.type, pt.index, 1)} angle={0} disabled={!matchData} />
+                            <Button text="−" fontSize={buttonFontSize} style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }} onClick={() => handleAction('red', pt.type, pt.index, -1)} angle={0} disabled={!matchData} />
                         </div>
                     </div>
                 ))}
             </div>
 
             <div className="time-bar">
+                <Button 
+                    onClick={() => navigate(-1)} 
+                    text="Back (返回)" 
+                    icon={<ArrowLeft size="1.2cqi" />} 
+                    fontSize="1.4cqi" 
+                    angle={180}
+                    variant="gray"
+                    style={{ marginRight: '0.5cqi' }}
+                />
+                {toggleDirection && (
+                    <Button 
+                        text="Swap (⇄)" 
+                        fontSize="1.4cqi" 
+                        onClick={toggleDirection} 
+                        angle={135} 
+                        style={{ marginRight: '1cqi' }}
+                    />
+                )}
                 <div className='time-control-group'>
                     <h2>Match Time</h2>
                     <div className="time-selects">
-                        <select value={matchMin} onChange={(e) => handleMatchMinChange(e.target.value)}>
+                        <select value={matchMin} onChange={(e) => handleMatchMinChange(e.target.value)} disabled={!matchData}>
                             {[0, 1, 2].map(min => <option key={min} value={min}>{min}</option>)}
                         </select> min
-                        <select value={matchSec} onChange={(e) => handleMatchSecChange(e.target.value)}>
+                        <select value={matchSec} onChange={(e) => handleMatchSecChange(e.target.value)} disabled={!matchData}>
                             {Array.from({ length: 60 }, (_, i) => i).map(sec => <option key={sec} value={sec}>{sec}</option>)}
                         </select> sec
                     </div>
@@ -206,10 +232,10 @@ const Edit = ({
                 <div className='time-control-group'>
                     <h2>Rest Time</h2>
                     <div className="time-selects">
-                        <select value={restMin} onChange={(e) => handleRestMinChange(e.target.value)}>
+                        <select value={restMin} onChange={(e) => handleRestMinChange(e.target.value)} disabled={!matchData}>
                             {[0, 1].map(min => <option key={min} value={min}>{min}</option>)}
                         </select> min
-                        <select value={restSec} onChange={(e) => handleRestSecChange(e.target.value)}>
+                        <select value={restSec} onChange={(e) => handleRestSecChange(e.target.value)} disabled={!matchData}>
                             {Array.from({ length: 60 }, (_, i) => i).map(sec => <option key={sec} value={sec}>{sec}</option>)}
                         </select> sec
                     </div>
@@ -219,9 +245,9 @@ const Edit = ({
                 {setShowQRCode && (
                     <Button 
                         text={`QR Code (${occupiedRefereesCount}/3)`}
-                        fontSize="1.6cqi"
+                        fontSize="1.4cqi"
                         angle={300}
-                        icon={<QrCode size="0.83cqi" />}
+                        icon={<QrCode size="1.4cqi" />}
                         onClick={() => {
                             setVisible(false);
                             setShowQRCode(true);
@@ -242,26 +268,26 @@ const Edit = ({
                      <Button 
                         onClick={() => promoteWinner(eventName, matchId, finalWinner)}
                         text="Promote Winner"
-                        fontSize="1.8cqi" 
+                        fontSize="1.4cqi" 
                         angle={50}
                     />
                 )}
 
                  {showDeclareWinnerButton && (
-                    <Button text="Winner (判定勝負)" fontSize="1.8cqi" onClick={handleDeclareWinner} angle={50} icon={<Trophy size="0.83cqi" />} />
+                    <Button text="Winner (判定勝負)" fontSize="1.4cqi" onClick={handleDeclareWinner} angle={50} icon={<Trophy size="1.4cqi" />} />
                 )}
                 
                 {showSuperiorityVote && (
                     <div className="superiority-vote time-control-group">
                         <h2>Woo-se-girok</h2>
                         <div className="buttons">
-                            <Button text="Blue" fontSize="1.8cqi" onClick={() => handleWinDeclaration('blue')} angle={220} icon={<PersonFill size="0.83cqi" />} />
-                            <Button text="Red" fontSize="1.8cqi" onClick={() => handleWinDeclaration('red')} angle={0} icon={<PersonFill size="0.83cqi" />} />
+                            <Button text="Blue" fontSize="1.4cqi" onClick={() => handleWinDeclaration('blue')} angle={220} icon={<PersonFill size="1.4cqi" />} />
+                            <Button text="Red" fontSize="1.4cqi" onClick={() => handleWinDeclaration('red')} angle={0} icon={<PersonFill size="1.4cqi" />} />
                         </div>
                     </div>
                 )}
 
-                <Button text="Done (完成)" fontSize="1.6cqi" onClick={() => setVisible(false)} icon={<CheckCircle size="0.83cqi" />} />
+                <Button text="Done (完成)" fontSize="1.4cqi" onClick={() => setVisible(false)} icon={<CheckCircle size="1.4cqi" />} />
             </div>
         </div>
     );

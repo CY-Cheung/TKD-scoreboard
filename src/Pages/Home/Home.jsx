@@ -7,6 +7,7 @@ import { ref, get } from 'firebase/database';
 import './Home.css';
 import Button from '../../Components/Button/Button';
 import QRCodeDisplay from '../../Components/QRCodeDisplay/QRCodeDisplay';
+import MarqueeText from "../../Components/MarqueeText";
 
 // 引入 Bootstrap Icons
 import { Display, Controller, Diagram2, PersonBadge, BoxArrowRight, ArrowLeftRight, Github } from 'react-bootstrap-icons';
@@ -114,10 +115,10 @@ function Home() {
                         <div style={{fontSize: '1.5cqi', color: '#fbc531', margin: '0.3cqi 0 0 0', fontWeight: '700', letterSpacing: '0.3cqi', textTransform: 'uppercase'}}>Kyorugi</div>
                         <h2 style={{fontSize: '1.5cqi', color: 'rgba(255,255,255,0.9)', margin: '0.8cqi 0 0 0', fontWeight: 'normal', letterSpacing: '0.1cqi'}}>跆拳道搏擊比賽計分系統</h2>
                         <ul className="home-app-intro-list">
-                            <li><strong>無須安裝 App</strong>：手機掃描 QR Code 即刻化身遙控器，隨時隨地開始計分。</li>
-                            <li><strong>防重複加分機制</strong>：多裁判模式下需於 1 秒內一致畀分先算有效，確保計分公平。</li>
-                            <li><strong>智能動態對戰表</strong>：一鍵匯入官方 PDF 賽程，自動生成實時更新嘅淘汰賽晉級圖。</li>
-                            <li><strong>自動連線監控</strong>：智能鎖定裁判席位，斷線即時警示並自動調整模式，比賽絕不中斷。</li>
+                            <li><strong>Cloud-Powered (雲端驅動)</strong>：只要連到上網，隨時隨地都可以開波計分！無須安裝任何軟件。</li>
+                            <li><strong>Scan & Score (掃描即用)</strong>：裁判只需用手機掃描 QR Code，一秒連接，即刻開始畀分。</li>
+                            <li><strong>One Account (一鍵開賽)</strong>：只需要一個 Google 帳號登入，就可以輕鬆創建及管理整場賽事。</li>
+                            <li><strong>Auto Bracket (魔法對戰表)</strong>：支援多個 Court 同時作賽，賽果實時同步，晉級表自動 Update！</li>
                         </ul>
                     </div>
                     <div className="home-footer-links">
@@ -130,41 +131,51 @@ function Home() {
                 <div className="home-divider"></div>
 
                 <div className="home-right-panel">
-                    <div style={{ width: '100%', textAlign: 'left', marginBottom: '1.5cqi' }}>
+                    <div style={{ width: '100%', textAlign: 'center', marginBottom: '1.5cqi' }}>
                         {(() => {
                             const fullEventName = session?.eventName || eventName || session?.eventId || 'N/A';
                             let mainEventName = fullEventName;
                             let eventDateStr = '';
                             
-                            // 嘗試解析帶有多個括號嘅複雜字串，例如 "Event Name (Day 1) (2023/10/10)"
+                            // Helper to normalize DD/MM/YYYY to YYYY/MM/DD
+                            const normalizeDate = (dateStr) => {
+                                const ddMMyyyyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                                if (ddMMyyyyMatch) {
+                                    return `${ddMMyyyyMatch[3]}/${ddMMyyyyMatch[2].padStart(2, '0')}/${ddMMyyyyMatch[1].padStart(2, '0')}`;
+                                }
+                                return dateStr;
+                            };
+
                             const matchDouble = fullEventName.match(/^(.*?)\s*\((Day[^)]+)\)\s*\(([^)]+)\)\s*$/i);
                             if (matchDouble) {
                                 mainEventName = matchDouble[1].trim();
-                                eventDateStr = `${matchDouble[2].trim()} - ${matchDouble[3].trim()}`;
+                                eventDateStr = `${matchDouble[2].trim()} - ${normalizeDate(matchDouble[3].trim())}`;
                             } else {
-                                // Fallback 解析 "Event Name (Day 1 - 2023/10/10)" 或者其他單一括號結尾嘅情況
                                 const matchSingle = fullEventName.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
                                 if (matchSingle) {
                                     mainEventName = matchSingle[1].trim();
-                                    eventDateStr = matchSingle[2].trim();
+                                    eventDateStr = normalizeDate(matchSingle[2].trim());
                                 }
                             }
                             
                             return (
-                                <>
-                                    <h3 style={{ fontSize: '1.6cqi', color: 'white', margin: '0 0 0.5cqi 0', fontWeight: 'bold', lineHeight: '1.2', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        {mainEventName}
-                                    </h3>
+                                <div style={{ width: '100%', overflow: 'hidden', textAlign: 'center' }}>
+                                    <MarqueeText 
+                                      text={mainEventName} 
+                                      style={{ fontSize: '1.6cqi', color: 'white', fontWeight: 'bold', width: '100%' }} 
+                                    />
                                     {eventDateStr && (
-                                        <div style={{ fontSize: '1.6cqi', color: '#fff', marginBottom: '0.5cqi' }}>
+                                        <div style={{ fontSize: '1.6cqi', color: '#fff', marginTop: '0.4cqi', fontWeight: 'bold' }}>
                                             {eventDateStr}
                                         </div>
                                     )}
-                                </>
+                                </div>
                             );
                         })()}
-                        <div style={{ fontSize: '1.6cqi', color: 'rgba(255,255,255,0.9)', marginTop: '0.5cqi' }}>
-                            Court: <strong style={{ color: '#fff' }}>{session?.courtId || 'N/A'}</strong>
+                        {/* Empty line space */}
+                        <div style={{ height: '1cqi' }}></div>
+                        <div style={{ fontSize: '1.6cqi', color: '#fff', fontWeight: 'bold' }}>
+                            Court {session?.courtId?.toString().replace(/court\s*/i, '').trim() || 'N/A'}
                         </div>
                     </div>
 

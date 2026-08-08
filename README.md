@@ -2,6 +2,11 @@
 
 一個用 React 同 Firebase 寫成嘅現代化 Real-time (實時) 跆拳道比賽計分系統，為觀眾、賽事管理員同 Corner Judges (邊線裁判) 提供 Seamless (無縫) 體驗。
 
+* **Cloud-Powered (雲端驅動)**：只要連到上網，隨時隨地都可以開波計分！無須安裝任何軟件。
+* **Scan & Score (掃描即用)**：裁判只需用手機掃描 QR Code，一秒連接，即刻開始畀分。
+* **One Account (一鍵開賽)**：只需要一個 Google 帳號登入，就可以輕鬆創建及管理整場賽事。
+* **Auto Bracket (魔法對戰表)**：支援多個 Court 同時作賽，賽果實時同步，晉級表自動 Update！
+
 ## 🌟 Key Features (主要功能)
 
 ### 📺 Live Scoreboard (實時計分板 - Screen)

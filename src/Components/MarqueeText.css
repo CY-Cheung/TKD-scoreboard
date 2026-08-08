@@ -1,0 +1,23 @@
+.marquee-container {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.marquee-content {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.marquee-content.overflowing {
+  padding-left: 100%;
+  animation: tkd-marquee-scroll 10s linear infinite;
+}
+
+@keyframes tkd-marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}

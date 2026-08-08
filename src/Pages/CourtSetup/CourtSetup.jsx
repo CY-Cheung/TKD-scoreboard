@@ -453,10 +453,10 @@ function CourtSetup() {
             <div style={{ fontSize: '1.5cqi', color: '#fbc531', margin: '0.3cqi 0 0 0', fontWeight: '700', letterSpacing: '0.3cqi', textTransform: 'uppercase' }}>Kyorugi</div>
             <h2 style={{ fontSize: '1.5cqi', color: 'rgba(255,255,255,0.9)', margin: '0.8cqi 0 0 0', fontWeight: 'normal', letterSpacing: '0.1cqi' }}>跆拳道搏擊比賽計分系統</h2>
             <ul className="cs-app-intro-list">
-                            <li><strong>無須安裝 App</strong>：手機掃描 QR Code 即刻化身遙控器，隨時隨地開始計分。</li>
-                            <li><strong>防重複加分機制</strong>：多裁判模式下需於 1 秒內一致畀分先算有效，確保計分公平。</li>
-                            <li><strong>智能動態對戰表</strong>：一鍵匯入官方 PDF 賽程，自動生成實時更新嘅淘汰賽晉級圖。</li>
-                            <li><strong>自動連線監控</strong>：智能鎖定裁判席位，斷線即時警示並自動調整模式，比賽絕不中斷。</li>
+                            <li><strong>Cloud-Powered (雲端驅動)</strong>：只要連到上網，隨時隨地都可以開波計分！無須安裝任何軟件。</li>
+                            <li><strong>Scan & Score (掃描即用)</strong>：裁判只需用手機掃描 QR Code，一秒連接，即刻開始畀分。</li>
+                            <li><strong>One Account (一鍵開賽)</strong>：只需要一個 Google 帳號登入，就可以輕鬆創建及管理整場賽事。</li>
+                            <li><strong>Auto Bracket (魔法對戰表)</strong>：支援多個 Court 同時作賽，賽果實時同步，晉級表自動 Update！</li>
                         </ul>
           </div>
           <div className="cs-footer-links">
@@ -474,9 +474,10 @@ function CourtSetup() {
           ) : !user ? (
             /* Google Sign-in Login Required Block */
             <div className="cs-form" style={{ textAlign: 'center', padding: '2cqi' }}>
-              <p style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: '1.8cqi', marginBottom: '2.5cqi', lineHeight: '1.6', fontWeight: '500' }}>
-                毋須額外註冊，<br />只需登入 Google 帳號即可。
-              </p>
+              <div style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: '1.5cqi', marginBottom: '2.5cqi', lineHeight: '1.8', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                <div>No signup required! (無須繁複註冊！)</div>
+                <div>Login with Google to start. (一鍵登入即可開賽。)</div>
+              </div>
               {authError && <p className="cs-error-message">{authError}</p>}
               <div className="google-btn-wrapper" style={{ display: 'flex', justifyContent: 'center' }}>
                 <Button
@@ -488,9 +489,10 @@ function CourtSetup() {
                   style={{ padding: '1cqi 2cqi' }}
                 />
               </div>
-              <p style={{ fontSize: '1.05cqi', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2cqi' }}>
-                系統將會驗證您的身分並載入賽事場地數據
-              </p>
+              <div style={{ fontSize: '1.05cqi', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2cqi', whiteSpace: 'nowrap', lineHeight: '1.6' }}>
+                <div>Verifying identity & loading events...</div>
+                <div>(系統將驗證身分並載入賽事)</div>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="cs-form">

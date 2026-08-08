@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
 import {
   QrCode,
@@ -9,6 +10,7 @@ import {
   CheckCircleFill,
   Globe,
 } from "react-bootstrap-icons";
+import MarqueeText from "../MarqueeText";
 import { ref, onValue, update } from "firebase/database";
 import { database } from "../../firebase";
 import "./QRCodeDisplay.css";
@@ -102,7 +104,7 @@ function QRCodeDisplay({
     });
   };
 
-  return (
+  return createPortal(
     <div className="qrcode-modal-overlay" onClick={onClose}>
       <div
         className="qrcode-split-card glass-card"
@@ -112,7 +114,7 @@ function QRCodeDisplay({
           className="qrcode-close-corner-btn"
           onClick={onClose}
           aria-label="Close"
-          icon={<X size="1.46cqi" />}
+          icon={<X size="2cqi" />}
           variant="orange"
           angle={45}
         />
@@ -131,22 +133,22 @@ function QRCodeDisplay({
           {/* Real-time Referee Connection Status Badge Panel */}
           <div
             className={`referee-status-box ${isFull ? "full" : ""}`}
-            
+
           >
-            <div className="referee-status-title" style={{ fontSize: "0.94cqi" }}>
-              <PeopleFill size="1.04cqi" />
-              <span>Referees Connected: {occupiedCount}/3</span>
-              {isFull && <CheckCircleFill size="1.04cqi" className="full-icon" />}
+            <div className="referee-status-title" style={{ fontSize: "1.8cqi", fontWeight: "bold" }}>
+              <PeopleFill size="1.5cqi" />
+              <span>Corner Judges Connected: {occupiedCount}/3</span>
+              {isFull && <CheckCircleFill size="1.5cqi" className="full-icon" />}
             </div>
             <div className="referee-badges-row">
               <span className={`ref-slot-pill ${isJ1 ? "online" : "vacant"}`}>
-                J1 {isJ1 ? "• Online" : "• Vacant"}
+                Corner Judge 1 (邊裁一) {isJ1 ? "• Online (已連線)" : "• Vacant (空缺)"}
               </span>
               <span className={`ref-slot-pill ${isJ2 ? "online" : "vacant"}`}>
-                J2 {isJ2 ? "• Online" : "• Vacant"}
+                Corner Judge 2 (邊裁二) {isJ2 ? "• Online (已連線)" : "• Vacant (空缺)"}
               </span>
               <span className={`ref-slot-pill ${isJ3 ? "online" : "vacant"}`}>
-                J3 {isJ3 ? "• Online" : "• Vacant"}
+                Corner Judge 3 (邊裁三) {isJ3 ? "• Online (已連線)" : "• Vacant (空缺)"}
               </span>
             </div>
           </div>
@@ -154,24 +156,24 @@ function QRCodeDisplay({
           {/* Referee Mode Selection */}
           <div className="referee-mode-selector">
             <span
-              style={{ fontSize: "1.4cqi", color: "#ccc", fontWeight: "bold" }}
+              style={{ fontSize: "1.8cqi", color: "#ccc", fontWeight: "bold" }}
             >
               Scoring Mode
             </span>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.52cqi", marginTop: "0.52cqi" }}>
               <Button
-                text="Single (單裁判)"
-                variant={refereeMode === "single" ? "orange" : "gray"}
+                text="Single Corner Judge (一位邊緣裁判)"
+                variant={refereeMode === "single" ? "yellow" : "gray"}
                 onClick={() => handleModeChange("single")}
-                fontSize="1.2cqi"
+                fontSize="1.6cqi"
                 style={{ flex: 1 }}
               />
               <Button
-                text="Multiple (多裁判)"
-                variant={refereeMode === "multiple" ? "orange" : "gray"}
+                text="Multiple Corner Judges (多位邊緣裁判)"
+                variant={refereeMode === "multiple" ? "yellow" : "gray"}
                 onClick={() => handleModeChange("multiple")}
                 disabled={occupiedCount < 2}
-                fontSize="1.2cqi"
+                fontSize="1.6cqi"
                 style={{ flex: 1, opacity: occupiedCount < 2 ? 0.5 : 1 }}
                 title={
                   occupiedCount < 2
@@ -183,7 +185,7 @@ function QRCodeDisplay({
             {refereeMode === "multiple" && (
               <div
                 style={{
-                  fontSize: "0.72cqi",
+                  fontSize: "1.1cqi",
                   color: "#ffcc00",
                   marginTop: "0.52cqi",
                 }}
@@ -194,9 +196,10 @@ function QRCodeDisplay({
             {occupiedCount < 2 && (
               <div
                 style={{
-                  fontSize: "0.72cqi",
-                  color: "#ff3b30",
+                  fontSize: "1.2cqi",
+                  color: "#ffc107",
                   marginTop: "0.52cqi",
+                  textAlign: "center",
                 }}
               >
                 ⚠️ Multiple mode requires at least 2 connected judges.
@@ -211,63 +214,92 @@ function QRCodeDisplay({
         <div className="qrcode-right-panel">
           {/* Network Host Config Section (Removed) */}
 
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.78cqi",
-            }}
-          >
-            <div style={{ textAlign: "center", marginBottom: "1.5cqi" }}>
-              {(() => {
-                const full = eventName || eventId || "N/A";
-                const dayMatch = full.match(/(.*?)\s*\(Day (\d+)\)\s*\((\d{4}\/\d{2}\/\d{2})\)/i);
-                const formatCourt = (cid) => cid ? cid.toString().replace(/court\s*/i, '').trim() : "N/A";
-                
-                if (dayMatch) {
-                  return (
-                    <>
-                      <div style={{ fontSize: '1.6cqi', fontWeight: 'bold', color: '#fff' }}>{dayMatch[1].trim()}</div>
-                      <div style={{ fontSize: '1.6cqi', fontWeight: 'bold', color: '#fff', marginTop: '0.4cqi' }}>Day {dayMatch[2]} - {dayMatch[3]} - Court {formatCourt(courtId)}</div>
-                    </>
-                  );
-                }
-                return (
-                    <>
-                      <div style={{ fontSize: '1.6cqi', fontWeight: 'bold', color: '#fff' }}>{full}</div>
-                      <div style={{ fontSize: '1.6cqi', fontWeight: 'bold', color: '#fff', marginTop: '0.4cqi' }}>Court {formatCourt(courtId)}</div>
-                    </>
-                );
-              })()}
-            </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
             
-            <div className="qrcode-wrapper" style={{ width: "55%", aspectRatio: "1" }}>
-              <QRCodeSVG
-                value={controllerUrl}
-                size="100%" style={{ width: '100%', height: '100%' }}
-                bgColor="transparent"
-                fgColor="#000000"
-                level="H"
-                includeMargin={false}
-              />
-            </div>
-            <p className="qrcode-instructions">
-              {isFull ? (
-                <span className="text-warning">
-                  ⚠️ 裁判席位已滿 (All 3 Referee Slots Occupied)
-                </span>
-              ) : (
-                "請裁判使用手機掃描二維碼開啟控制頁面"
-              )}
-            </p>
+            {/* Top Section */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                {(() => {
+                  const fullEventName = eventName || eventId || "N/A";
+                  let mainEventName = fullEventName;
+                  let eventDateStr = '';
+                  
+                  // Helper to normalize DD/MM/YYYY to YYYY/MM/DD
+                  const normalizeDate = (dateStr) => {
+                      const ddMMyyyyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                      if (ddMMyyyyMatch) {
+                          return `${ddMMyyyyMatch[3]}/${ddMMyyyyMatch[2].padStart(2, '0')}/${ddMMyyyyMatch[1].padStart(2, '0')}`;
+                      }
+                      return dateStr;
+                  };
+                  
+                  const matchDouble = fullEventName.match(/^(.*?)\s*\((Day[^)]+)\)\s*\(([^)]+)\)\s*$/i);
+                  if (matchDouble) {
+                      mainEventName = matchDouble[1].trim();
+                      eventDateStr = `${matchDouble[2].trim()} - ${normalizeDate(matchDouble[3].trim())}`;
+                  } else {
+                      const matchSingle = fullEventName.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+                      if (matchSingle) {
+                          mainEventName = matchSingle[1].trim();
+                          eventDateStr = normalizeDate(matchSingle[2].trim());
+                      }
+                  }
+                  
+                  return (
+                    <div style={{ width: '100%', overflow: 'hidden', textAlign: 'center' }}>
+                      <MarqueeText 
+                        text={mainEventName} 
+                        style={{ fontSize: '2.6cqi', fontWeight: 'bold', color: '#fff', width: '100%' }} 
+                      />
+                      {eventDateStr && (
+                        <div style={{ fontSize: '2.2cqi', fontWeight: 'bold', color: '#fff', marginTop: '0.4cqi' }}>
+                          {eventDateStr}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
           </div>
 
+            {/* Middle Section (QR Code absolutely centered relative to the flex distribution) */}
+            <div style={{ flex: 'none', display: 'flex', justifyContent: 'center', position: 'relative' }}>
+              <div className="qrcode-wrapper" style={{ width: "65%", aspectRatio: "1" }}>
+                <QRCodeSVG
+                  value={controllerUrl}
+                  size="100%" style={{ width: '100%', height: '100%' }}
+                  bgColor="transparent"
+                  fgColor="#ffffff"
+                  level="H"
+                  includeMargin={false}
+                />
+              </div>
+              <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translate(-50%, 0)', fontSize: '2.6cqi', fontWeight: 'bold', color: '#fff', marginTop: '0.8cqi', whiteSpace: 'nowrap' }}>
+                Court {courtId ? courtId.toString().replace(/court\s*/i, '').trim() : "N/A"}
+              </div>
+            </div>
+
+            {/* Bottom Section */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', width: '100%' }}>
+              <div className="qrcode-instructions" style={{ textAlign: 'center', width: '100%' }}>
+                {isFull ? (
+                  <span className="text-warning">
+                    ⚠️ 裁判席位已滿 (All 3 Referee Slots Occupied)
+                  </span>
+                ) : (
+                  <div style={{ textAlign: 'center', width: '100%', lineHeight: '1.5' }}>
+                    <span style={{ fontSize: '1.4cqi', opacity: 0.9 }}>Scan to instantly become a referee!</span>
+                    <br />
+                    <span>拿出手機掃描，即刻成為裁判！</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
+
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

@@ -30,6 +30,18 @@ const DataImport = () => {
     const [newRestDuration, setNewRestDuration] = useState(60);
     const [currentMatches, setCurrentMatches] = useState({});
     const [selectedMatchId, setSelectedMatchId] = useState(null);
+    const [toastMessage, setToastMessage] = useState(null);
+    const toastTimeoutRef = useRef(null);
+
+    const showToast = (message) => {
+        setToastMessage(message);
+        if (toastTimeoutRef.current) {
+            clearTimeout(toastTimeoutRef.current);
+        }
+        toastTimeoutRef.current = setTimeout(() => {
+            setToastMessage(null);
+        }, 3000);
+    };
 
     // Date Filter State for Matches List
     const [selectedDateFilter, setSelectedDateFilter] = useState('all');
@@ -466,12 +478,12 @@ const DataImport = () => {
 
     const handleLoadMatch = async () => {
         if (!eventName || !selectedMatchId) {
-            alert('Please select an event and a match to load.');
+            showToast('Please select an event and a match to load.');
             return;
         }
         
         if (!session || !session.courtId) {
-            alert('No court is configured for this device. Please go to Court Setup first.');
+            showToast('No court is configured for this device. Please go to Court Setup first.');
             return;
         }
     
@@ -481,11 +493,11 @@ const DataImport = () => {
     
             localStorage.setItem('selectedMatchId', selectedMatchId);
             
-            alert(`Match ${selectedMatchId} successfully loaded to ${session.courtId}.`);
+            showToast(`Match ${selectedMatchId} successfully loaded to ${session.courtId}.`);
     
         } catch (error) {
             console.error("Error loading match to court:", error);
-            alert(`Failed to load match to court. See console for details.`);
+            showToast(`Failed to load match to court. See console for details.`);
         }
     };
 
@@ -501,6 +513,24 @@ const DataImport = () => {
     };
     return (
         <div className="di-container aurora-bg" onDoubleClick={toggleFullScreen}>
+            {toastMessage && (
+                <div style={{
+                    position: 'absolute',
+                    top: '2cqi',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    color: '#fff',
+                    padding: '0.8cqi 1.6cqi',
+                    borderRadius: '0.5cqi',
+                    fontSize: '1cqi',
+                    zIndex: 2000,
+                    boxShadow: '0 0.4cqi 1cqi rgba(0,0,0,0.5)',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                }}>
+                    {toastMessage}
+                </div>
+            )}
             <div className="di-content-wrapper glass-card">
 
                 

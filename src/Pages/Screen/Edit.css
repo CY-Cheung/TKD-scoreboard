@@ -6,11 +6,12 @@
     background-color: rgba(0, 0, 0, 0.9);
     color: white;
     display: flex;
-    flex-direction: column; /* Changed to column */
+    flex-direction: column;
     align-items: center;
-    padding: 0.781cqi;
+    padding: 0.7cqi;
     transition: bottom 0.3s ease-in-out;
     z-index: 1001;
+    container-type: inline-size;
 }
 
 .edit-bar.visible {
@@ -34,12 +35,12 @@
 
 .grid-cell.header {
     font-weight: bold;
-    font-size: 1.5dvw;
+    font-size: 1.3cqi;
 }
 
 .grid-cell.side-label {
     font-weight: bold;
-    font-size: 1.8dvw;
+    font-size: 1.6cqi;
     justify-content: flex-start;
 }
 
@@ -67,20 +68,20 @@
 
 .time-control-group h2 {
     margin-right: 0.521cqi;
-    font-size: 1.5dvw;
+    font-size: 1.3cqi;
 }
 
 .time-selects {
     display: flex;
     align-items: center;
     margin: 0 0.26cqi;
-    font-size: 1.5dvw;
+    font-size: 1.3cqi;
 }
 
 .time-selects select {
-    width: auto; /* Override the global 100% width */
+    width: auto;
     margin: 0 0.26cqi;
-    font-size: 1.5dvw;
+    font-size: 1.3cqi;
 }
 
 /* Aligning the Done button */

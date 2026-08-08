@@ -367,16 +367,6 @@ function Screen() {
         <>
             <div className="screen" onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}>
                 <div className="screen-floating-top-bar" style={{ position: 'absolute', bottom: '100%', left: 0, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'calc(var(--screen-height) * 0.03) calc(var(--screen-width) * 0.03)', zIndex: 100, boxSizing: 'border-box', color: 'rgba(255,255,255,0.5)', fontFamily: 'Outfit, sans-serif' }}>
-                    <div style={{ position: 'absolute', left: 'calc(var(--screen-width) * 0.03)' }}>
-                        <Button 
-                            onClick={(e) => { e.stopPropagation(); window.history.back(); }} 
-                            text="Back (返回)" 
-                            icon={<ArrowLeft style={{ width: 'calc(var(--screen-width) * 0.015)', height: 'calc(var(--screen-width) * 0.015)' }} />} 
-                            fontSize="calc(var(--screen-width) * 0.012)" 
-                            angle={180}
-                            variant="gray"
-                        />
-                    </div>
                     <div style={{ fontSize: 'calc(var(--screen-width) * 0.018)', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase' }}>
                         {eventName || selectedEvent || "No Event Selected"}
                     </div>
@@ -392,7 +382,7 @@ function Screen() {
                 <div className="midbottom" style={{ flexDirection: direction, display: "flex" }}>
                     {/* Red Side: Gam-jeom and Score */}
                     <div className="red-log red-bg">
-                        <div className="red-gamjeom red-bg" onClick={() => isMatchLoaded && setShowEdit(true)}>
+                        <div className="red-gamjeom red-bg" onClick={() => setShowEdit(true)}>
                             <div className="gamjeom-number">{redGamJeom}</div>
                             <div className="gamjeom-font">GAM-JEOM</div>
                         </div>
@@ -401,7 +391,7 @@ function Screen() {
                         <div
                             className={'red-score-text red-score-bg score-font cursor-target'}
                             style={{ color: redScoreColor }}
-                            onClick={() => isMatchLoaded && setShowEdit(true)}
+                            onClick={() => setShowEdit(true)}
                         >
                             {isResting || isFinal ? renderSideHistory('red') : redTotalScore}
                         </div>
@@ -436,13 +426,13 @@ function Screen() {
                         <div
                             className={'blue-score-text blue-score-bg score-font cursor-target'}
                             style={{ color: blueScoreColor }}
-                            onClick={() => isMatchLoaded && setShowEdit(true)}
+                            onClick={() => setShowEdit(true)}
                         >
                             {isResting || isFinal ? renderSideHistory('blue') : blueTotalScore}
                         </div>
                     </div>
                     <div className="blue-log blue-bg">
-                        <div className="blue-gamjeom blue-bg" onClick={() => isMatchLoaded && setShowEdit(true)}>
+                        <div className="blue-gamjeom blue-bg" onClick={() => setShowEdit(true)}>
                             <div className="gamjeom-number">{blueGamJeom}</div>
                             <div className="gamjeom-font">GAM-JEOM</div>
                         </div>
@@ -460,6 +450,7 @@ function Screen() {
                 dominantSide={dominantSide}
                 setShowQRCode={setShowQRCode}
                 occupiedRefereesCount={occupiedRefereesCount}
+                toggleDirection={toggleDirection}
             />
 
             {/* Controller Connection QR Code Modal */}

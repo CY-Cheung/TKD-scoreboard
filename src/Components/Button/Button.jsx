@@ -24,6 +24,10 @@ function Button({
             gradientString = "linear-gradient(135deg, #4f46e5, #8b5cf6, #ec4899, #f43f5e)";
         } else if (variant === "orange") {
             gradientString = "linear-gradient(135deg, #f97316, #d97706, #f59e0b)";
+        } else if (variant === "yellow") {
+            gradientString = "linear-gradient(135deg, #facc15, #eab308, #ca8a04)";
+        } else if (variant === "gray") {
+            gradientString = "linear-gradient(135deg, #9ca3af, #6b7280, #4b5563)";
         } else {
             const h1 = angle % 360;
             const h2 = (angle + step) % 360;
