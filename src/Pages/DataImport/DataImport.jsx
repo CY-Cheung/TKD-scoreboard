@@ -317,10 +317,10 @@ const DataImport = () => {
         }
     };
 
-    // Prompt Delete Event Confirmation
-    const promptDeleteEvent = () => {
-        if (!eventName) {
-            showToast('請先選擇要刪除的賽事。');
+    // Prompt Delete Match Confirmation
+    const promptDeleteMatch = () => {
+        if (!eventName || !selectedMatchId) {
+            showToast('請先選擇要刪除的比賽場次 (Match)。');
             return;
         }
 
@@ -330,28 +330,34 @@ const DataImport = () => {
         }
         
         showConfirm({
-            title: '刪除賽事確認 (Confirm Delete)',
-            message: `您確定要刪除整個賽事「${eventName}」嗎？\n⚠️ 此操作會將該賽事下的所有比賽數據、場地設定及賽程永久刪除，無法復原！`,
-            onConfirm: confirmDeleteEvent,
+            title: '刪除場次確認 (Confirm Delete Match)',
+            message: `您確定要刪除場次「${selectedMatchId}」嗎？\n⚠️ 此操作無法復原，該場次的所有資料將被永久刪除！`,
+            onConfirm: confirmDeleteMatch,
             confirmText: 'Confirm Delete',
             cancelText: 'Cancel'
         });
     };
 
-    // Confirm Delete Event Execution
-    const confirmDeleteEvent = async () => {
-        if (!eventName || !user) return;
+    // Confirm Delete Match Execution
+    const confirmDeleteMatch = async () => {
+        if (!eventName || !selectedMatchId || !user) return;
         setIsDeleting(true);
 
         try {
-            const eventRef = ref(database, `events/${eventName}`);
-            await remove(eventRef);
-            showToast(`🗑️ 賽事 ${eventName} 已成功刪除！`);
-            setEventName('');
-            fetchEventsList();
+            const matchRef = ref(database, `events/${eventName}/matches/${selectedMatchId}`);
+            await remove(matchRef);
+            showToast(`🗑️ 場次 ${selectedMatchId} 已成功刪除！`);
+            setSelectedMatchId(null);
+            
+            // Remove from local state
+            setCurrentMatches(prev => {
+                const newMatches = { ...prev };
+                delete newMatches[selectedMatchId];
+                return newMatches;
+            });
         } catch (error) {
-            console.error("Delete Event Failed:", error);
-            showToast(`刪除賽事失敗：只有該賽事的建立者或協作者可以刪除！\n(${error.message})`);
+            console.error("Delete Match Failed:", error);
+            showToast(`刪除場次失敗：\n(${error.message})`);
         } finally {
             setIsDeleting(false);
         }
@@ -640,7 +646,7 @@ const DataImport = () => {
                             <Button text="Add Match (新增賽事)" angle={260} onClick={handleAddMatch} icon={<PlusCircle size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi" }} />
                             <Button text="Load (載入)" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi" }} />
                             <Button text="Home (主頁)" angle={150} onClick={() => navigate('/')} icon={<House size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi" }} />
-                            <Button text="Delete (刪除)" angle={350} onClick={promptDeleteEvent} icon={<Trash size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi", backgroundColor: "#ff3b30" }} />
+                            <Button text="Delete (刪除)" angle={350} onClick={promptDeleteMatch} disabled={!selectedMatchId} icon={<Trash size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi", backgroundColor: "#ff3b30" }} />
                         </div>
                     </div>
 

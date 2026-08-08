@@ -297,7 +297,7 @@ function QRCodeDisplay({
                   value={controllerUrl}
                   size="100%" style={{ width: '100%', height: '100%' }}
                   bgColor="transparent"
-                  fgColor="#ffffff"
+                  fgColor="rgba(255, 255, 255, 0.75)"
                   level="H"
                   includeMargin={false}
                 />

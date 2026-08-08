@@ -1,41 +1,36 @@
-# Taekwondo Scoreboard System (跆拳道計分系統)
+# TKD SCÖREBÖARD (跆拳道計分系統) 🛠️
 
-一個用 React 同 Firebase 寫成嘅現代化 Real-time (實時) 跆拳道比賽計分系統，為觀眾、賽事管理員同 Corner Judges (邊線裁判) 提供 Seamless (無縫) 體驗。
+*VÄLKOMMEN! (歡迎！)* 歡迎來到你嘅跆拳道賽事 DIY 組裝包。
+正如組裝一個書櫃，呢個系統為觀眾、賽事管理員同邊線裁判提供咗「一啪即合」嘅無縫體驗。你唔需要準備六角匙 (Allen key)，只需準備一個 Google 帳號同埋一部手機，我哋就可以開工！
 
-* **Cloud-Powered (雲端驅動)**：只要連到上網，隨時隨地都可以開波計分！無須安裝任何軟件。
-* **Scan & Score (掃描即用)**：裁判只需用手機掃描 QR Code，一秒連接，即刻開始畀分。
-* **One Account (一鍵開賽)**：只需要一個 Google 帳號登入，就可以輕鬆創建及管理整場賽事。
-* **Auto Bracket (魔法對戰表)**：支援多個 Court 同時作賽，賽果實時同步，晉級表自動 Update！
+## 📦 產品組件 (Key Features)
 
-## 🌟 Key Features (主要功能)
+### 📺 LÏVE SCÖREBÖARD (實時計分大螢幕)
+*   **REAL-TÏME (實時同步)**: 分數更新快過你跌咗粒螺絲。Firebase 實時數據庫加持，秒速同步。
+*   **GLÄSS QR (玻璃感二維碼)**: 經過精心調校嘅半透明 QR Code，完美融入 Glassmorphism 磨砂玻璃背景。唔單止掃得到，仲好有質感！
+*   **SMÄRT PÄRSE (智能解析)**: 掟份官方 PDF 賽程表落去，系統就會好似睇說明書咁自動提取 Match IDs 同選手資料。
 
-### 📺 Live Scoreboard (實時計分板 - Screen)
-* **Real-time Sync (實時同步)**: 透過 Firebase Realtime Database 做到分數秒速更新。
-* **Smart Match Resolution (智能賽事解析)**: 解析官方 PDF 賽程表，自動提取 Match IDs (比賽編號) 及選手資料。
-* **Dynamic QR Code (動態二維碼)**: 顯示專屬 QR Code，畀最多 3 位裁判用手機連接 Court (場地)。
-* **Auto-Downgrade & Connection Alert (自動降級與斷線提示)**: 實時監測連線，斷線即時警示；人數不足會自動降級為單一裁判模式。
+### 📱 MÖBILE CÖNTRÖLLER (手機遙控器)
+*   **NÖ-ÄPP (免安裝)**: 掃描 QR Code 即刻用得，乾淨俐落。
+*   **SMÄRT LÖCKING (智能防搶位)**: 採用咗高級嘅 Transaction 防呆設計，J1 裁判位再唔怕被「幽靈連線」霸佔。邊個坐緊？一目了然！斷線自動讓座。
+*   **VÄLID PÖINT (有效得分機制)**: 2 位以上裁判喺 1 秒內篤同一個分先會加，杜絕手震同重複畀分。
 
-### 📱 Mobile Controller (手機遙控器 - Remote)
-* **No-App Installation (免安裝)**: 掃描 QR Code 即可喺 Mobile Browser (手機瀏覽器) 操作，無須下載 App。
-* **Smart Seat Locking (智能座位鎖定)**: 採用 Distributed Locking 機制，自動分配 `J1`, `J2`, `J3` 席位，斷線自動讓座。
-* **Valid Point System (有效得分機制)**: 支援 Multiple Referee 模式，2 位以上裁判喺 1秒內投出相同分數，先會透過 `runTransaction` 正式加分，杜絕 Double Scoring (重複加分)。
-* **Haptic Feedback (觸覺回饋)**: 撳分時手機提供即時震動回饋。
-* **Secure Access (安全存取)**: Firebase Security Rules 嚴格驗證 Device ID，防止未經授權改分。
+### ⚙️ ÄDMIN MÄNÄGEMENT (賽事管理中心)
+*   **PÖPUP FRÄMEWÖRK (全局優雅彈窗)**: 我哋徹底丟棄咗嗰啲核突又阻掟嘅 Browser 原生 Alert，換上全套自家製暗黑玻璃風 Toast 同 Modal。操作從未如此順滑。
+*   **PRECIṠE DELËTE (精準拆除)**: 以前撳 Delete 會唔小心炸晒成個 Event？而家嘅 Delete 掣只會乖乖地刪除你選中嗰一場 Match，安全可靠。
+*   **TRËE BRÄCKET (淘汰樹狀圖)**: 自動排版，勝出者路徑閃閃發光。
 
-### ⚙️ Event Management (賽事管理 - Admin)
-* **PDF Data Import (資料匯入)**: 完美還原官方跆拳道淘汰賽賽程。
-* **Interactive Tournament Bracket (互動式對戰表)**: 動態生成 Binary Tree Bracket，自動處理首輪輪空 (BYE) 排版；勝出者路徑即時亮起，並內建縮放功能。
-* **Court Setup (場地設定)**: 透過 Google Authentication 安全登入，管理場地及比賽。
-* **Admin Override (管理員覆寫)**: 管理員可自由修改分數及狀態。
+---
 
-## 📐 Database Rules Architecture (規則架構)
-採用 Court-level Locking (場地層級鎖定) 機制。掃描 QR Code 時產生獨立 Device ID 搶佔空置席位。Firebase 嚴格規定只有佔據該席位嘅裝置可修改分數。斷線時 `onDisconnect()` 自動清空席位。
+## 🛠️ 組裝說明 (Tech Stack)
+要砌好呢個系統，我哋用咗以下零件：
+*   **Frontend (層板)**: React 18 (Vite), React Router v6
+*   **Backend (鉸鏈)**: Firebase Realtime Database, Firebase Authentication
+*   **Styling (漆油)**: Vanilla CSS, 滿滿的 Glassmorphism 
+*   **PDF Parsing (說明書翻譯機)**: pdfjs-dist
 
-## 🚀 Tech Stack (技術棧)
-* **Frontend**: React 18 (Vite), React Router v6
-* **Backend & Auth**: Firebase Realtime Database, Firebase Authentication
-* **Styling**: Vanilla CSS, Glassmorphism, CSS Grid
-* **PDF Parsing**: pdfjs-dist
+## ⚠️ 安全警告 (Database Rules)
+採用 Court-level Locking 機制。每部裝置都有自己嘅 ID，只有坐正喺位度嘅裝置先可以改分。斷線時 `onDisconnect()` 會自動清空席位。請勿讓兒童吞食。
 
-## 📄 License
-This project is licensed under the MIT License.
+---
+*設計於香港，組裝於互聯網。This project is licensed under the MIT License.*
