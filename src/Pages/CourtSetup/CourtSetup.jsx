@@ -5,6 +5,7 @@ import { ref, get, set, remove, update } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
 import { FolderPlus, Trash, ExclamationTriangle, Key, FileEarmarkPdf, FileEarmarkArrowUp, BoxArrowRight, CheckCircle, House, XCircle, Github } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
+import { usePopup } from '../../Context/PopupContext';
 
 import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
@@ -17,6 +18,7 @@ function CourtSetup() {
   const [courtId, setCourtId] = useState('');
   const [courtOptions, setCourtOptions] = useState([]);
   const [authError, setAuthError] = useState('');
+  const { showToast, showConfirm } = usePopup();
 
   // Create Event Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -29,8 +31,6 @@ function CourtSetup() {
   const [newRestDuration, setNewRestDuration] = useState(60);
   const [courtCount, setCourtCount] = useState(4); // Default 4 courts
 
-  // Delete Confirmation Modal State
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fileInputRef = useRef(null);
@@ -120,7 +120,7 @@ function CourtSetup() {
     if (!file) return;
 
     if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
-      alert('請選擇有效的 PDF 賽程文件！');
+      showToast('請選擇有效的 PDF 賽程文件！');
       return;
     }
 
@@ -128,7 +128,7 @@ function CourtSetup() {
     try {
       const result = await parseHktkdaPdfFile(file);
       if (!result || result.matchCount === 0) {
-        alert('未能在 PDF 中解析出有效賽程，請確認格式是否為香港跆拳道協會對陣表。');
+        showToast('未能在 PDF 中解析出有效賽程，請確認格式是否為香港跆拳道協會對陣表。');
       } else {
         setPdfParseResult(result);
         setNewEventName(result.eventName);
@@ -138,7 +138,7 @@ function CourtSetup() {
       }
     } catch (error) {
       console.error("PDF Parsing Failed:", error);
-      alert(`解析 PDF 失敗: ${error.message}`);
+      showToast(`解析 PDF 失敗: ${error.message}`);
     } finally {
       setIsParsingPdf(false);
       if (fileInputRef.current) {
@@ -151,7 +151,7 @@ function CourtSetup() {
   const handleCreateEvent = async (e) => {
     e.preventDefault();
     if (!user) {
-      alert('🔒 請先登入 Google 帳號！');
+      showToast('🔒 請先登入 Google 帳號！');
       return;
     }
 
@@ -159,7 +159,7 @@ function CourtSetup() {
     const trimmedName = newEventName.trim();
 
     if (!trimmedId || !trimmedName) {
-      alert('請提供有效的 Event ID 與 Event Name！');
+      showToast('請提供有效的 Event ID 與 Event Name！');
       return;
     }
 
@@ -231,7 +231,7 @@ function CourtSetup() {
             createdCount++;
           }
 
-          alert(`✅ 成功按 ${pdfParseResult.datesList.length} 個比賽日期拆分並建立 ${createdCount} 個子賽事！`);
+          showToast(`✅ 成功按 ${pdfParseResult.datesList.length} 個比賽日期拆分並建立 ${createdCount} 個子賽事！`);
           setSelectedEvent(`${trimmedId}_Day1_${firstCleanDate}`);
         } else {
           const dateStr = pdfParseResult.datesList?.[0] || '';
@@ -261,7 +261,7 @@ function CourtSetup() {
             courts: generatedCourts,
             matches: pdfParseResult.matches
           });
-          alert(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
+          showToast(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
           setSelectedEvent(trimmedId);
         }
       } else {
@@ -281,7 +281,7 @@ function CourtSetup() {
           courts: generatedCourts,
           matches: {}
         });
-        alert(`✅ 成功建立賽事：${trimmedName} (${trimmedId})，包含 ${count} 個場地！`);
+        showToast(`✅ 成功建立賽事：${trimmedName} (${trimmedId})，包含 ${count} 個場地！`);
         setSelectedEvent(trimmedId);
       }
 
@@ -299,27 +299,33 @@ function CourtSetup() {
 
     } catch (err) {
       console.error("Create Event Failed:", err);
-      alert(`建立賽事失敗: ${err.message}`);
+      showToast(`建立賽事失敗: ${err.message}`);
     }
   };
 
   const promptDeleteEvent = () => {
     if (!selectedEvent) {
-      alert('請先選擇要刪除的賽事。');
+      showToast('請先選擇要刪除的賽事。');
       return;
     }
     if (!user) {
-      alert('🔒 請先登入 Google 帳號！');
+      showToast('🔒 請先登入 Google 帳號！');
       return;
     }
 
     const eventData = events.find(e => e.id === selectedEvent);
     if (eventData && eventData.createdByEmail && eventData.createdByEmail !== user.email) {
-      alert('❌ 只有賽事的建立者可以刪除此賽事！');
+      showToast('❌ 只有賽事的建立者可以刪除此賽事！');
       return;
     }
 
-    setShowDeleteModal(true);
+    showConfirm({
+        title: '刪除賽事確認 (Confirm Delete)',
+        message: `您確定要刪除賽事「${selectedEvent}」嗎？\n⚠️ 此操作會將該賽事下的所有比賽數據、場地設定及賽程永久刪除，無法復原！`,
+        onConfirm: confirmDeleteEvent,
+        confirmText: 'Confirm Delete',
+        cancelText: 'Cancel'
+    });
   };
 
   // Confirm Delete Event Execution
@@ -330,13 +336,12 @@ function CourtSetup() {
     try {
       const eventRef = ref(database, `events/${selectedEvent}`);
       await remove(eventRef);
-      alert(`🗑️ 賽事 ${selectedEvent} 已成功刪除！`);
-      setShowDeleteModal(false);
+      showToast(`🗑️ 賽事 ${selectedEvent} 已成功刪除！`);
       setSelectedEvent('');
       fetchEvents();
     } catch (err) {
       console.error("Delete Event Failed:", err);
-      alert(`刪除賽事失敗：只有該賽事的建立者或協作者可以刪除！\n(${err.message})`);
+      showToast(`刪除賽事失敗：只有該賽事的建立者或協作者可以刪除！\n(${err.message})`);
     } finally {
       setIsDeleting(false);
     }

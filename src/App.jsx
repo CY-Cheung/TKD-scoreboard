@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './Context/AuthContext';
+import { PopupProvider } from './Context/PopupContext';
 import './App.css';
 import TargetCursor from './Components/TargetCursor/TargetCursor';
 import ProtectedRoute from './Components/ProtectedRoute/ProtectedRoute';
@@ -15,8 +16,9 @@ function App() {
   return (
     <BrowserRouter basename="/TKD-scoreboard">
       <AuthProvider>
-        <TargetCursor targetSelector="input, select, .cursor-target" />
-        <Routes>
+        <PopupProvider>
+          <TargetCursor targetSelector="input, select, .cursor-target" />
+          <Routes>
           {/* --- Public Routes --- */}
           <Route path="/court-setup" element={<CourtSetup />} />
 
@@ -58,6 +60,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
 
         </Routes>
+        </PopupProvider>
       </AuthProvider>
     </BrowserRouter>
   );

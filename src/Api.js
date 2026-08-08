@@ -40,10 +40,11 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
             targetSide.gamjeomAvoiding = (targetSide.gamjeomAvoiding || 0) + delta;
             if (targetSide.gamjeomAvoiding < 0) targetSide.gamjeomAvoiding = 0;
         } else if (type === 'pointsStat') {
+            const now = Date.now();
             if (mode === 'multiple' && seatName) {
                 // Handle Valid Point Voting Mechanism
                 if (!matchData.votes) matchData.votes = [];
-                const now = Date.now();
+                
                 
                 // Add the new vote
                 matchData.votes.push({ side, index, seatName, deviceId, timestamp: now });
@@ -70,6 +71,10 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
                     
                     // Clear the votes for this specific score to prevent double-scoring
                     matchData.votes = matchData.votes.filter(v => !(v.side === side && v.index === index));
+                    
+                    // Add to recentScores
+                    if (!matchData.recentScores) matchData.recentScores = [];
+                    matchData.recentScores.push({ side, index, seatNames: Array.from(uniqueSeats), timestamp: now });
                 } else {
                     // Not enough votes yet, just return and save the vote array
                     return matchData;
@@ -85,6 +90,12 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
                 }
                 targetSide.pointsStat[index] = (targetSide.pointsStat[index] || 0) + delta;
                 if (targetSide.pointsStat[index] < 0) targetSide.pointsStat[index] = 0;
+                
+                // Add to recentScores in single mode if delta > 0
+                if (delta > 0) {
+                    if (!matchData.recentScores) matchData.recentScores = [];
+                    matchData.recentScores.push({ side, index, seatNames: [seatName || 'J1'], timestamp: now });
+                }
             }
         }
 
@@ -176,6 +187,8 @@ export const declareRoundWinner = (eventName, matchId, winnerSide) => {
                 blue: { gamjeom: 0, pointsStat: [0,0,0,0,0] }
             };
             
+            matchData.recentScores = [];
+            
             matchData.state.phase = "REST";
             matchData.state.timer = matchData.config?.rules?.restDuration || 60;
             matchData.state.isPaused = false;
@@ -215,14 +228,13 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
     try {
         const snapshot = await get(ref(database, `${matchRoot}/${currentMatchId}/config`));
         const config = snapshot.val();
-        if (!config) return;
+        if (!config) throw new Error("Match config not found");
 
         const winnerData = config.competitors[winnerSide];
         const { nextMatchId, nextMatchSlot } = config;
 
         if (!nextMatchId || !nextMatchSlot) {
-            alert("此場次未設定下一場比賽路徑 (Next Match ID/Slot missing)");
-            return;
+            throw new Error("此場次未設定下一場比賽路徑 (Next Match ID/Slot missing)");
         }
 
         const targetPath = `${matchRoot}/${nextMatchId}/config/competitors/${nextMatchSlot}`;
@@ -237,10 +249,10 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
             winnerSide: winnerSide
         });
 
-        alert(`已成功晉級：\n${winnerData.name} -> ${nextMatchId} (${nextMatchSlot})`);
+        return `已成功晉級：\n${winnerData.name} -> ${nextMatchId} (${nextMatchSlot})`;
 
     } catch (e) {
         console.error(e);
-        alert(`晉級失敗: ${e.message}`);
+        throw e;
     }
 };

@@ -69,6 +69,13 @@
 	width: calc(var(--screen-width) * 19/150);
 	height: calc(var(--screen-height) * 9/11);
 }
+.log-records-container {
+	-ms-overflow-style: none; /* IE and Edge */
+	scrollbar-width: none; /* Firefox */
+}
+.log-records-container::-webkit-scrollbar {
+	display: none;
+}
 
 .red-score {
 	display: flex;
@@ -97,6 +104,29 @@
 	width: calc(var(--screen-width) * 19/150);
 	height: calc(var(--screen-height) * 9/11);
 }
+
+.vote-row {
+	display: flex;
+	width: 100%;
+	aspect-ratio: 4 / 1;
+	background: transparent;
+	margin-top: 2px;
+}
+
+.vote-cell {
+	flex: 1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 1.5vw;
+}
+
+.vote-cell img.action-logo {
+	width: 80%;
+	height: 80%;
+	object-fit: contain;
+}
+
 
 .red-score-text {
 	display: flex;

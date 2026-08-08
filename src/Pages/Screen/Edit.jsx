@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
 import { ref, get, update } from "firebase/database";
-import { QrCode, PeopleFill, Trophy, PersonFill, CheckCircle, ArrowLeft, TabletFill, RecordCircleFill, ShieldFill, PersonCircle, ArrowRepeat } from "react-bootstrap-icons";
+import { QrCode, PeopleFill, Trophy, PersonFill, CheckCircle, ArrowLeft, FileFill, RecordCircleFill, ShieldFill, PersonCircle, ArrowRepeat } from "react-bootstrap-icons";
+import { usePopup } from "../../Context/PopupContext";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
 import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner } from '../../Api';
@@ -18,8 +19,11 @@ const Edit = ({
     occupiedRefereesCount = 0,
     toggleDirection,
     toggleKyeShi,
-    kyeShiActive
+    kyeShiActive,
+    courtId,
+    session
 }) => {
+    const { showToast } = usePopup();
     const [matchMin, setMatchMin] = useState(0);
     const [matchSec, setMatchSec] = useState(0);
     const [restMin, setRestMin] = useState(0);
@@ -37,11 +41,7 @@ const Edit = ({
         setShowSuperiorityVote(false);
     };
 
-    const handleStartNextRound = () => {
-        if (!eventName || !matchId) return;
-        startNextRound(eventName, matchId);
-        setVisible(false);
-    };
+    // handleStartNextRound has been removed as rounds now auto-start
 
     const handleDeclareWinner = () => {
         if (dominantSide && dominantSide.trim() !== 'none') {
@@ -177,7 +177,7 @@ const Edit = ({
 
     const buttonFontSize = '2cqi';
     const pointTypes = [
-        { name: "Gam-jeom", type: "gamjeom", index: null, icon: TabletFill },
+        { name: "Gam-jeom", type: "gamjeom", index: null, icon: FileFill },
         { name: "Punch", type: "pointsStat", index: 0, icon: RecordCircleFill },
         { name: "Body", type: "pointsStat", index: 1, icon: ShieldFill },
         { name: "Head", type: "pointsStat", index: 2, icon: PersonCircle },
@@ -205,6 +205,15 @@ const Edit = ({
 
     const showDeclareWinnerButton = (phase === 'ROUND' && (isFinished || winReason)) && !finalWinner && !showSuperiorityVote;
     const showPromoteWinnerButton = isFinished && finalWinner;
+
+    const handlePromoteWinner = async () => {
+        try {
+            const message = await promoteWinner(eventName, matchId, finalWinner);
+            if (message) showToast(message);
+        } catch (e) {
+            showToast(`晉級失敗: ${e.message}`);
+        }
+    };
 
     return (
         <div className={`edit-bar ${visible ? 'visible' : ''}`}>
@@ -296,18 +305,11 @@ const Edit = ({
                     />
                 )}
 
-                {phase === 'REST' && !isFinished && (
-                    <Button
-                        text={`Start Round ${(matchData?.state?.currentRound || 1) + 1}`}
-                        fontSize="1.8cqi"
-                        onClick={handleStartNextRound}
-                        angle={50}
-                    />
-                )}
+                {/* Start Round button removed per request */}
 
                 {showPromoteWinnerButton && (
                     <Button
-                        onClick={() => promoteWinner(eventName, matchId, finalWinner)}
+                        onClick={handlePromoteWinner}
                         text="Promote Winner"
                         fontSize="1.4cqi"
                         angle={50}

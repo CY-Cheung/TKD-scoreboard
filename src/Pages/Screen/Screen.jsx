@@ -6,7 +6,11 @@ import "../../App.css";
 import Edit from "./Edit";
 import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
 import Button from "../../Components/Button/Button";
-import { ArrowLeft } from "react-bootstrap-icons";
+import { ArrowLeft, Icon1CircleFill, Icon2CircleFill, Icon3CircleFill, Icon1Square, Icon2Square, Icon3Square, Icon1SquareFill, Icon2SquareFill, Icon3SquareFill } from "react-bootstrap-icons";
+import { startNextRound } from "../../Api";
+import PunchIcon from "../../assets/icons/PunchIcon.png";
+import TrunkIcon from "../../assets/icons/TrunkIcon.png";
+import HelmetIcon from "../../assets/icons/HelmetIcon.png";
 
 const formatTime = (totalSeconds) => {
     if (typeof totalSeconds !== 'number' || isNaN(totalSeconds)) {
@@ -82,6 +86,15 @@ function Screen() {
 
     const animationFrameRef = useRef();
     const isMatchLoaded = !!matchData;
+    const [now, setNow] = useState(Date.now());
+
+    // Update 'now' every 100ms for UI expiry checks
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            setNow(Date.now());
+        }, 100);
+        return () => clearInterval(intervalId);
+    }, []);
 
     // Listen to refereeMode
     useEffect(() => {
@@ -234,6 +247,9 @@ function Screen() {
                         timer: 0,
                         lastStartTime: null
                     });
+                } else {
+                    // Auto-start the next round when rest time ends
+                    startNextRound(selectedEvent, currentMatchId);
                 }
             } else {
                 setDisplayTime(remaining);
@@ -386,6 +402,124 @@ function Screen() {
         return style;
     };
 
+    const renderVoteRows = (side) => {
+        if (!matchData) return null;
+
+        const combinedLogs = [];
+
+        // 1. Pending Votes (expire after 1000ms)
+        const activeVotes = (matchData.votes || []).filter(v => v.side === side && now - v.timestamp <= 1000);
+        // Group by index
+        const pendingGroups = activeVotes.reduce((acc, v) => {
+            if (!acc[v.index]) acc[v.index] = { index: v.index, seatNames: new Set(), timestamp: v.timestamp };
+            acc[v.index].seatNames.add(v.seatName);
+            // Keep the oldest timestamp so it doesn't extend forever unless new presses? Actually timestamp is when the group started.
+            acc[v.index].timestamp = Math.max(acc[v.index].timestamp, v.timestamp);
+            return acc;
+        }, {});
+
+        Object.values(pendingGroups).forEach(group => {
+            combinedLogs.push({
+                type: 'pending',
+                index: group.index,
+                seatNames: Array.from(group.seatNames),
+                timestamp: group.timestamp
+            });
+        });
+
+        // 2. Successful Scores (stay forever)
+        const recentScores = (matchData.recentScores || []).filter(s => s.side === side);
+        recentScores.forEach(score => {
+            combinedLogs.push({
+                type: 'success',
+                index: score.index,
+                seatNames: score.seatNames,
+                timestamp: score.timestamp
+            });
+        });
+
+        // Sort descending by timestamp (newest at the top)
+        combinedLogs.sort((a, b) => b.timestamp - a.timestamp);
+
+        return combinedLogs.map((log, idx) => {
+            let ActionIcon = PunchIcon;
+            let NumberIconComp = Icon1CircleFill;
+            let numberColor = '#FFFF00'; // Yellow
+
+            if (log.index === 0) { // Punch
+                ActionIcon = PunchIcon;
+                NumberIconComp = Icon1CircleFill; // Placeholder, dynamically assigned later
+                numberColor = '#FFFF00';
+            } else if (log.index === 1) { // Body
+                ActionIcon = TrunkIcon;
+                NumberIconComp = Icon1Square;
+                numberColor = '#ADD8E6'; // Light blue
+            } else if (log.index === 2) { // Head
+                ActionIcon = HelmetIcon;
+                NumberIconComp = Icon1Square;
+                numberColor = '#ADD8E6'; // Light blue
+            } else if (log.index === 3 || log.index === 4) { // Turn Body or Turn Head
+                ActionIcon = log.index === 3 ? TrunkIcon : HelmetIcon;
+                NumberIconComp = Icon1SquareFill;
+                numberColor = '#00FF00'; // Green
+            }
+
+            const getNumberIcon = (seat, CompType, color) => {
+                let RealComp = CompType;
+                if (seat === 'J1') {
+                    if (CompType === Icon1CircleFill) RealComp = Icon1CircleFill;
+                    if (CompType === Icon1Square) RealComp = Icon1Square;
+                    if (CompType === Icon1SquareFill) RealComp = Icon1SquareFill;
+                } else if (seat === 'J2') {
+                    if (CompType === Icon1CircleFill) RealComp = Icon2CircleFill;
+                    if (CompType === Icon1Square) RealComp = Icon2Square;
+                    if (CompType === Icon1SquareFill) RealComp = Icon2SquareFill;
+                } else if (seat === 'J3') {
+                    if (CompType === Icon1CircleFill) RealComp = Icon3CircleFill;
+                    if (CompType === Icon1Square) RealComp = Icon3Square;
+                    if (CompType === Icon1SquareFill) RealComp = Icon3SquareFill;
+                }
+                return <RealComp size="80%" color={color} />;
+            };
+
+            const cells = [
+                <div key="action" className="vote-cell">
+                    <img src={ActionIcon} className="action-logo" alt="Action" />
+                </div>,
+                <div key="J1" className="vote-cell">
+                    {log.seatNames.includes('J1') ? getNumberIcon('J1', NumberIconComp, numberColor) : null}
+                </div>,
+                <div key="J2" className="vote-cell">
+                    {log.seatNames.includes('J2') ? getNumberIcon('J2', NumberIconComp, numberColor) : null}
+                </div>,
+                <div key="J3" className="vote-cell">
+                    {log.seatNames.includes('J3') ? getNumberIcon('J3', NumberIconComp, numberColor) : null}
+                </div>
+            ];
+
+            // If it's blue-log, the score is on the left, so action logo should be on the left (index 0).
+            // Wait, Red-log: flex-row, red-gamjeom is on left, red score is on right.
+            // Oh, direction is 'row'.
+            // In row direction:
+            // [ red-log ] [ red-score ] [ match-info ] [ blue-score ] [ blue-log ]
+            // So for red side, the score is on the RIGHT of red-log.
+            // Meaning the action icon should be on the RIGHT of red-log.
+            // For blue side, the score is on the LEFT of blue-log.
+            // Meaning the action icon should be on the LEFT of blue-log.
+            if (side === 'red' && direction === 'row') {
+                cells.reverse();
+            } else if (side === 'blue' && direction === 'row-reverse') {
+                cells.reverse();
+            }
+
+            return (
+                <div key={`${log.type}-${log.timestamp}-${log.index}`} className="vote-row">
+                    {cells}
+                </div>
+            );
+        });
+    };
+
     return (
         <>
             <div className="screen" onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}>
@@ -404,8 +538,11 @@ function Screen() {
                 {/* Main Section: Scores and Info */}
                 <div className="midbottom" style={{ flexDirection: direction, display: "flex" }}>
                     {/* Red Side: Gam-jeom and Score */}
-                    <div className="red-log red-bg">
-                        <div className="red-gamjeom red-bg" onClick={() => setShowEdit(true)}>
+                    <div className="red-log red-bg" style={{ position: 'relative' }}>
+                        <div className="log-records-container" style={{ flexGrow: 1, overflowY: 'scroll', display: 'flex', flexDirection: 'column' }}>
+                            {renderVoteRows('red')}
+                        </div>
+                        <div className="red-gamjeom red-bg" onClick={() => setShowEdit(true)} style={{ position: 'absolute', top: 'calc(var(--screen-height) * 7/11)', bottom: 0, left: 0, right: 0, zIndex: 10, borderRadius: '1cqi', justifyContent: 'flex-end' }}>
                             <div className="gamjeom-number">{redGamJeom}</div>
                             <div className="gamjeom-font">GAM-JEOM</div>
                         </div>
@@ -471,8 +608,11 @@ function Screen() {
                             {isResting || isFinal ? renderSideHistory('blue') : blueTotalScore}
                         </div>
                     </div>
-                    <div className="blue-log blue-bg">
-                        <div className="blue-gamjeom blue-bg" onClick={() => setShowEdit(true)}>
+                    <div className="blue-log blue-bg" style={{ position: 'relative' }}>
+                        <div className="log-records-container" style={{ flexGrow: 1, overflowY: 'scroll', display: 'flex', flexDirection: 'column' }}>
+                            {renderVoteRows('blue')}
+                        </div>
+                        <div className="blue-gamjeom blue-bg" onClick={() => setShowEdit(true)} style={{ position: 'absolute', top: 'calc(var(--screen-height) * 7/11)', bottom: 0, left: 0, right: 0, zIndex: 10, borderRadius: '1cqi', justifyContent: 'flex-end' }}>
                             <div className="gamjeom-number">{blueGamJeom}</div>
                             <div className="gamjeom-font">GAM-JEOM</div>
                         </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ref, set, get, remove } from "firebase/database";
 import { database } from '../../firebase';
+import { usePopup } from '../../Context/PopupContext';
 import './DataImport.css';
 import Button from '../../Components/Button/Button';
 import { useNavigate } from 'react-router-dom';
@@ -30,18 +31,7 @@ const DataImport = () => {
     const [newRestDuration, setNewRestDuration] = useState(60);
     const [currentMatches, setCurrentMatches] = useState({});
     const [selectedMatchId, setSelectedMatchId] = useState(null);
-    const [toastMessage, setToastMessage] = useState(null);
-    const toastTimeoutRef = useRef(null);
-
-    const showToast = (message) => {
-        setToastMessage(message);
-        if (toastTimeoutRef.current) {
-            clearTimeout(toastTimeoutRef.current);
-        }
-        toastTimeoutRef.current = setTimeout(() => {
-            setToastMessage(null);
-        }, 3000);
-    };
+    const { showToast, showConfirm } = usePopup();
 
     // Date Filter State for Matches List
     const [selectedDateFilter, setSelectedDateFilter] = useState('all');
@@ -54,8 +44,6 @@ const DataImport = () => {
     const [newEventName, setNewEventName] = useState('');
     const [newSetupPassword, setNewSetupPassword] = useState('');
 
-    // Delete Event Confirmation Modal State
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
     // PDF Parse & Batch Import State
@@ -153,7 +141,7 @@ const DataImport = () => {
         if (!file) return;
 
         if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
-            alert('請選擇有效的 PDF 賽程文件！');
+            showToast('請選擇有效的 PDF 賽程文件！');
             return;
         }
 
@@ -161,7 +149,7 @@ const DataImport = () => {
         try {
             const result = await parseHktkdaPdfFile(file);
             if (!result || result.matchCount === 0) {
-                alert('未能在 PDF 中解析出有效賽程，請確認格式是否為香港跆拳道協會對陣表。');
+                showToast('未能在 PDF 中解析出有效賽程，請確認格式是否為香港跆拳道協會對陣表。');
             } else {
                 setPdfParseResult(result);
                 setNewEventName(result.eventName);
@@ -171,7 +159,7 @@ const DataImport = () => {
             }
         } catch (error) {
             console.error("PDF Parsing Failed:", error);
-            alert(`解析 PDF 失敗: ${error.message}`);
+            showToast(`解析 PDF 失敗: ${error.message}`);
         } finally {
             setIsParsingPdf(false);
             if (fileInputRef.current) {
@@ -184,7 +172,7 @@ const DataImport = () => {
     const handleCreateEvent = async (e) => {
         e.preventDefault();
         if (!user) {
-            alert('🔒 請先登入 Google 帳號，方可建立新賽事！');
+            showToast('🔒 請先登入 Google 帳號，方可建立新賽事！');
             return;
         }
 
@@ -192,7 +180,7 @@ const DataImport = () => {
         const trimmedName = newEventName.trim();
 
         if (!trimmedId || !trimmedName) {
-            alert('請提供有效的 Event ID 與 Event Name！');
+            showToast('請提供有效的 Event ID 與 Event Name！');
             return;
         }
 
@@ -258,7 +246,7 @@ const DataImport = () => {
                         createdCount++;
                     }
 
-                    alert(`✅ 成功按 ${pdfParseResult.datesList.length} 個比賽日期拆分並建立 ${createdCount} 個子賽事！`);
+                    showToast(`✅ 成功按 ${pdfParseResult.datesList.length} 個比賽日期拆分並建立 ${createdCount} 個子賽事！`);
                     setEventName(`${trimmedId}_Day1_${firstCleanDate}`);
                 } else {
                     const dateStr = pdfParseResult.datesList?.[0] || '';
@@ -288,7 +276,7 @@ const DataImport = () => {
                         courts: { court1: { name: 'court1', currentMatchId: '' } },
                         matches: pdfParseResult.matches
                     });
-                    alert(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
+                    showToast(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
                     setEventName(trimmedId);
                 }
             } else {
@@ -308,7 +296,7 @@ const DataImport = () => {
                     courts: { court1: { name: 'court1', currentMatchId: '' } },
                     matches: {}
                 });
-                alert(`✅ 成功建立賽事：${trimmedName}`);
+                showToast(`✅ 成功建立賽事：${trimmedName}`);
                 setEventName(trimmedId);
             }
 
@@ -325,22 +313,29 @@ const DataImport = () => {
 
         } catch (error) {
             console.error("Create Event Failed:", error);
-            alert(`建立賽事失敗: ${error.message}`);
+            showToast(`建立賽事失敗: ${error.message}`);
         }
     };
 
     // Prompt Delete Event Confirmation
     const promptDeleteEvent = () => {
         if (!eventName) {
-            alert('請先選擇要刪除的賽事。');
+            showToast('請先選擇要刪除的賽事。');
             return;
         }
 
         if (!user) {
-            alert('🔒 請先登入 Google 帳號！');
+            showToast('🔒 請先登入 Google 帳號！');
             return;
         }
-        setShowDeleteModal(true);
+        
+        showConfirm({
+            title: '刪除賽事確認 (Confirm Delete)',
+            message: `您確定要刪除整個賽事「${eventName}」嗎？\n⚠️ 此操作會將該賽事下的所有比賽數據、場地設定及賽程永久刪除，無法復原！`,
+            onConfirm: confirmDeleteEvent,
+            confirmText: 'Confirm Delete',
+            cancelText: 'Cancel'
+        });
     };
 
     // Confirm Delete Event Execution
@@ -351,13 +346,12 @@ const DataImport = () => {
         try {
             const eventRef = ref(database, `events/${eventName}`);
             await remove(eventRef);
-            alert(`🗑️ 賽事 ${eventName} 已成功刪除！`);
-            setShowDeleteModal(false);
+            showToast(`🗑️ 賽事 ${eventName} 已成功刪除！`);
             setEventName('');
             fetchEventsList();
         } catch (error) {
             console.error("Delete Event Failed:", error);
-            alert(`刪除賽事失敗：只有該賽事的建立者或協作者可以刪除！\n(${error.message})`);
+            showToast(`刪除賽事失敗：只有該賽事的建立者或協作者可以刪除！\n(${error.message})`);
         } finally {
             setIsDeleting(false);
         }
@@ -513,24 +507,6 @@ const DataImport = () => {
     };
     return (
         <div className="di-container aurora-bg" onDoubleClick={toggleFullScreen}>
-            {toastMessage && (
-                <div style={{
-                    position: 'absolute',
-                    top: '2cqi',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    color: '#fff',
-                    padding: '0.8cqi 1.6cqi',
-                    borderRadius: '0.5cqi',
-                    fontSize: '1cqi',
-                    zIndex: 2000,
-                    boxShadow: '0 0.4cqi 1cqi rgba(0,0,0,0.5)',
-                    border: '1px solid rgba(255,255,255,0.2)'
-                }}>
-                    {toastMessage}
-                </div>
-            )}
             <div className="di-content-wrapper glass-card">
 
                 
@@ -664,6 +640,7 @@ const DataImport = () => {
                             <Button text="Add Match (新增賽事)" angle={260} onClick={handleAddMatch} icon={<PlusCircle size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi" }} />
                             <Button text="Load (載入)" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi" }} />
                             <Button text="Home (主頁)" angle={150} onClick={() => navigate('/')} icon={<House size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi" }} />
+                            <Button text="Delete (刪除)" angle={350} onClick={promptDeleteEvent} icon={<Trash size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi", backgroundColor: "#ff3b30" }} />
                         </div>
                     </div>
 
@@ -870,59 +847,6 @@ const DataImport = () => {
                                 />
                             </div>
                         </form>
-                    </div>
-                </div>
-            )}
-
-            {/* --- Custom Delete Confirmation Modal Overlay --- */}
-            {showDeleteModal && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                    zIndex: 1100,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}>
-                    <div style={{
-                        backgroundColor: '#221515',
-                        border: '1px solid rgba(255, 59, 48, 0.5)',
-                        borderRadius: '0.62cqi',
-                        padding: '1.3cqi',
-                        width: '90%',
-                        maxWidth: '22.88cqi',
-                        color: '#fff',
-                        boxShadow: '0 0.52cqi 2.08cqi rgba(255, 59, 48, 0.3)',
-                        textAlign: 'left'
-                    }}>
-                        <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.52cqi', color: '#ff3b30', fontSize: '1.19cqi' }}>
-                            <ExclamationTriangle size="1.46cqi" /> 刪除賽事確認 (Confirm Delete)
-                        </h3>
-                        <p style={{ fontSize: '0.85cqi', lineHeight: '1.5', color: '#ddd' }}>
-                            您確定要刪除整個賽事「<strong style={{ color: '#FFFF00' }}>{eventName}</strong>」嗎？
-                        </p>
-                        <p style={{ fontSize: '0.72cqi', color: '#ff6b6b', backgroundColor: 'rgba(255, 59, 48, 0.1)', padding: '0.52cqi', borderRadius: '0.31cqi' }}>
-                            ⚠️ 此操作會將該賽事下的所有比賽數據、場地設定及賽程永久刪除，無法復原！
-                        </p>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.62cqi', marginTop: '1.04cqi' }}>
-                            <Button 
-                                onClick={() => setShowDeleteModal(false)}
-                                disabled={isDeleting}
-                                text="Cancel (取消)"
-                                fontSize="0.77cqi"
-                                angle={0}
-                                icon={<XCircle size="0.83cqi" />}
-                            />
-                            <Button 
-                                onClick={confirmDeleteEvent}
-                                disabled={isDeleting}
-                                text={isDeleting ? 'Deleting...' : 'Confirm Delete'}
-                                icon={<Trash size="0.83cqi" />}
-                                fontSize="0.77cqi"
-                                angle={350}
-                            />
-                        </div>
                     </div>
                 </div>
             )}

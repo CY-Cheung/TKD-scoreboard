@@ -11,8 +11,9 @@ import {
   Globe,
 } from "react-bootstrap-icons";
 import MarqueeText from "../MarqueeText";
-import { ref, onValue, update } from "firebase/database";
+import { ref, onValue, update, set } from "firebase/database";
 import { database } from "../../firebase";
+import { usePopup } from "../../Context/PopupContext";
 import "./QRCodeDisplay.css";
 import Button from "../Button/Button";
 
@@ -27,6 +28,7 @@ function QRCodeDisplay({
 }) {
   const [copied, setCopied] = useState(false);
   const [referees, setReferees] = useState(propRefereesData || {});
+  const { showConfirm } = usePopup();
 
   // Custom Network Host state (for localhost dev environment mobile scans)
   const [customHost, setCustomHost] = useState(() => {
@@ -141,15 +143,43 @@ function QRCodeDisplay({
               {isFull && <CheckCircleFill size="1.5cqi" className="full-icon" />}
             </div>
             <div className="referee-badges-row">
-              <span className={`ref-slot-pill ${isJ1 ? "online" : "vacant"}`}>
-                Corner Judge 1 (邊裁一) {isJ1 ? "• Online (已連線)" : "• Vacant (空缺)"}
-              </span>
-              <span className={`ref-slot-pill ${isJ2 ? "online" : "vacant"}`}>
-                Corner Judge 2 (邊裁二) {isJ2 ? "• Online (已連線)" : "• Vacant (空缺)"}
-              </span>
-              <span className={`ref-slot-pill ${isJ3 ? "online" : "vacant"}`}>
-                Corner Judge 3 (邊裁三) {isJ3 ? "• Online (已連線)" : "• Vacant (空缺)"}
-              </span>
+              {['J1', 'J2', 'J3'].map((slotName, index) => {
+                const refData = referees?.[slotName];
+                const isConnected = !!refData;
+                const deviceName = typeof refData === 'object' && refData !== null 
+                    ? refData.deviceName 
+                    : (isConnected ? 'Online' : 'Vacant');
+                
+                const chineseLabel = ['一', '二', '三'][index];
+
+                const handleDisconnect = () => {
+                    if (!eventId || !courtId) return;
+                    showConfirm({
+                        title: 'Force Disconnect (強制斷線)',
+                        message: `Are you sure you want to forcefully disconnect Corner Judge ${index + 1}?`,
+                        onConfirm: () => {
+                            set(ref(database, `events/${eventId}/courts/${courtId}/referees/${slotName}`), null);
+                        },
+                        confirmText: 'Disconnect',
+                        cancelText: 'Cancel'
+                    });
+                };
+
+                return (
+                    <span key={slotName} className={`ref-slot-pill ${isConnected ? "online" : "vacant"}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <span>
+                            Corner Judge {index + 1} (邊裁{chineseLabel}) {isConnected ? `• ${deviceName} (已連線)` : "• Vacant (空缺)"}
+                        </span>
+                        <Button 
+                            onClick={handleDisconnect}
+                            icon={<X size="1.5cqi" />}
+                            style={{ padding: '0.2cqi', minHeight: 'unset', marginLeft: '1cqi', borderRadius: '50%' }}
+                            variant="red"
+                            title={`Disconnect ${slotName}`}
+                        />
+                    </span>
+                );
+              })}
             </div>
           </div>
 

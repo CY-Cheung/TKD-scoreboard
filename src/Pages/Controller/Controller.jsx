@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ref, onValue, set, onDisconnect } from "firebase/database";
+import { ref, onValue, set, onDisconnect, runTransaction } from "firebase/database";
 import { database } from "../../firebase";
 import { updateScoreAndCheckRules } from "../../Api";
 import { useAuth } from "../../Context/AuthContext";
 import Button from "../../Components/Button/Button";
 import { Wifi, WifiOff, ArrowLeft } from "react-bootstrap-icons";
 import "./Controller.css";
+
+const getDeviceName = () => {
+    const ua = navigator.userAgent;
+    if (/iPad/i.test(ua)) return "iPad";
+    if (/iPhone/i.test(ua)) return "iPhone";
+    if (/Android/i.test(ua)) return "Android";
+    if (/Mac OS X/i.test(ua)) return "Mac";
+    if (/Windows/i.test(ua)) return "Windows";
+    return "Device";
+};
 
 function Controller() {
     const [searchParams] = useSearchParams();
@@ -101,14 +111,32 @@ function Controller() {
         setIsFull(false);
         let grabbedSeat = null;
 
+        let isMounted = true;
         const trySeat = async (seatName) => {
+            if (!isMounted) return false;
             const seatRef = ref(database, `events/${eventId}/courts/${courtId}/referees/${seatName}`);
             try {
-                await set(seatRef, newDeviceId);
-                onDisconnect(seatRef).remove();
-                setMySeat(seatName);
-                grabbedSeat = seatName;
-                return true;
+                const deviceData = { deviceId: newDeviceId, deviceName: getDeviceName() };
+                let success = false;
+                
+                const result = await runTransaction(seatRef, (currentData) => {
+                    if (currentData === null) {
+                        return deviceData;
+                    }
+                    return; // Abort if occupied
+                });
+
+                if (result.committed) {
+                    if (!isMounted) {
+                        set(seatRef, null);
+                        return false;
+                    }
+                    onDisconnect(seatRef).remove();
+                    setMySeat(seatName);
+                    grabbedSeat = seatName;
+                    return true;
+                }
+                return false;
             } catch (e) {
                 return false;
             }
@@ -118,17 +146,40 @@ function Controller() {
             if (await trySeat('J1')) return;
             if (await trySeat('J2')) return;
             if (await trySeat('J3')) return;
-            setIsFull(true);
+            if (isMounted) setIsFull(true);
         };
 
         grabSeat();
 
         return () => {
+            isMounted = false;
             if (grabbedSeat) {
                 set(ref(database, `events/${eventId}/courts/${courtId}/referees/${grabbedSeat}`), null).catch(() => {});
             }
         };
     }, [eventId, courtId, user]);
+
+    // Self-disconnect listener: watch mySeat and kick out if deviceId doesn't match
+    useEffect(() => {
+        if (!eventId || !courtId || !mySeat || !deviceId) return;
+
+        const seatRef = ref(database, `events/${eventId}/courts/${courtId}/referees/${mySeat}`);
+        const unsubscribe = onValue(seatRef, (snapshot) => {
+            const currentSeatData = snapshot.val();
+            const seatDeviceId = typeof currentSeatData === 'object' && currentSeatData !== null 
+                ? currentSeatData.deviceId 
+                : currentSeatData;
+                
+            if (seatDeviceId !== deviceId) {
+                setIsConnected(false);
+                setMySeat(null);
+                setDeviceId(null); // Force regenerate next time
+                setMatchData(null);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [eventId, courtId, mySeat, deviceId]);
 
     // Listen to currentMatchId on court
     useEffect(() => {
