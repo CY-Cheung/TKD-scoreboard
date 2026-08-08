@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
 import { ref, get, update } from "firebase/database";
-import { QrCode, PeopleFill, Trophy, PersonFill, CheckCircle, ArrowLeft, ExclamationTriangle, LightningCharge, Shield, PersonCircle, ArrowRepeat } from "react-bootstrap-icons";
+import { QrCode, PeopleFill, Trophy, PersonFill, CheckCircle, ArrowLeft, TabletFill, RecordCircleFill, ShieldFill, PersonCircle, ArrowRepeat } from "react-bootstrap-icons";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
 import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner } from '../../Api';
@@ -138,12 +138,12 @@ const Edit = ({
 
     const buttonFontSize = '2cqi';
     const pointTypes = [
-        { name: "Gam-jeom", type: "gamjeom", index: null, icon: ExclamationTriangle },
-        { name: "Punch", type: "pointsStat", index: 0, icon: LightningCharge },
-        { name: "Body", type: "pointsStat", index: 1, icon: Shield },
+        { name: "Gam-jeom", type: "gamjeom", index: null, icon: TabletFill },
+        { name: "Punch", type: "pointsStat", index: 0, icon: RecordCircleFill },
+        { name: "Body", type: "pointsStat", index: 1, icon: ShieldFill },
         { name: "Head", type: "pointsStat", index: 2, icon: PersonCircle },
-        { name: "Body(Turn)", type: "pointsStat", index: 3, icon: ArrowRepeat },
-        { name: "Head(Turn)", type: "pointsStat", index: 4, icon: ArrowRepeat }
+        { name: "Body(Turn)", type: "pointsStat", index: 3, icon: ArrowRepeat, secondIcon: ShieldFill },
+        { name: "Head(Turn)", type: "pointsStat", index: 4, icon: ArrowRepeat, secondIcon: PersonCircle }
     ];
 
     // Remove early return to allow rendering empty state
@@ -172,9 +172,10 @@ const Edit = ({
             <div className="edit-grid">
                  <div className="grid-cell header"></div>
                 {pointTypes.map(pt => (
-                    <div className="grid-cell header" key={pt.name}>
-                        {pt.icon && <pt.icon size="1.3cqi" style={{ marginRight: '0.4cqi', color: 'white' }} />}
-                        {pt.name}
+                    <div className="grid-cell header" key={pt.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {pt.icon && <pt.icon size="1.3cqi" style={{ marginRight: pt.secondIcon ? '0.1cqi' : '0.4cqi', color: 'white' }} />}
+                        {pt.secondIcon && <pt.secondIcon size="1.3cqi" style={{ marginRight: '0.4cqi', color: 'white' }} />}
+                        <span>{pt.name}</span>
                     </div>
                 ))}
 
