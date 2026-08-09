@@ -187,10 +187,10 @@
 /* Referee Real-time Status Panel */
 .referee-status-box {
   width: 100%;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.625cqi;
-  padding: 0.521cqi 0.729cqi;
+  padding: 1.042cqi;
   display: flex;
   flex-direction: column;
   gap: 0.417cqi;

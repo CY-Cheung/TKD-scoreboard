@@ -23,7 +23,7 @@
         },
         "matches": {
           "$matchId": {
-            ".write": "auth != null || (newData.exists() && data.exists() && newData.hasChild('providedCourtId') && newData.hasChild('providedDeviceId') && (root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J1').val() === newData.child('providedDeviceId').val() || root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J2').val() === newData.child('providedDeviceId').val() || root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J3').val() === newData.child('providedDeviceId').val()))"
+            ".write": "auth != null || (newData.exists() && data.exists() && newData.hasChild('providedCourtId') && newData.hasChild('providedDeviceId') && (root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J1').child('deviceId').val() === newData.child('providedDeviceId').val() || root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J2').child('deviceId').val() === newData.child('providedDeviceId').val() || root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J3').child('deviceId').val() === newData.child('providedDeviceId').val()))"
           }
         }
       }

@@ -106,6 +106,21 @@ function QRCodeDisplay({
     });
   };
 
+  const handleDisconnectAll = () => {
+    if (!eventId || !courtId || occupiedCount === 0) return;
+    showConfirm({
+      title: 'Disconnect All Judges (斷開所有裁判)',
+      message: `Are you sure you want to forcefully disconnect all ${occupiedCount} connected corner judge(s)?`,
+      onConfirm: () => {
+        ['J1', 'J2', 'J3'].forEach(slotName => {
+          set(ref(database, `events/${eventId}/courts/${courtId}/referees/${slotName}`), null);
+        });
+      },
+      confirmText: 'Disconnect All',
+      cancelText: 'Cancel'
+    });
+  };
+
   return createPortal(
     <div className="qrcode-modal-overlay" onClick={onClose}>
       <div
@@ -181,6 +196,15 @@ function QRCodeDisplay({
                 );
               })}
             </div>
+            {occupiedCount > 0 && (
+              <Button
+                text="Disconnect All (斷開所有)"
+                variant="red"
+                onClick={handleDisconnectAll}
+                fontSize="1.4cqi"
+                style={{ marginTop: '0.52cqi', width: '100%' }}
+              />
+            )}
           </div>
 
           {/* Referee Mode Selection */}
@@ -297,7 +321,7 @@ function QRCodeDisplay({
                   value={controllerUrl}
                   size="100%" style={{ width: '100%', height: '100%' }}
                   bgColor="transparent"
-                  fgColor="rgba(255, 255, 255, 0.75)"
+                  fgColor="#FFFFFF"
                   level="H"
                   includeMargin={false}
                 />

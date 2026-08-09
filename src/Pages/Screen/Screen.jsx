@@ -444,23 +444,27 @@ function Screen() {
         return combinedLogs.map((log, idx) => {
             let ActionIcon = PunchIcon;
             let NumberIconComp = Icon1CircleFill;
-            let numberColor = '#FFFF00'; // Yellow
+            let numberColor = '#FFFF00'; // Yellow (default for Punch)
 
-            if (log.index === 0) { // Punch
+            if (log.index === 0) { // Punch - use yellow circle-fill numbered icons
                 ActionIcon = PunchIcon;
-                NumberIconComp = Icon1CircleFill; // Placeholder, dynamically assigned later
-                numberColor = '#FFFF00';
+                NumberIconComp = Icon1CircleFill; // Will map to 1/2/3-circle-fill by seat
+                numberColor = '#FFFF00'; // Yellow
             } else if (log.index === 1) { // Body
                 ActionIcon = TrunkIcon;
-                NumberIconComp = Icon1Square;
-                numberColor = '#ADD8E6'; // Light blue
+                NumberIconComp = Icon1Square; // Hollow
+                numberColor = '#00FFFF'; // Cyan
             } else if (log.index === 2) { // Head
                 ActionIcon = HelmetIcon;
-                NumberIconComp = Icon1Square;
-                numberColor = '#ADD8E6'; // Light blue
-            } else if (log.index === 3 || log.index === 4) { // Turn Body or Turn Head
-                ActionIcon = log.index === 3 ? TrunkIcon : HelmetIcon;
-                NumberIconComp = Icon1SquareFill;
+                NumberIconComp = Icon1SquareFill; // Solid
+                numberColor = '#00FFFF'; // Cyan
+            } else if (log.index === 3) { // Turn Body
+                ActionIcon = TrunkIcon;
+                NumberIconComp = Icon1Square; // Hollow
+                numberColor = '#00FF00'; // Green
+            } else if (log.index === 4) { // Turn Head
+                ActionIcon = HelmetIcon;
+                NumberIconComp = Icon1SquareFill; // Solid
                 numberColor = '#00FF00'; // Green
             }
 
@@ -482,9 +486,21 @@ function Screen() {
                 return <RealComp size="80%" color={color} />;
             };
 
+            // Action icon: for body/head, show in opponent's color using CSS mask
+            const isBodyOrHead = log.index >= 1; // index 1-4 are trunk or helmet icons
+            const actionIconClass = (log.index === 1 || log.index === 3) ? 'trunk-icon' : 'helmet-icon';
+            const opponentColor = side === 'red' ? '#0000aa' : '#aa0000'; // red-log→blue, blue-log→red
+
             const cells = [
                 <div key="action" className="vote-cell">
-                    <img src={ActionIcon} className="action-logo" alt="Action" />
+                    {isBodyOrHead ? (
+                        <span
+                            className={actionIconClass}
+                            style={{ width: '80%', height: '80%', backgroundColor: opponentColor }}
+                        />
+                    ) : (
+                        <img src={ActionIcon} className="action-logo" alt="Action" />
+                    )}
                 </div>,
                 <div key="J1" className="vote-cell">
                     {log.seatNames.includes('J1') ? getNumberIcon('J1', NumberIconComp, numberColor) : null}

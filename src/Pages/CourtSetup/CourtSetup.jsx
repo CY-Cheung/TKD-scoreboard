@@ -704,58 +704,7 @@ function CourtSetup() {
         </div>
       )}
 
-      {/* --- Custom Delete Confirmation Modal Overlay --- */}
-      {showDeleteModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          zIndex: 1100,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{
-            backgroundColor: '#221515',
-            border: '1px solid rgba(255, 59, 48, 0.5)',
-            borderRadius: '0.62cqi',
-            padding: '1.3cqi',
-            width: '90%',
-            maxWidth: '22.88cqi',
-            color: '#fff',
-            boxShadow: '0 0.52cqi 2.08cqi rgba(255, 59, 48, 0.3)',
-            textAlign: 'left'
-          }}>
-            <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.52cqi', color: '#ff3b30', fontSize: '1.19cqi' }}>
-              <ExclamationTriangle size="1.46cqi" /> 刪除賽事確認 (Confirm Delete)
-            </h3>
-            <p style={{ fontSize: '0.85cqi', lineHeight: '1.5', color: '#ddd' }}>
-              您確定要刪除整個賽事「<strong style={{ color: '#ffcc00' }}>{selectedEvent}</strong>」嗎？
-            </p>
-            <p style={{ fontSize: '0.72cqi', color: '#ff6b6b', backgroundColor: 'rgba(255, 59, 48, 0.1)', padding: '0.52cqi', borderRadius: '0.31cqi' }}>
-              ⚠️ 此操作會將該賽事下的所有比賽數據、場地設定及賽程永久刪除，無法復原！
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.62cqi', marginTop: '1.04cqi' }}>
-              <Button
-                onClick={() => setShowDeleteModal(false)}
-                disabled={isDeleting}
-                text="Cancel (取消)"
-                fontSize="0.77cqi"
-                angle={0}
-                icon={<XCircle size="0.83cqi" />}
-              />
-              <Button
-                onClick={confirmDeleteEvent}
-                disabled={isDeleting}
-                text={isDeleting ? 'Deleting...' : 'Confirm Delete'}
-                icon={<Trash size="0.83cqi" />}
-                fontSize="0.77cqi"
-                angle={350}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

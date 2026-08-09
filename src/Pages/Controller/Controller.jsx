@@ -103,6 +103,9 @@ function Controller() {
         
         if (user) {
             setMySeat("Admin");
+            // Admin also needs a deviceId for the scoring API
+            const adminDeviceId = `admin-${Math.random().toString(36).substring(2, 10)}`;
+            setDeviceId(adminDeviceId);
             return;
         }
 
@@ -143,6 +146,10 @@ function Controller() {
         };
 
         const grabSeat = async () => {
+            // Add a small delay to bypass React StrictMode double-mount race condition
+            await new Promise(resolve => setTimeout(resolve, 400));
+            if (!isMounted) return;
+
             if (await trySeat('J1')) return;
             if (await trySeat('J2')) return;
             if (await trySeat('J3')) return;
@@ -160,8 +167,10 @@ function Controller() {
     }, [eventId, courtId, user]);
 
     // Self-disconnect listener: watch mySeat and kick out if deviceId doesn't match
+    // Skip for Admin users - they don't occupy a referee seat in Firebase
     useEffect(() => {
         if (!eventId || !courtId || !mySeat || !deviceId) return;
+        if (mySeat === "Admin") return; // Admin doesn't have a Firebase referee slot
 
         const seatRef = ref(database, `events/${eventId}/courts/${courtId}/referees/${mySeat}`);
         const unsubscribe = onValue(seatRef, (snapshot) => {
@@ -243,7 +252,6 @@ function Controller() {
 
         // Mobile haptic vibration feedback
         if (navigator.vibrate) {
-            // Using array format and slightly longer duration (70ms) to ensure modern Samsung LRA motors trigger correctly
             navigator.vibrate([70]);
         }
 
@@ -322,21 +330,21 @@ function Controller() {
                     text="Red 6" 
                     angle={350} 
                     fontSize="2.5cqi" 
-                    onClick={() => handleScore("red", 4, "+6 Turn Head")} 
+                    onClick={(e) => { e.stopPropagation(); handleScore("red", 4, "+6 Turn Head"); }} 
                 />
                 <Button 
                     className="neon-btn red-btn"
                     text="Red 4" 
                     angle={350} 
                     fontSize="2.5cqi" 
-                    onClick={() => handleScore("red", 3, "+4 Turn Body")} 
+                    onClick={(e) => { e.stopPropagation(); handleScore("red", 3, "+4 Turn Body"); }} 
                 />
                 <Button 
                     className="neon-btn red-btn"
                     text="Red 1" 
                     angle={350} 
                     fontSize="2.5cqi" 
-                    onClick={() => handleScore("red", 0, "+1 Punch")} 
+                    onClick={(e) => { e.stopPropagation(); handleScore("red", 0, "+1 Punch"); }} 
                 />
             </div>
 
@@ -347,14 +355,14 @@ function Controller() {
                     text="Red 3" 
                     angle={350} 
                     fontSize="2.5cqi" 
-                    onClick={() => handleScore("red", 2, "+3 Head")} 
+                    onClick={(e) => { e.stopPropagation(); handleScore("red", 2, "+3 Head"); }} 
                 />
                 <Button 
                     className="neon-btn red-btn"
                     text="Red 2" 
                     angle={350} 
                     fontSize="2.5cqi" 
-                    onClick={() => handleScore("red", 1, "+2 Body")} 
+                    onClick={(e) => { e.stopPropagation(); handleScore("red", 1, "+2 Body"); }} 
                 />
             </div>
 
@@ -365,6 +373,9 @@ function Controller() {
                     <div className="center-vs-box">
                         <span className="vs-badge">VS</span>
                         <span className="round-pill">R{currentRound} • {isPaused ? "PAUSED" : "LIVE"}</span>
+                        <span className="round-pill" style={{ fontSize: '1cqi', opacity: 0.8, background: refereeMode === 'multiple' ? 'rgba(255,100,0,0.4)' : 'rgba(0,200,100,0.3)' }}>
+                            {refereeMode === 'multiple' ? '👥 Multi' : '👤 Single'} • {mySeat || '...'}
+                        </span>
                     </div>
                     <div className="competitor-side blue-side-text">{blueName}</div>
                 </div>
@@ -377,14 +388,14 @@ function Controller() {
                     text="Blue 3" 
                     angle={210} 
                     fontSize="2.5cqi" 
-                    onClick={() => handleScore("blue", 2, "+3 Head")} 
+                    onClick={(e) => { e.stopPropagation(); handleScore("blue", 2, "+3 Head"); }} 
                 />
                 <Button 
                     className="neon-btn blue-btn"
                     text="Blue 2" 
                     angle={210} 
                     fontSize="2.5cqi" 
-                    onClick={() => handleScore("blue", 1, "+2 Body")} 
+                    onClick={(e) => { e.stopPropagation(); handleScore("blue", 1, "+2 Body"); }} 
                 />
             </div>
 
@@ -395,21 +406,21 @@ function Controller() {
                     text="Blue 6" 
                     angle={210} 
                     fontSize="2.5cqi" 
-                    onClick={() => handleScore("blue", 4, "+6 Turn Head")} 
+                    onClick={(e) => { e.stopPropagation(); handleScore("blue", 4, "+6 Turn Head"); }} 
                 />
                 <Button 
                     className="neon-btn blue-btn"
                     text="Blue 4" 
                     angle={210} 
                     fontSize="2.5cqi" 
-                    onClick={() => handleScore("blue", 3, "+4 Turn Body")} 
+                    onClick={(e) => { e.stopPropagation(); handleScore("blue", 3, "+4 Turn Body"); }} 
                 />
                 <Button 
                     className="neon-btn blue-btn"
                     text="Blue 1" 
                     angle={210} 
                     fontSize="2.5cqi" 
-                    onClick={() => handleScore("blue", 0, "+1 Punch")} 
+                    onClick={(e) => { e.stopPropagation(); handleScore("blue", 0, "+1 Punch"); }} 
                 />
             </div>
         </div>

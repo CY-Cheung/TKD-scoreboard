@@ -176,13 +176,22 @@ const Edit = ({
     };
 
     const buttonFontSize = '2cqi';
+    const PunchIconComp = ({ size, style }) => (
+        <span className="punch-icon" style={{ ...style, width: size, height: size }} />
+    );
+    const TrunkIconComp = ({ size, style }) => (
+        <span className="trunk-icon" style={{ ...style, width: size, height: size }} />
+    );
+    const HelmetIconComp = ({ size, style }) => (
+        <span className="helmet-icon" style={{ ...style, width: size, height: size }} />
+    );
     const pointTypes = [
         { name: "Gam-jeom", type: "gamjeom", index: null, icon: FileFill },
-        { name: "Punch", type: "pointsStat", index: 0, icon: RecordCircleFill },
-        { name: "Body", type: "pointsStat", index: 1, icon: ShieldFill },
-        { name: "Head", type: "pointsStat", index: 2, icon: PersonCircle },
-        { name: "Body(Turn)", type: "pointsStat", index: 3, icon: ArrowRepeat, secondIcon: ShieldFill },
-        { name: "Head(Turn)", type: "pointsStat", index: 4, icon: ArrowRepeat, secondIcon: PersonCircle }
+        { name: "Punch", type: "pointsStat", index: 0, icon: PunchIconComp, iconSize: "1.8cqi" },
+        { name: "Body", type: "pointsStat", index: 1, icon: TrunkIconComp, iconSize: "1.5cqi" },
+        { name: "Head", type: "pointsStat", index: 2, icon: HelmetIconComp, iconSize: "1.5cqi" },
+        { name: "Body(Turn)", type: "pointsStat", index: 3, icon: ArrowRepeat, secondIcon: TrunkIconComp, iconSize: "1.5cqi" },
+        { name: "Head(Turn)", type: "pointsStat", index: 4, icon: ArrowRepeat, secondIcon: HelmetIconComp, iconSize: "1.5cqi" }
     ];
 
     // Remove early return to allow rendering empty state
@@ -221,8 +230,8 @@ const Edit = ({
                 <div className="grid-cell header"></div>
                 {pointTypes.map(pt => (
                     <div className="grid-cell header" key={pt.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {pt.icon && <pt.icon size="1.3cqi" style={{ marginRight: pt.secondIcon ? '0.1cqi' : '0.4cqi', color: 'white' }} />}
-                        {pt.secondIcon && <pt.secondIcon size="1.3cqi" style={{ marginRight: '0.4cqi', color: 'white' }} />}
+                        {pt.icon && <pt.icon size={pt.iconSize || "1.3cqi"} style={{ marginRight: pt.secondIcon ? '0.1cqi' : '0.4cqi', color: 'white' }} />}
+                        {pt.secondIcon && <pt.secondIcon size={pt.iconSize || "1.3cqi"} style={{ marginRight: '0.4cqi', color: 'white' }} />}
                         <span>{pt.name}</span>
                     </div>
                 ))}

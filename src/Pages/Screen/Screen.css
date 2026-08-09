@@ -68,11 +68,17 @@
 	flex-direction: column;
 	width: calc(var(--screen-width) * 19/150);
 	height: calc(var(--screen-height) * 9/11);
+	padding: 1cqi;
+	box-sizing: border-box;
 }
+
 .log-records-container {
-	-ms-overflow-style: none; /* IE and Edge */
-	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none;
+	/* IE and Edge */
+	scrollbar-width: none;
+	/* Firefox */
 }
+
 .log-records-container::-webkit-scrollbar {
 	display: none;
 }
@@ -103,6 +109,8 @@
 	flex-direction: column;
 	width: calc(var(--screen-width) * 19/150);
 	height: calc(var(--screen-height) * 9/11);
+	padding: 1cqi;
+	box-sizing: border-box;
 }
 
 .vote-row {
@@ -111,6 +119,7 @@
 	aspect-ratio: 4 / 1;
 	background: transparent;
 	margin-top: 2px;
+	opacity: 0.75;
 }
 
 .vote-cell {
@@ -284,7 +293,8 @@
 	width: var(--log-width);
 }
 
-.log-icon, .ref-num {
+.log-icon,
+.ref-num {
 	--icon-width: calc(var(--screen-width) * 4/150 * 0.875);
 	width: calc(var(--icon-width));
 	height: calc(var(--icon-width));

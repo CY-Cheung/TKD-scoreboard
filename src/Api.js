@@ -1,6 +1,12 @@
 // src/Api.js
-import { ref, runTransaction, update, get } from "firebase/database";
+import { ref, runTransaction, update, get, onValue } from "firebase/database";
 import { database } from './firebase';
+
+let globalServerTimeOffset = 0;
+const offsetRef = ref(database, ".info/serverTimeOffset");
+onValue(offsetRef, (snap) => {
+  globalServerTimeOffset = snap.val() || 0;
+});
 
 const getScoreValue = (stats, opponentStats) => {
     const p = stats?.pointsStat || [0,0,0,0,0];
@@ -19,15 +25,17 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
             matchData.providedDeviceId = deviceId;
         }
 
-        if (matchData.state.phase === 'REST') return;
-
+        // Ensure state exists before reading from it
+        if (!matchData.state) matchData.state = {
+            isFinished: false, isPaused: true, timer: 0, winReason: null, lastStartTime: null, dominantSide: 'none'
+        };
+        
         if (!matchData.stats) matchData.stats = {
             red: { pointsStat: [0,0,0,0,0], gamjeom: 0 },
             blue: { pointsStat: [0,0,0,0,0], gamjeom: 0 }
         };
-        if (!matchData.state) matchData.state = {
-            isFinished: false, isPaused: true, timer: 0, winReason: null, lastStartTime: null, dominantSide: 'none'
-        };
+
+        if (matchData.state.phase === 'REST') return;
 
         const targetSide = matchData.stats[side];
 
@@ -40,7 +48,7 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
             targetSide.gamjeomAvoiding = (targetSide.gamjeomAvoiding || 0) + delta;
             if (targetSide.gamjeomAvoiding < 0) targetSide.gamjeomAvoiding = 0;
         } else if (type === 'pointsStat') {
-            const now = Date.now();
+            const now = Date.now() + globalServerTimeOffset;
             if (mode === 'multiple' && seatName) {
                 // Handle Valid Point Voting Mechanism
                 if (!matchData.votes) matchData.votes = [];
@@ -49,12 +57,12 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
                 // Add the new vote
                 matchData.votes.push({ side, index, seatName, deviceId, timestamp: now });
                 
-                // Keep only votes from the last 1000ms
-                matchData.votes = matchData.votes.filter(v => now - v.timestamp <= 1000);
+                // Keep only votes from the last 1500ms
+                matchData.votes = matchData.votes.filter(v => now - v.timestamp <= 1500);
                 
                 // Check if there are 2 or more UNIQUE referees who voted for the exact same side & index
                 const matchingVotes = matchData.votes.filter(v => v.side === side && v.index === index);
-                const uniqueSeats = new Set(matchingVotes.map(v => v.seatName));
+                const uniqueSeats = new Set(matchingVotes.map(v => v.deviceId)); // Use deviceId to support testing with multiple Admin tabs
                 
                 if (uniqueSeats.size >= 2) {
                     // Valid Point achieved!
@@ -74,7 +82,8 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
                     
                     // Add to recentScores
                     if (!matchData.recentScores) matchData.recentScores = [];
-                    matchData.recentScores.push({ side, index, seatNames: Array.from(uniqueSeats), timestamp: now });
+                    const actualSeatNames = Array.from(new Set(matchingVotes.map(v => v.seatName)));
+                    matchData.recentScores.push({ side, index, seatNames: actualSeatNames, timestamp: now });
                 } else {
                     // Not enough votes yet, just return and save the vote array
                     return matchData;
