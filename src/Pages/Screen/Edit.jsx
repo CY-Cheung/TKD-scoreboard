@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
 import { ref, get, update } from "firebase/database";
-import { QrCode, PeopleFill, Trophy, PersonFill, CheckCircle, ArrowLeft, FileFill, RecordCircleFill, ShieldFill, PersonCircle, ArrowRepeat } from "react-bootstrap-icons";
+import { QrCode, PeopleFill, Trophy, PersonFill, CheckCircle, ArrowLeft, FileFill, RecordCircleFill, ShieldFill, PersonCircle, ArrowRepeat, FilePlayFill, FileFontFill } from "react-bootstrap-icons";
 import { usePopup } from "../../Context/PopupContext";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
@@ -40,8 +40,6 @@ const Edit = ({
         setVisible(false);
         setShowSuperiorityVote(false);
     };
-
-    // handleStartNextRound has been removed as rounds now auto-start
 
     const handleDeclareWinner = () => {
         if (dominantSide && dominantSide.trim() !== 'none') {
@@ -86,6 +84,19 @@ const Edit = ({
         }
         setShowAvoidingPopup(false);
         setAvoidingSide(null);
+    };
+
+    // --- IVR 與 Technical Card 點擊邏輯預留區域 ---
+    const handleIVRAction = (side) => {
+        if (!matchData) return;
+        console.log(`Triggered IVR for ${side}`);
+        // TODO: 在這裡實作扣除預設 IVR 挑戰次數的邏輯，或呼叫 API
+    };
+
+    const handleTechnicalCardAction = (side) => {
+        if (!matchData) return;
+        console.log(`Triggered Technical Card for ${side}`);
+        // TODO: 在這裡實作 Technical Card 的警告顯示或扣分機制
     };
 
     useEffect(() => {
@@ -194,7 +205,6 @@ const Edit = ({
         { name: "Head(Turn)", type: "pointsStat", index: 4, icon: ArrowRepeat, secondIcon: HelmetIconComp, iconSize: "1.5cqi" }
     ];
 
-    // Remove early return to allow rendering empty state
     const { config = {}, state = {}, stats = {} } = matchData || {};
     const { phase, isFinished, winReason } = state || {};
     const { roundWins } = stats || {};
@@ -227,16 +237,58 @@ const Edit = ({
     return (
         <div className={`edit-bar ${visible ? 'visible' : ''}`}>
             <div className="edit-grid">
+                {/* Header Row */}
                 <div className="grid-cell header"></div>
+
+                {/* IVR 標題 - 水平排列對齊 */}
+                <div className="grid-cell header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FilePlayFill size="1.3cqi" color="white" style={{ marginRight: '0.4cqi' }} />
+                    <span style={{ whiteSpace: 'nowrap' }}>IVR</span>
+                </div>
+                {/* Technical Card 標題 - 水平排列對齊 */}
+                <div className="grid-cell header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FileFontFill size="1.3cqi" color="white" style={{ marginRight: '0.4cqi' }} />
+                    <span style={{ whiteSpace: 'nowrap' }}>Technical</span>
+                </div>
+
                 {pointTypes.map(pt => (
                     <div className="grid-cell header" key={pt.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {pt.icon && <pt.icon size={pt.iconSize || "1.3cqi"} style={{ marginRight: pt.secondIcon ? '0.1cqi' : '0.4cqi', color: 'white' }} />}
                         {pt.secondIcon && <pt.secondIcon size={pt.iconSize || "1.3cqi"} style={{ marginRight: '0.4cqi', color: 'white' }} />}
-                        <span>{pt.name}</span>
+                        <span style={{ whiteSpace: 'nowrap' }}>{pt.name}</span>
                     </div>
                 ))}
 
+                {/* Blue Row */}
                 <div className="grid-cell side-label blue">Blue</div>
+
+                {/* Blue IVR 按鈕 - 完全對齊加減制 */}
+                <div className="grid-cell">
+                    <div className="buttons">
+                        <Button
+                            icon={<FilePlayFill color="white" size="2cqi" />}
+                            fontSize={buttonFontSize}
+                            onClick={() => handleIVRAction('blue')}
+                            style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }}
+                            angle={220}
+                            disabled={!matchData}
+                        />
+                    </div>
+                </div>
+                {/* Blue Technical Card 按鈕 - 完全對齊加減制 */}
+                <div className="grid-cell">
+                    <div className="buttons">
+                        <Button
+                            icon={<FileFontFill color="white" size="2cqi" />}
+                            fontSize={buttonFontSize}
+                            onClick={() => handleTechnicalCardAction('blue')}
+                            style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }}
+                            angle={220}
+                            disabled={!matchData}
+                        />
+                    </div>
+                </div>
+
                 {pointTypes.map(pt => (
                     <div className="grid-cell" key={`blue-${pt.name}`}>
                         <div className="buttons">
@@ -246,7 +298,36 @@ const Edit = ({
                     </div>
                 ))}
 
+                {/* Red Row */}
                 <div className="grid-cell side-label red">Red</div>
+
+                {/* Red IVR 按鈕 - 完全對齊加減制 */}
+                <div className="grid-cell">
+                    <div className="buttons">
+                        <Button
+                            icon={<FilePlayFill color="white" size="2cqi" />}
+                            fontSize={buttonFontSize}
+                            onClick={() => handleIVRAction('red')}
+                            style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }}
+                            angle={0}
+                            disabled={!matchData}
+                        />
+                    </div>
+                </div>
+                {/* Red Technical Card 按鈕 - 完全對齊加減制 */}
+                <div className="grid-cell">
+                    <div className="buttons">
+                        <Button
+                            icon={<FileFontFill color="white" size="2cqi" />}
+                            fontSize={buttonFontSize}
+                            onClick={() => handleTechnicalCardAction('red')}
+                            style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }}
+                            angle={0}
+                            disabled={!matchData}
+                        />
+                    </div>
+                </div>
+
                 {pointTypes.map(pt => (
                     <div className="grid-cell" key={`red-${pt.name}`}>
                         <div className="buttons">
@@ -281,8 +362,8 @@ const Edit = ({
                         text={kyeShiActive ? "Stop Kye-shi" : "Kye-shi"}
                         fontSize="1.4cqi"
                         onClick={toggleKyeShi}
-                        style={{ 
-                            marginRight: '1cqi', 
+                        style={{
+                            marginRight: '1cqi',
                             color: kyeShiActive ? '#ef4444' : '#FFFF00',
                             '--button-gradient': kyeShiActive ? '#ef4444' : '#FFFF00'
                         }}
@@ -300,7 +381,6 @@ const Edit = ({
                     </div>
                 </div>
 
-                {/* QR Code Controller Toggle Button inside Edit Drawer */}
                 {setShowQRCode && (
                     <Button
                         text={`QR Code (${occupiedRefereesCount}/3)`}
@@ -313,8 +393,6 @@ const Edit = ({
                         style={{ '--button-gradient': '#38bdf8' }}
                     />
                 )}
-
-                {/* Start Round button removed per request */}
 
                 {showPromoteWinnerButton && (
                     <Button

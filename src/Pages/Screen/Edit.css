@@ -20,10 +20,12 @@
 
 .edit-grid {
     display: grid;
-    grid-template-columns: auto repeat(6, 1fr); /* 1 label column + 6 content columns */
+    /* 修正重點：統一其餘 8 個欄位（2 個新功能 + 6 個計分）各佔 1 份 (1fr)，確保寬度完全一致 */
+    grid-template-columns: auto repeat(8, 1fr);
     gap: 0.521cqi;
     width: 95%;
-    margin-bottom: 1.042cqi; /* Space between grid and time bar */
+    margin-bottom: 1.042cqi;
+    /* Space between grid and time bar */
 }
 
 .grid-cell {
@@ -48,8 +50,13 @@
     display: flex;
 }
 
-.blue { color: var(--blue-primary); }
-.red { color: var(--red-primary); }
+.blue {
+    color: var(--blue-primary);
+}
+
+.red {
+    color: var(--red-primary);
+}
 
 .time-bar {
     display: flex;
@@ -85,6 +92,7 @@
 }
 
 /* Aligning the Done button */
-.time-bar > .btn-wrapper {
-    margin-left: 2.083cqi; /* Add some space before the Done button */
+.time-bar>.btn-wrapper {
+    margin-left: 2.083cqi;
+    /* Add some space before the Done button */
 }

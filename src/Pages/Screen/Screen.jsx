@@ -301,7 +301,7 @@ function Screen() {
             if (e.key === "\\") { toggleDirection(); }
             if (e.key === "e" || e.key === "E") { setShowEdit(prev => !prev); }
             if (e.key === "q" || e.key === "Q") { setShowQRCode(prev => !prev); }
-            if (e.key === "k" || e.key === "K") { 
+            if (e.key === "k" || e.key === "K") {
                 toggleKyeShi();
             }
         };
@@ -551,30 +551,22 @@ function Screen() {
                     <div className="blue-name blue-bg name-font">{renderPlayerName(config.competitors?.blue)}</div>
                 </div>
 
-                {/* Main Section: Scores and Info */}
-                <div className="midbottom" style={{ flexDirection: direction, display: "flex" }}>
-                    {/* Red Side: Gam-jeom and Score */}
-                    <div className="red-log red-bg" style={{ position: 'relative' }}>
+                {/* Middle Section: Scores and Match Info */}
+                <div className="middle" style={{ flexDirection: direction }}>
+                    {/* Red Side: Log */}
+                    <div className="red-log red-bg">
                         <div className="log-records-container" style={{ flexGrow: 1, overflowY: 'scroll', display: 'flex', flexDirection: 'column' }}>
                             {renderVoteRows('red')}
                         </div>
-                        <div className="red-gamjeom red-bg" onClick={() => setShowEdit(true)} style={{ position: 'absolute', top: 'calc(var(--screen-height) * 7/11)', bottom: 0, left: 0, right: 0, zIndex: 10, borderRadius: '1cqi', justifyContent: 'flex-end' }}>
-                            <div className="gamjeom-number">{redGamJeom}</div>
-                            <div className="gamjeom-font">GAM-JEOM</div>
-                        </div>
-                    </div>
-                    <div className="red-score red-bg">
-                        <div
-                            className={'red-score-text red-score-bg score-font cursor-target'}
-                            style={{ color: redScoreColor }}
-                            onClick={() => setShowEdit(true)}
-                        >
-                            {isResting || isFinal ? renderSideHistory('red') : redTotalScore}
-                        </div>
                     </div>
 
-                    {/* Center: Match Info */}
-                    <div className="match-info">
+                    {/* Red Side: Score */}
+                    <div className={'red-score-text red-score-bg score-font cursor-target'} style={{ color: redScoreColor }} onClick={() => setShowEdit(true)}>
+                        {isResting || isFinal ? renderSideHistory('red') : redTotalScore}
+                    </div>
+
+                    {/* Center: Match Timer */}
+                    <div className="match-info-middle">
                         <div className="match cursor-target" onClick={toggleDirection}>
                             <div className="match-font">MATCH</div>
                             <div className="match-number">{matchNumber}</div>
@@ -582,11 +574,7 @@ function Screen() {
                         <div className="timer cursor-target">
                             {kyeShiTimer !== null ? (
                                 <>
-                                    <div
-                                        className="time-out match-font timeout-active"
-                                        onClick={toggleTimer}
-                                        style={{ backgroundColor: '#FFFF00', color: '#000000' }}
-                                    >
+                                    <div className="time-out match-font timeout-active" onClick={toggleTimer} style={{ backgroundColor: '#FFFF00', color: '#000000' }}>
                                         Kye-shi
                                     </div>
                                     <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: '#FFFF00' }}>
@@ -598,40 +586,61 @@ function Screen() {
                                     <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: timerColor }}>
                                         {renderTimerContent()}
                                     </div>
-                                    <div
-                                        className={`time-out match-font ${isMatchLoaded && !isPaused ? "timeout-active" : ""} ${isResting ? 'rest-mode' : ''}`}
-                                        onClick={toggleTimer}
-                                        style={getTimeoutStyle()}
-                                    >
+                                    <div className={`time-out match-font ${isMatchLoaded && !isPaused ? "timeout-active" : ""} ${isResting ? 'rest-mode' : ''}`} onClick={toggleTimer} style={getTimeoutStyle()}>
                                         {isResting ? 'REST TIME' : 'Time out'}
                                     </div>
                                 </>
                             )}
                         </div>
+                    </div>
+
+                    {/* Blue Side: Score */}
+                    <div className={'blue-score-text blue-score-bg score-font cursor-target'} style={{ color: blueScoreColor }} onClick={() => setShowEdit(true)}>
+                        {isResting || isFinal ? renderSideHistory('blue') : blueTotalScore}
+                    </div>
+
+                    {/* Blue Side: Log */}
+                    <div className="blue-log blue-bg">
+                        <div className="log-records-container" style={{ flexGrow: 1, overflowY: 'scroll', display: 'flex', flexDirection: 'column' }}>
+                            {renderVoteRows('blue')}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Bottom Section: Gamjeom, IVR Logo, and Round */}
+                <div className="bottom" style={{ flexDirection: direction }}>
+                    {/* Red Side: Gam-jeom */}
+                    <div className="red-gamjeom red-bg cursor-target" onClick={() => setShowEdit(true)}>
+                        <div className="gamjeom-number">{redGamJeom}</div>
+                        <div className="gamjeom-font">GAM-JEOM</div>
+                    </div>
+
+                    {/* Red Side: IVR Logo */}
+                    <div className="red-score-info red-bg cursor-target">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="4cqi" height="4cqi" fill="currentColor" className="bi bi-files" viewBox="0 0 16 16">
+                            <path d="M13 0H6a2 2 0 0 0-2 2 2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 2 2 0 0 0 2-2V2a2 2 0 0 0-2-2m0 13V4a2 2 0 0 0-2-2H5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1M3 4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
+                        </svg>
+                    </div>
+
+                    {/* Center: Round Info */}
+                    <div className="match-info-bottom">
                         <div className="round-info">
                             <div className="round-font">ROUND</div>
                             <div className="round-number">{currentRound}</div>
                         </div>
                     </div>
 
-                    {/* Blue Side: Score and Gam-jeom */}
-                    <div className="blue-score blue-bg">
-                        <div
-                            className={'blue-score-text blue-score-bg score-font cursor-target'}
-                            style={{ color: blueScoreColor }}
-                            onClick={() => setShowEdit(true)}
-                        >
-                            {isResting || isFinal ? renderSideHistory('blue') : blueTotalScore}
-                        </div>
+                    {/* Blue Side: IVR Logo */}
+                    <div className="blue-score-info blue-bg cursor-target">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="4cqi" height="4cqi" fill="currentColor" className="bi bi-files" viewBox="0 0 16 16">
+                            <path d="M13 0H6a2 2 0 0 0-2 2 2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 2 2 0 0 0 2-2V2a2 2 0 0 0-2-2m0 13V4a2 2 0 0 0-2-2H5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1M3 4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
+                        </svg>
                     </div>
-                    <div className="blue-log blue-bg" style={{ position: 'relative' }}>
-                        <div className="log-records-container" style={{ flexGrow: 1, overflowY: 'scroll', display: 'flex', flexDirection: 'column' }}>
-                            {renderVoteRows('blue')}
-                        </div>
-                        <div className="blue-gamjeom blue-bg" onClick={() => setShowEdit(true)} style={{ position: 'absolute', top: 'calc(var(--screen-height) * 7/11)', bottom: 0, left: 0, right: 0, zIndex: 10, borderRadius: '1cqi', justifyContent: 'flex-end' }}>
-                            <div className="gamjeom-number">{blueGamJeom}</div>
-                            <div className="gamjeom-font">GAM-JEOM</div>
-                        </div>
+
+                    {/* Blue Side: Gam-jeom */}
+                    <div className="blue-gamjeom blue-bg cursor-target" onClick={() => setShowEdit(true)}>
+                        <div className="gamjeom-number">{blueGamJeom}</div>
+                        <div className="gamjeom-font">GAM-JEOM</div>
                     </div>
                 </div>
             </div>

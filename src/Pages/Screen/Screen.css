@@ -63,11 +63,26 @@
 	height: calc(var(--screen-height) * 9/11);
 }
 
+/* 新增：分隔出來的 Middle 區塊 */
+.middle {
+	display: flex;
+	width: var(--screen-width);
+	height: calc(var(--screen-height) * 7/11);
+}
+
+/* 新增：分隔出來的 Bottom 區塊 */
+.bottom {
+	display: flex;
+	width: var(--screen-width);
+	height: calc(var(--screen-height) * 2/11);
+}
+
 .red-log {
 	display: flex;
 	flex-direction: column;
 	width: calc(var(--screen-width) * 19/150);
-	height: calc(var(--screen-height) * 9/11);
+	height: calc(var(--screen-height) * 7/11);
+	/* 由 9/11 改為 7/11 */
 	padding: 1cqi;
 	box-sizing: border-box;
 }
@@ -97,6 +112,24 @@
 	height: calc(var(--screen-height) * 9/11);
 }
 
+/* 新增：中半部分專用的 match-info */
+.match-info-middle {
+	display: flex;
+	flex-direction: column;
+	width: calc(var(--screen-width) * 34/150);
+	height: calc(var(--screen-height) * 7/11);
+}
+
+/* 新增：下半部分專用的 match-info */
+.match-info-bottom {
+	display: flex;
+	flex-direction: column;
+	width: calc(var(--screen-width) * 34/150);
+	height: calc(var(--screen-height) * 2/11);
+	justify-content: center;
+	align-items: center;
+}
+
 .blue-score {
 	display: flex;
 	flex-direction: column;
@@ -108,7 +141,8 @@
 	display: flex;
 	flex-direction: column;
 	width: calc(var(--screen-width) * 19/150);
-	height: calc(var(--screen-height) * 9/11);
+	height: calc(var(--screen-height) * 7/11);
+	/* 由 9/11 改為 7/11 */
 	padding: 1cqi;
 	box-sizing: border-box;
 }
@@ -162,12 +196,20 @@
 	display: flex;
 	width: calc(var(--screen-width) * 39/150);
 	height: calc(var(--screen-height) * 2/11);
+	justify-content: center;
+	/* 加入置中屬性 */
+	align-items: center;
+	/* 加入置中屬性 */
 }
 
 .blue-score-info {
 	display: flex;
 	width: calc(var(--screen-width) * 39/150);
 	height: calc(var(--screen-height) * 2/11);
+	justify-content: center;
+	/* 加入置中屬性 */
+	align-items: center;
+	/* 加入置中屬性 */
 }
 
 .red-ref-log {
@@ -191,15 +233,25 @@
 .red-gamjeom {
 	display: flex;
 	flex-direction: column-reverse;
-	flex: 2;
+	width: calc(var(--screen-width) * 19/150);
+	/* 加入固定寬度對齊列 */
+	height: calc(var(--screen-height) * 2/11);
+	/* 加入高度 */
 	align-items: center;
+	justify-content: center;
+	/* 加入置中屬性 */
 }
 
 .blue-gamjeom {
 	display: flex;
 	flex-direction: column-reverse;
-	flex: 2;
+	width: calc(var(--screen-width) * 19/150);
+	/* 加入固定寬度對齊列 */
+	height: calc(var(--screen-height) * 2/11);
+	/* 加入高度 */
 	align-items: center;
+	justify-content: center;
+	/* 加入置中屬性 */
 }
 
 .gamjeom-font {
