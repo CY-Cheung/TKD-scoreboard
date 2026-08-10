@@ -1,6 +1,6 @@
 # Refactoring Plan — TKD Scoreboard
 
-> **Status:** Phase 2 in progress — Wave 0–4 underway after plan approval.  
+> **Status:** Phase 2 Waves 0–5 complete (P0 timer/seat/transaction internals still deferred).  
 > **Branch:** `cursor/clean-code-refactor-8215`  
 > **Base:** `main` @ `84fb26e`  
 > **Completed:**  
@@ -8,7 +8,8 @@
 > - Wave 1: `defaultRules` / `scoreMath` / `matchRules` → `Api` / `Screen` / `Edit`  
 > - Wave 2: `matchFactory` / `eventCreation` → `CourtSetup` / `DataImport` / `pdfParser`  
 > - Wave 3: Controller score-pad/params; Edit grid pieces; DecisionFlow Confirm + announcement timing  
-> - Wave 4: Screen `formatTime` / `voteLogUtils` / `VoteLogRows` (timer rAF / Firebase listeners unchanged)
+> - Wave 4: Screen `formatTime` / `voteLogUtils` / `VoteLogRows` (timer rAF / Firebase listeners unchanged)  
+> - Wave 5: `AuthContext` (Google only) + `EventSessionContext` (event/court); `AUTH_SESSION_KEY` workaround preserved
 
 This document is the Phase 1 deliverable for a Clean Code / complexity-reduction refactor. Phase 2 (test-driven execution) must not start without approval.
 
