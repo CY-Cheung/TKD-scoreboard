@@ -1,6 +1,11 @@
 // src/Api.js
 import { ref, runTransaction, update, get, onValue } from "firebase/database";
 import { database } from './firebase';
+import { getScoreValue } from './domain/scoreMath.js';
+import {
+    resetSideStatsForNextRound,
+    resolveMatchRules,
+} from './domain/matchRules.js';
 
 /** Multiple-referee vote window: judges must agree within this period (ms). */
 export const VOTE_WINDOW_MS = 1000;
@@ -11,20 +16,15 @@ onValue(offsetRef, (snap) => {
   globalServerTimeOffset = snap.val() || 0;
 });
 
-const getScoreValue = (stats, opponentStats) => {
-    const p = stats?.pointsStat || [0,0,0,0,0];
-    const points = (p[0]*1) + (p[1]*2) + (p[2]*3) + (p[3]*4) + (p[4]*6);
-    return points + (opponentStats?.gamjeom || 0) + (opponentStats?.gamjeomAvoiding || 0);
-};
-
-/** Clear round-scoped scoring; keep match-scoped fields such as IVR remaining. */
-const resetSideStatsForNextRound = (sideStats = {}) => {
-    const next = { gamjeom: 0, pointsStat: [0, 0, 0, 0, 0] };
-    if (typeof sideStats.ivrRemaining === "number" && !Number.isNaN(sideStats.ivrRemaining)) {
-        next.ivrRemaining = sideStats.ivrRemaining;
-    }
-    return next;
-};
+// Re-export pure scoring helpers for callers that already import from Api.
+export { getScoreValue } from './domain/scoreMath.js';
+export {
+    resetSideStatsForNextRound,
+    resolveMatchRules,
+    determineDominantSide,
+    getFinalWinnerSide,
+    isMatchFinal,
+} from './domain/matchRules.js';
 
 export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, courtId = null, deviceId = null, seatName = null, mode = 'single') => {
     const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
@@ -137,8 +137,9 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
             matchData.state.lastStartTime = null;
         };
 
-        const maxGap = matchData.config?.rules?.maxPointGap || 15;
-        const maxGJ = matchData.config?.rules?.maxGamjeom || 5;
+        const { maxPointGap: maxGap, maxGamjeom: maxGJ } = resolveMatchRules(
+            matchData.config?.rules
+        );
 
         const isPUN = redGamjeom >= maxGJ || blueGamjeom >= maxGJ;
         const isPTG = Math.abs(redScore - blueScore) >= maxGap;
@@ -192,7 +193,9 @@ export const declareRoundWinner = (eventName, matchId, winnerSide) => {
 
         const redWins = matchData.stats.roundWins.red;
         const blueWins = matchData.stats.roundWins.blue;
-        const roundsToWin = matchData.config?.rules?.roundsToWin || 2;
+        const { roundsToWin, restDuration } = resolveMatchRules(
+            matchData.config?.rules
+        );
 
         if (redWins >= roundsToWin || blueWins >= roundsToWin) {
             matchData.state.isFinished = true;
@@ -211,7 +214,7 @@ export const declareRoundWinner = (eventName, matchId, winnerSide) => {
             matchData.recentScores = [];
             
             matchData.state.phase = "REST";
-            matchData.state.timer = matchData.config?.rules?.restDuration || 60;
+            matchData.state.timer = restDuration;
             matchData.state.isPaused = false;
             matchData.state.lastStartTime = Date.now();
             matchData.state.isFinished = false;
@@ -233,7 +236,7 @@ export const startNextRound = (eventName, matchId) => {
 
         matchData.state.currentRound = (matchData.state.currentRound || 1) + 1;
         matchData.state.phase = "ROUND";
-        matchData.state.timer = matchData.config?.rules?.roundDuration || 90;
+        matchData.state.timer = resolveMatchRules(matchData.config?.rules).roundDuration;
         matchData.state.isPaused = true;
         matchData.state.lastStartTime = null;
         matchData.state.isFinished = false;

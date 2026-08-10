@@ -13,6 +13,12 @@ import IVRAnnouncement from "../../Components/IVRFlow/IVRAnnouncement";
 import PunchIcon from "../../assets/icons/PunchIcon.png";
 import TrunkIcon from "../../assets/icons/TrunkIcon.png";
 import HelmetIcon from "../../assets/icons/HelmetIcon.png";
+import { getScoreValue } from "../../domain/scoreMath.js";
+import {
+    determineDominantSide,
+    isMatchFinal,
+    resolveMatchRules,
+} from "../../domain/matchRules.js";
 
 const formatTime = (totalSeconds) => {
     if (typeof totalSeconds !== 'number' || isNaN(totalSeconds)) {
@@ -21,51 +27,6 @@ const formatTime = (totalSeconds) => {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = Math.floor(totalSeconds % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-};
-
-const calculateScore = (stats, opponentStats) => {
-    const p = stats?.pointsStat || [0, 0, 0, 0, 0];
-    return (p[0] * 1) + (p[1] * 2) + (p[2] * 3) + (p[3] * 4) + (p[4] * 6) + (opponentStats?.gamjeom || 0) + (opponentStats?.gamjeomAvoiding || 0);
-};
-
-const determineDominantSide = (redStats, blueStats) => {
-    const rG = redStats?.gamjeom || 0;
-    const bG = blueStats?.gamjeom || 0;
-
-    if (rG >= 5) return 'blue';
-    if (bG >= 5) return 'red';
-
-    const rP = redStats?.pointsStat || [0, 0, 0, 0, 0];
-    const bP = blueStats?.pointsStat || [0, 0, 0, 0, 0];
-
-    const redTotal = calculateScore(redStats, blueStats);
-    const blueTotal = calculateScore(blueStats, redStats);
-
-    if (redTotal > blueTotal) return 'red';
-    if (blueTotal > redTotal) return 'blue';
-
-    const redTurningPoints = (rP[3] * 4) + (rP[4] * 6);
-    const blueTurningPoints = (bP[3] * 4) + (bP[4] * 6);
-    if (redTurningPoints > blueTurningPoints) return 'red';
-    if (blueTurningPoints > redTurningPoints) return 'blue';
-
-    const redCount35 = rP[2] + rP[4];
-    const blueCount35 = bP[2] + bP[4];
-    if (redCount35 > blueCount35) return 'red';
-    if (blueCount35 > redCount35) return 'blue';
-
-    const redCount24 = rP[1] + rP[3];
-    const blueCount24 = bP[1] + bP[3];
-    if (redCount24 > blueCount24) return 'red';
-    if (blueCount24 > redCount24) return 'blue';
-
-    if (rP[0] > bP[0]) return 'red';
-    if (bP[0] > rP[0]) return 'blue';
-
-    if (rG < bG) return 'red';
-    if (bG < rG) return 'blue';
-
-    return 'none';
 };
 
 function Screen() {
@@ -355,14 +316,15 @@ function Screen() {
     const { state = {}, config = {}, stats = {} } = matchData || {};
     const { phase = 'ROUND', currentRound: matchCurrentRound, winReason, isFinished, isPaused = true } = state;
     const { roundScores = {}, roundWins: matchRoundWins = {} } = stats;
+    const resolvedRules = resolveMatchRules(config?.rules);
 
     const redStats = stats.red;
     const blueStats = stats.blue;
 
     const dominantSide = useMemo(() => {
         if (!isMatchLoaded) return 'none';
-        return determineDominantSide(redStats, blueStats);
-    }, [redStats, blueStats, isMatchLoaded]);
+        return determineDominantSide(redStats, blueStats, resolvedRules.maxGamjeom);
+    }, [redStats, blueStats, isMatchLoaded, resolvedRules.maxGamjeom]);
 
     // Compute occupied referee count (J1, J2, J3)
     const occupiedRefereesCount = useMemo(() => {
@@ -384,7 +346,7 @@ function Screen() {
 
     const isResting = phase === 'REST';
     const roundWins = { red: matchRoundWins.red || 0, blue: matchRoundWins.blue || 0 };
-    const isFinal = roundWins.red === 2 || roundWins.blue === 2;
+    const isFinal = isMatchFinal(roundWins, resolvedRules.roundsToWin);
 
     const renderPlayerName = (c) => {
         if (!c || !c.name) return <div className="name-only"> </div>;
@@ -401,8 +363,8 @@ function Screen() {
     const redIvrRemaining = getEffectiveIvrRemaining(stats, "red", eventSettings, matchRules);
     const blueIvrRemaining = getEffectiveIvrRemaining(stats, "blue", eventSettings, matchRules);
 
-    const redTotalScore = isMatchLoaded ? calculateScore(stats.red, stats.blue) : 0;
-    const blueTotalScore = isMatchLoaded ? calculateScore(stats.blue, stats.red) : 0;
+    const redTotalScore = isMatchLoaded ? getScoreValue(stats.red, stats.blue) : 0;
+    const blueTotalScore = isMatchLoaded ? getScoreValue(stats.blue, stats.red) : 0;
 
     const matchNumber = config.matchId ?? "000";
     const currentRound = matchCurrentRound ?? 1;
