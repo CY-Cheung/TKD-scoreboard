@@ -6,13 +6,10 @@ import "../../App.css";
 import Edit from "./Edit";
 import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
 import Button from "../../Components/Button/Button";
-import { ArrowLeft, Icon1CircleFill, Icon2CircleFill, Icon3CircleFill, Icon1Square, Icon2Square, Icon3Square, Icon1SquareFill, Icon2SquareFill, Icon3SquareFill, Files, File, FileExcel, RecordCircle } from "react-bootstrap-icons";
-import { startNextRound, VOTE_WINDOW_MS, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement, getEffectiveIvrRemaining, isIvrUnlimited } from "../../Api";
+import { ArrowLeft, Files, File, FileExcel, RecordCircle } from "react-bootstrap-icons";
+import { startNextRound, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement, getEffectiveIvrRemaining, isIvrUnlimited } from "../../Api";
 import TechnicalCardAnnouncement from "../../Components/TechnicalCardFlow/TechnicalCardAnnouncement";
 import IVRAnnouncement from "../../Components/IVRFlow/IVRAnnouncement";
-import PunchIcon from "../../assets/icons/PunchIcon.png";
-import TrunkIcon from "../../assets/icons/TrunkIcon.png";
-import HelmetIcon from "../../assets/icons/HelmetIcon.png";
 import {
     determineDominantSide,
     getScoreValue,
@@ -21,15 +18,8 @@ import {
 } from "../../Utils/matchRules";
 import { getEventDisplayName } from "../../Utils/matchFactory";
 import { useEventSession } from "../../Context/EventSessionContext";
-
-const formatTime = (totalSeconds) => {
-    if (typeof totalSeconds !== 'number' || isNaN(totalSeconds)) {
-        return "0:00";
-    }
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = Math.floor(totalSeconds % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-};
+import { formatTime } from "./formatTime";
+import VoteLogRows from "./VoteLogRows";
 
 function Screen() {
     const { session } = useEventSession();
@@ -435,142 +425,6 @@ function Screen() {
         return style;
     };
 
-    const renderVoteRows = (side) => {
-        if (!matchData) return null;
-
-        const combinedLogs = [];
-
-        // 1. Pending Votes (expire after VOTE_WINDOW_MS)
-        const activeVotes = (matchData.votes || []).filter(v => v.side === side && now - v.timestamp <= VOTE_WINDOW_MS);
-        // Group by index
-        const pendingGroups = activeVotes.reduce((acc, v) => {
-            if (!acc[v.index]) acc[v.index] = { index: v.index, seatNames: new Set(), timestamp: v.timestamp };
-            acc[v.index].seatNames.add(v.seatName);
-            // Keep the oldest timestamp so it doesn't extend forever unless new presses? Actually timestamp is when the group started.
-            acc[v.index].timestamp = Math.max(acc[v.index].timestamp, v.timestamp);
-            return acc;
-        }, {});
-
-        Object.values(pendingGroups).forEach(group => {
-            combinedLogs.push({
-                type: 'pending',
-                index: group.index,
-                seatNames: Array.from(group.seatNames),
-                timestamp: group.timestamp
-            });
-        });
-
-        // 2. Successful Scores (stay forever)
-        const recentScores = (matchData.recentScores || []).filter(s => s.side === side);
-        recentScores.forEach(score => {
-            combinedLogs.push({
-                type: 'success',
-                index: score.index,
-                seatNames: score.seatNames,
-                timestamp: score.timestamp
-            });
-        });
-
-        // Sort descending by timestamp (newest at the top)
-        combinedLogs.sort((a, b) => b.timestamp - a.timestamp);
-
-        return combinedLogs.map((log, idx) => {
-            let ActionIcon = PunchIcon;
-            let NumberIconComp = Icon1CircleFill;
-            let numberColor = '#FFFF00'; // Yellow (default for Punch)
-
-            if (log.index === 0) { // Punch - use yellow circle-fill numbered icons
-                ActionIcon = PunchIcon;
-                NumberIconComp = Icon1CircleFill; // Will map to 1/2/3-circle-fill by seat
-                numberColor = '#FFFF00'; // Yellow
-            } else if (log.index === 1) { // Body
-                ActionIcon = TrunkIcon;
-                NumberIconComp = Icon1Square; // Hollow
-                numberColor = '#00FFFF'; // Cyan
-            } else if (log.index === 2) { // Head
-                ActionIcon = HelmetIcon;
-                NumberIconComp = Icon1SquareFill; // Solid
-                numberColor = '#00FFFF'; // Cyan
-            } else if (log.index === 3) { // Turn Body
-                ActionIcon = TrunkIcon;
-                NumberIconComp = Icon1Square; // Hollow
-                numberColor = '#00FF00'; // Green
-            } else if (log.index === 4) { // Turn Head
-                ActionIcon = HelmetIcon;
-                NumberIconComp = Icon1SquareFill; // Solid
-                numberColor = '#00FF00'; // Green
-            }
-
-            const getNumberIcon = (seat, CompType, color) => {
-                let RealComp = CompType;
-                if (seat === 'J1') {
-                    if (CompType === Icon1CircleFill) RealComp = Icon1CircleFill;
-                    if (CompType === Icon1Square) RealComp = Icon1Square;
-                    if (CompType === Icon1SquareFill) RealComp = Icon1SquareFill;
-                } else if (seat === 'J2') {
-                    if (CompType === Icon1CircleFill) RealComp = Icon2CircleFill;
-                    if (CompType === Icon1Square) RealComp = Icon2Square;
-                    if (CompType === Icon1SquareFill) RealComp = Icon2SquareFill;
-                } else if (seat === 'J3') {
-                    if (CompType === Icon1CircleFill) RealComp = Icon3CircleFill;
-                    if (CompType === Icon1Square) RealComp = Icon3Square;
-                    if (CompType === Icon1SquareFill) RealComp = Icon3SquareFill;
-                }
-                return <RealComp size="80%" color={color} />;
-            };
-
-            // Action icon: for body/head, show in opponent's color using CSS mask
-            const isBodyOrHead = log.index >= 1; // index 1-4 are trunk or helmet icons
-            const actionIconClass = (log.index === 1 || log.index === 3) ? 'trunk-icon' : 'helmet-icon';
-            const opponentColor = side === 'red' ? '#0000aa' : '#aa0000'; // red-log→blue, blue-log→red
-
-            const cells = [
-                <div key="action" className="vote-cell">
-                    {isBodyOrHead ? (
-                        <span className="log-action-icon-glow" style={{ width: '80%', height: '80%' }}>
-                            <span
-                                className={actionIconClass}
-                                style={{ width: '100%', height: '100%', backgroundColor: opponentColor }}
-                            />
-                        </span>
-                    ) : (
-                        <img src={ActionIcon} className="action-logo" alt="Action" />
-                    )}
-                </div>,
-                <div key="J1" className="vote-cell">
-                    {log.seatNames.includes('J1') ? getNumberIcon('J1', NumberIconComp, numberColor) : null}
-                </div>,
-                <div key="J2" className="vote-cell">
-                    {log.seatNames.includes('J2') ? getNumberIcon('J2', NumberIconComp, numberColor) : null}
-                </div>,
-                <div key="J3" className="vote-cell">
-                    {log.seatNames.includes('J3') ? getNumberIcon('J3', NumberIconComp, numberColor) : null}
-                </div>
-            ];
-
-            // If it's blue-log, the score is on the left, so action logo should be on the left (index 0).
-            // Wait, Red-log: flex-row, red-gamjeom is on left, red score is on right.
-            // Oh, direction is 'row'.
-            // In row direction:
-            // [ red-log ] [ red-score ] [ match-info ] [ blue-score ] [ blue-log ]
-            // So for red side, the score is on the RIGHT of red-log.
-            // Meaning the action icon should be on the RIGHT of red-log.
-            // For blue side, the score is on the LEFT of blue-log.
-            // Meaning the action icon should be on the LEFT of blue-log.
-            if (side === 'red' && direction === 'row') {
-                cells.reverse();
-            } else if (side === 'blue' && direction === 'row-reverse') {
-                cells.reverse();
-            }
-
-            return (
-                <div key={`${log.type}-${log.timestamp}-${log.index}`} className="vote-row">
-                    {cells}
-                </div>
-            );
-        });
-    };
-
     return (
         <>
             <div className="screen" onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}>
@@ -591,7 +445,15 @@ function Screen() {
                     {/* Red Side: Log */}
                     <div className="red-log red-bg">
                         <div className="log-records-container" style={{ flexGrow: 1, overflowY: 'scroll', display: 'flex', flexDirection: 'column' }}>
-                            {renderVoteRows('red')}
+                            {matchData && (
+                                <VoteLogRows
+                                    side="red"
+                                    direction={direction}
+                                    votes={matchData.votes}
+                                    recentScores={matchData.recentScores}
+                                    now={now}
+                                />
+                            )}
                         </div>
                     </div>
 
@@ -637,7 +499,15 @@ function Screen() {
                     {/* Blue Side: Log */}
                     <div className="blue-log blue-bg">
                         <div className="log-records-container" style={{ flexGrow: 1, overflowY: 'scroll', display: 'flex', flexDirection: 'column' }}>
-                            {renderVoteRows('blue')}
+                            {matchData && (
+                                <VoteLogRows
+                                    side="blue"
+                                    direction={direction}
+                                    votes={matchData.votes}
+                                    recentScores={matchData.recentScores}
+                                    now={now}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
