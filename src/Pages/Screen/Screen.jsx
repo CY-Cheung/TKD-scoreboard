@@ -7,7 +7,7 @@ import Edit from "./Edit";
 import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
 import Button from "../../Components/Button/Button";
 import { ArrowLeft, Icon1CircleFill, Icon2CircleFill, Icon3CircleFill, Icon1Square, Icon2Square, Icon3Square, Icon1SquareFill, Icon2SquareFill, Icon3SquareFill } from "react-bootstrap-icons";
-import { startNextRound, VOTE_WINDOW_MS, startTechCardAnnouncement, finalizeTechCardAnnouncement } from "../../Api";
+import { startNextRound, VOTE_WINDOW_MS, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi } from "../../Api";
 import TechnicalCardAnnouncement from "../../Components/TechnicalCardFlow/TechnicalCardAnnouncement";
 import PunchIcon from "../../assets/icons/PunchIcon.png";
 import TrunkIcon from "../../assets/icons/TrunkIcon.png";
@@ -82,7 +82,6 @@ function Screen() {
 
     const [refereeMode, setRefereeMode] = useState('single');
     const [toastMessages, setToastMessages] = useState([]);
-    const [kyeShiTimer, setKyeShiTimer] = useState(null);
     const prevRefereesRef = useRef({});
 
     const techCardAnnouncement = matchData?.state?.techCardAnnouncement ?? null;
@@ -91,6 +90,16 @@ function Screen() {
     const animationFrameRef = useRef();
     const isMatchLoaded = !!matchData;
     const [now, setNow] = useState(Date.now());
+
+    const kyeShiRemaining = useMemo(() => {
+        const kyeShi = matchData?.state?.kyeShi;
+        if (!kyeShi?.startedAt) return null;
+        const elapsed = Math.floor((now - kyeShi.startedAt) / 1000);
+        const remaining = (kyeShi.duration ?? 60) - elapsed;
+        return remaining > 0 ? remaining : null;
+    }, [matchData?.state?.kyeShi, now]);
+
+    const isKyeShiActive = Boolean(matchData?.state?.kyeShi?.startedAt);
 
     // Update 'now' every 100ms for UI expiry checks
     useEffect(() => {
@@ -136,15 +145,13 @@ function Screen() {
     }, [toastMessages]);
 
     useEffect(() => {
-        if (kyeShiTimer === null) return;
-        const interval = setInterval(() => {
-            setKyeShiTimer(prev => {
-                if (prev <= 1) return null;
-                return prev - 1;
-            });
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [kyeShiTimer]);
+        const kyeShi = matchData?.state?.kyeShi;
+        if (!kyeShi?.startedAt || !selectedEvent || !currentMatchId) return;
+        const remaining = (kyeShi.duration ?? 60) - Math.floor((now - kyeShi.startedAt) / 1000);
+        if (remaining <= 0) {
+            stopKyeShi(selectedEvent, currentMatchId);
+        }
+    }, [matchData?.state?.kyeShi, now, selectedEvent, currentMatchId]);
 
     // Listen to referees status on current court
     useEffect(() => {
@@ -281,7 +288,7 @@ function Screen() {
 
     const toggleTimer = async (force = false) => {
         if (!isMatchLoaded) return;
-        if (kyeShiTimer !== null && !force) return; // Block timer toggling during Kye-shi
+        if (isKyeShiActive && !force) return;
         const stateRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}/state`);
         const currentState = matchData?.state || {};
         const isPaused = currentState.isPaused ?? true;
@@ -302,12 +309,17 @@ function Screen() {
         }
     };
 
-    const toggleKyeShi = () => {
-        setKyeShiTimer(prev => prev === null ? 60 : null);
+    const toggleKyeShi = useCallback(() => {
+        if (!selectedEvent || !currentMatchId) return;
+        if (matchData?.state?.kyeShi?.startedAt) {
+            stopKyeShi(selectedEvent, currentMatchId);
+            return;
+        }
+        startKyeShi(selectedEvent, currentMatchId);
         if (matchData && !matchData.state.isPaused) {
             toggleTimer(true);
         }
-    };
+    }, [selectedEvent, currentMatchId, matchData]);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -588,13 +600,13 @@ function Screen() {
                             <div className="match-number">{matchNumber}</div>
                         </div>
                         <div className="timer cursor-target">
-                            {kyeShiTimer !== null ? (
+                            {kyeShiRemaining !== null ? (
                                 <>
                                     <div className="time-out match-font timeout-active" onClick={toggleTimer} style={{ backgroundColor: '#FFFF00', color: '#000000' }}>
                                         Kye-shi
                                     </div>
                                     <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: '#FFFF00' }}>
-                                        {`${Math.floor(kyeShiTimer / 60)}:${(kyeShiTimer % 60).toString().padStart(2, '0')}`}
+                                        {`${Math.floor(kyeShiRemaining / 60)}:${(kyeShiRemaining % 60).toString().padStart(2, '0')}`}
                                     </div>
                                 </>
                             ) : (
@@ -673,7 +685,7 @@ function Screen() {
                 occupiedRefereesCount={occupiedRefereesCount}
                 toggleDirection={toggleDirection}
                 toggleKyeShi={toggleKyeShi}
-                kyeShiActive={kyeShiTimer !== null}
+                kyeShiActive={isKyeShiActive}
                 onTechCardConfirm={handleTechCardConfirm}
                 isTechnicalCardFlowActive={isTechCardFlowActive}
             />

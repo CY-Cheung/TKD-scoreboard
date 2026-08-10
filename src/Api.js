@@ -299,3 +299,18 @@ export const finalizeTechCardAnnouncement = async (eventName, matchId) => {
         updateScoreAndCheckRules(eventName, matchId, payload.side, "gamjeom", null, 1);
     }
 };
+
+export const startKyeShi = (eventName, matchId, durationSeconds = 60) => {
+    const stateRef = ref(database, `events/${eventName}/matches/${matchId}/state`);
+    return update(stateRef, {
+        kyeShi: {
+            startedAt: Date.now(),
+            duration: durationSeconds,
+        },
+    });
+};
+
+export const stopKyeShi = (eventName, matchId) => {
+    const stateRef = ref(database, `events/${eventName}/matches/${matchId}/state`);
+    return update(stateRef, { kyeShi: null });
+};
