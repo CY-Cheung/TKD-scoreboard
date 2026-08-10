@@ -16,22 +16,10 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
+/**
+ * Google Auth only. Event/court selection lives in EventSessionContext.
+ */
 export function AuthProvider({ children }) {
-  // Synchronously initialize session state from sessionStorage
-  const [session, setSession] = useState(() => {
-    const savedEvent = sessionStorage.getItem('selectedEvent');
-    const savedCourt = sessionStorage.getItem('selectedCourt');
-    const savedEventName = sessionStorage.getItem('selectedEventName');
-    if (savedEvent && savedCourt) {
-      return { 
-        eventId: savedEvent, 
-        courtId: savedCourt, 
-        eventName: savedEventName || savedEvent 
-      };
-    }
-    return null;
-  });
-
   const [user, setUser] = useState(null);
   const [userLoading, setUserLoading] = useState(true);
 
@@ -85,30 +73,11 @@ export function AuthProvider({ children }) {
     await signOut(auth);
   };
 
-  const login = (sessionData) => {
-    sessionStorage.setItem('selectedEvent', sessionData.eventId);
-    sessionStorage.setItem('selectedCourt', sessionData.courtId);
-    if (sessionData.eventName) {
-      sessionStorage.setItem('selectedEventName', sessionData.eventName);
-    }
-    setSession(sessionData);
-  };
-
-  const logout = () => {
-    sessionStorage.removeItem('selectedEvent');
-    sessionStorage.removeItem('selectedCourt');
-    sessionStorage.removeItem('selectedEventName');
-    setSession(null);
-  };
-
   const value = {
-    session,
     user,
     userLoading,
     googleLogin,
     googleLogout,
-    login,
-    logout
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

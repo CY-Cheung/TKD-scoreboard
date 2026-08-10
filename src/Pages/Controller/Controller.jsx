@@ -4,6 +4,7 @@ import { ref, onValue, set, onDisconnect, runTransaction } from "firebase/databa
 import { database } from "../../firebase";
 import { updateScoreAndCheckRules } from "../../Api";
 import { useAuth } from "../../Context/AuthContext";
+import { useEventSession } from "../../Context/EventSessionContext";
 import Button from "../../Components/Button/Button";
 import { Wifi, WifiOff, ArrowLeft } from "react-bootstrap-icons";
 import { getEventDisplayName } from "../../Utils/matchFactory";
@@ -23,6 +24,7 @@ function Controller() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { session, setEventSession } = useEventSession();
 
     // Helper to extract query parameter from searchParams, search URL, Hash URL, or sessionStorage
     const getParam = (key) => {
@@ -38,8 +40,8 @@ function Controller() {
             if (hashParams.get(key)) return hashParams.get(key);
         }
 
-        if (key === "event") return sessionStorage.getItem("selectedEvent") || "";
-        if (key === "court") return sessionStorage.getItem("selectedCourt") || "";
+        if (key === "event") return session?.eventId || sessionStorage.getItem("selectedEvent") || "";
+        if (key === "court") return session?.courtId || sessionStorage.getItem("selectedCourt") || "";
 
         return "";
     };
@@ -59,18 +61,20 @@ function Controller() {
     const [isConnected, setIsConnected] = useState(false);
     const [refereeMode, setRefereeMode] = useState('single');
 
-    // Sync state if URL changes
+    // Sync state + EventSession when URL / QR deep-link params change
     useEffect(() => {
         const ev = getParam("event");
         const ct = getParam("court");
-        if (ev) {
-            setEventId(ev);
-            sessionStorage.setItem("selectedEvent", ev);
+        if (ev) setEventId(ev);
+        if (ct) setCourtId(ct);
+        if (ev && ct) {
+            setEventSession({
+                eventId: ev,
+                courtId: ct,
+                eventName: session?.eventName || ev,
+            });
         }
-        if (ct) {
-            setCourtId(ct);
-            sessionStorage.setItem("selectedCourt", ct);
-        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
     // Listen to refereeMode

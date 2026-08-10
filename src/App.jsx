@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './Context/AuthContext';
+import { EventSessionProvider } from './Context/EventSessionContext';
 import { PopupProvider } from './Context/PopupContext';
 import './App.css';
 import TargetCursor from './Components/TargetCursor/TargetCursor';
@@ -17,52 +18,54 @@ function App() {
   return (
     <BrowserRouter basename="/TKD-scoreboard">
       <AuthProvider>
-        <PopupProvider>
-          <TargetCursor targetSelector="input, select, .cursor-target" />
-          <Routes>
-          {/* --- Public Routes --- */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/court-setup" element={<CourtSetup />} />
+        <EventSessionProvider>
+          <PopupProvider>
+            <TargetCursor targetSelector="input, select, .cursor-target" />
+            <Routes>
+            {/* --- Public Routes --- */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/court-setup" element={<CourtSetup />} />
 
-          {/* --- Routes that require session info (Protected Routes) --- */}
-          <Route 
-            path="/screen" 
-            element={
-              <ProtectedRoute>
-                <Screen />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/home" 
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/controller" 
-            element={
-              <ProtectedRoute>
-                <Controller />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/import" 
-            element={
-              <ProtectedRoute>
-                <DataImport />
-              </ProtectedRoute>
-            } 
-          />
+            {/* --- Routes that require event/court session (Protected Routes) --- */}
+            <Route 
+              path="/screen" 
+              element={
+                <ProtectedRoute>
+                  <Screen />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/home" 
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/controller" 
+              element={
+                <ProtectedRoute>
+                  <Controller />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/import" 
+              element={
+                <ProtectedRoute>
+                  <DataImport />
+                </ProtectedRoute>
+              } 
+            />
 
-          {/* Catch-all redirects to the home page */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Catch-all redirects to the home page */}
+            <Route path="*" element={<Navigate to="/" replace />} />
 
-        </Routes>
-        </PopupProvider>
+            </Routes>
+          </PopupProvider>
+        </EventSessionProvider>
       </AuthProvider>
     </BrowserRouter>
   );

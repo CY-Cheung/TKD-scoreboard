@@ -6,6 +6,7 @@ import './DataImport.css';
 import Button from '../../Components/Button/Button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
+import { useEventSession } from '../../Context/EventSessionContext';
 import { PlusCircle, Trash, FolderPlus, ExclamationTriangle, FileEarmarkArrowUp, FileEarmarkPdf, CheckCircleFill, Calendar3, Funnel, House, XCircle, CheckCircle, Display, Diagram3, X, ArrowLeft } from 'react-bootstrap-icons';
 import { appendIvrQuotaToRules, formatIvrQuotaForInput } from '../../Api';
 import TournamentBracket from '../../Components/TournamentBracket/TournamentBracket';
@@ -28,7 +29,8 @@ const parseName = (fullName) => {
 
 const DataImport = () => {
     const navigate = useNavigate();
-    const { session, user } = useAuth(); 
+    const { user } = useAuth();
+    const { session } = useEventSession(); 
     const [eventsList, setEventsList] = useState([]);
     const [eventName, setEventName] = useState('');
     const [newMaxPointGap, setNewMaxPointGap] = useState(15);
