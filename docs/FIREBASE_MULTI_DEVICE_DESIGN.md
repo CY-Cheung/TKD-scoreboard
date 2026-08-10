@@ -1,8 +1,8 @@
 # TKD-scoreboard 多裝置實時互動設計文件
 (TKD-scoreboard Multi-device Real-time Interaction Design Document)
 
-> **文件狀態**：反映 **2026-08** 源碼現況。  
-> 標有 **〔計劃中〕** 嘅功能尚未實作，唔好當成已上線行為。
+> **文件狀態**：反映 **2026-08** 源碼現況（`src/`、`database.rules.json`）。  
+> 標有 **〔計劃中〕** 嘅功能尚未實作。
 
 ---
 
@@ -10,176 +10,222 @@
 
 本系統係 **Frontend-only (純前端)** 跆拳道 **Kyorugi (搏擊)** 計分應用，透過 **Firebase Realtime Database (即時資料庫)** 同步：
 
-| 角色 | 頁面 | 裝置 |
+| 角色 | 路由 | 裝置 |
 |------|------|------|
-| 賽事管理員 | `CourtSetup`、`DataImport` | 電腦 + Google 帳號 |
-| 大螢幕 Host | `Screen`、`Home` | 投影／電視 |
-| 邊裁 Corner Judge | `Controller` | 手機（掃 QR Code，免安裝） |
+| 賽事管理 | `/court-setup`、`/import` | 電腦 + Google 帳號 |
+| 大螢幕 Host | `/screen` | 投影／電視 |
+| 邊裁 Client | `/controller` | 手機（掃 QR Code） |
 
 **已實作核心能力**：
 
-- **Dynamic QR Code (動態二維碼)**：按 `eventId` + `courtId` 生成 Controller 連結
-- **Slot-based Seating (席位制)**：每 Court 固定 `J1`、`J2`、`J3` 三個席位
-- **Atomic Transaction (原子事務) 搶位**：逐席位 `runTransaction()`，防 **Race Condition (競態條件)**
-- **onDisconnect() Cleanup (斷線清理)**：離線自動 `remove()` 席位節點
-- **Valid Point Voting (有效得分投票)**：Multiple Mode 下 2+ 裁判 **1 秒內**同投同分先加分
-- **Court-level Write Lock (場地級寫入鎖)**：`database.rules.json` 限制只有佔位 `deviceId` 或已登入 Admin 可改分
+- **Dynamic QR Code (動態二維碼)**：`QRCodeDisplay` 產生 `/controller?event=&court=` 連結
+- **Slot-based Referee Seats (席位制)**：每 Court 固定 `J1`、`J2`、`J3`
+- **Atomic Transaction (原子事務) 搶位**：`Controller.jsx` 對每個席位獨立 `runTransaction()`
+- **onDisconnect Cleanup (斷線清理)**：離線時 `remove()` 席位節點
+- **Valid Point Voting (有效得分投票)**：Multiple Mode 下 2+ 裁判 **1 秒內**（`VOTE_WINDOW_MS = 1000`）同意先加分
+- **Court-level Match Binding (場地綁定比賽)**：`courts/{courtId}/currentMatchId` 驅動 Screen／Controller
+- **Technical Card Announcement Sync (技術警告牌公告同步)**：`state.techCardAnnouncement` 廣播 Step 2 glass card 到同一 Match 嘅所有 Screen；5 秒後 `finalizeTechCardAnnouncement` 原子清除（Reject 延遲 Gam-jeom +1）
 
 **〔計劃中，未實作〕**：
 
 - **Persistent Token (持久化權杖)** + `localStorage` 重連
-- **`hostStatus`** 大螢幕在線狀態同 Controller 離線警示
+- **`hostStatus`** 大螢幕在線心跳同 Controller 離線警示
 
 ---
 
-## 2. 路由與 Session (Routing & Session)
+## 2. 應用路由同 Session (工作階段)
 
 ```
 /court-setup     → 公開；Google 登入、建立／選擇 Event、選 Court
 /                → Home 導航（需 session）
-/screen          → 大螢幕計分板
-/controller      → 手機裁判（可 ?event=&court= 直入）
-/import          → 管理後台（Match CRUD、Load、Bracket）
+/screen          → 大螢幕計分（需 session）
+/controller      → 裁判遙控（需 session 或 URL query）
+/import          → 管理後台（需 session）
 ```
 
-**Session (工作階段)** 存於 `sessionStorage`：
+**Session** 存於 `sessionStorage`：`selectedEvent`、`selectedCourt`、`selectedEventName`。  
+由 `AuthContext.login()` 寫入；`ProtectedRoute` 檢查 session、storage 或 `?event=&court=` query。
 
-```json
-{ "eventId": "...", "courtId": "court1", "eventName": "..." }
-```
+**Authentication (認證)**：
 
-由 `AuthContext.login()` 寫入；`ProtectedRoute` 檢查 session、`sessionStorage` 或 URL query。
-
-**Google Authentication (Google 認證)**：用於建立／刪除 Event、Admin 後台；裁判手機 **唔使** Google 登入。
+- **Google OAuth**：建立／刪除 Event、Admin 操作
+- **Setup Password**：非 Event 建立者進入 Court 時需輸入
+- **未登入裁判**：可經 QR Code 進入 Controller，靠 `deviceId` 席位寫入 match
 
 ---
 
-## 3. 資料庫架構 (Database Schema)
+## 3. 資料庫 Schema (現行結構)
 
 ```
 events/{eventId}/
-├── EventName, createdBy, createdByEmail, settings, matchDate
-├── settings/
-│   ├── setupPassword
-│   ├── maxPointGap, maxGamjeom, roundDuration, restDuration
+├── EventName, createdBy, createdByEmail, settings/
+│   └── setupPassword, maxPointGap, maxGamjeom, roundDuration, restDuration
 ├── courts/{courtId}/
 │   ├── name
-│   ├── currentMatchId          ← 而家邊場比賽喺呢個 Court
+│   ├── currentMatchId          ← 此 Court 正在進行的 Match
 │   ├── config/
 │   │   └── refereeMode         ← "single" | "multiple"
 │   └── referees/
-│       ├── J1                  ← { deviceId, deviceName } 或 null（節點不存在）
+│       ├── J1                  ← { deviceId, deviceName } 或節點不存在（空位）
 │       ├── J2
 │       └── J3
 └── matches/{matchId}/
     ├── config/
     │   ├── matchId, competitors.{red,blue}, rules
-    │   ├── nextMatchId, nextMatchSlot   ← 晉級路徑
-    │   └── matchDate
+    │   └── nextMatchId, nextMatchSlot   ← 晉級路徑
     ├── state/
     │   ├── timer, isPaused, lastStartTime, phase ("ROUND"|"REST")
-    │   ├── currentRound, isFinished, winReason, winnerSide, dominantSide
+    │   ├── currentRound, isFinished, winReason, winnerSide
+    │   ├── dominantSide
+    │   └── techCardAnnouncement   ← Technical Card Step 2 公告（見 §4.1）
     └── stats/
         ├── red/blue: pointsStat[5], gamjeom, gamjeomAvoiding
         ├── roundWins, roundScores
-    ├── votes[]                   ← Multiple Mode 暫存投票（1 秒窗口）
-    ├── recentScores[]            ← 大螢幕得分紀錄
-    ├── providedCourtId           ← Transaction 時暫寫，供 Rules 驗證（副作用）
-    └── providedDeviceId
+        ├── votes[]              ← Multiple Mode 待確認投票
+        └── recentScores[]       ← 大螢幕得分紀錄
 ```
 
-### 3.1 裁判席位（現況）
+### 3.1 裁判席位（現行，非舊版 token schema）
 
-**空位** = Firebase 節點 **不存在** 或值為 `null`（唔再用 `status: "vacant"` 字串）。
-
-**已佔位**：
+空位 = **節點不存在**（`null`），唔再用 `status: "vacant"`：
 
 ```json
-"J1": { "deviceId": "abc123xyz", "deviceName": "iPhone" }
+"referees": {
+  "J1": { "deviceId": "abc123xyz", "deviceName": "iPhone" },
+  "J3": { "deviceId": "def456uvw", "deviceName": "Android" }
+}
 ```
 
-### 3.2 Match 分數結構
+### 3.2 Match 計分相關欄位
 
-`pointsStat` 索引對應：
+**pointsStat 索引**（對應 Controller 按鈕）：
 
 | Index | 分數 | 類型 |
 |-------|------|------|
-| 0 | 1 | Punch (拳) |
-| 1 | 2 | Body (軀幹) |
-| 2 | 3 | Head (頭) |
-| 3 | 4 | Turning Body (旋轉軀幹) |
-| 4 | 6 | Turning Head (旋轉頭) |
+| 0 | +1 | Punch |
+| 1 | +2 | Body |
+| 2 | +3 | Head |
+| 3 | +4 | Turning Body |
+| 4 | +6 | Turning Head |
 
-**總分** = `Σ(pointsStat[i] × [1,2,3,4,6])` + 對手 `gamjeom` + 對手 `gamjeomAvoiding`
+**總分公式**：
+
+```
+score = Σ(pointsStat[i] × [1,2,3,4,6]) + opponent.gamjeom + opponent.gamjeomAvoiding
+```
+
+**winReason**：`PUN`（Gam-jeom 上限）、`PTG`（分差）、`PTF`（局數勝出）
+
+### 3.3 Technical Card 公告欄位
+
+Step 2 glass card 同步用；由主裁 Screen 寫入，所有訂閱同一 Match 嘅 Screen 讀取：
+
+```json
+"techCardAnnouncement": {
+  "side": "blue",
+  "decision": "accept",
+  "startedAt": 1723276800000
+}
+```
+
+| 欄位 | 說明 |
+|------|------|
+| `side` | `"blue"` \| `"red"` |
+| `decision` | `"accept"` \| `"reject"` |
+| `startedAt` | 公告開始時間（ms）；各 Screen 用於計算剩餘 5 秒 |
+
+清除：`finalizeTechCardAnnouncement` 以 `runTransaction` 刪除節點；若 `decision === "reject"` 再呼叫 `updateScoreAndCheckRules(..., 'gamjeom', null, 1)`。多 Screen 同時 finalize 時只有首個 transaction 成功，避免重複加分。
 
 ---
 
-## 4. 核心運作流程 (Core Operation Flow)
+## 4. 端到端運作流程 (End-to-End Flow)
+
+### Phase A — 賽事建立
+
+1. 管理員喺 `/court-setup` Google 登入
+2. 建立 Event（可上傳 **HKTKDA PDF**，`pdfParser.js` 解析；多日自動拆子 Event）
+3. 揀 Event + Court → 寫入 session → 進 Home
+
+### Phase B — 載入比賽
+
+1. Admin 去 `/import`（DataImport）
+2. 新增或選擇 Match → **Load** 寫入 `courts/{courtId}/currentMatchId`
+3. Screen 同 Controller 經 `onValue` 自動載入該 Match
+
+### Phase C — 開波
+
+1. Screen 全屏顯示；`Space` 開始／暫停計時
+2. `Q` 開 QR Code Modal；裁判掃描進入 Controller
+3. Controller 搶 J1→J2→J3；成功後註冊 `onDisconnect(seatRef).remove()`
+4. 計時 **運行中**（`isPaused === false`）先可遙控得分
+
+### Phase D — 計分同步
 
 ```
-[Admin 電腦]                         [Firebase]                          [Screen 大螢幕]     [Controller 手機]
-     |                                    |                                    |                    |
-     | CourtSetup: 建 Event + 揀 Court -->|                                    |                    |
-     | DataImport: Load Match ----------->| currentMatchId 寫入 court -------->| onValue 載入 match |
-     |                                    |                                    |                    |
-     |                                    |                                    | Q 開 QR Code ----->| 掃碼
-     |                                    |<----------- runTransaction J1-J3 --|                    |
-     |                                    | onDisconnect().remove() 註冊 ------|                    |
-     |                                    |                                    |                    |
-     |                                    |<--- updateScoreAndCheckRules ------| 撳分（timer 運行中）|
-     |                                    |--- onValue 同步 match ------------>| 即時更新比分        |
-     |                                    |                                    |                    |
-     | Edit: 宣告回合勝者 / Promote ----->| declareRoundWinner / promoteWinner |                    |
+Controller.handleScore()
+  → Api.updateScoreAndCheckRules(event, matchId, side, "pointsStat", index, 1, courtId, deviceId, seat, mode)
+  → runTransaction(matchRef)
+  → Screen onValue 更新 UI + vote log
 ```
 
-### 4.1 開賽標準流程
+**Single Mode**：一次按鈕即加分。  
+**Multiple Mode**：寫入 `votes`；2+ 不同 `deviceId` 在 **1 秒**內投同一 `side+index` 先真正加分，並寫入 `recentScores`。
 
-1. **CourtSetup**：Google 登入 → 建立或選擇 Event → 選 Court →（非建立者輸入 `setupPassword`）→ 進 Home
-2. **DataImport**：選 Match → **Load** → 寫入 `courts/{courtId}/currentMatchId`
-3. **Screen**：全屏顯示；`Space` 開始／暫停計時；`E` 開 Edit 面板
-4. **QRCodeDisplay**：生成 `/controller?event=X&court=Y`；可切 **Single / Multiple** 裁判模式
-5. **Controller**：自動搶 J1→J2→J3；**僅在 `isPaused === false` 時**可遙控加分
-6. 回合結束 → Edit **Winner** → REST 倒數 → 自動 `startNextRound`
-7. 贏夠局數 → **Promote Winner** 寫入下一場 `competitors` 名單
+### Phase D.1 — Technical Card 公告同步
 
-### 4.2 搶位（現況實作 — `Controller.jsx`）
+```
+Edit.jsx（主裁）Accept/Reject
+  → Api.startTechCardAnnouncement(event, matchId, { side, decision })
+  → update state.techCardAnnouncement { side, decision, startedAt }
+  → 所有 Screen onValue(matchRef) 顯示 TechnicalCardAnnouncement（5 秒，startedAt 同步倒數）
+  → 任一 Screen 倒數完 → Api.finalizeTechCardAnnouncement(event, matchId)
+  → runTransaction 刪除 techCardAnnouncement
+  → Reject：updateScoreAndCheckRules(..., 'gamjeom', null, 1)
+```
 
-1. 生成 random `deviceId`
-2. 依次對 `referees/J1`、`J2`、`J3` 做 `runTransaction`：節點為 `null` 則寫入 `{ deviceId, deviceName }`
+* **Step 1**（確認 popup）只喺操作 Screen 嘅 Edit 底欄顯示，**唔寫** Firebase。
+* **Step 2**（glass card）必須喺 Screen 層 `createPortal(document.body)`，確保觀眾可見。
+* 詳細 UI spec → [`TODO_WT2026.md`](../TODO_WT2026.md#technical-card已實作)
+
+### Phase E — 回合／晉級
+
+1. 計時歸零或 PTG/PUN → `Edit` 宣告回合勝者（`declareRoundWinner`）
+2. REST 階段倒數 → 自動 `startNextRound`
+3. 贏夠局數 → **Promote Winner**（`promoteWinner`）寫入 `nextMatchId` 對應 slot
+
+---
+
+## 5. 模組對照 (Module Map)
+
+| 檔案 | 職責 |
+|------|------|
+| `src/Api.js` | 計分 Transaction、回合、晉級；`VOTE_WINDOW_MS`；Technical Card 公告 API |
+| `src/Pages/CourtSetup/CourtSetup.jsx` | Event/Court 建立、session 登入 |
+| `src/Pages/DataImport/DataImport.jsx` | Match CRUD、Load to Court、Bracket |
+| `src/Pages/Screen/Screen.jsx` | 大螢幕、計時、dominance、vote log |
+| `src/Pages/Screen/Edit.jsx` | 主裁面板：手動改分、判勝、Kye-shi、Technical Card Step 1 |
+| `src/Pages/Controller/Controller.jsx` | 搶位、遙控得分 |
+| `src/Components/QRCodeDisplay/QRCodeDisplay.jsx` | QR、裁判狀態、single/multiple 切換 |
+| `src/Components/TechnicalCardFlow/` | Technical Card Step 1 確認 + Step 2 公告 glass card |
+| `src/Context/AuthContext.jsx` | Google Auth + Court session |
+| `database.rules.json` | Firebase Security Rules |
+
+---
+
+## 6. 裁判搶位實作細節 (Controller.jsx)
+
+1. 未登入用戶生成 `deviceId`，依次 `runTransaction` 試 `J1`、`J2`、`J3`
+2. 若席位節點為 `null`，寫入 `{ deviceId, deviceName }`
 3. 成功後 `onDisconnect(seatRef).remove()`
-4. 三席皆滿 → 顯示 "Court is Full"
-5. **Google 登入用戶**顯示 `Admin`，唔寫入 Firebase 席位（改分靠 `auth != null` Rules 路徑）
-6. React StrictMode 下加 **400ms delay** 避免 double-mount 搶位衝突
+4. 監聽自己席位；若 `deviceId` 被取代則踢出
+5. **Google 登入 Admin**：顯示 `Admin` 標籤，**不佔** Firebase 席位；計分靠 `auth != null` rules 路徑
+6. React StrictMode：400ms delay 避免 double-mount 搶位競態
 
-### 4.3 計分（`Api.js` — `updateScoreAndCheckRules`）
-
-**Single Mode**：一次按鈕即加分（若 timer 運行中）。
-
-**Multiple Mode**：
-
-1. 推送 vote 到 `match.votes[]`（含 `side, index, seatName, deviceId, timestamp`）
-2. 只保留 **最近 1000ms** 內嘅 votes
-3. 同一 `side + index` 有 **≥2 個不同 `deviceId`** → 加分並清除該組 votes
-4. 寫入 `recentScores` 供 Screen 顯示
-
-**自動判勝**（寫入 `state.winReason` 並 pause timer）：
-
-- `PUN`：任一方 `gamjeom >= maxGamjeom`
-- `PTG`：分差 `>= maxPointGap`
-
-**REST 階段**：`phase === 'REST'` 時拒絕加分。
-
-### 4.4 大螢幕監聽（`Screen.jsx`）
-
-- 監聽 `currentMatchId`、`matches/{id}`、`referees`
-- 本地 `requestAnimationFrame` 倒數 timer；歸零 → 完賽或 `startNextRound`
-- 裁判斷線 → Toast 提示
-- 在線裁判 **< 2** → 自動將 `refereeMode` 降回 `single`
-- 裁判連線狀態主要顯示於 **QR Modal** 同 **Edit**（`(n/3)`），主計分板無常駐 Badge
+**滿額**：三席皆佔 → 顯示 "Court is Full"。
 
 ---
 
-## 5. Firebase Security Rules（現況）
+## 7. Firebase Security Rules (現行)
 
 源碼：`database.rules.json`（**唔係**全開 `.write: true`）
 
@@ -189,54 +235,55 @@ events/{eventId}/
 | `events/.../referees/{slot}` | 已登入 **或** 搶位／斷線（`null`） |
 | `events/.../matches/{matchId}` | 已登入 **或** Transaction 帶 `providedDeviceId` 且匹配 J1/J2/J3 席位 |
 
-未登入裁判改分時，`Api.js` 會在 transaction 內寫入 `providedCourtId` / `providedDeviceId` 供 Rules 驗證。
-
-Admin 喺 **Edit 面板**改分不傳 `deviceId`，走 **auth != null** 路徑。
-
----
-
-## 6. 主要源碼對照 (Source File Map)
-
-| 職責 | 檔案 |
-|------|------|
-| 計分 Transaction | `src/Api.js` |
-| 路由 / Provider | `src/App.jsx` |
-| Session / Google Auth | `src/Context/AuthContext.jsx` |
-| 搶位 + 手機 UI | `src/Pages/Controller/Controller.jsx` |
-| 大螢幕 + Timer | `src/Pages/Screen/Screen.jsx` |
-| 管理員計分面板 | `src/Pages/Screen/Edit.jsx` |
-| QR + 裁判模式 | `src/Components/QRCodeDisplay/QRCodeDisplay.jsx` |
-| Event / Match 管理 | `src/Pages/CourtSetup/CourtSetup.jsx`、`DataImport.jsx` |
-| PDF 匯入 | `src/Utils/pdfParser.js` |
-| 淘汰樹 | `src/Components/TournamentBracket/TournamentBracket.jsx` |
+Controller 計分時 `Api.js` 會暫寫 `providedCourtId`、`providedDeviceId` 供 rules 驗證。  
+Screen `Edit` 面板不傳 deviceId，依賴 Admin 已登入 Google。
 
 ---
 
-## 7. 邊緣情況（現況行為）
+## 8. 大螢幕裁判狀態 UI (現況)
 
-| 情況 | 現況 |
-|------|------|
-| 3 席已滿 | Controller 顯示 "Court is Full" |
+- **QR Modal / Edit 面板**：顯示 J1–J3 連線狀態同 `(n/3)`
+- **主計分畫面**：**無**常駐 Referee Badge（〔計劃中〕可加）
+- **斷線 Toast**：裁判離線時 Screen 彈出警告
+- **Auto-downgrade**：連線裁判 < 2 時自動切回 `single` mode
+
+---
+
+## 9. 邊緣情況 (Edge Cases)
+
+| 情況 | 現有行為 |
+|------|----------|
+| 3/3 滿額再掃碼 | Controller 顯示 Court is Full |
 | 裁判斷線 | `onDisconnect` 清除席位；Screen Toast |
-| 裁判 refresh 瀏覽器 | **重新搶位**（無 Token 恢復）〔計劃中改善〕 |
-| 大螢幕關閉 | **無** `hostStatus` 同步〔計劃中〕 |
-| Multiple 只剩 1 裁判 | 自動降級 Single Mode |
-| Timer 暫停 | Controller 禁加分；Screen `Space` 可 toggle |
-| Gam-jeom 最後 10 秒 | Edit 彈窗選 1-Jeom / 2-Jeom (Avoiding) |
+| 裁判 refresh 頁面 | **重新搶位**（無 token 恢復）〔計劃中改善〕 |
+| 大螢幕關閉 | **無** hostStatus 警示〔計劃中〕 |
+| 計時暫停 | Controller 禁畀分 |
+| REST 階段 | `Api.js` 拒絕改分 |
+| Multiple + 只有 1 裁判 | QR 面板 disable multiple；若已開會被 Screen 自動降級 |
+| Technical Card flow 進行中 | Firebase 有 `techCardAnnouncement` 時禁止重複觸發；finalize 用 transaction 防雙重加分 |
 
 ---
 
-## 8. 〔計劃中〕功能備忘
+## 10. 〔計劃中〕功能備忘
 
-以下曾出現喺早期設計或 `TODO_WT2026.md`，**源碼尚未完成**：
+以下曾喺早期設計提及，**現有源碼未實作**：
 
-1. **`localStorage` Token 重連** — 誤 refresh 後恢復原席位
-2. **`hostStatus`** — Screen 離線時通知 Controller
-3. **IVR (Instant Video Replay)** — Edit.jsx 仅有 UI stub
-4. **Technical Card** — 同上
-5. **大螢幕常駐 J1/J2/J3 Badge** — 現只在 QR Modal
+1. **`localStorage` (`tkd_judge_session`)** — refresh 後恢復席位
+2. **`hostStatus: online/offline`** — Screen heartbeat + Controller 警示
+3. **大螢幕常駐 Referee Badge**
+4. **IVR (Instant Video Replay)** — 見 [`TODO_WT2026.md`](../TODO_WT2026.md)
 
 ---
 
-*文件建立：2026-07-30 · 現況對齊更新：2026-08-10*  
+## 11. 相關常數
+
+```javascript
+// src/Api.js
+export const VOTE_WINDOW_MS = 1000;  // Multiple Mode 有效得分投票窗口
+```
+
+---
+
+*文件建立：2026-07-30*  
+*最後更新：2026-08-10（Technical Card Firebase 同步、schema §3.3）*  
 *專案：TKD-scoreboard*
