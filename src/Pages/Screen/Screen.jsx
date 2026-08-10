@@ -508,10 +508,12 @@ function Screen() {
             const cells = [
                 <div key="action" className="vote-cell">
                     {isBodyOrHead ? (
-                        <span
-                            className={actionIconClass}
-                            style={{ width: '80%', height: '80%', backgroundColor: opponentColor }}
-                        />
+                        <span className="log-action-icon-glow" style={{ width: '80%', height: '80%' }}>
+                            <span
+                                className={actionIconClass}
+                                style={{ width: '100%', height: '100%', backgroundColor: opponentColor }}
+                            />
+                        </span>
                     ) : (
                         <img src={ActionIcon} className="action-logo" alt="Action" />
                     )}
