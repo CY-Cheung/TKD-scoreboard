@@ -10,6 +10,7 @@ import TechnicalCardConfirm from "../../Components/TechnicalCardFlow/TechnicalCa
 import IVRConfirm from "../../Components/IVRFlow/IVRConfirm";
 import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner, getEffectiveIvrRemaining, formatIvrQuotaForEdit, isIvrUnlimited, setIvrRemaining } from '../../Api';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
+import { getFinalWinnerSide, resolveMatchRules } from '../../Utils/matchRules';
 
 /** Dual-layer locale for grid: width stays max(EN, ZH) so columns don't shift on fade. */
 function EditGridLocale({ en, zh, locale, visible, className = '' }) {
@@ -336,17 +337,8 @@ const Edit = ({
     const { roundWins } = stats || {};
     const { rules = {} } = config;
 
-    const roundsToWin = rules.roundsToWin || 2;
-
-    const getFinalWinner = () => {
-        const redWins = roundWins?.red || 0;
-        const blueWins = roundWins?.blue || 0;
-        if (redWins >= roundsToWin) return 'red';
-        if (blueWins >= roundsToWin) return 'blue';
-        return null;
-    };
-
-    const finalWinner = getFinalWinner();
+    const { roundsToWin } = resolveMatchRules(rules);
+    const finalWinner = getFinalWinnerSide(roundWins, roundsToWin);
 
     const showDeclareWinnerButton = (phase === 'ROUND' && (isFinished || winReason)) && !finalWinner && !showSuperiorityVote;
     const showPromoteWinnerButton = isFinished && finalWinner;

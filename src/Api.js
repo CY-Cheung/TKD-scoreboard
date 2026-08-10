@@ -1,6 +1,12 @@
 // src/Api.js
 import { ref, runTransaction, update, get, onValue } from "firebase/database";
 import { database } from './firebase';
+import {
+    EMPTY_POINTS_STAT,
+    getScoreValue,
+    normalizePointsStat,
+    resolveMatchRules,
+} from './Utils/matchRules';
 
 /** Multiple-referee vote window: judges must agree within this period (ms). */
 export const VOTE_WINDOW_MS = 1000;
@@ -11,15 +17,9 @@ onValue(offsetRef, (snap) => {
   globalServerTimeOffset = snap.val() || 0;
 });
 
-const getScoreValue = (stats, opponentStats) => {
-    const p = stats?.pointsStat || [0,0,0,0,0];
-    const points = (p[0]*1) + (p[1]*2) + (p[2]*3) + (p[3]*4) + (p[4]*6);
-    return points + (opponentStats?.gamjeom || 0) + (opponentStats?.gamjeomAvoiding || 0);
-};
-
 /** Clear round-scoped scoring; keep match-scoped fields such as IVR remaining. */
 const resetSideStatsForNextRound = (sideStats = {}) => {
-    const next = { gamjeom: 0, pointsStat: [0, 0, 0, 0, 0] };
+    const next = { gamjeom: 0, pointsStat: [...EMPTY_POINTS_STAT] };
     if (typeof sideStats.ivrRemaining === "number" && !Number.isNaN(sideStats.ivrRemaining)) {
         next.ivrRemaining = sideStats.ivrRemaining;
     }
@@ -43,8 +43,8 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
         };
         
         if (!matchData.stats) matchData.stats = {
-            red: { pointsStat: [0,0,0,0,0], gamjeom: 0 },
-            blue: { pointsStat: [0,0,0,0,0], gamjeom: 0 }
+            red: { pointsStat: [...EMPTY_POINTS_STAT], gamjeom: 0 },
+            blue: { pointsStat: [...EMPTY_POINTS_STAT], gamjeom: 0 }
         };
 
         if (matchData.state.phase === 'REST') return;
@@ -79,13 +79,7 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
                 if (uniqueSeats.size >= 2) {
                     // Valid Point achieved!
                     // Add score
-                    if (!targetSide.pointsStat || targetSide.pointsStat.length < 5) {
-                        const oldStats = targetSide.pointsStat || [];
-                        targetSide.pointsStat = [
-                            oldStats[0] || 0, oldStats[1] || 0, oldStats[2] || 0,
-                            oldStats[3] || 0, oldStats[4] || 0
-                        ];
-                    }
+                    targetSide.pointsStat = normalizePointsStat(targetSide.pointsStat);
                     targetSide.pointsStat[index] = (targetSide.pointsStat[index] || 0) + delta;
                     if (targetSide.pointsStat[index] < 0) targetSide.pointsStat[index] = 0;
                     
@@ -102,13 +96,7 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
                 }
             } else {
                 // Single mode or direct score
-                if (!targetSide.pointsStat || targetSide.pointsStat.length < 5) {
-                     const oldStats = targetSide.pointsStat || [];
-                     targetSide.pointsStat = [
-                        oldStats[0] || 0, oldStats[1] || 0, oldStats[2] || 0,
-                        oldStats[3] || 0, oldStats[4] || 0
-                     ];
-                }
+                targetSide.pointsStat = normalizePointsStat(targetSide.pointsStat);
                 targetSide.pointsStat[index] = (targetSide.pointsStat[index] || 0) + delta;
                 if (targetSide.pointsStat[index] < 0) targetSide.pointsStat[index] = 0;
                 
@@ -137,8 +125,7 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
             matchData.state.lastStartTime = null;
         };
 
-        const maxGap = matchData.config?.rules?.maxPointGap || 15;
-        const maxGJ = matchData.config?.rules?.maxGamjeom || 5;
+        const { maxPointGap: maxGap, maxGamjeom: maxGJ } = resolveMatchRules(matchData.config?.rules);
 
         const isPUN = redGamjeom >= maxGJ || blueGamjeom >= maxGJ;
         const isPTG = Math.abs(redScore - blueScore) >= maxGap;
@@ -192,7 +179,7 @@ export const declareRoundWinner = (eventName, matchId, winnerSide) => {
 
         const redWins = matchData.stats.roundWins.red;
         const blueWins = matchData.stats.roundWins.blue;
-        const roundsToWin = matchData.config?.rules?.roundsToWin || 2;
+        const { roundsToWin } = resolveMatchRules(matchData.config?.rules);
 
         if (redWins >= roundsToWin || blueWins >= roundsToWin) {
             matchData.state.isFinished = true;
