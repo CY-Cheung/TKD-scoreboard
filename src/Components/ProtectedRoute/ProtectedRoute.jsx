@@ -35,7 +35,7 @@ function ProtectedRoute({ children }) {
   const isAuthenticated = !!session || hasSessionStorage() || hasUrlParams();
 
   if (!isAuthenticated) {
-    return <Navigate to="/court-setup" replace />;
+    return <Navigate to="/welcome" replace />;
   }
 
   return children;

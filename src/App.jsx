@@ -11,6 +11,7 @@ import CourtSetup from './Pages/CourtSetup/CourtSetup';
 import Controller from './Pages/Controller/Controller';
 import Screen from './Pages/Screen/Screen';
 import DataImport from './Pages/DataImport/DataImport';
+import Landing from './Pages/Landing/Landing';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <TargetCursor targetSelector="input, select, .cursor-target" />
           <Routes>
           {/* --- Public Routes --- */}
+          <Route path="/welcome" element={<Landing />} />
           <Route path="/court-setup" element={<CourtSetup />} />
 
           {/* --- Routes that require session info (Protected Routes) --- */}
