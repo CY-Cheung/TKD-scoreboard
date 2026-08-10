@@ -7,6 +7,11 @@ import { FolderPlus, Trash, ExclamationTriangle, FileEarmarkPdf, FileEarmarkArro
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 import { appendIvrQuotaToSettings } from '../../Api';
 import { usePopup } from '../../Context/PopupContext';
+import {
+  buildCourtsMap,
+  buildEventRecords,
+  normalizeRulesFromForm,
+} from '../../services/eventCreation';
 
 import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
@@ -235,117 +240,41 @@ function CourtSetup() {
       return;
     }
 
-    const generatedCourts = {};
-    const count = Math.max(1, Math.min(12, parseInt(courtCount, 10) || 4));
-    for (let i = 1; i <= count; i++) {
-      generatedCourts[`court${i}`] = { name: `court${i}`, currentMatchId: '' };
-    }
-
     try {
-      const finalRules = {
-        maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-        maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-        roundDuration: parseInt(newRoundDuration, 10) || 90,
-        restDuration: parseInt(newRestDuration, 10) || 60
-      };
+      const formRules = normalizeRulesFromForm({
+        maxPointGap: newMaxPointGap,
+        maxGamjeom: newMaxGamjeom,
+        roundDuration: newRoundDuration,
+        restDuration: newRestDuration,
+      });
+      const { courts, count } = buildCourtsMap(courtCount);
+      const settings = appendIvrQuotaToSettings(
+        { setupPassword: newSetupPassword, ...formRules },
+        newIvrQuota
+      );
 
-      const buildSettings = () => appendIvrQuotaToSettings({
-        setupPassword: newSetupPassword,
-        maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-        maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-        roundDuration: parseInt(newRoundDuration, 10) || 90,
-        restDuration: parseInt(newRestDuration, 10) || 60
-      }, newIvrQuota);
+      const { records, primaryEventId, mode, datesCount } = buildEventRecords({
+        eventId: trimmedId,
+        eventName: trimmedName,
+        user,
+        settings,
+        courts,
+        courtCount: count,
+        pdfParseResult,
+      });
 
-      if (pdfParseResult) {
-        if (pdfParseResult.dateGroups) {
-          Object.values(pdfParseResult.dateGroups).forEach(group => {
-            if (group.matches) {
-              Object.values(group.matches).forEach(m => {
-                if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
-              });
-            }
-          });
-        } else if (pdfParseResult.matches) {
-          Object.values(pdfParseResult.matches).forEach(m => {
-            if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
-          });
-        }
-
-        if (pdfParseResult.datesList?.length > 1) {
-          let createdCount = 0;
-          let firstCleanDate = '';
-
-          for (let i = 0; i < pdfParseResult.datesList.length; i++) {
-            const dateStr = pdfParseResult.datesList[i];
-            const parts = dateStr.split('/');
-            let formattedDate = dateStr;
-            let cleanDate = dateStr.replace(/[^0-9]/g, '');
-            if (parts.length === 3) {
-              const [d, m, y] = parts;
-              formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
-              cleanDate = `${y}${m.padStart(2, '0')}${d.padStart(2, '0')}`;
-            }
-            if (i === 0) firstCleanDate = cleanDate;
-
-            const subEventId = `${trimmedId}_Day${i + 1}_${cleanDate}`;
-            const subEventName = `${trimmedName} (Day ${i + 1}) (${formattedDate})`;
-
-            const eventRef = ref(database, `events/${subEventId}`);
-            await set(eventRef, {
-              EventName: subEventName,
-              createdBy: user.uid,
-              createdByEmail: user.email || '',
-              createdAt: Date.now(),
-              matchDate: formattedDate,
-              settings: buildSettings(),
-              courts: generatedCourts,
-              matches: pdfParseResult.dateGroups[dateStr].matches
-            });
-            createdCount++;
-          }
-
-          showToast(`✅ 成功按 ${pdfParseResult.datesList.length} 個比賽日期拆分並建立 ${createdCount} 個子賽事！`);
-          setSelectedEvent(`${trimmedId}_Day1_${firstCleanDate}`);
-        } else {
-          const dateStr = pdfParseResult.datesList?.[0] || '';
-          let formattedDate = dateStr;
-          if (dateStr) {
-            const parts = dateStr.split('/');
-            if (parts.length === 3) {
-              const [d, m, y] = parts;
-              formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
-            }
-          }
-
-          const eventRef = ref(database, `events/${trimmedId}`);
-          await set(eventRef, {
-            EventName: trimmedName,
-            createdBy: user.uid,
-            createdByEmail: user.email || '',
-            createdAt: Date.now(),
-            matchDate: formattedDate,
-            settings: buildSettings(),
-            courts: generatedCourts,
-            matches: pdfParseResult.matches
-          });
-          showToast(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
-          setSelectedEvent(trimmedId);
-        }
-      } else {
-        const eventRef = ref(database, `events/${trimmedId}`);
-        await set(eventRef, {
-          EventName: trimmedName,
-          createdBy: user.uid,
-          createdByEmail: user.email || '',
-          createdAt: Date.now(),
-          settings: buildSettings(),
-          courts: generatedCourts,
-          matches: {}
-        });
-        showToast(`✅ 成功建立賽事：${trimmedName} (${trimmedId})，包含 ${count} 個場地！`);
-        setSelectedEvent(trimmedId);
+      for (const record of records) {
+        await set(ref(database, `events/${record.id}`), record.data);
       }
+
+      if (mode === 'multi') {
+        showToast(`✅ 成功按 ${datesCount} 個比賽日期拆分並建立 ${records.length} 個子賽事！`);
+      } else if (mode === 'single-pdf') {
+        showToast(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
+      } else {
+        showToast(`✅ 成功建立賽事：${trimmedName} (${trimmedId})，包含 ${count} 個場地！`);
+      }
+      setSelectedEvent(primaryEventId);
 
       setNewEventId('');
       setNewEventName('');

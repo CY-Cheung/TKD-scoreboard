@@ -1,4 +1,8 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import {
+    createEmptyMatchConfig,
+    finalizeParsedMatch,
+} from '../services/matchFactory.js';
 
 // Configure pdfjs worker from cdnjs or local build
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -170,24 +174,12 @@ export const parsePdfPage = async (page) => {
     xClusters.forEach((cluster, colIndex) => {
         cluster.matches.forEach(m => {
             parsedMatches[m.matchId] = {
-                config: {
+                config: createEmptyMatchConfig({
                     matchId: m.matchId,
-                    nextMatchId: null,
-                    nextMatchSlot: null,
                     categoryTitle: categoryTitle || '',
                     matchDate: matchDate || '',
                     courtCode: courtId || '',
-                    rules: {
-                        maxGamjeom: 5,
-                        maxPointGap: 15,
-                        restDuration: 60,
-                        roundDuration: 90
-                    },
-                    competitors: {
-                        blue: { name: '', affiliatedClub: '' },
-                        red: { name: '', affiliatedClub: '' }
-                    }
-                },
+                }),
                 x: m.x,
                 y: m.y,
                 colIndex
@@ -266,25 +258,7 @@ export const parsePdfPage = async (page) => {
     // Format clean matches map
     const cleanMatchesMap = {};
     Object.keys(parsedMatches).forEach(mId => {
-        const m = parsedMatches[mId];
-        cleanMatchesMap[mId] = {
-            config: m.config,
-            state: {
-                isStarted: false,
-                isPaused: true,
-                isFinished: false,
-                currentRound: 1,
-                timer: m.config.rules.roundDuration,
-                winnerSide: null,
-                phase: 'ROUND',
-                winReason: null
-            },
-            stats: {
-                roundWins: { red: 0, blue: 0 },
-                blue: { pointsStat: [0, 0, 0, 0, 0], gamjeom: 0 },
-                red: { pointsStat: [0, 0, 0, 0, 0], gamjeom: 0 }
-            }
-        };
+        cleanMatchesMap[mId] = finalizeParsedMatch(parsedMatches[mId]);
     });
 
     return {

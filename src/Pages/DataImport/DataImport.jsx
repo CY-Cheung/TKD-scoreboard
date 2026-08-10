@@ -11,6 +11,12 @@ import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 import { appendIvrQuotaToSettings, appendIvrQuotaToRules, formatIvrQuotaForInput } from '../../Api';
 import TournamentBracket from '../../Components/TournamentBracket/TournamentBracket';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
+import {
+    buildCourtsMap,
+    buildEventRecords,
+    normalizeRulesFromForm,
+} from '../../services/eventCreation';
+import { createMatchDocument } from '../../services/matchFactory';
 
 // A helper function to parse name and club from old format
 const parseName = (fullName) => {
@@ -190,110 +196,40 @@ const DataImport = () => {
         }
 
         try {
-            const finalRules = {
-                maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-                maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                roundDuration: parseInt(newRoundDuration, 10) || 90,
-                restDuration: parseInt(newRestDuration, 10) || 60
-            };
+            const formRules = normalizeRulesFromForm({
+                maxPointGap: newMaxPointGap,
+                maxGamjeom: newMaxGamjeom,
+                roundDuration: newRoundDuration,
+                restDuration: newRestDuration,
+            });
+            const { courts } = buildCourtsMap(1);
+            const settings = appendIvrQuotaToSettings(
+                { setupPassword: newSetupPassword, ...formRules },
+                newIvrQuota
+            );
 
-            const buildSettings = () => appendIvrQuotaToSettings({
-                setupPassword: newSetupPassword,
-                maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-                maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                roundDuration: parseInt(newRoundDuration, 10) || 90,
-                restDuration: parseInt(newRestDuration, 10) || 60
-            }, newIvrQuota);
+            const { records, primaryEventId, mode, datesCount } = buildEventRecords({
+                eventId: trimmedId,
+                eventName: trimmedName,
+                user,
+                settings,
+                courts,
+                courtCount: 1,
+                pdfParseResult,
+            });
 
-            if (pdfParseResult) {
-                if (pdfParseResult.dateGroups) {
-                    Object.values(pdfParseResult.dateGroups).forEach(group => {
-                        if (group.matches) {
-                            Object.values(group.matches).forEach(m => {
-                                if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
-                            });
-                        }
-                    });
-                } else if (pdfParseResult.matches) {
-                    Object.values(pdfParseResult.matches).forEach(m => {
-                        if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
-                    });
-                }
-
-                if (pdfParseResult.datesList?.length > 1) {
-                    let createdCount = 0;
-                    let firstCleanDate = '';
-                    
-                    for (let i = 0; i < pdfParseResult.datesList.length; i++) {
-                        const dateStr = pdfParseResult.datesList[i];
-                        const parts = dateStr.split('/');
-                        let formattedDate = dateStr;
-                        let cleanDate = dateStr.replace(/[^0-9]/g, '');
-                        if (parts.length === 3) {
-                            const [d, m, y] = parts;
-                            formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
-                            cleanDate = `${y}${m.padStart(2, '0')}${d.padStart(2, '0')}`;
-                        }
-                        if (i === 0) firstCleanDate = cleanDate;
-
-                        const subEventId = `${trimmedId}_Day${i + 1}_${cleanDate}`;
-                        const subEventName = `${trimmedName} (Day ${i + 1}) (${formattedDate})`;
-
-                        const eventRef = ref(database, `events/${subEventId}`);
-                        await set(eventRef, {
-                            EventName: subEventName,
-                            createdBy: user.uid,
-                            createdByEmail: user.email || '',
-                            createdAt: Date.now(),
-                            matchDate: formattedDate,
-                            settings: buildSettings(),
-                            courts: { court1: { name: 'court1', currentMatchId: '' } },
-                            matches: pdfParseResult.dateGroups[dateStr].matches
-                        });
-                        createdCount++;
-                    }
-
-                    showToast(`✅ 成功按 ${pdfParseResult.datesList.length} 個比賽日期拆分並建立 ${createdCount} 個子賽事！`);
-                    setEventName(`${trimmedId}_Day1_${firstCleanDate}`);
-                } else {
-                    const dateStr = pdfParseResult.datesList?.[0] || '';
-                    let formattedDate = dateStr;
-                    if (dateStr) {
-                        const parts = dateStr.split('/');
-                        if (parts.length === 3) {
-                            const [d, m, y] = parts;
-                            formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
-                        }
-                    }
-
-                    const eventRef = ref(database, `events/${trimmedId}`);
-                    await set(eventRef, {
-                        EventName: trimmedName,
-                        createdBy: user.uid,
-                        createdByEmail: user.email || '',
-                        createdAt: Date.now(),
-                        matchDate: formattedDate,
-                        settings: buildSettings(),
-                        courts: { court1: { name: 'court1', currentMatchId: '' } },
-                        matches: pdfParseResult.matches
-                    });
-                    showToast(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
-                    setEventName(trimmedId);
-                }
-            } else {
-                const eventRef = ref(database, `events/${trimmedId}`);
-                await set(eventRef, {
-                    EventName: trimmedName,
-                    createdBy: user.uid,
-                    createdByEmail: user.email || '',
-                    createdAt: Date.now(),
-                    settings: buildSettings(),
-                    courts: { court1: { name: 'court1', currentMatchId: '' } },
-                    matches: {}
-                });
-                showToast(`✅ 成功建立賽事：${trimmedName}`);
-                setEventName(trimmedId);
+            for (const record of records) {
+                await set(ref(database, `events/${record.id}`), record.data);
             }
+
+            if (mode === 'multi') {
+                showToast(`✅ 成功按 ${datesCount} 個比賽日期拆分並建立 ${records.length} 個子賽事！`);
+            } else if (mode === 'single-pdf') {
+                showToast(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
+            } else {
+                showToast(`✅ 成功建立賽事：${trimmedName}`);
+            }
+            setEventName(primaryEventId);
 
             setNewEventId('');
             setNewEventName('');
@@ -414,42 +350,30 @@ const DataImport = () => {
         }
 
         try {
-            const newMatch = {
-                config: {
-                    matchId: matchId,
-                    nextMatchId: nextMatchId || null,
-                    nextMatchSlot: nextMatchSlot || null,
-                    rules: appendIvrQuotaToRules({
-                        maxPointGap: parseInt(maxPointGap, 10),
-                        maxGamjeom: parseInt(maxGamjeom, 10),
-                        roundDuration: parseInt(roundDuration, 10),
-                        restDuration: parseInt(restDuration, 10),
-                    }, ivrQuota),
-                    competitors: {
-                        blue: { 
-                            name: blueName, 
-                            affiliatedClub: blueAffiliatedClub || '', 
-                            previousMatch: bluePreviousMatch || null 
-                        },
-                        red: { 
-                            name: redName, 
-                            affiliatedClub: redAffiliatedClub || '',
-                            previousMatch: redPreviousMatch || null
-                        },
+            const newMatch = createMatchDocument({
+                matchId,
+                nextMatchId: nextMatchId || null,
+                nextMatchSlot: nextMatchSlot || null,
+                rules: appendIvrQuotaToRules({
+                    maxPointGap: parseInt(maxPointGap, 10),
+                    maxGamjeom: parseInt(maxGamjeom, 10),
+                    roundDuration: parseInt(roundDuration, 10),
+                    restDuration: parseInt(restDuration, 10),
+                }, ivrQuota),
+                competitors: {
+                    blue: {
+                        name: blueName,
+                        affiliatedClub: blueAffiliatedClub || '',
+                        previousMatch: bluePreviousMatch || null
+                    },
+                    red: {
+                        name: redName,
+                        affiliatedClub: redAffiliatedClub || '',
+                        previousMatch: redPreviousMatch || null
                     },
                 },
-                state: { 
-                    isStarted: false, isPaused: true, isFinished: false,
-                    currentRound: 1, timer: parseInt(roundDuration, 10),
-                    winnerSide: null, phase: 'ROUND',
-                    winReason: null
-                },
-                stats: { 
-                    roundWins: { red: 0, blue: 0 }, 
-                    blue: { pointsStat: [0,0,0,0,0], gamjeom: 0 }, 
-                    red: { pointsStat: [0,0,0,0,0], gamjeom: 0 } 
-                }
-            };
+                roundDuration: parseInt(roundDuration, 10),
+            });
 
             const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
             await set(matchRef, newMatch);
