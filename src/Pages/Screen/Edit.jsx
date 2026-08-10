@@ -2,31 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
 import { ref, get, update } from "firebase/database";
-import { QrCode, PeopleFill, Trophy, PersonFill, CheckCircle, ArrowLeft, FileFill, RecordCircleFill, ShieldFill, PersonCircle, ArrowRepeat, FilePlayFill, FileFontFill, Stopwatch } from "react-bootstrap-icons";
+import { QrCode, Trophy, PersonFill, CheckCircle, ArrowLeft, FilePlayFill, FileFontFill, Stopwatch } from "react-bootstrap-icons";
 import { usePopup } from "../../Context/PopupContext";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
 import TechnicalCardConfirm from "../../Components/TechnicalCardFlow/TechnicalCardConfirm";
 import IVRConfirm from "../../Components/IVRFlow/IVRConfirm";
-import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner, getEffectiveIvrRemaining, formatIvrQuotaForEdit, isIvrUnlimited, setIvrRemaining } from '../../Api';
+import { updateScoreAndCheckRules, declareRoundWinner, promoteWinner, getEffectiveIvrRemaining, formatIvrQuotaForEdit, isIvrUnlimited, setIvrRemaining } from '../../Api';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import { getFinalWinnerSide, resolveMatchRules } from '../../Utils/matchRules';
-
-/** Dual-layer locale for grid: width stays max(EN, ZH) so columns don't shift on fade. */
-function EditGridLocale({ en, zh, locale, visible, className = '' }) {
-    const enActive = locale === 'en' && visible;
-    const zhActive = locale === 'zh' && visible;
-    return (
-        <span className={`edit-grid-locale${className ? ` ${className}` : ''}`}>
-            <span className={`edit-grid-locale-layer${enActive ? ' is-visible' : ''}`} lang="en" aria-hidden={!enActive}>
-                {en}
-            </span>
-            <span className={`edit-grid-locale-layer${zhActive ? ' is-visible' : ''}`} lang="zh-Hant" aria-hidden={!zhActive}>
-                {zh}
-            </span>
-        </span>
-    );
-}
+import EditGridLocale from './EditGridLocale';
+import { EDIT_POINT_TYPES } from './editPointTypes';
+import EditSideScoreRow from './EditSideScoreRow';
+import AvoidingPenaltyPopup from './AvoidingPenaltyPopup';
 
 const Edit = ({
     visible,
@@ -314,23 +302,6 @@ const Edit = ({
     };
 
     const buttonFontSize = '2cqi';
-    const PunchIconComp = ({ size, style }) => (
-        <span className="punch-icon" style={{ ...style, width: size, height: size }} />
-    );
-    const TrunkIconComp = ({ size, style }) => (
-        <span className="trunk-icon" style={{ ...style, width: size, height: size }} />
-    );
-    const HelmetIconComp = ({ size, style }) => (
-        <span className="helmet-icon" style={{ ...style, width: size, height: size }} />
-    );
-    const pointTypes = [
-        { id: 'gamjeom', nameEn: "Gam-jeom", nameZh: "犯規", type: "gamjeom", index: null, icon: FileFill },
-        { id: 'punch', nameEn: "Punch", nameZh: "正拳", type: "pointsStat", index: 0, icon: PunchIconComp, iconSize: "1.8cqi" },
-        { id: 'body', nameEn: "Body", nameZh: "軀幹", type: "pointsStat", index: 1, icon: TrunkIconComp, iconSize: "1.5cqi" },
-        { id: 'head', nameEn: "Head", nameZh: "頭部", type: "pointsStat", index: 2, icon: HelmetIconComp, iconSize: "1.5cqi" },
-        { id: 'body-turn', nameEn: "Body(Turn)", nameZh: "軀幹(轉身)", type: "pointsStat", index: 3, icon: ArrowRepeat, secondIcon: TrunkIconComp, iconSize: "1.5cqi" },
-        { id: 'head-turn', nameEn: "Head(Turn)", nameZh: "頭部(轉身)", type: "pointsStat", index: 4, icon: ArrowRepeat, secondIcon: HelmetIconComp, iconSize: "1.5cqi" }
-    ];
 
     const { config = {}, state = {}, stats = {} } = matchData || {};
     const { phase, isFinished, winReason } = state || {};
@@ -389,7 +360,7 @@ const Edit = ({
                     <EditGridLocale locale={locale} visible={localeVisible} en="Technical" zh="技術卡" />
                 </div>
 
-                {pointTypes.map(pt => (
+                {EDIT_POINT_TYPES.map(pt => (
                     <div className="grid-cell header" key={pt.id}>
                         {pt.icon && <pt.icon size={pt.iconSize || "1.3cqi"} style={{ marginRight: pt.secondIcon ? '0.1cqi' : '0.4cqi', color: 'white', flexShrink: 0 }} />}
                         {pt.secondIcon && <pt.secondIcon size={pt.iconSize || "1.3cqi"} style={{ marginRight: '0.4cqi', color: 'white', flexShrink: 0 }} />}
@@ -397,89 +368,39 @@ const Edit = ({
                     </div>
                 ))}
 
-                {/* Blue Row */}
-                <div className="grid-cell side-label blue">
-                    <EditGridLocale locale={locale} visible={localeVisible} en="Blue" zh="藍" />
-                </div>
+                <EditSideScoreRow
+                    side="blue"
+                    angle={220}
+                    labelEn="Blue"
+                    labelZh="藍"
+                    locale={locale}
+                    localeVisible={localeVisible}
+                    buttonFontSize={buttonFontSize}
+                    matchData={matchData}
+                    onIvr={handleIVRAction}
+                    onTechCard={handleTechnicalCardAction}
+                    ivrDisabled={ivrButtonDisabled('blue')}
+                    techCardDisabled={techCardButtonDisabled}
+                    ivrQuotaInput={renderIvrQuotaInput('blue')}
+                    onScoreAction={handleAction}
+                />
 
-                {/* Blue IVR 按鈕 + 剩餘 quota */}
-                <div className="grid-cell">
-                    <div className="buttons">
-                        <Button
-                            icon={<FilePlayFill color="white" size="2cqi" />}
-                            fontSize={buttonFontSize}
-                            onClick={() => handleIVRAction('blue')}
-                            style={{ padding: '0.1cqi 1.2cqi', opacity: ivrButtonDisabled('blue') ? 0.3 : 1 }}
-                            angle={220}
-                            disabled={ivrButtonDisabled('blue')}
-                        />
-                        {renderIvrQuotaInput('blue')}
-                    </div>
-                </div>
-                {/* Blue Technical Card 按鈕 - 完全對齊加減制 */}
-                <div className="grid-cell">
-                    <div className="buttons">
-                        <Button
-                            icon={<FileFontFill color="white" size="2cqi" />}
-                            fontSize={buttonFontSize}
-                            onClick={() => handleTechnicalCardAction('blue')}
-                            style={{ padding: '0.1cqi 1.2cqi', opacity: techCardButtonDisabled ? 0.3 : 1 }}
-                            angle={220}
-                            disabled={techCardButtonDisabled}
-                        />
-                    </div>
-                </div>
-
-                {pointTypes.map(pt => (
-                    <div className="grid-cell" key={`blue-${pt.id}`}>
-                        <div className="buttons">
-                            <Button text="+" fontSize={buttonFontSize} style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }} onClick={() => handleAction('blue', pt.type, pt.index, 1)} angle={220} disabled={!matchData} />
-                            <Button text="−" fontSize={buttonFontSize} style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }} onClick={() => handleAction('blue', pt.type, pt.index, -1)} angle={220} disabled={!matchData} />
-                        </div>
-                    </div>
-                ))}
-
-                {/* Red Row */}
-                <div className="grid-cell side-label red">
-                    <EditGridLocale locale={locale} visible={localeVisible} en="Red" zh="紅" />
-                </div>
-
-                {/* Red IVR 按鈕 + 剩餘 quota */}
-                <div className="grid-cell">
-                    <div className="buttons">
-                        <Button
-                            icon={<FilePlayFill color="white" size="2cqi" />}
-                            fontSize={buttonFontSize}
-                            onClick={() => handleIVRAction('red')}
-                            style={{ padding: '0.1cqi 1.2cqi', opacity: ivrButtonDisabled('red') ? 0.3 : 1 }}
-                            angle={0}
-                            disabled={ivrButtonDisabled('red')}
-                        />
-                        {renderIvrQuotaInput('red')}
-                    </div>
-                </div>
-                {/* Red Technical Card 按鈕 - 完全對齊加減制 */}
-                <div className="grid-cell">
-                    <div className="buttons">
-                        <Button
-                            icon={<FileFontFill color="white" size="2cqi" />}
-                            fontSize={buttonFontSize}
-                            onClick={() => handleTechnicalCardAction('red')}
-                            style={{ padding: '0.1cqi 1.2cqi', opacity: techCardButtonDisabled ? 0.3 : 1 }}
-                            angle={0}
-                            disabled={techCardButtonDisabled}
-                        />
-                    </div>
-                </div>
-
-                {pointTypes.map(pt => (
-                    <div className="grid-cell" key={`red-${pt.id}`}>
-                        <div className="buttons">
-                            <Button text="+" fontSize={buttonFontSize} style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }} onClick={() => handleAction('red', pt.type, pt.index, 1)} angle={0} disabled={!matchData} />
-                            <Button text="−" fontSize={buttonFontSize} style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }} onClick={() => handleAction('red', pt.type, pt.index, -1)} angle={0} disabled={!matchData} />
-                        </div>
-                    </div>
-                ))}
+                <EditSideScoreRow
+                    side="red"
+                    angle={0}
+                    labelEn="Red"
+                    labelZh="紅"
+                    locale={locale}
+                    localeVisible={localeVisible}
+                    buttonFontSize={buttonFontSize}
+                    matchData={matchData}
+                    onIvr={handleIVRAction}
+                    onTechCard={handleTechnicalCardAction}
+                    ivrDisabled={ivrButtonDisabled('red')}
+                    techCardDisabled={techCardButtonDisabled}
+                    ivrQuotaInput={renderIvrQuotaInput('red')}
+                    onScoreAction={handleAction}
+                />
             </div>
 
             <div className="time-bar">
@@ -597,47 +518,14 @@ const Edit = ({
             )}
 
             {showAvoidingPopup && (
-                <div style={{
-                    position: 'absolute',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 2000,
-                    backdropFilter: 'blur(5px)'
-                }}>
-                    <div className="glass-panel" style={{
-                        padding: '3cqi 4cqi',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '2cqi',
-                        border: '2px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '2cqi',
-                        background: 'rgba(30, 30, 40, 0.85)'
-                    }}>
-                        <StableLocaleText
-                            as="h2"
-                            locale={locale}
-                            visible={localeVisible}
-                            style={{ margin: 0, fontSize: '2.2cqi', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
-                            en={avoidingAction === 1 ? "Penalty in last 10s" : "Remove Penalty"}
-                            zh={avoidingAction === 1 ? "最後 10 秒犯規" : "移除犯規"}
-                        />
-                        <div style={{ display: 'flex', gap: '2cqi', marginTop: '1cqi' }}>
-                            <Button fontSize="1.6cqi" onClick={() => handleAvoidingDecision(1)} angle={avoidingSide === 'blue' ? 220 : 0} style={{ padding: '1cqi 2cqi' }}>
-                                <StableLocaleText as="span" locale={locale} visible={localeVisible} en={avoidingAction === 1 ? "1-Jeom" : "-1 Jeom"} zh={avoidingAction === 1 ? "1 分" : "−1 分"} />
-                            </Button>
-                            <Button fontSize="1.6cqi" onClick={() => handleAvoidingDecision(2)} angle={avoidingSide === 'blue' ? 220 : 0} style={{ padding: '1cqi 2cqi' }}>
-                                <StableLocaleText as="span" locale={locale} visible={localeVisible} en={avoidingAction === 1 ? "2-Jeom" : "-2 Jeom"} zh={avoidingAction === 1 ? "2 分" : "−2 分"} />
-                            </Button>
-                        </div>
-                        <Button fontSize="1.2cqi" variant="cancel" onClick={() => setShowAvoidingPopup(false)} style={{ marginTop: '1cqi', padding: '0.5cqi 2cqi' }}>
-                            <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Cancel" zh="取消" />
-                        </Button>
-                    </div>
-                </div>
+                <AvoidingPenaltyPopup
+                    locale={locale}
+                    localeVisible={localeVisible}
+                    avoidingSide={avoidingSide}
+                    avoidingAction={avoidingAction}
+                    onDecision={handleAvoidingDecision}
+                    onCancel={() => setShowAvoidingPopup(false)}
+                />
             )}
         </div>
     );
