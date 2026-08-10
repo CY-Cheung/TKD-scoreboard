@@ -53,7 +53,7 @@
 .tc-announce-left {
     justify-content: center;
     align-items: center;
-    padding: 2cqi 2.5cqi;
+    padding: 2.4cqi 2.8cqi;
 }
 
 .tc-announce-left-inner {
@@ -61,7 +61,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2cqi;
+    gap: 2.6cqi;
     width: 100%;
     height: 100%;
 }
@@ -71,7 +71,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 2.8cqi;
+    gap: 3.4cqi;
     width: 100%;
     flex-shrink: 0;
 }
@@ -82,7 +82,7 @@
     font-size: 4.2cqi;
     letter-spacing: 0.08cqi;
     text-align: center;
-    line-height: 1.1;
+    line-height: 1.15;
     text-shadow: var(--tc-text-glow);
     animation: tcRowIn 0.45s ease-out 0.12s backwards;
 }
@@ -103,12 +103,14 @@
 }
 
 .tc-announce-right-inner.tc-reject-rows {
-    gap: 0.75cqi;
+    gap: 1.5cqi;
+    padding: 1.6cqi 2.4cqi;
 }
 
 .tc-announce-right-inner.tc-reject-rows .tc-announce-status-icon {
-    width: 7.5cqi;
-    height: 7.5cqi;
+    width: 7cqi;
+    height: 7cqi;
+    margin: 0.25cqi 0;
 }
 
 .tc-announce-right-inner {
@@ -116,10 +118,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1.1cqi;
+    gap: 1.45cqi;
     width: 100%;
     height: 100%;
-    padding: 1.5cqi 2cqi;
+    padding: 1.8cqi 2.4cqi;
     box-sizing: border-box;
 }
 
@@ -130,6 +132,7 @@
     flex-shrink: 0;
     width: 9cqi;
     height: 9cqi;
+    margin: 0.2cqi 0;
 }
 
 .tc-announce-status-icon svg {
@@ -148,14 +151,17 @@
 .tc-row {
     color: #ffffff;
     font-weight: 700;
-    line-height: 1.15;
+    line-height: 1.2;
     text-align: center;
     text-shadow: var(--tc-text-glow);
     animation: tcRowIn 0.45s ease-out backwards;
 }
 
 .tc-row-2 {
-    font-size: 3cqi;
+    font-size: 4.2cqi;
+    font-weight: 800;
+    letter-spacing: 0.08cqi;
+    line-height: 1.15;
     opacity: 0.95;
     animation-delay: 0.18s;
 }
@@ -164,6 +170,7 @@
     font-size: 2.8cqi;
     font-weight: 800;
     letter-spacing: 0.05cqi;
+    line-height: 1.2;
     animation-delay: 0.32s;
 }
 
@@ -171,6 +178,7 @@
     font-size: 2.8cqi;
     font-weight: 800;
     letter-spacing: 0.05cqi;
+    line-height: 1.2;
     animation-delay: 0.4s;
 }
 
