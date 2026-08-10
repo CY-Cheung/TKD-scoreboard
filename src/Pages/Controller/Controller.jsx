@@ -8,17 +8,10 @@ import { useEventSession } from "../../Context/EventSessionContext";
 import Button from "../../Components/Button/Button";
 import { Wifi, WifiOff, ArrowLeft } from "react-bootstrap-icons";
 import { getEventDisplayName } from "../../Utils/matchFactory";
+import { requestFullscreen } from "../../Utils/requestFullscreen";
+import { getDeviceName, resolveControllerParam } from "./controllerParams";
+import ControllerScorePad from "./ControllerScorePad";
 import "./Controller.css";
-
-const getDeviceName = () => {
-    const ua = navigator.userAgent;
-    if (/iPad/i.test(ua)) return "iPad";
-    if (/iPhone/i.test(ua)) return "iPhone";
-    if (/Android/i.test(ua)) return "Android";
-    if (/Mac OS X/i.test(ua)) return "Mac";
-    if (/Windows/i.test(ua)) return "Windows";
-    return "Device";
-};
 
 function Controller() {
     const [searchParams] = useSearchParams();
@@ -26,25 +19,8 @@ function Controller() {
     const { user } = useAuth();
     const { session, setEventSession } = useEventSession();
 
-    // Helper to extract query parameter from searchParams, search URL, Hash URL, or sessionStorage
-    const getParam = (key) => {
-        const fromSearch = searchParams.get(key);
-        if (fromSearch) return fromSearch;
-
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get(key)) return urlParams.get(key);
-
-        if (window.location.hash.includes("?")) {
-            const hashQuery = window.location.hash.split("?")[1];
-            const hashParams = new URLSearchParams(hashQuery);
-            if (hashParams.get(key)) return hashParams.get(key);
-        }
-
-        if (key === "event") return session?.eventId || sessionStorage.getItem("selectedEvent") || "";
-        if (key === "court") return session?.courtId || sessionStorage.getItem("selectedCourt") || "";
-
-        return "";
-    };
+    const getParam = (key) =>
+        resolveControllerParam(key, { searchParams, session });
 
     const initialEvent = getParam("event");
     const initialCourt = getParam("court");
@@ -235,19 +211,6 @@ function Controller() {
         return () => unsubscribe();
     }, [currentMatchId, eventId]);
 
-    // Cross-browser Fullscreen request helper
-    const handleFullscreen = () => {
-        if (!document.fullscreenElement) {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else if (document.documentElement.webkitRequestFullscreen) {
-                document.documentElement.webkitRequestFullscreen();
-            } else if (document.documentElement.msRequestFullscreen) {
-                document.documentElement.msRequestFullscreen();
-            }
-        }
-    };
-
     const handleScore = (side, index, label) => {
         if (!eventId || !currentMatchId) return;
 
@@ -288,7 +251,7 @@ function Controller() {
     }
 
     return (
-        <div className="controller aurora-bg" onClick={handleFullscreen}>
+        <div className="controller aurora-bg" onClick={requestFullscreen}>
             {/* Top Bar Banner for Match & Connection Status */}
             <div className="ctrl-top-bar">
                 <Button 
@@ -328,106 +291,22 @@ function Controller() {
                 </div>
             )}
 
-            {/* Column 1: Red 6, Red 4, Red 1 */}
-            <div className="col red-col">
-                <Button 
-                    className="neon-btn red-btn"
-                    text="Red 6" 
-                    angle={350} 
-                    fontSize="2.5cqi" 
-                    onClick={(e) => { e.stopPropagation(); handleScore("red", 4, "+6 Turn Head"); }} 
-                />
-                <Button 
-                    className="neon-btn red-btn"
-                    text="Red 4" 
-                    angle={350} 
-                    fontSize="2.5cqi" 
-                    onClick={(e) => { e.stopPropagation(); handleScore("red", 3, "+4 Turn Body"); }} 
-                />
-                <Button 
-                    className="neon-btn red-btn"
-                    text="Red 1" 
-                    angle={350} 
-                    fontSize="2.5cqi" 
-                    onClick={(e) => { e.stopPropagation(); handleScore("red", 0, "+1 Punch"); }} 
-                />
-            </div>
-
-            {/* Column 2: Red 3, Red 2 */}
-            <div className="col red-col">
-                <Button 
-                    className="neon-btn red-btn"
-                    text="Red 3" 
-                    angle={350} 
-                    fontSize="2.5cqi" 
-                    onClick={(e) => { e.stopPropagation(); handleScore("red", 2, "+3 Head"); }} 
-                />
-                <Button 
-                    className="neon-btn red-btn"
-                    text="Red 2" 
-                    angle={350} 
-                    fontSize="2.5cqi" 
-                    onClick={(e) => { e.stopPropagation(); handleScore("red", 1, "+2 Body"); }} 
-                />
-            </div>
-
-            {/* Column 3: Center Info Panel (Horizontal Left-to-Right layout) */}
-            <div className="col center-col">
-                <div className="center-match-details-horizontal">
-                    <div className="competitor-side red-side-text">{redName}</div>
-                    <div className="center-vs-box">
-                        <span className="vs-badge">VS</span>
-                        <span className="round-pill">R{currentRound} • {isPaused ? "PAUSED" : "LIVE"}</span>
-                        <span className="round-pill" style={{ fontSize: '1cqi', opacity: 0.8, background: refereeMode === 'multiple' ? 'rgba(255,100,0,0.4)' : 'rgba(0,200,100,0.3)' }}>
-                            {refereeMode === 'multiple' ? '👥 Multi' : '👤 Single'} • {mySeat || '...'}
-                        </span>
+            <ControllerScorePad onScore={handleScore}>
+                {/* Center Info Panel (Horizontal Left-to-Right layout) */}
+                <div className="col center-col">
+                    <div className="center-match-details-horizontal">
+                        <div className="competitor-side red-side-text">{redName}</div>
+                        <div className="center-vs-box">
+                            <span className="vs-badge">VS</span>
+                            <span className="round-pill">R{currentRound} • {isPaused ? "PAUSED" : "LIVE"}</span>
+                            <span className="round-pill" style={{ fontSize: '1cqi', opacity: 0.8, background: refereeMode === 'multiple' ? 'rgba(255,100,0,0.4)' : 'rgba(0,200,100,0.3)' }}>
+                                {refereeMode === 'multiple' ? '👥 Multi' : '👤 Single'} • {mySeat || '...'}
+                            </span>
+                        </div>
+                        <div className="competitor-side blue-side-text">{blueName}</div>
                     </div>
-                    <div className="competitor-side blue-side-text">{blueName}</div>
                 </div>
-            </div>
-
-            {/* Column 4: Blue 3, Blue 2 */}
-            <div className="col blue-col">
-                <Button 
-                    className="neon-btn blue-btn"
-                    text="Blue 3" 
-                    angle={210} 
-                    fontSize="2.5cqi" 
-                    onClick={(e) => { e.stopPropagation(); handleScore("blue", 2, "+3 Head"); }} 
-                />
-                <Button 
-                    className="neon-btn blue-btn"
-                    text="Blue 2" 
-                    angle={210} 
-                    fontSize="2.5cqi" 
-                    onClick={(e) => { e.stopPropagation(); handleScore("blue", 1, "+2 Body"); }} 
-                />
-            </div>
-
-            {/* Column 5: Blue 6, Blue 4, Blue 1 */}
-            <div className="col blue-col">
-                <Button 
-                    className="neon-btn blue-btn"
-                    text="Blue 6" 
-                    angle={210} 
-                    fontSize="2.5cqi" 
-                    onClick={(e) => { e.stopPropagation(); handleScore("blue", 4, "+6 Turn Head"); }} 
-                />
-                <Button 
-                    className="neon-btn blue-btn"
-                    text="Blue 4" 
-                    angle={210} 
-                    fontSize="2.5cqi" 
-                    onClick={(e) => { e.stopPropagation(); handleScore("blue", 3, "+4 Turn Body"); }} 
-                />
-                <Button 
-                    className="neon-btn blue-btn"
-                    text="Blue 1" 
-                    angle={210} 
-                    fontSize="2.5cqi" 
-                    onClick={(e) => { e.stopPropagation(); handleScore("blue", 0, "+1 Punch"); }} 
-                />
-            </div>
+            </ControllerScorePad>
         </div>
     );
 }
