@@ -7,11 +7,14 @@ import Button from '../../Components/Button/Button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
 import { PlusCircle, Trash, FolderPlus, ExclamationTriangle, FileEarmarkArrowUp, FileEarmarkPdf, CheckCircleFill, Calendar3, Funnel, House, XCircle, CheckCircle, Display, Diagram3, X, ArrowLeft } from 'react-bootstrap-icons';
-import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
-import { appendIvrQuotaToSettings, appendIvrQuotaToRules, formatIvrQuotaForInput } from '../../Api';
+import { appendIvrQuotaToRules, formatIvrQuotaForInput } from '../../Api';
 import TournamentBracket from '../../Components/TournamentBracket/TournamentBracket';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import { createEmptyMatch, getEventDisplayName } from '../../Utils/matchFactory';
+import {
+    createEventFromFormOrPdf,
+    parseSchedulePdfFile,
+} from '../../Utils/createEvent';
 
 // A helper function to parse name and club from old format
 const parseName = (fullName) => {
@@ -146,22 +149,21 @@ const DataImport = () => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
-            showToast('請選擇有效的 PDF 賽程文件！');
-            return;
-        }
-
         setIsParsingPdf(true);
         try {
-            const result = await parseHktkdaPdfFile(file);
-            if (!result || result.matchCount === 0) {
-                showToast('未能在 PDF 中解析出有效賽程，請確認格式是否為香港跆拳道協會對陣表。');
-            } else {
-                setPdfParseResult(result);
-                setNewEventName(result.eventName);
-                if (!newEventId) {
-                    setNewEventId('TKD' + Date.now().toString().slice(-6));
+            const parsed = await parseSchedulePdfFile(file);
+            if (!parsed.ok) {
+                if (parsed.error === 'INVALID_PDF') {
+                    showToast('請選擇有效的 PDF 賽程文件！');
+                } else if (parsed.error === 'EMPTY_SCHEDULE') {
+                    showToast('未能在 PDF 中解析出有效賽程，請確認格式是否為香港跆拳道協會對陣表。');
                 }
+                return;
+            }
+            setPdfParseResult(parsed.result);
+            setNewEventName(parsed.result.eventName);
+            if (!newEventId) {
+                setNewEventId('TKD' + Date.now().toString().slice(-6));
             }
         } catch (error) {
             console.error("PDF Parsing Failed:", error);
@@ -177,124 +179,24 @@ const DataImport = () => {
     // Create New Event Handler (Handles PDF auto-import and date splitting)
     const handleCreateEvent = async (e) => {
         e.preventDefault();
-        if (!user) {
-            showToast('🔒 請先登入 Google 帳號，方可建立新賽事！');
-            return;
-        }
-
-        const trimmedId = newEventId.trim();
-        const trimmedName = newEventName.trim();
-
-        if (!trimmedId || !trimmedName) {
-            showToast('請提供有效的 Event ID 與 Event Name！');
-            return;
-        }
-
         try {
-            const finalRules = {
-                maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-                maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                roundDuration: parseInt(newRoundDuration, 10) || 90,
-                restDuration: parseInt(newRestDuration, 10) || 60
-            };
-
-            const buildSettings = () => appendIvrQuotaToSettings({
+            const result = await createEventFromFormOrPdf({
+                user,
+                eventId: newEventId,
+                eventName: newEventName,
                 setupPassword: newSetupPassword,
-                maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-                maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                roundDuration: parseInt(newRoundDuration, 10) || 90,
-                restDuration: parseInt(newRestDuration, 10) || 60
-            }, newIvrQuota);
+                maxPointGap: newMaxPointGap,
+                maxGamjeom: newMaxGamjeom,
+                roundDuration: newRoundDuration,
+                restDuration: newRestDuration,
+                ivrQuota: newIvrQuota,
+                courtCount: 1,
+                pdfParseResult,
+                includeCourtCountInEmptyToast: false,
+            });
 
-            if (pdfParseResult) {
-                if (pdfParseResult.dateGroups) {
-                    Object.values(pdfParseResult.dateGroups).forEach(group => {
-                        if (group.matches) {
-                            Object.values(group.matches).forEach(m => {
-                                if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
-                            });
-                        }
-                    });
-                } else if (pdfParseResult.matches) {
-                    Object.values(pdfParseResult.matches).forEach(m => {
-                        if (m.config) m.config.rules = { ...m.config.rules, ...finalRules };
-                    });
-                }
-
-                if (pdfParseResult.datesList?.length > 1) {
-                    let createdCount = 0;
-                    let firstCleanDate = '';
-                    
-                    for (let i = 0; i < pdfParseResult.datesList.length; i++) {
-                        const dateStr = pdfParseResult.datesList[i];
-                        const parts = dateStr.split('/');
-                        let formattedDate = dateStr;
-                        let cleanDate = dateStr.replace(/[^0-9]/g, '');
-                        if (parts.length === 3) {
-                            const [d, m, y] = parts;
-                            formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
-                            cleanDate = `${y}${m.padStart(2, '0')}${d.padStart(2, '0')}`;
-                        }
-                        if (i === 0) firstCleanDate = cleanDate;
-
-                        const subEventId = `${trimmedId}_Day${i + 1}_${cleanDate}`;
-                        const subEventName = `${trimmedName} (Day ${i + 1}) (${formattedDate})`;
-
-                        const eventRef = ref(database, `events/${subEventId}`);
-                        await set(eventRef, {
-                            EventName: subEventName,
-                            createdBy: user.uid,
-                            createdByEmail: user.email || '',
-                            createdAt: Date.now(),
-                            matchDate: formattedDate,
-                            settings: buildSettings(),
-                            courts: { court1: { name: 'court1', currentMatchId: '' } },
-                            matches: pdfParseResult.dateGroups[dateStr].matches
-                        });
-                        createdCount++;
-                    }
-
-                    showToast(`✅ 成功按 ${pdfParseResult.datesList.length} 個比賽日期拆分並建立 ${createdCount} 個子賽事！`);
-                    setEventName(`${trimmedId}_Day1_${firstCleanDate}`);
-                } else {
-                    const dateStr = pdfParseResult.datesList?.[0] || '';
-                    let formattedDate = dateStr;
-                    if (dateStr) {
-                        const parts = dateStr.split('/');
-                        if (parts.length === 3) {
-                            const [d, m, y] = parts;
-                            formattedDate = `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
-                        }
-                    }
-
-                    const eventRef = ref(database, `events/${trimmedId}`);
-                    await set(eventRef, {
-                        EventName: trimmedName,
-                        createdBy: user.uid,
-                        createdByEmail: user.email || '',
-                        createdAt: Date.now(),
-                        matchDate: formattedDate,
-                        settings: buildSettings(),
-                        courts: { court1: { name: 'court1', currentMatchId: '' } },
-                        matches: pdfParseResult.matches
-                    });
-                    showToast(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
-                    setEventName(trimmedId);
-                }
-            } else {
-                const eventRef = ref(database, `events/${trimmedId}`);
-                await set(eventRef, {
-                    EventName: trimmedName,
-                    createdBy: user.uid,
-                    createdByEmail: user.email || '',
-                    createdAt: Date.now(),
-                    settings: buildSettings(),
-                    courts: { court1: { name: 'court1', currentMatchId: '' } },
-                    matches: {}
-                });
-                showToast(`✅ 成功建立賽事：${trimmedName}`);
-                setEventName(trimmedId);
-            }
+            showToast(result.toastMessage);
+            setEventName(result.selectedEventId);
 
             setNewEventId('');
             setNewEventName('');
@@ -307,9 +209,16 @@ const DataImport = () => {
             setPdfParseResult(null);
             setShowCreateEventModal(false);
             fetchEventsList();
-
         } catch (error) {
             console.error("Create Event Failed:", error);
+            if (error.message === 'AUTH_REQUIRED') {
+                showToast('🔒 請先登入 Google 帳號，方可建立新賽事！');
+                return;
+            }
+            if (error.message === 'MISSING_EVENT_FIELDS') {
+                showToast('請提供有效的 Event ID 與 Event Name！');
+                return;
+            }
             showToast(`建立賽事失敗: ${error.message}`);
         }
     };
