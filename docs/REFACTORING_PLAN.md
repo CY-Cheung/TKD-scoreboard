@@ -1,9 +1,12 @@
 # Refactoring Plan — TKD Scoreboard
 
-> **Status:** Phase 2 in progress — Wave 0 + Wave 1 started after plan approval.  
+> **Status:** Phase 2 in progress — Wave 0–2 underway after plan approval.  
 > **Branch:** `cursor/clean-code-refactor-8215`  
 > **Base:** `main` @ `84fb26e`  
-> **Completed:** Wave 0 (Vitest + `npm test`); Wave 1 domain modules (`defaultRules`, `scoreMath`, `matchRules`) wired into `Api.js`, `Screen.jsx`, `Edit.jsx`.
+> **Completed:**  
+> - Wave 0: Vitest + `npm test`  
+> - Wave 1: `defaultRules` / `scoreMath` / `matchRules` → `Api` / `Screen` / `Edit`  
+> - Wave 2: `matchFactory` / `eventCreation` → `CourtSetup` / `DataImport` / `pdfParser`
 
 This document is the Phase 1 deliverable for a Clean Code / complexity-reduction refactor. Phase 2 (test-driven execution) must not start without approval.
 
