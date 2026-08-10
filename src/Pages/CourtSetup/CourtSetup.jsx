@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
-import { ref, get, set, remove, update } from "firebase/database";
+import { ref, get, remove, update } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
 import { FolderPlus, Trash, ExclamationTriangle, FileEarmarkPdf, FileEarmarkArrowUp, BoxArrowRight, CheckCircle, House, XCircle, Github, Key } from 'react-bootstrap-icons';
 import { usePopup } from '../../Context/PopupContext';
