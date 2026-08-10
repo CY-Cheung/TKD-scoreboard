@@ -55,7 +55,7 @@ Edit（主裁）─┘         ▲
               Screen 出 QR ──掃碼──► Controller
 ```
 
-> 多裝置同步、資料庫 schema、搶位細節 → [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md)
+> 多裝置同步、資料庫 schema、搶位細節 → [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](https://github.com/CY-Cheung/TKD-scoreboard/blob/main/docs/FIREBASE_MULTI_DEVICE_DESIGN.md)
 
 ---
 
@@ -113,7 +113,7 @@ Court Setup → Data Import (Load Match) → Screen 開波 (Space 計時, Q 出 
 ```bash
 npm install && npm run dev    # 試裝
 npm run build && npm run deploy   # 装箱上架
-npm run lint                  # 检查螺丝
+npm run lint                  # 檢查螺絲
 ```
 
 ---
@@ -160,13 +160,13 @@ npm run lint                  # 检查螺丝
 
 ## 安全 · 未入盒 · 延伸
 
-**Court-level Locking**：坐正 J1–J3 嘅 `deviceId` 先改分；Admin 靠 Google auth；Event 靠建立者。詳見 [`database.rules.json`](database.rules.json)。
+**Court-level Locking**：坐正 J1–J3 嘅 `deviceId` 先改分；Admin 靠 Google auth；Event 靠建立者。詳見 [`database.rules.json`](https://github.com/CY-Cheung/TKD-scoreboard/blob/main/database.rules.json)。
 
-**計劃中**：Persistent Token 重連、hostStatus 離線警示、**IVR**（[`TODO_WT2026.md`](TODO_WT2026.md)）
+**計劃中**：Persistent Token 重連、hostStatus 離線警示（詳見 [`TODO_WT2026.md`](https://github.com/CY-Cheung/TKD-scoreboard/blob/main/TODO_WT2026.md)）
 
-**已實作（WT 2026）**：Technical Card — 見 [`TODO_WT2026.md`](TODO_WT2026.md#technical-card已實作)
+**已實作（WT 2026）**：Technical Card、IVR — 見 [`TODO_WT2026.md`](https://github.com/CY-Cheung/TKD-scoreboard/blob/main/TODO_WT2026.md)
 
-**深入閱讀**：[`FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md) · [`TODO_WT2026.md`](TODO_WT2026.md) · [`package.json`](package.json)
+**深入閱讀**：[`FIREBASE_MULTI_DEVICE_DESIGN.md`](https://github.com/CY-Cheung/TKD-scoreboard/blob/main/docs/FIREBASE_MULTI_DEVICE_DESIGN.md) · [`TODO_WT2026.md`](https://github.com/CY-Cheung/TKD-scoreboard/blob/main/TODO_WT2026.md) · [`package.json`](https://github.com/CY-Cheung/TKD-scoreboard/blob/main/package.json)
 
 ---
 
