@@ -19,6 +19,7 @@ import {
     isMatchFinal,
     resolveMatchRules,
 } from "../../Utils/matchRules";
+import { getEventDisplayName } from "../../Utils/matchFactory";
 
 const formatTime = (totalSeconds) => {
     if (typeof totalSeconds !== 'number' || isNaN(totalSeconds)) {
@@ -92,7 +93,7 @@ function Screen() {
         const unsubscribe = onValue(eventRef, (snapshot) => {
             const val = snapshot.val();
             if (val) {
-                setEventName(val?.EventName || val?.eventName || val?.settings?.eventName || val?.name || selectedEvent);
+                setEventName(getEventDisplayName(val, selectedEvent));
                 setEventSettings(val?.settings || {});
             } else {
                 setEventName(selectedEvent);

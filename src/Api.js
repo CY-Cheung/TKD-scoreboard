@@ -7,6 +7,10 @@ import {
     normalizePointsStat,
     resolveMatchRules,
 } from './Utils/matchRules';
+import {
+    createEmptyMatchStats,
+    createInitialMatchState,
+} from './Utils/matchFactory';
 
 /** Multiple-referee vote window: judges must agree within this period (ms). */
 export const VOTE_WINDOW_MS = 1000;
@@ -38,14 +42,15 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
         }
 
         // Ensure state exists before reading from it
-        if (!matchData.state) matchData.state = {
-            isFinished: false, isPaused: true, timer: 0, winReason: null, lastStartTime: null, dominantSide: 'none'
-        };
+        if (!matchData.state) {
+            matchData.state = createInitialMatchState({
+                timer: 0,
+                lastStartTime: null,
+                dominantSide: 'none',
+            });
+        }
         
-        if (!matchData.stats) matchData.stats = {
-            red: { pointsStat: [...EMPTY_POINTS_STAT], gamjeom: 0 },
-            blue: { pointsStat: [...EMPTY_POINTS_STAT], gamjeom: 0 }
-        };
+        if (!matchData.stats) matchData.stats = createEmptyMatchStats();
 
         if (matchData.state.phase === 'REST') return;
 

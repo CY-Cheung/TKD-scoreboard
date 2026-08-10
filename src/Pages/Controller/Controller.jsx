@@ -6,6 +6,7 @@ import { updateScoreAndCheckRules } from "../../Api";
 import { useAuth } from "../../Context/AuthContext";
 import Button from "../../Components/Button/Button";
 import { Wifi, WifiOff, ArrowLeft } from "react-bootstrap-icons";
+import { getEventDisplayName } from "../../Utils/matchFactory";
 import "./Controller.css";
 
 const getDeviceName = () => {
@@ -89,7 +90,7 @@ function Controller() {
         const unsubscribe = onValue(eventRef, (snapshot) => {
             const val = snapshot.val();
             if (val) {
-                setEventName(val.EventName || val.eventName || val.name || eventId);
+                setEventName(getEventDisplayName(val, eventId));
             } else {
                 setEventName(eventId);
             }

@@ -10,6 +10,7 @@ import QRCodeDisplay from '../../Components/QRCodeDisplay/QRCodeDisplay';
 import MarqueeText from "../../Components/MarqueeText";
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import { LANDING_FEATURES, LANDING_HERO } from '../../constants/landingFeatures';
+import { getEventDisplayName } from '../../Utils/matchFactory';
 
 // 引入 Bootstrap Icons
 import { Display, Controller, Diagram2, PersonBadge, BoxArrowRight, ArrowLeftRight, Github } from 'react-bootstrap-icons';
@@ -32,8 +33,7 @@ function Home() {
         get(eventRef).then((snapshot) => {
             if (snapshot.exists()) {
                 const val = snapshot.val();
-                const fetchedName = val?.EventName || val?.eventName || val?.settings?.eventName || val?.name || session.eventId;
-                setEventName(fetchedName);
+                setEventName(getEventDisplayName(val, session.eventId));
             } else {
                 setEventName(session.eventId);
             }

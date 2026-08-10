@@ -1,4 +1,9 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import {
+    createDefaultMatchRules,
+    createEmptyMatchStats,
+    createInitialMatchState,
+} from './matchFactory';
 
 // Configure pdfjs worker from cdnjs or local build
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -177,12 +182,7 @@ export const parsePdfPage = async (page) => {
                     categoryTitle: categoryTitle || '',
                     matchDate: matchDate || '',
                     courtCode: courtId || '',
-                    rules: {
-                        maxGamjeom: 5,
-                        maxPointGap: 15,
-                        restDuration: 60,
-                        roundDuration: 90
-                    },
+                    rules: createDefaultMatchRules(),
                     competitors: {
                         blue: { name: '', affiliatedClub: '' },
                         red: { name: '', affiliatedClub: '' }
@@ -269,21 +269,8 @@ export const parsePdfPage = async (page) => {
         const m = parsedMatches[mId];
         cleanMatchesMap[mId] = {
             config: m.config,
-            state: {
-                isStarted: false,
-                isPaused: true,
-                isFinished: false,
-                currentRound: 1,
-                timer: m.config.rules.roundDuration,
-                winnerSide: null,
-                phase: 'ROUND',
-                winReason: null
-            },
-            stats: {
-                roundWins: { red: 0, blue: 0 },
-                blue: { pointsStat: [0, 0, 0, 0, 0], gamjeom: 0 },
-                red: { pointsStat: [0, 0, 0, 0, 0], gamjeom: 0 }
-            }
+            state: createInitialMatchState({ timer: m.config.rules.roundDuration }),
+            stats: createEmptyMatchStats(),
         };
     });
 

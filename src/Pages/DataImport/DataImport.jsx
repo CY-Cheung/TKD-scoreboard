@@ -11,6 +11,7 @@ import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 import { appendIvrQuotaToSettings, appendIvrQuotaToRules, formatIvrQuotaForInput } from '../../Api';
 import TournamentBracket from '../../Components/TournamentBracket/TournamentBracket';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
+import { createEmptyMatch, getEventDisplayName } from '../../Utils/matchFactory';
 
 // A helper function to parse name and club from old format
 const parseName = (fullName) => {
@@ -81,7 +82,7 @@ const DataImport = () => {
                     const item = val[key];
                     return {
                         id: key,
-                        displayName: item?.EventName || item?.eventName || key,
+                        displayName: getEventDisplayName(item, key),
                         createdBy: item?.createdBy || null
                     };
                 });
@@ -414,42 +415,29 @@ const DataImport = () => {
         }
 
         try {
-            const newMatch = {
-                config: {
-                    matchId: matchId,
-                    nextMatchId: nextMatchId || null,
-                    nextMatchSlot: nextMatchSlot || null,
-                    rules: appendIvrQuotaToRules({
-                        maxPointGap: parseInt(maxPointGap, 10),
-                        maxGamjeom: parseInt(maxGamjeom, 10),
-                        roundDuration: parseInt(roundDuration, 10),
-                        restDuration: parseInt(restDuration, 10),
-                    }, ivrQuota),
-                    competitors: {
-                        blue: { 
-                            name: blueName, 
-                            affiliatedClub: blueAffiliatedClub || '', 
-                            previousMatch: bluePreviousMatch || null 
-                        },
-                        red: { 
-                            name: redName, 
-                            affiliatedClub: redAffiliatedClub || '',
-                            previousMatch: redPreviousMatch || null
-                        },
+            const newMatch = createEmptyMatch({
+                matchId,
+                nextMatchId: nextMatchId || null,
+                nextMatchSlot: nextMatchSlot || null,
+                rules: appendIvrQuotaToRules({
+                    maxPointGap: parseInt(maxPointGap, 10),
+                    maxGamjeom: parseInt(maxGamjeom, 10),
+                    roundDuration: parseInt(roundDuration, 10),
+                    restDuration: parseInt(restDuration, 10),
+                }, ivrQuota),
+                competitors: {
+                    blue: {
+                        name: blueName,
+                        affiliatedClub: blueAffiliatedClub || '',
+                        previousMatch: bluePreviousMatch || null,
+                    },
+                    red: {
+                        name: redName,
+                        affiliatedClub: redAffiliatedClub || '',
+                        previousMatch: redPreviousMatch || null,
                     },
                 },
-                state: { 
-                    isStarted: false, isPaused: true, isFinished: false,
-                    currentRound: 1, timer: parseInt(roundDuration, 10),
-                    winnerSide: null, phase: 'ROUND',
-                    winReason: null
-                },
-                stats: { 
-                    roundWins: { red: 0, blue: 0 }, 
-                    blue: { pointsStat: [0,0,0,0,0], gamjeom: 0 }, 
-                    red: { pointsStat: [0,0,0,0,0], gamjeom: 0 } 
-                }
-            };
+            });
 
             const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
             await set(matchRef, newMatch);

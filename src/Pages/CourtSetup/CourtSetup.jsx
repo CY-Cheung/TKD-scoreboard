@@ -12,6 +12,7 @@ import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import { LANDING_FEATURES, LANDING_HERO } from '../../constants/landingFeatures';
+import { getEventDisplayName } from '../../Utils/matchFactory';
 
 function CourtSetup() {
   const [password, setPassword] = useState('');
@@ -91,7 +92,7 @@ function CourtSetup() {
           const val = snapshot.val();
           const eventList = Object.keys(val).map(key => {
             const item = val[key];
-            const displayName = item?.EventName || item?.eventName || item?.settings?.eventName || item?.name || key;
+            const displayName = getEventDisplayName(item, key);
             return { id: key, displayName, createdBy: item?.createdBy || null, createdByEmail: item?.createdByEmail || null };
           });
           setEvents(eventList);
