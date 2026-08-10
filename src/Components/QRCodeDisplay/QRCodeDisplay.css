@@ -50,6 +50,12 @@
   justify-content: space-between;
 }
 
+.qrcode-left-panel .referee-status-box,
+.qrcode-left-panel .referee-mode-selector {
+  width: 80%;
+  align-self: center;
+}
+
 .qrcode-right-panel {
   flex: 1 1 50%;
   width: 50%;
@@ -244,6 +250,25 @@
   color: #94a3b8;
 }
 
+.ref-slot-pill .locale-slot {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.qrcode-instructions .locale-slot,
+.qrcode-title .locale-slot {
+  width: auto;
+}
+
+.qrcode-center-column {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
 .qrcode-wrapper {
   background: transparent;
   padding: 1.5cqi;
@@ -256,13 +281,41 @@
   box-sizing: border-box;
 }
 
+.qrcode-wrapper--compact {
+  width: 52%;
+  padding: 1cqi;
+}
+
+.qrcode-court-label {
+  margin-top: 0.8cqi;
+  font-size: 2.6cqi;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.qrcode-court-label .locale-slot {
+  width: auto;
+}
+
 .qrcode-instructions {
+  margin-top: 1.4cqi;
   font-size: 1.6cqi;
   font-weight: bold;
   color: #fff;
   text-align: center;
-  margin: 0;
+  width: 100%;
   line-height: 1.4;
+}
+
+.qrcode-scan-copy {
+  text-align: center;
+  width: 100%;
+  line-height: 1.5;
+  font-size: 1.4cqi;
+  opacity: 0.9;
+  white-space: pre-line;
 }
 
 .text-warning {

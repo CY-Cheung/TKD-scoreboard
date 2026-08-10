@@ -35,7 +35,8 @@ function ProtectedRoute({ children }) {
   const isAuthenticated = !!session || hasSessionStorage() || hasUrlParams();
 
   if (!isAuthenticated) {
-    return <Navigate to="/court-setup" replace />;
+    // Prefer Court Setup over Landing so Google session is not wiped by Landing's mount logout.
+    return <Navigate to="/court-setup" replace state={{ from: location.pathname }} />;
   }
 
   return children;

@@ -8,6 +8,8 @@ import './Home.css';
 import Button from '../../Components/Button/Button';
 import QRCodeDisplay from '../../Components/QRCodeDisplay/QRCodeDisplay';
 import MarqueeText from "../../Components/MarqueeText";
+import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
+import { LANDING_FEATURES, LANDING_HERO } from '../../constants/landingFeatures';
 
 // 引入 Bootstrap Icons
 import { Display, Controller, Diagram2, PersonBadge, BoxArrowRight, ArrowLeftRight, Github } from 'react-bootstrap-icons';
@@ -15,6 +17,7 @@ import { Display, Controller, Diagram2, PersonBadge, BoxArrowRight, ArrowLeftRig
 function Home() {
     const navigate = useNavigate();
     const { session, user, googleLogout, logout } = useAuth();
+    const { locale, visible } = useAlternatingLocale();
     const [eventName, setEventName] = useState('');
     const [showQRCode, setShowQRCode] = useState(false);
 
@@ -50,12 +53,13 @@ function Home() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    const handleSessionLogout = () => {
-        logout();
-        navigate('/court-setup');
+    // Stay on /home until Court Setup mounts — session is cleared there.
+    // Clearing session here lets ProtectedRoute interrupt the navigation.
+    const handleGoToCourtSetup = () => {
+        navigate('/court-setup', { replace: true });
     };
 
-    // Google Sign Out & Clear Session with Redirect to Court Setup
+    // Full Google sign-out → Landing (Court Setup requires Google user)
     const handleGoogleLogout = async () => {
         try {
             await googleLogout();
@@ -63,7 +67,7 @@ function Home() {
             console.error("Google logout error:", err);
         } finally {
             logout();
-            navigate('/court-setup');
+            navigate('/', { replace: true });
         }
     };
 
@@ -99,7 +103,7 @@ function Home() {
                     </div>
                     <Button 
                         onClick={handleGoogleLogout}
-                        title="Sign Out of Google Account & Redirect to Court Setup"
+                        title="Sign Out of Google Account & Return to Landing"
                         fontSize="0.72cqi"
                         variant="orange"
                         icon={<BoxArrowRight size="0.73cqi" />}
@@ -111,14 +115,43 @@ function Home() {
 
                 <div className="home-left-panel">
                     <div className="home-title-container">
-                        <h1 style={{fontSize: '3.5cqi', lineHeight: '1.1'}}>Taekwondo<br/>Scoreboard</h1>
-                        <div style={{fontSize: '1.5cqi', color: '#fbc531', margin: '0.3cqi 0 0 0', fontWeight: '700', letterSpacing: '0.3cqi', textTransform: 'uppercase'}}>Kyorugi</div>
-                        <h2 style={{fontSize: '1.5cqi', color: 'rgba(255,255,255,0.9)', margin: '0.8cqi 0 0 0', fontWeight: 'normal', letterSpacing: '0.1cqi'}}>跆拳道搏擊比賽計分系統</h2>
+                        <StableLocaleText
+                            as="h1"
+                            locale={locale}
+                            visible={visible}
+                            className="home-hero-title"
+                            en={LANDING_HERO.titleEn}
+                            zh={LANDING_HERO.titleZh}
+                        />
+                        <StableLocaleText
+                            as="p"
+                            locale={locale}
+                            visible={visible}
+                            className="home-subtitle"
+                            en={LANDING_HERO.subtitleEn}
+                            zh={LANDING_HERO.subtitleZh}
+                        />
                         <ul className="home-app-intro-list">
-                            <li><strong>Cloud-Powered (雲端驅動)</strong>：只要連到上網，隨時隨地都可以開波計分！無須安裝任何軟件。</li>
-                            <li><strong>Scan & Score (掃描即用)</strong>：裁判只需用手機掃描 QR Code，一秒連接，即刻開始畀分。</li>
-                            <li><strong>One Account (一鍵開賽)</strong>：只需要一個 Google 帳號登入，就可以輕鬆創建及管理整場賽事。</li>
-                            <li><strong>Auto Bracket (魔法對戰表)</strong>：支援多個 Court 同時作賽，賽果實時同步，晉級表自動 Update！</li>
+                            {LANDING_FEATURES.map(({ id, titleEn, titleZh, en, zh }) => (
+                                <li key={id} className="home-app-intro-item">
+                                    <StableLocaleText
+                                        as="div"
+                                        locale={locale}
+                                        visible={visible}
+                                        className="home-app-intro-title"
+                                        en={titleEn}
+                                        zh={titleZh}
+                                    />
+                                    <StableLocaleText
+                                        as="div"
+                                        locale={locale}
+                                        visible={visible}
+                                        className="home-app-intro-desc"
+                                        en={en}
+                                        zh={zh}
+                                    />
+                                </li>
+                            ))}
                         </ul>
                     </div>
                     <div className="home-footer-links">
@@ -174,16 +207,54 @@ function Home() {
                         })()}
                         {/* Empty line space */}
                         <div style={{ height: '1cqi' }}></div>
-                        <div style={{ fontSize: '1.6cqi', color: '#fff', fontWeight: 'bold' }}>
-                            Court {session?.courtId?.toString().replace(/court\s*/i, '').trim() || 'N/A'}
+                        <div className="home-court-row">
+                            <StableLocaleText
+                                as="div"
+                                locale={locale}
+                                visible={visible}
+                                className="home-court-label"
+                                en={`Court ${session?.courtId?.toString().replace(/court\s*/i, '').trim() || 'N/A'}`}
+                                zh={`場地 ${session?.courtId?.toString().replace(/court\s*/i, '').trim() || 'N/A'}`}
+                            />
+                            <Button
+                                onClick={handleGoToCourtSetup}
+                                className="home-court-setup-btn"
+                                icon={<ArrowLeftRight size="1cqi" />}
+                                fontSize="1.05cqi"
+                                angle={0}
+                                style={{ padding: '0.55cqi 0.95cqi', margin: 0, width: 'auto', whiteSpace: 'nowrap' }}
+                            >
+                                <StableLocaleText as="span" locale={locale} visible={visible} en="Court Setup" zh="場地設置" />
+                            </Button>
                         </div>
                     </div>
 
                     <div className="home-nav-container">
-                        <Button onClick={handleSessionLogout} text="Court Setup (場地設置)" icon={<ArrowLeftRight size="1.25cqi" />} fontSize="1.35cqi" angle={0} style={{ padding: '0.8cqi 1.5cqi', width: '100%' }} />
-                        <Button onClick={() => navigate("/screen")} text="Screen (顯示屏)" icon={<Display size="1.25cqi" />} fontSize="1.35cqi" angle={50} style={{ padding: '0.8cqi 1.5cqi', width: '100%' }} />
-                        <Button onClick={() => navigate("/import")} text="Admin (管理後台)" icon={<Diagram2 size="1.25cqi" />} fontSize="1.35cqi" angle={90} style={{ padding: '0.8cqi 1.5cqi', width: '100%' }} />
-                        <Button onClick={() => setShowQRCode(true)} text="Referee (裁判控制)" icon={<PersonBadge size="1.25cqi" />} fontSize="1.35cqi" angle={180} style={{ padding: '0.8cqi 1.5cqi', width: '100%' }} />
+                        <Button
+                            onClick={() => navigate("/screen")}
+                            icon={<Display size="1.25cqi" />}
+                            fontSize="1.35cqi"
+                            gradient={
+                                'linear-gradient(90deg, ' +
+                                'var(--red-secondary) 0%, ' +
+                                'var(--red-primary) 5%, ' +
+                                'var(--red-primary) 36%, ' +
+                                'var(--yellow-primary) 42%, ' +
+                                'var(--yellow-primary) 58%, ' +
+                                'var(--blue-primary) 64%, ' +
+                                'var(--blue-primary) 95%, ' +
+                                'var(--blue-secondary) 100%)'
+                            }
+                            style={{ padding: '0.8cqi 1.5cqi' }}
+                        >
+                            <StableLocaleText as="span" locale={locale} visible={visible} en="Scoreboard" zh="分牌顯示" />
+                        </Button>
+                        <Button onClick={() => navigate("/import")} icon={<Diagram2 size="1.25cqi" />} fontSize="1.35cqi" angle={90} style={{ padding: '0.8cqi 1.5cqi' }}>
+                            <StableLocaleText as="span" locale={locale} visible={visible} en="Manage Match" zh="管理賽事" />
+                        </Button>
+                        <Button onClick={() => setShowQRCode(true)} icon={<PersonBadge size="1.25cqi" />} fontSize="1.35cqi" angle={180} style={{ padding: '0.8cqi 1.5cqi' }}>
+                            <StableLocaleText as="span" locale={locale} visible={visible} en="Corner Judge" zh="邊裁設定" />
+                        </Button>
                     </div>
                 </div>
             </div>

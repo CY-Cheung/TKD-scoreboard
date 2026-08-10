@@ -1,107 +1,140 @@
-:root {
-    background: #000000;
-    color: #ffffff;
-    font-family: sans-serif;
-}
-
-body {
-    height: 100vh;
-    height: 100dvh;
-    margin: 0;
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    -webkit-tap-highlight-color: transparent;
-}
-
-/* Global Select (Dropdown) Styles */
-select {
-    background-color: #333;
-    color: white;
-    border: 0.052cqi solid #555;
-    border-radius: 0.208cqi;
-    padding: 0.521cqi;
-    font-size: 0.833cqi;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat;
-    background-position: right 0.521cqi top 50%;
-    background-size: .65em auto;
-    padding-right: 1.562cqi; /* Make space for the arrow */
-    width: 100%; /* Ensure full width */
-    box-sizing: border-box;
-}
-
-select:focus {
-    outline: none;
-    border-color: var(--yellow-primary);
-}
-
-select option {
-    background-color: #333;
-    color: white;
-}
-
-/* --- Global Design System --- */
-
-/* Aurora Background (Top Red, Bottom Blue) */
-.aurora-bg {
-    position: relative;
-    overflow: hidden;
-    background-color: #111116; /* Deep dark background */
-}
-
-.aurora-bg::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: -15%;
-    transform: translateY(-50%);
-    width: 50cqi;
-    height: 100vh;
-    background: radial-gradient(ellipse, rgba(255, 0, 80, 0.5) 0%, rgba(255, 0, 80, 0) 65%);
-    filter: blur(4.167cqi);
-    z-index: 0;
-    pointer-events: none;
-}
-
-.aurora-bg::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: -15%;
-    bottom: auto;
-    left: auto;
-    transform: translateY(-50%);
-    width: 50cqi;
-    height: 100vh;
-    background: radial-gradient(ellipse, rgba(0, 150, 255, 0.5) 0%, rgba(0, 150, 255, 0) 65%);
-    filter: blur(4.167cqi);
-    z-index: 0;
-    pointer-events: none;
-}
-
-/* Glassmorphism Card */
-.glass-card {
-    position: relative;
-    z-index: 10;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(2.083cqi);
-    -webkit-backdrop-filter: blur(2.083cqi);
-    border: 0.078cqi solid rgba(255, 255, 255, 0.3);
-    border-radius: 1.042cqi;
-    box-shadow: 0 1.562cqi 3.125cqi -0.781cqi rgba(0, 0, 0, 0.6);
-}
+:root {
+    background: #000000;
+    color: #ffffff;
+    font-family: 'Inter', 'Segoe UI', 'Microsoft JhengHei UI', 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', sans-serif;
+}
 
-.home-container, .court-setup-container, .data-import-container, .screen-container {
+body {
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Global Select (Dropdown) Styles */
+select {
+    background-color: #333;
+    color: white;
+    border: 0.052cqi solid #555;
+    border-radius: 0.208cqi;
+    padding: 0.521cqi;
+    font-size: 0.833cqi;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 0.521cqi top 50%;
+    background-size: .65em auto;
+    padding-right: 1.562cqi; /* Make space for the arrow */
+    width: 100%; /* Ensure full width */
+    box-sizing: border-box;
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--yellow-primary);
+}
+
+select option {
+    background-color: #333;
+    color: white;
+}
+
+/* --- Global Design System --- */
+
+/* Aurora Background — red + blue glow blobs orbit screen center (CCW, 60s) */
+.aurora-bg {
+    position: relative;
+    overflow: hidden;
+    background-color: #111116;
+    --aurora-blob-size: min(85cqi, 85vh);
+    --aurora-orbit-radius: min(54cqi, 54vh);
+}
+
+.aurora-bg::before,
+.aurora-bg::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--aurora-blob-size);
+    height: var(--aurora-blob-size);
+    border-radius: 50%;
+    filter: blur(4cqi);
+    z-index: 0;
+    pointer-events: none;
+    will-change: transform;
+}
+
+.aurora-bg::before {
+    background: radial-gradient(
+        circle,
+        rgba(255, 0, 80, 0.52) 0%,
+        rgba(255, 0, 80, 0.16) 42%,
+        rgba(255, 0, 80, 0) 76%
+    );
+    animation: aurora-orbit-red 45s linear infinite;
+}
+
+.aurora-bg::after {
+    background: radial-gradient(
+        circle,
+        rgba(0, 150, 255, 0.52) 0%,
+        rgba(0, 150, 255, 0.16) 42%,
+        rgba(0, 150, 255, 0) 76%
+    );
+    animation: aurora-orbit-blue 45s linear infinite;
+}
+
+@keyframes aurora-orbit-red {
+    from {
+        transform: translate(-50%, -50%) rotate(180deg) translateX(var(--aurora-orbit-radius)) rotate(-180deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(-180deg) translateX(var(--aurora-orbit-radius)) rotate(180deg);
+    }
+}
+
+@keyframes aurora-orbit-blue {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg) translateX(var(--aurora-orbit-radius)) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(-360deg) translateX(var(--aurora-orbit-radius)) rotate(360deg);
+    }
+}
+
+/* Glassmorphism Card */
+.glass-card {
+    position: relative;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(2.083cqi);
+    -webkit-backdrop-filter: blur(2.083cqi);
+    border: 0.078cqi solid rgba(255, 255, 255, 0.3);
+    border-radius: 1.042cqi;
+    box-shadow: 0 1.562cqi 3.125cqi -0.781cqi rgba(0, 0, 0, 0.6);
+}
+
+.home-container, .court-setup-container, .data-import-container, .screen-container, .landing-page {
     container-type: inline-size;
     min-width: 1024px;
     width: 100%;
+}
+
+.home-container, .court-setup-container, .data-import-container, .screen-container {
     height: 100vh;
     overflow-x: auto;
+}
+
+.landing-page {
+    height: 100dvh;
+    overflow: hidden;
 }
 
 /* Hide scrollbar globally but keep functionality */
@@ -111,7 +144,7 @@ select option {
 * {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
-}
+}
 
 .punch-icon {
     background-color: currentColor;

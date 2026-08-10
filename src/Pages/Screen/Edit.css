@@ -20,41 +20,81 @@
 
 .edit-grid {
     display: grid;
-    /* side label + IVR + Technical + 6 scoring columns */
-    grid-template-columns: auto repeat(8, 1fr);
-    gap: 0.521cqi;
+    /* side + IVR + Technical + 6 scoring = 9 columns */
+    grid-template-columns: max-content repeat(8, minmax(0, 1fr));
+    grid-auto-flow: row;
+    gap: 0.4cqi;
     width: 95%;
     margin-bottom: 1.042cqi;
-    /* Space between grid and time bar */
+    align-items: center;
 }
 
-.grid-cell {
+.edit-grid > .grid-cell {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0.26cqi;
+    padding: 0.2cqi;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
-.grid-cell.header {
+.edit-grid > .grid-cell.header {
     font-weight: bold;
-    font-size: 1.3cqi;
+    font-size: 1.15cqi;
+    overflow: hidden;
+    gap: 0.15cqi;
 }
 
-.grid-cell.side-label {
+.edit-grid > .grid-cell.side-label {
     font-weight: bold;
     font-size: 1.6cqi;
     justify-content: flex-start;
+    padding-right: 0.4cqi;
 }
 
-.grid-cell .buttons {
+.edit-grid > .grid-cell .buttons {
     display: flex;
     align-items: center;
-    gap: 0.21cqi;
+    justify-content: center;
+    gap: 0.15cqi;
+    min-width: 0;
+}
+
+.edit-grid > .grid-cell .buttons .tkd-btn {
+    margin: 0.08cqi;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.edit-grid-locale {
+    display: inline-grid;
+    grid-template: 1fr / 1fr;
+    align-items: center;
+    justify-items: center;
+    width: max-content;
+    max-width: 100%;
+    line-height: 1.15;
+    vertical-align: middle;
+}
+
+.edit-grid-locale-layer {
+    grid-area: 1 / 1;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+.edit-grid-locale-layer.is-visible {
+    opacity: 1;
 }
 
 .edit-ivr-quota-input {
     width: 2.6cqi;
-    min-width: 2.6cqi;
+    min-width: 2.2cqi;
+    max-width: 2.8cqi;
     padding: 0.15cqi 0.2cqi;
     font-size: 1.4cqi;
     font-weight: 800;
@@ -77,6 +117,14 @@
 
 .red {
     color: var(--red-primary);
+}
+
+.time-control-group h2.locale-slot,
+.time-bar .locale-slot {
+    display: inline-grid !important;
+    width: auto !important;
+    white-space: nowrap;
+    vertical-align: middle;
 }
 
 .time-bar {
@@ -104,6 +152,7 @@
     align-items: center;
     margin: 0 0.26cqi;
     font-size: 1.3cqi;
+    gap: 0.2cqi;
 }
 
 .time-selects select {
@@ -115,5 +164,4 @@
 /* Aligning the Done button */
 .time-bar>.btn-wrapper {
     margin-left: 2.083cqi;
-    /* Add some space before the Done button */
 }

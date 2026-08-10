@@ -17,6 +17,15 @@ const getScoreValue = (stats, opponentStats) => {
     return points + (opponentStats?.gamjeom || 0) + (opponentStats?.gamjeomAvoiding || 0);
 };
 
+/** Clear round-scoped scoring; keep match-scoped fields such as IVR remaining. */
+const resetSideStatsForNextRound = (sideStats = {}) => {
+    const next = { gamjeom: 0, pointsStat: [0, 0, 0, 0, 0] };
+    if (typeof sideStats.ivrRemaining === "number" && !Number.isNaN(sideStats.ivrRemaining)) {
+        next.ivrRemaining = sideStats.ivrRemaining;
+    }
+    return next;
+};
+
 export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, courtId = null, deviceId = null, seatName = null, mode = 'single') => {
     const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
 
@@ -195,8 +204,8 @@ export const declareRoundWinner = (eventName, matchId, winnerSide) => {
             const originalStats = { ...matchData.stats };
             matchData.stats = {
                 ...originalStats,
-                red: { gamjeom: 0, pointsStat: [0,0,0,0,0] },
-                blue: { gamjeom: 0, pointsStat: [0,0,0,0,0] }
+                red: resetSideStatsForNextRound(originalStats.red),
+                blue: resetSideStatsForNextRound(originalStats.blue),
             };
             
             matchData.recentScores = [];
@@ -219,8 +228,8 @@ export const startNextRound = (eventName, matchId) => {
     runTransaction(matchRef, (matchData) => {
         if (!matchData) return;
 
-        matchData.stats.red = { gamjeom: 0, pointsStat: [0,0,0,0,0] };
-        matchData.stats.blue = { gamjeom: 0, pointsStat: [0,0,0,0,0] };
+        matchData.stats.red = resetSideStatsForNextRound(matchData.stats.red);
+        matchData.stats.blue = resetSideStatsForNextRound(matchData.stats.blue);
 
         matchData.state.currentRound = (matchData.state.currentRound || 1) + 1;
         matchData.state.phase = "ROUND";

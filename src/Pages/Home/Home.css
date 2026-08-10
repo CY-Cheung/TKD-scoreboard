@@ -53,8 +53,9 @@
     text-align: left;
 }
 
-.home-title-container h1 {
-    font-size: 3.5cqi;
+.home-title-container h1,
+.home-hero-title {
+    font-size: 2.67cqi;
     margin: 0;
     color: #ffffff;
     font-weight: 800;
@@ -62,25 +63,40 @@
     letter-spacing: 0.03cqi;
 }
 
-.home-title-container h2 {
+.home-subtitle {
     font-size: 1.5cqi;
-    color: rgba(255,255,255,0.9);
-    margin: 0.8cqi 0 0 0;
-    font-weight: normal;
-    letter-spacing: 0.1cqi;
+    color: #fbc531;
+    margin: 0.3cqi 0 0 0;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.3cqi;
+    text-transform: uppercase;
 }
 
 .home-app-intro-list {
-    font-size: 1.1cqi;
-    color: rgba(255, 255, 255, 0.85);
-    margin-top: 2cqi;
-    line-height: 1.6;
-    padding-left: 1.5cqi;
-    list-style-type: disc;
+    margin-top: 1.5cqi;
+    padding-left: 0;
+    list-style: none;
 }
 
-.home-app-intro-list li {
-    margin-bottom: 0.5cqi;
+.home-app-intro-item {
+    margin-bottom: 0.85cqi;
+}
+
+.home-app-intro-title {
+    display: grid;
+    font-size: 1.38cqi;
+    font-weight: 700;
+    line-height: 1.25;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.home-app-intro-desc {
+    display: grid;
+    margin-top: 0.25cqi;
+    font-size: 1.05cqi;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.52);
 }
 
 .home-footer-links {
@@ -134,8 +150,38 @@
 .home-nav-container {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 1.5cqi;
     width: 100%;
+}
+
+.home-nav-container .tkd-btn {
+    width: 82%;
+}
+
+.home-court-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9cqi;
+    width: 100%;
+}
+
+.home-court-row .home-court-label.locale-slot {
+    font-size: 1.6cqi;
+    color: #fff;
+    font-weight: bold;
+    white-space: nowrap;
+    width: auto;
+}
+
+.home-court-row .home-court-label .locale-layer {
+    width: auto;
+}
+
+.home-court-setup-btn {
+    flex-shrink: 0;
+    width: auto !important;
 }
 
 

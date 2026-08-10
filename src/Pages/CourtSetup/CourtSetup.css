@@ -7,7 +7,7 @@
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', 'Segoe UI', 'Microsoft JhengHei UI', 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', sans-serif;
 }
 
 .cs-content {
@@ -39,16 +39,30 @@
 }
 
 .cs-app-intro-list {
-    font-size: 1.12cqi;
-    color: rgba(255, 255, 255, 0.85);
     margin-top: 1.5cqi;
-    line-height: 1.6;
-    padding-left: 1.5cqi;
-    list-style-type: disc;
+    padding-left: 0;
+    list-style: none;
 }
 
-.cs-app-intro-list li {
-    margin-bottom: 0.5cqi;
+.cs-app-intro-item {
+    margin-bottom: 0.85cqi;
+    padding-left: 0;
+}
+
+.cs-app-intro-title {
+    display: grid;
+    font-size: 1.38cqi;
+    font-weight: 700;
+    line-height: 1.25;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.cs-app-intro-desc {
+    display: grid;
+    margin-top: 0.25cqi;
+    font-size: 1.05cqi;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.52);
 }
 
 .cs-divider {
@@ -89,7 +103,8 @@
     width: 100%;
 }
 
-.cs-title-container h1 {
+.cs-title-container h1,
+.cs-title-container .cs-hero-title {
     font-size: 2.67cqi; /* Make it slightly bigger for split layout */
     margin: 0;
     color: #ffffff;
@@ -99,11 +114,13 @@
 }
 
 .cs-subtitle {
-    font-size: 0.92cqi;
-    color: rgba(255, 255, 255, 0.8);
-    margin-top: 0.78cqi;
-    font-weight: 400;
-    letter-spacing: 0.03cqi;
+    font-size: 1.5cqi;
+    color: #fbc531;
+    margin: 0.3cqi 0 0 0;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.3cqi;
+    text-transform: uppercase;
 }
 
 .cs-form {
@@ -125,7 +142,10 @@
     align-items: flex-start;
 }
 
-.form-group label {
+.form-group label,
+.cs-form-label {
+    display: grid;
+    width: 100%;
     margin-bottom: 0.6cqi;
     font-size: 1.12cqi;
     color: rgba(255, 255, 255, 0.9);
@@ -167,6 +187,19 @@
     color: rgba(255, 255, 255, 0.3);
     cursor: not-allowed;
     border-color: rgba(255, 255, 255, 0.05);
+}
+
+.cs-court-confirm-row {
+    display: flex;
+    align-items: center;
+    gap: 0.52cqi;
+    width: 100%;
+}
+
+.cs-court-select {
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
 }
 
 .cs-action-buttons {
@@ -237,6 +270,141 @@
 
 .cs-footer-links a:hover {
     color: rgba(255, 255, 255, 0.9);
+}
+
+.cs-create-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cs-create-modal {
+    aspect-ratio: 16 / 9;
+    width: min(82vw, 58cqi, calc(78vh * 16 / 9));
+    max-height: 78vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: #1e1e1e;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.62cqi;
+    padding: 1.3cqi;
+    color: #fff;
+    box-shadow: 0 0.42cqi 1.66cqi rgba(0, 0, 0, 0.6);
+    text-align: left;
+}
+
+.cs-create-modal-title {
+    margin: 0 0 0.78cqi;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.42cqi;
+    color: #34c759;
+    font-size: 1.19cqi;
+}
+
+.cs-create-modal-form {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.78cqi;
+}
+
+.cs-create-modal-pdf {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 0.78cqi;
+    border-radius: 0.42cqi;
+    display: flex;
+    flex-direction: column;
+    gap: 0.52cqi;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cs-create-modal-pdf-head {
+    display: flex;
+    align-items: center;
+    gap: 0.52cqi;
+}
+
+.cs-create-modal-pdf-title {
+    color: #fff;
+    font-weight: 700;
+}
+
+.cs-create-modal-pdf-desc {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.68cqi;
+}
+
+.cs-create-modal-pdf-success {
+    color: #4caf50;
+    font-size: 0.72cqi;
+    margin-top: 0.26cqi;
+}
+
+.cs-create-modal-pdf-btn {
+    align-self: center;
+    width: fit-content;
+}
+
+.cs-create-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7.8cqi, 1fr));
+    gap: 0.52cqi;
+}
+
+.cs-create-modal-grid--pair {
+    grid-template-columns: 1fr 1fr;
+}
+
+.cs-create-modal-grid--quad {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cs-create-modal-grid--wide {
+    grid-template-columns: repeat(auto-fit, minmax(10.4cqi, 1fr));
+    gap: 0.78cqi;
+}
+
+.cs-create-modal-field {
+    margin-bottom: 0;
+}
+
+.cs-create-modal-label {
+    display: grid;
+    color: #ccc;
+    font-size: 0.72cqi;
+    margin-bottom: 0.26cqi;
+}
+
+.cs-create-modal-grid--wide .cs-create-modal-label {
+    font-size: 0.77cqi;
+}
+
+.cs-create-modal-input {
+    width: 100%;
+    padding: 0.42cqi;
+    border-radius: 0.21cqi;
+    border: 1px solid #555;
+    background-color: #333;
+    color: #fff;
+    box-sizing: border-box;
+}
+
+.cs-create-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.52cqi;
+    margin-top: 0.52cqi;
 }
 
 

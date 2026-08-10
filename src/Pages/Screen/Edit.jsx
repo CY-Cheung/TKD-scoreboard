@@ -9,6 +9,23 @@ import Button from "../../Components/Button/Button";
 import TechnicalCardConfirm from "../../Components/TechnicalCardFlow/TechnicalCardConfirm";
 import IVRConfirm from "../../Components/IVRFlow/IVRConfirm";
 import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner, getEffectiveIvrRemaining, formatIvrQuotaForEdit, isIvrUnlimited, setIvrRemaining } from '../../Api';
+import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
+
+/** Dual-layer locale for grid: width stays max(EN, ZH) so columns don't shift on fade. */
+function EditGridLocale({ en, zh, locale, visible, className = '' }) {
+    const enActive = locale === 'en' && visible;
+    const zhActive = locale === 'zh' && visible;
+    return (
+        <span className={`edit-grid-locale${className ? ` ${className}` : ''}`}>
+            <span className={`edit-grid-locale-layer${enActive ? ' is-visible' : ''}`} lang="en" aria-hidden={!enActive}>
+                {en}
+            </span>
+            <span className={`edit-grid-locale-layer${zhActive ? ' is-visible' : ''}`} lang="zh-Hant" aria-hidden={!zhActive}>
+                {zh}
+            </span>
+        </span>
+    );
+}
 
 const Edit = ({
     visible,
@@ -31,6 +48,7 @@ const Edit = ({
     eventSettings = {},
 }) => {
     const { showToast } = usePopup();
+    const { locale, visible: localeVisible } = useAlternatingLocale();
     const [matchMin, setMatchMin] = useState(0);
     const [matchSec, setMatchSec] = useState(0);
     const [restMin, setRestMin] = useState(0);
@@ -305,12 +323,12 @@ const Edit = ({
         <span className="helmet-icon" style={{ ...style, width: size, height: size }} />
     );
     const pointTypes = [
-        { name: "Gam-jeom", type: "gamjeom", index: null, icon: FileFill },
-        { name: "Punch", type: "pointsStat", index: 0, icon: PunchIconComp, iconSize: "1.8cqi" },
-        { name: "Body", type: "pointsStat", index: 1, icon: TrunkIconComp, iconSize: "1.5cqi" },
-        { name: "Head", type: "pointsStat", index: 2, icon: HelmetIconComp, iconSize: "1.5cqi" },
-        { name: "Body(Turn)", type: "pointsStat", index: 3, icon: ArrowRepeat, secondIcon: TrunkIconComp, iconSize: "1.5cqi" },
-        { name: "Head(Turn)", type: "pointsStat", index: 4, icon: ArrowRepeat, secondIcon: HelmetIconComp, iconSize: "1.5cqi" }
+        { id: 'gamjeom', nameEn: "Gam-jeom", nameZh: "犯規", type: "gamjeom", index: null, icon: FileFill },
+        { id: 'punch', nameEn: "Punch", nameZh: "正拳", type: "pointsStat", index: 0, icon: PunchIconComp, iconSize: "1.8cqi" },
+        { id: 'body', nameEn: "Body", nameZh: "軀幹", type: "pointsStat", index: 1, icon: TrunkIconComp, iconSize: "1.5cqi" },
+        { id: 'head', nameEn: "Head", nameZh: "頭部", type: "pointsStat", index: 2, icon: HelmetIconComp, iconSize: "1.5cqi" },
+        { id: 'body-turn', nameEn: "Body(Turn)", nameZh: "軀幹(轉身)", type: "pointsStat", index: 3, icon: ArrowRepeat, secondIcon: TrunkIconComp, iconSize: "1.5cqi" },
+        { id: 'head-turn', nameEn: "Head(Turn)", nameZh: "頭部(轉身)", type: "pointsStat", index: 4, icon: ArrowRepeat, secondIcon: HelmetIconComp, iconSize: "1.5cqi" }
     ];
 
     const { config = {}, state = {}, stats = {} } = matchData || {};
@@ -369,26 +387,28 @@ const Edit = ({
                 <div className="grid-cell header"></div>
 
                 {/* IVR 標題 - 水平排列對齊 */}
-                <div className="grid-cell header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <FilePlayFill size="1.3cqi" color="white" style={{ marginRight: '0.4cqi' }} />
-                    <span style={{ whiteSpace: 'nowrap' }}>IVR</span>
+                <div className="grid-cell header">
+                    <FilePlayFill size="1.3cqi" color="white" style={{ marginRight: '0.4cqi', flexShrink: 0 }} />
+                    <EditGridLocale locale={locale} visible={localeVisible} en="IVR" zh="IVR" />
                 </div>
                 {/* Technical Card 標題 - 水平排列對齊 */}
-                <div className="grid-cell header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <FileFontFill size="1.3cqi" color="white" style={{ marginRight: '0.4cqi' }} />
-                    <span style={{ whiteSpace: 'nowrap' }}>Technical</span>
+                <div className="grid-cell header">
+                    <FileFontFill size="1.3cqi" color="white" style={{ marginRight: '0.4cqi', flexShrink: 0 }} />
+                    <EditGridLocale locale={locale} visible={localeVisible} en="Technical" zh="技術卡" />
                 </div>
 
                 {pointTypes.map(pt => (
-                    <div className="grid-cell header" key={pt.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {pt.icon && <pt.icon size={pt.iconSize || "1.3cqi"} style={{ marginRight: pt.secondIcon ? '0.1cqi' : '0.4cqi', color: 'white' }} />}
-                        {pt.secondIcon && <pt.secondIcon size={pt.iconSize || "1.3cqi"} style={{ marginRight: '0.4cqi', color: 'white' }} />}
-                        <span style={{ whiteSpace: 'nowrap' }}>{pt.name}</span>
+                    <div className="grid-cell header" key={pt.id}>
+                        {pt.icon && <pt.icon size={pt.iconSize || "1.3cqi"} style={{ marginRight: pt.secondIcon ? '0.1cqi' : '0.4cqi', color: 'white', flexShrink: 0 }} />}
+                        {pt.secondIcon && <pt.secondIcon size={pt.iconSize || "1.3cqi"} style={{ marginRight: '0.4cqi', color: 'white', flexShrink: 0 }} />}
+                        <EditGridLocale locale={locale} visible={localeVisible} en={pt.nameEn} zh={pt.nameZh} />
                     </div>
                 ))}
 
                 {/* Blue Row */}
-                <div className="grid-cell side-label blue">Blue</div>
+                <div className="grid-cell side-label blue">
+                    <EditGridLocale locale={locale} visible={localeVisible} en="Blue" zh="藍" />
+                </div>
 
                 {/* Blue IVR 按鈕 + 剩餘 quota */}
                 <div className="grid-cell">
@@ -419,7 +439,7 @@ const Edit = ({
                 </div>
 
                 {pointTypes.map(pt => (
-                    <div className="grid-cell" key={`blue-${pt.name}`}>
+                    <div className="grid-cell" key={`blue-${pt.id}`}>
                         <div className="buttons">
                             <Button text="+" fontSize={buttonFontSize} style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }} onClick={() => handleAction('blue', pt.type, pt.index, 1)} angle={220} disabled={!matchData} />
                             <Button text="−" fontSize={buttonFontSize} style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }} onClick={() => handleAction('blue', pt.type, pt.index, -1)} angle={220} disabled={!matchData} />
@@ -428,7 +448,9 @@ const Edit = ({
                 ))}
 
                 {/* Red Row */}
-                <div className="grid-cell side-label red">Red</div>
+                <div className="grid-cell side-label red">
+                    <EditGridLocale locale={locale} visible={localeVisible} en="Red" zh="紅" />
+                </div>
 
                 {/* Red IVR 按鈕 + 剩餘 quota */}
                 <div className="grid-cell">
@@ -459,7 +481,7 @@ const Edit = ({
                 </div>
 
                 {pointTypes.map(pt => (
-                    <div className="grid-cell" key={`red-${pt.name}`}>
+                    <div className="grid-cell" key={`red-${pt.id}`}>
                         <div className="buttons">
                             <Button text="+" fontSize={buttonFontSize} style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }} onClick={() => handleAction('red', pt.type, pt.index, 1)} angle={0} disabled={!matchData} />
                             <Button text="−" fontSize={buttonFontSize} style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }} onClick={() => handleAction('red', pt.type, pt.index, -1)} angle={0} disabled={!matchData} />
@@ -471,21 +493,23 @@ const Edit = ({
             <div className="time-bar">
                 <Button
                     onClick={() => navigate(-1)}
-                    text="Back (返回)"
                     icon={<ArrowLeft size="1.2cqi" />}
                     fontSize="1.4cqi"
                     angle={180}
                     variant="gray"
                     style={{ marginRight: '0.5cqi' }}
-                />
+                >
+                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Back" zh="返回" />
+                </Button>
                 {toggleDirection && (
                     <Button
-                        text="Swap (⇄)"
                         fontSize="1.4cqi"
                         onClick={toggleDirection}
                         gradient={['#ef4444', '#ef4444', '#ef4444', '#3b82f6', '#3b82f6', '#3b82f6']}
                         style={{ marginRight: '1cqi' }}
-                    />
+                    >
+                        <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Swap (⇄)" zh="對調 (⇄)" />
+                    </Button>
                 )}
                 {toggleKyeShi && (
                     <Button
@@ -501,14 +525,16 @@ const Edit = ({
                     />
                 )}
                 <div className='time-control-group'>
-                    <h2>Match Time</h2>
+                    <StableLocaleText as="h2" locale={locale} visible={localeVisible} en="Match Time" zh="比賽時間" />
                     <div className="time-selects">
                         <select value={matchMin} onChange={(e) => handleMatchMinChange(e.target.value)} disabled={!matchData}>
                             {[0, 1, 2].map(min => <option key={min} value={min}>{min}</option>)}
-                        </select> min
+                        </select>
+                        <StableLocaleText as="span" locale={locale} visible={localeVisible} className="edit-locale-label" en="min" zh="分" />
                         <select value={matchSec} onChange={(e) => handleMatchSecChange(e.target.value)} disabled={!matchData}>
                             {Array.from({ length: 60 }, (_, i) => i).map(sec => <option key={sec} value={sec}>{sec}</option>)}
-                        </select> sec
+                        </select>
+                        <StableLocaleText as="span" locale={locale} visible={localeVisible} className="edit-locale-label" en="sec" zh="秒" />
                     </div>
                 </div>
 
@@ -528,27 +554,36 @@ const Edit = ({
                 {showPromoteWinnerButton && (
                     <Button
                         onClick={handlePromoteWinner}
-                        text="Promote Winner"
                         fontSize="1.4cqi"
                         angle={50}
-                    />
+                    >
+                        <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Promote Winner" zh="晉級優勝者" />
+                    </Button>
                 )}
 
                 {showDeclareWinnerButton && (
-                    <Button text="Winner (判定勝負)" fontSize="1.4cqi" onClick={handleDeclareWinner} angle={50} icon={<Trophy size="1.4cqi" />} />
+                    <Button fontSize="1.4cqi" onClick={handleDeclareWinner} angle={50} icon={<Trophy size="1.4cqi" />}>
+                        <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Winner" zh="判定勝負" />
+                    </Button>
                 )}
 
                 {showSuperiorityVote && (
                     <div className="superiority-vote time-control-group">
-                        <h2>Woo-se-girok</h2>
+                        <StableLocaleText as="h2" locale={locale} visible={localeVisible} en="Woo-se-girok" zh="優勢判定" />
                         <div className="buttons">
-                            <Button text="Blue" fontSize="1.4cqi" onClick={() => handleWinDeclaration('blue')} angle={220} icon={<PersonFill size="1.4cqi" />} />
-                            <Button text="Red" fontSize="1.4cqi" onClick={() => handleWinDeclaration('red')} angle={0} icon={<PersonFill size="1.4cqi" />} />
+                            <Button fontSize="1.4cqi" onClick={() => handleWinDeclaration('blue')} angle={220} icon={<PersonFill size="1.4cqi" />}>
+                                <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Blue" zh="藍" />
+                            </Button>
+                            <Button fontSize="1.4cqi" onClick={() => handleWinDeclaration('red')} angle={0} icon={<PersonFill size="1.4cqi" />}>
+                                <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Red" zh="紅" />
+                            </Button>
                         </div>
                     </div>
                 )}
 
-                <Button text="Done (完成)" fontSize="1.4cqi" onClick={() => setVisible(false)} icon={<CheckCircle size="1.4cqi" />} />
+                <Button fontSize="1.4cqi" onClick={() => setVisible(false)} icon={<CheckCircle size="1.4cqi" />}>
+                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Done" zh="完成" />
+                </Button>
             </div>
 
             {techCardConfirmSide && (
@@ -590,14 +625,25 @@ const Edit = ({
                         borderRadius: '2cqi',
                         background: 'rgba(30, 30, 40, 0.85)'
                     }}>
-                        <h2 style={{ margin: 0, fontSize: '2.2cqi', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                            {avoidingAction === 1 ? "Penalty in last 10s" : "Remove Penalty"}
-                        </h2>
+                        <StableLocaleText
+                            as="h2"
+                            locale={locale}
+                            visible={localeVisible}
+                            style={{ margin: 0, fontSize: '2.2cqi', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                            en={avoidingAction === 1 ? "Penalty in last 10s" : "Remove Penalty"}
+                            zh={avoidingAction === 1 ? "最後 10 秒犯規" : "移除犯規"}
+                        />
                         <div style={{ display: 'flex', gap: '2cqi', marginTop: '1cqi' }}>
-                            <Button text={avoidingAction === 1 ? "1-Jeom" : "-1 Jeom"} fontSize="1.6cqi" onClick={() => handleAvoidingDecision(1)} angle={avoidingSide === 'blue' ? 220 : 0} style={{ padding: '1cqi 2cqi' }} />
-                            <Button text={avoidingAction === 1 ? "2-Jeom" : "-2 Jeom"} fontSize="1.6cqi" onClick={() => handleAvoidingDecision(2)} angle={avoidingSide === 'blue' ? 220 : 0} style={{ padding: '1cqi 2cqi' }} />
+                            <Button fontSize="1.6cqi" onClick={() => handleAvoidingDecision(1)} angle={avoidingSide === 'blue' ? 220 : 0} style={{ padding: '1cqi 2cqi' }}>
+                                <StableLocaleText as="span" locale={locale} visible={localeVisible} en={avoidingAction === 1 ? "1-Jeom" : "-1 Jeom"} zh={avoidingAction === 1 ? "1 分" : "−1 分"} />
+                            </Button>
+                            <Button fontSize="1.6cqi" onClick={() => handleAvoidingDecision(2)} angle={avoidingSide === 'blue' ? 220 : 0} style={{ padding: '1cqi 2cqi' }}>
+                                <StableLocaleText as="span" locale={locale} visible={localeVisible} en={avoidingAction === 1 ? "2-Jeom" : "-2 Jeom"} zh={avoidingAction === 1 ? "2 分" : "−2 分"} />
+                            </Button>
                         </div>
-                        <Button text="Cancel" fontSize="1.2cqi" variant="cancel" onClick={() => setShowAvoidingPopup(false)} style={{ marginTop: '1cqi', padding: '0.5cqi 2cqi' }} />
+                        <Button fontSize="1.2cqi" variant="cancel" onClick={() => setShowAvoidingPopup(false)} style={{ marginTop: '1cqi', padding: '0.5cqi 2cqi' }}>
+                            <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Cancel" zh="取消" />
+                        </Button>
                     </div>
                 </div>
             )}

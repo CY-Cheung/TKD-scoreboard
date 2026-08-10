@@ -1,0 +1,40 @@
+.locale-fade-text {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.locale-fade-text.is-visible {
+    opacity: 1;
+}
+
+.locale-slot {
+    display: grid;
+    grid-template: 1fr / 1fr;
+    align-items: start;
+    align-content: start;
+    width: 100%;
+}
+
+span.locale-slot {
+    display: inline-grid;
+    width: auto;
+    vertical-align: baseline;
+}
+
+.locale-layer {
+    grid-area: 1 / 1;
+    align-self: start;
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    line-height: inherit;
+    /* Inherit page font (Inter on Court Setup / Landing); keep CJK fallbacks for 中文 */
+    font-family: inherit;
+    transition: opacity 0.5s ease;
+}
+
+.locale-layer.is-visible {
+    opacity: 1;
+}

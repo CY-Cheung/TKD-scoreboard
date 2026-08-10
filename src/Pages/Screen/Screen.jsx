@@ -6,7 +6,7 @@ import "../../App.css";
 import Edit from "./Edit";
 import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
 import Button from "../../Components/Button/Button";
-import { ArrowLeft, Icon1CircleFill, Icon2CircleFill, Icon3CircleFill, Icon1Square, Icon2Square, Icon3Square, Icon1SquareFill, Icon2SquareFill, Icon3SquareFill, Files, File, FileExcel } from "react-bootstrap-icons";
+import { ArrowLeft, Icon1CircleFill, Icon2CircleFill, Icon3CircleFill, Icon1Square, Icon2Square, Icon3Square, Icon1SquareFill, Icon2SquareFill, Icon3SquareFill, Files, File, FileExcel, RecordCircle } from "react-bootstrap-icons";
 import { startNextRound, VOTE_WINDOW_MS, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement, getEffectiveIvrRemaining, isIvrUnlimited } from "../../Api";
 import TechnicalCardAnnouncement from "../../Components/TechnicalCardFlow/TechnicalCardAnnouncement";
 import IVRAnnouncement from "../../Components/IVRFlow/IVRAnnouncement";
@@ -689,8 +689,20 @@ function Screen() {
                     {/* Center: Round Info */}
                     <div className="match-info-bottom">
                         <div className="round-info">
-                            <div className="round-font">ROUND</div>
-                            <div className="round-number">{currentRound}</div>
+                            <div className="match-font">ROUND</div>
+                            <div className="round-number-row">
+                                <div className="round-win-marks round-win-marks--left" aria-label={`${direction === 'row' ? 'Red' : 'Blue'} round wins`}>
+                                    {Array.from({ length: Math.max(0, Math.min(2, direction === 'row' ? roundWins.red : roundWins.blue)) }).map((_, i) => (
+                                        <RecordCircle key={`left-win-${i}`} className="round-win-icon" aria-hidden />
+                                    ))}
+                                </div>
+                                <div className="round-number">{currentRound}</div>
+                                <div className="round-win-marks round-win-marks--right" aria-label={`${direction === 'row' ? 'Blue' : 'Red'} round wins`}>
+                                    {Array.from({ length: Math.max(0, Math.min(2, direction === 'row' ? roundWins.blue : roundWins.red)) }).map((_, i) => (
+                                        <RecordCircle key={`right-win-${i}`} className="round-win-icon" aria-hidden />
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
 

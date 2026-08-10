@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
 import { ref, get, set, remove, update } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
-import { FolderPlus, Trash, ExclamationTriangle, Key, FileEarmarkPdf, FileEarmarkArrowUp, BoxArrowRight, CheckCircle, House, XCircle, Github } from 'react-bootstrap-icons';
+import { FolderPlus, Trash, ExclamationTriangle, FileEarmarkPdf, FileEarmarkArrowUp, BoxArrowRight, CheckCircle, House, XCircle, Github, Key } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
-import { appendIvrQuotaToSettings, buildIvrQuotaUpdate, formatIvrQuotaForInput } from '../../Api';
+import { appendIvrQuotaToSettings } from '../../Api';
 import { usePopup } from '../../Context/PopupContext';
 
 import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
+import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
+import { LANDING_FEATURES, LANDING_HERO } from '../../constants/landingFeatures';
 
 function CourtSetup() {
   const [password, setPassword] = useState('');
@@ -31,7 +33,6 @@ function CourtSetup() {
   const [newRoundDuration, setNewRoundDuration] = useState(90);
   const [newRestDuration, setNewRestDuration] = useState(60);
   const [newIvrQuota, setNewIvrQuota] = useState('');
-  const [editEventIvrQuota, setEditEventIvrQuota] = useState('');
   const [courtCount, setCourtCount] = useState(4); // Default 4 courts
 
   const [isDeleting, setIsDeleting] = useState(false);
@@ -41,7 +42,42 @@ function CourtSetup() {
   const [pdfParseResult, setPdfParseResult] = useState(null);
 
   const navigate = useNavigate();
-  const { user, userLoading, googleLogin, googleLogout, login } = useAuth();
+  const { user, userLoading, googleLogin, googleLogout, login, logout } = useAuth();
+  const { locale, visible } = useAlternatingLocale();
+  const [signingIn, setSigningIn] = useState(false);
+
+  // Reset event/court session when entering setup (e.g. from Home).
+  // Must not clear Google auth — that would bounce us to Landing.
+  useEffect(() => {
+    logout();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    setAuthError('');
+    setSigningIn(true);
+    try {
+      await googleLogin();
+    } catch (err) {
+      console.error('Google Sign-In Error:', err);
+      setAuthError(`Login failed: ${err.message}`);
+    } finally {
+      setSigningIn(false);
+    }
+  };
+
+  // Sign out Google then go to Landing — must clear user before navigate,
+  // otherwise Landing auto-forwards signed-in users back to Court Setup.
+  const handleGoogleLogout = async () => {
+    try {
+      await googleLogout();
+    } catch (err) {
+      console.error('Google logout error:', err);
+    } finally {
+      logout();
+      navigate('/', { replace: true });
+    }
+  };
 
   // Load events from Firebase
   const fetchEvents = () => {
@@ -107,55 +143,48 @@ function CourtSetup() {
     }
   }, [selectedEvent, user]);
 
-  useEffect(() => {
-    if (!selectedEvent || !user) {
-      setEditEventIvrQuota('');
-      return;
-    }
-    const settingsRef = ref(database, `events/${selectedEvent}/settings`);
-    get(settingsRef).then((snapshot) => {
-      const settings = snapshot.val() || {};
-      setEditEventIvrQuota(formatIvrQuotaForInput(settings.ivrQuota));
-    }).catch(() => {
-      setEditEventIvrQuota('');
-    });
-  }, [selectedEvent, user]);
+  if (userLoading) {
+    return (
+      <div className="cs-container aurora-bg">
+        <div className="cs-content glass-card" style={{ padding: '3cqi', textAlign: 'center' }}>
+          <p>Loading authentication state…</p>
+        </div>
+      </div>
+    );
+  }
 
-  const selectedEventData = events.find((evt) => evt.id === selectedEvent);
-  const isSelectedEventCreator = Boolean(
-    user && selectedEventData && (user.uid === selectedEventData.createdBy || user.email === selectedEventData.createdByEmail)
-  );
-
-  const handleSaveEventIvrQuota = async () => {
-    if (!selectedEvent) {
-      showToast('請先選擇賽事。');
-      return;
-    }
-    if (!isSelectedEventCreator) {
-      showToast('只有賽事建立者可以修改 Event IVR Quota。');
-      return;
-    }
-    try {
-      await update(
-        ref(database, `events/${selectedEvent}/settings`),
-        buildIvrQuotaUpdate(editEventIvrQuota)
-      );
-      showToast('Event IVR Quota 已更新。');
-    } catch (err) {
-      console.error('Save Event IVR Quota Failed:', err);
-      showToast(`更新 Event IVR Quota 失敗: ${err.message}`);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setAuthError('');
-    try {
-      await googleLogin();
-    } catch (err) {
-      console.error("Google Sign-In Error:", err);
-      setAuthError(`Login failed: ${err.message}`);
-    }
-  };
+  if (!user) {
+    return (
+      <div className="cs-container aurora-bg">
+        <div className="cs-content glass-card" style={{ padding: '3cqi', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2cqi' }}>
+          <StableLocaleText
+            as="p"
+            locale={locale}
+            visible={visible}
+            en="Sign in with Google to set up a court."
+            zh="請用 Google 登入以設置場地。"
+          />
+          <Button
+            onClick={handleGoogleSignIn}
+            disabled={signingIn}
+            text={signingIn ? 'Signing in…' : 'Google (登入)'}
+            icon={<Key size="1.4cqi" />}
+            fontSize="1.2cqi"
+            variant="gemini"
+            style={{ padding: '0.9cqi 1.8cqi' }}
+          />
+          {authError && <p style={{ color: '#ff6b6b', margin: 0 }}>{authError}</p>}
+          <Button
+            onClick={() => navigate('/', { replace: true })}
+            text="Back (返回)"
+            fontSize="1cqi"
+            variant="gray"
+            style={{ padding: '0.6cqi 1.2cqi' }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   // PDF File Upload Handler
   const handleFileSelect = async (e) => {
@@ -395,6 +424,11 @@ function CourtSetup() {
       return;
     }
 
+    if (!password.trim()) {
+      setError('Please enter setup password.');
+      return;
+    }
+
     const performLogin = async () => {
       const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
       // 只更新 name，避免覆蓋正在進行的比賽狀態 (currentMatchId)
@@ -411,21 +445,8 @@ function CourtSetup() {
         eventName: eventDisplayName
       });
 
-      navigate('/');
+      navigate('/home');
     };
-
-    const selectedEventData = events.find(evt => evt.id === selectedEvent);
-    const isCreator = user && selectedEventData && (user.email === selectedEventData.createdByEmail || user.uid === selectedEventData.createdBy);
-
-    if (isCreator) {
-      try {
-        await performLogin();
-      } catch (err) {
-        setError('An error occurred during login.');
-        console.error("Error during setup:", err);
-      }
-      return;
-    }
 
     const settingsRef = ref(database, `events/${selectedEvent}/settings/setupPassword`);
 
@@ -476,8 +497,8 @@ function CourtSetup() {
             </div>
           </div>
           <Button
-            onClick={googleLogout}
-            title="Sign Out of Google Account"
+            onClick={handleGoogleLogout}
+            title="Sign Out of Google Account & Return to Landing"
             fontSize="0.72cqi"
             variant="orange"
             icon={<BoxArrowRight size="0.73cqi" />}
@@ -488,15 +509,44 @@ function CourtSetup() {
       )}
         <div className="cs-left-panel">
           <div className="cs-title-container">
-            <h1 style={{ fontSize: '3.5cqi', lineHeight: '1.1' }}>Taekwondo<br />Scoreboard</h1>
-            <div style={{ fontSize: '1.5cqi', color: '#fbc531', margin: '0.3cqi 0 0 0', fontWeight: '700', letterSpacing: '0.3cqi', textTransform: 'uppercase' }}>Kyorugi</div>
-            <h2 style={{ fontSize: '1.5cqi', color: 'rgba(255,255,255,0.9)', margin: '0.8cqi 0 0 0', fontWeight: 'normal', letterSpacing: '0.1cqi' }}>跆拳道搏擊比賽計分系統</h2>
+            <StableLocaleText
+              as="h1"
+              locale={locale}
+              visible={visible}
+              className="cs-hero-title"
+              en={LANDING_HERO.titleEn}
+              zh={LANDING_HERO.titleZh}
+            />
+            <StableLocaleText
+              as="p"
+              locale={locale}
+              visible={visible}
+              className="cs-subtitle"
+              en={LANDING_HERO.subtitleEn}
+              zh={LANDING_HERO.subtitleZh}
+            />
             <ul className="cs-app-intro-list">
-                            <li><strong>Cloud-Powered (雲端驅動)</strong>：只要連到上網，隨時隨地都可以開波計分！無須安裝任何軟件。</li>
-                            <li><strong>Scan & Score (掃描即用)</strong>：裁判只需用手機掃描 QR Code，一秒連接，即刻開始畀分。</li>
-                            <li><strong>One Account (一鍵開賽)</strong>：只需要一個 Google 帳號登入，就可以輕鬆創建及管理整場賽事。</li>
-                            <li><strong>Auto Bracket (魔法對戰表)</strong>：支援多個 Court 同時作賽，賽果實時同步，晉級表自動 Update！</li>
-                        </ul>
+              {LANDING_FEATURES.map(({ id, titleEn, titleZh, en, zh }) => (
+                <li key={id} className="cs-app-intro-item">
+                  <StableLocaleText
+                    as="div"
+                    locale={locale}
+                    visible={visible}
+                    className="cs-app-intro-title"
+                    en={titleEn}
+                    zh={titleZh}
+                  />
+                  <StableLocaleText
+                    as="div"
+                    locale={locale}
+                    visible={visible}
+                    className="cs-app-intro-desc"
+                    en={en}
+                    zh={zh}
+                  />
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="cs-footer-links">
             <a href="https://github.com/CY-Cheung/TKD-scoreboard" target="_blank" rel="noopener noreferrer">
@@ -508,36 +558,17 @@ function CourtSetup() {
         <div className="cs-divider"></div>
 
         <div className="cs-right-panel">
-          {userLoading ? (
-            <p>Loading authentication state...</p>
-          ) : !user ? (
-            /* Google Sign-in Login Required Block */
-            <div className="cs-form" style={{ textAlign: 'center', padding: '2cqi' }}>
-              <div style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: '1.5cqi', marginBottom: '2.5cqi', lineHeight: '1.8', fontWeight: '500', whiteSpace: 'nowrap' }}>
-                <div>無需繁瑣註冊！</div>
-                <div>一鍵登入即可開賽。</div>
-              </div>
-              {authError && <p className="cs-error-message">{authError}</p>}
-              <div className="google-btn-wrapper" style={{ display: 'flex', justifyContent: 'center' }}>
-                <Button
-                  onClick={handleGoogleSignIn}
-                  text="Google (登入)"
-                  icon={<Key size="1.6cqi" />}
-                  fontSize="1.3cqi"
-                  variant="gemini"
-                  style={{ padding: '1cqi 2cqi' }}
-                />
-              </div>
-              <div style={{ fontSize: '1.05cqi', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2cqi', whiteSpace: 'nowrap', lineHeight: '1.6' }}>
-                <div>系統將驗證身分並載入賽事</div>
-              </div>
-            </div>
-          ) : (
             <form onSubmit={handleSubmit} className="cs-form">
               <div className="form-group">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '0.5dvh' }}>
-                  <label htmlFor="event-select" style={{ margin: 0, fontSize: '1cqi' }}>Select Event</label>
-                </div>
+                <StableLocaleText
+                  as="label"
+                  htmlFor="event-select"
+                  locale={locale}
+                  visible={visible}
+                  className="cs-form-label"
+                  en="Select Event"
+                  zh="選擇賽事"
+                />
 
                 <select
                   id="event-select"
@@ -547,7 +578,9 @@ function CourtSetup() {
                   onChange={(e) => setSelectedEvent(e.target.value)}
                   required
                 >
-                  <option value="" disabled>-- Please select an event --</option>
+                  <option value="" disabled>
+                    {locale === 'en' ? '-- Please select an event --' : '-- 請選擇賽事 --'}
+                  </option>
                   {events.map(event => (
                     <option key={event.id} value={event.id}>
                       {event.displayName || event.id}
@@ -556,114 +589,109 @@ function CourtSetup() {
                 </select>
 
                 <div style={{ display: 'flex', gap: '0.52cqi', marginTop: '0.52cqi' }}>
-                  <Button type="button" onClick={() => setShowCreateModal(true)} text="Create (新增)" fontSize="0.77cqi" angle={120} icon={<FolderPlus size="0.83cqi" />} style={{ flex: 1, whiteSpace: 'nowrap' }} />
-                  <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} text="Delete (刪除)" fontSize="0.77cqi" angle={350} icon={<Trash size="0.83cqi" />} style={{ flex: 1, whiteSpace: 'nowrap' }} />
+                  <Button type="button" onClick={() => setShowCreateModal(true)} fontSize="0.77cqi" angle={120} icon={<FolderPlus size="0.83cqi" />} style={{ flex: 1, whiteSpace: 'nowrap' }}>
+                    <StableLocaleText as="span" locale={locale} visible={visible} en="Create Event" zh="新增賽事" />
+                  </Button>
+                  <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} fontSize="0.77cqi" angle={350} icon={<Trash size="0.83cqi" />} style={{ flex: 1, whiteSpace: 'nowrap' }}>
+                    <StableLocaleText as="span" locale={locale} visible={visible} en="Delete Event" zh="刪除賽事" />
+                  </Button>
                 </div>
               </div>
 
               <div className="form-group">
-                <label htmlFor="court-select" style={{ fontSize: '1cqi' }}>Select Court</label>
-                <select
-                  id="court-select"
+                <StableLocaleText
+                  as="label"
+                  htmlFor="setup-password"
+                  locale={locale}
+                  visible={visible}
+                  className="cs-form-label"
+                  en="Setup Password"
+                  zh="設定密碼"
+                />
+                <input
+                  id="setup-password"
+                  type="password"
                   className="datalist-input"
-                  style={{ padding: '0 0.62cqi', fontSize: '0.85cqi', height: '2.34cqi', boxSizing: 'border-box', width: '100%' }}
-                  value={courtId}
-                  onChange={(e) => setCourtId(e.target.value)}
-                  disabled={!selectedEvent || courtOptions.length === 0}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={locale === 'en' ? 'Enter setup password' : '請輸入設定密碼'}
                   required
-                >
-                  <option value="" disabled>-- Please select a court --</option>
-                  {courtOptions.map(court => (
-                    <option key={court} value={court}>{court}</option>
-                  ))}
-                </select>
+                />
               </div>
 
-              {isSelectedEventCreator && selectedEvent && (
-                <div className="form-group">
-                  <label htmlFor="edit-event-ivr-quota" style={{ fontSize: '1cqi' }}>Event IVR Quota (留空=無限)</label>
-                  <div style={{ display: 'flex', gap: '0.52cqi', alignItems: 'center' }}>
-                    <input
-                      id="edit-event-ivr-quota"
-                      type="number"
-                      min="1"
-                      className="datalist-input"
-                      placeholder="留空 = 無限"
-                      value={editEventIvrQuota}
-                      onChange={(e) => setEditEventIvrQuota(e.target.value)}
-                      style={{ flex: 1, padding: '0 0.62cqi', fontSize: '0.85cqi', height: '2.34cqi', boxSizing: 'border-box' }}
-                    />
-                    <Button
-                      type="button"
-                      onClick={handleSaveEventIvrQuota}
-                      text="Save"
-                      fontSize="0.77cqi"
-                      angle={120}
-                      icon={<CheckCircle size="0.83cqi" />}
-                      style={{ whiteSpace: 'nowrap', padding: '0.42cqi 0.83cqi' }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {(!user || (selectedEvent && events.find(e => e.id === selectedEvent) && events.find(e => e.id === selectedEvent).createdByEmail !== user?.email)) && (
-                <div className="form-group">
-                  <label htmlFor="setup-password" style={{ fontSize: '1cqi' }}>Setup Password</label>
-                  <input
-                    id="setup-password"
-                    type="password"
-                    className="datalist-input"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter setup password"
+              <div className="form-group">
+                <StableLocaleText
+                  as="label"
+                  htmlFor="court-select"
+                  locale={locale}
+                  visible={visible}
+                  className="cs-form-label"
+                  en="Select Court"
+                  zh="選擇場地"
+                />
+                <div className="cs-court-confirm-row">
+                  <select
+                    id="court-select"
+                    className="datalist-input cs-court-select"
+                    style={{ padding: '0 0.62cqi', fontSize: '0.85cqi', height: '2.34cqi', boxSizing: 'border-box' }}
+                    value={courtId}
+                    onChange={(e) => setCourtId(e.target.value)}
+                    disabled={!selectedEvent || courtOptions.length === 0}
                     required
-                  />
+                  >
+                    <option value="" disabled>
+                      {locale === 'en' ? '-- Please select a court --' : '-- 請選擇場地 --'}
+                    </option>
+                    {courtOptions.map(court => (
+                      <option key={court} value={court}>{court}</option>
+                    ))}
+                  </select>
+                  <Button type="submit" fontSize="0.85cqi" angle={30} disabled={!selectedEvent || !courtId} icon={<CheckCircle size="0.83cqi" />} style={{ whiteSpace: 'nowrap', padding: '0.52cqi 1.2cqi', margin: 0, flex: 1 }}>
+                    <StableLocaleText as="span" locale={locale} visible={visible} en="Confirm Settings" zh="確認設定" />
+                  </Button>
                 </div>
-              )}
+              </div>
 
               {error && <p className="cs-error-message">{error}</p>}
-              <div className="cs-action-buttons">
-                <Button type="submit" text="Confirm (確認)" fontSize="0.85cqi" angle={30} disabled={!selectedEvent || !courtId} icon={<CheckCircle size="0.83cqi" />} style={{ whiteSpace: 'nowrap', padding: '0.52cqi 2.08cqi' }} />
-              </div>
             </form>
-          )}
         </div>
       </div>
 
       {/* --- Create Event Modal Overlay --- */}
       {showCreateModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{
-            backgroundColor: '#1e1e1e',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '0.62cqi',
-            padding: '1.3cqi',
-            width: '95%',
-            maxWidth: '44.2cqi',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            color: '#fff',
-            boxShadow: '0 0.42cqi 1.66cqi rgba(0,0,0,0.6)',
-            textAlign: 'left'
-          }}>
-            <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.42cqi', color: '#34c759', fontSize: '1.19cqi' }}>
-              <FolderPlus size="1.25cqi" /> 建立新賽事 (Create Event)
+        <div className="cs-create-modal-overlay">
+          <div className="cs-create-modal">
+            <h3 className="cs-create-modal-title">
+              <FolderPlus size="1.25cqi" />
+              <StableLocaleText
+                as="span"
+                locale={locale}
+                visible={visible}
+                en="Create Event"
+                zh="建立新賽事"
+              />
             </h3>
-            <form onSubmit={handleCreateEvent} style={{ display: 'flex', flexDirection: 'column', gap: '0.78cqi' }}>
-              <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.78cqi', borderRadius: '0.42cqi', display: 'flex', flexDirection: 'column', gap: '0.52cqi', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.52cqi' }}>
+            <form onSubmit={handleCreateEvent} className="cs-create-modal-form">
+              <div className="cs-create-modal-pdf">
+                <div className="cs-create-modal-pdf-head">
                   <FileEarmarkPdf size="1.25cqi" color="#34c759" />
-                  <span style={{ color: '#fff', fontWeight: 'bold' }}>上傳 PDF 自動建立 (Optional)</span>
+                  <StableLocaleText
+                    as="span"
+                    locale={locale}
+                    visible={visible}
+                    className="cs-create-modal-pdf-title"
+                    en="Upload PDF (Optional)"
+                    zh="上傳 PDF 自動建立（選填）"
+                  />
                 </div>
-                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.68cqi' }}>上傳對陣表即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。</div>
+                <StableLocaleText
+                  as="p"
+                  locale={locale}
+                  visible={visible}
+                  className="cs-create-modal-pdf-desc"
+                  en="Upload a bracket PDF to auto-fill the event name and import athletes. Multi-day events are split into sub-events automatically."
+                  zh="上傳對陣表即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。"
+                />
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -673,96 +701,113 @@ function CourtSetup() {
                 />
                 <Button
                   type="button"
+                  className="cs-create-modal-pdf-btn"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isParsingPdf}
-                  text={isParsingPdf ? 'Parsing...' : 'Select PDF'}
-                  icon={<FileEarmarkArrowUp size="0.83cqi" />}
                   fontSize="0.77cqi"
                   angle={60}
-                />
+                  icon={<FileEarmarkArrowUp size="0.83cqi" />}
+                  style={{ padding: '0.42cqi 0.9cqi', margin: 0 }}
+                >
+                  <StableLocaleText
+                    as="span"
+                    locale={locale}
+                    visible={visible}
+                    en={isParsingPdf ? 'Parsing…' : 'Select PDF'}
+                    zh={isParsingPdf ? '解析中…' : '選擇 PDF'}
+                  />
+                </Button>
                 {pdfParseResult && (
-                  <div style={{ color: '#4CAF50', fontSize: '0.72cqi', marginTop: '0.26cqi' }}>
-                    ✅ 成功解析：{pdfParseResult.matchCount} 場比賽
-                    {pdfParseResult.datesList?.length > 1 && ` (包含 ${pdfParseResult.datesList.length} 個日期，將自動分拆為多個賽事)`}
-                  </div>
+                  <StableLocaleText
+                    as="div"
+                    locale={locale}
+                    visible={visible}
+                    className="cs-create-modal-pdf-success"
+                    en={`✅ Parsed: ${pdfParseResult.matchCount} matches${pdfParseResult.datesList?.length > 1 ? ` (${pdfParseResult.datesList.length} dates — will split into multiple events)` : ''}`}
+                    zh={`✅ 成功解析：${pdfParseResult.matchCount} 場比賽${pdfParseResult.datesList?.length > 1 ? `（包含 ${pdfParseResult.datesList.length} 個日期，將自動分拆為多個賽事）` : ''}`}
+                  />
                 )}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(10.4cqi, 1fr))', gap: '0.78cqi' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.77cqi' }}>Event ID (賽事識別碼)</label>
+              <div className="cs-create-modal-grid cs-create-modal-grid--wide">
+                <div className="form-group cs-create-modal-field">
+                  <StableLocaleText as="label" locale={locale} visible={visible} className="cs-create-modal-label" en="Event ID" zh="賽事識別碼" />
                   <input
                     type="text"
-                    placeholder="例如: TKD2026 (不可重複)"
+                    placeholder={locale === 'en' ? 'e.g. TKD2026 (unique)' : '例如: TKD2026（不可重複）'}
                     value={newEventId}
                     onChange={e => setNewEventId(e.target.value)}
                     required
-                    style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                    className="cs-create-modal-input"
                   />
                 </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.77cqi' }}>Event Name (賽事全稱)</label>
+                <div className="form-group cs-create-modal-field">
+                  <StableLocaleText as="label" locale={locale} visible={visible} className="cs-create-modal-label" en="Event Name" zh="賽事全稱" />
                   <input
                     type="text"
-                    placeholder="例如: 2026 全港跆拳道錦標賽"
+                    placeholder={locale === 'en' ? 'e.g. 2026 Hong Kong Taekwondo Championships' : '例如: 2026 全港跆拳道錦標賽'}
                     value={newEventName}
                     onChange={e => setNewEventName(e.target.value)}
                     required
-                    style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                    className="cs-create-modal-input"
                   />
                 </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.77cqi' }}>Setup Password (設定密碼)</label>
+                <div className="form-group cs-create-modal-field">
+                  <StableLocaleText as="label" locale={locale} visible={visible} className="cs-create-modal-label" en="Setup Password" zh="設定密碼" />
                   <input
                     type="text"
-                    placeholder="例如: BCB2026"
+                    placeholder={locale === 'en' ? 'e.g. BCB2026' : '例如: BCB2026'}
                     value={newSetupPassword}
                     onChange={e => setNewSetupPassword(e.target.value)}
                     required
-                    style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }}
+                    className="cs-create-modal-input"
                   />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(7.8cqi, 1fr))', gap: '0.52cqi' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Point Gap (分差)</label>
-                  <input type="number" value={newMaxPointGap} onChange={e => setNewMaxPointGap(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+              <div className="cs-create-modal-grid cs-create-modal-grid--pair">
+                <div className="form-group cs-create-modal-field">
+                  <StableLocaleText as="label" locale={locale} visible={visible} className="cs-create-modal-label" en="Round Duration (sec)" zh="回合秒數" />
+                  <input type="number" value={newRoundDuration} onChange={e => setNewRoundDuration(e.target.value)} className="cs-create-modal-input" />
                 </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Max Gam-jeom (犯規上限)</label>
-                  <input type="number" value={newMaxGamjeom} onChange={e => setNewMaxGamjeom(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Round Duration (回合秒數)</label>
-                  <input type="number" value={newRoundDuration} onChange={e => setNewRoundDuration(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Rest Duration (休息秒數)</label>
-                  <input type="number" value={newRestDuration} onChange={e => setNewRestDuration(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>IVR Quota (留空=無限)</label>
-                  <input type="number" min="1" placeholder="留空 = 無限" value={newIvrQuota} onChange={e => setNewIvrQuota(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Courts Count (1~12)</label>
-                  <input type="number" min="1" max="12" value={courtCount} onChange={e => setCourtCount(e.target.value)} required style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                <div className="form-group cs-create-modal-field">
+                  <StableLocaleText as="label" locale={locale} visible={visible} className="cs-create-modal-label" en="Rest Duration (sec)" zh="休息秒數" />
+                  <input type="number" value={newRestDuration} onChange={e => setNewRestDuration(e.target.value)} className="cs-create-modal-input" />
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.52cqi', marginTop: '0.52cqi' }}>
+              <div className="cs-create-modal-grid cs-create-modal-grid--quad">
+                <div className="form-group cs-create-modal-field">
+                  <StableLocaleText as="label" locale={locale} visible={visible} className="cs-create-modal-label" en="Point Gap" zh="分差" />
+                  <input type="number" value={newMaxPointGap} onChange={e => setNewMaxPointGap(e.target.value)} className="cs-create-modal-input" />
+                </div>
+                <div className="form-group cs-create-modal-field">
+                  <StableLocaleText as="label" locale={locale} visible={visible} className="cs-create-modal-label" en="Max Gam-jeom" zh="犯規上限" />
+                  <input type="number" value={newMaxGamjeom} onChange={e => setNewMaxGamjeom(e.target.value)} className="cs-create-modal-input" />
+                </div>
+                <div className="form-group cs-create-modal-field">
+                  <StableLocaleText as="label" locale={locale} visible={visible} className="cs-create-modal-label" en="IVR Quota" zh="IVR 配額" />
+                  <input type="number" min="1" placeholder={locale === 'en' ? 'Empty = unlimited' : '留空 = 無限'} value={newIvrQuota} onChange={e => setNewIvrQuota(e.target.value)} className="cs-create-modal-input" />
+                </div>
+                <div className="form-group cs-create-modal-field">
+                  <StableLocaleText as="label" locale={locale} visible={visible} className="cs-create-modal-label" en="Number of Courts" zh="場地數量" />
+                  <input type="number" min="1" max="12" placeholder={locale === 'en' ? '1–12' : '1–12'} value={courtCount} onChange={e => setCourtCount(e.target.value)} required className="cs-create-modal-input" />
+                </div>
+              </div>
+              <div className="cs-create-modal-actions">
                 <Button
                   onClick={() => setShowCreateModal(false)}
-                  text="Cancel (取消)"
                   fontSize="0.77cqi"
                   angle={0}
                   icon={<XCircle size="0.83cqi" />}
-                />
+                >
+                  <StableLocaleText as="span" locale={locale} visible={visible} en="Cancel" zh="取消" />
+                </Button>
                 <Button
                   type="submit"
-                  text="Confirm (確認)"
                   fontSize="0.77cqi"
                   angle={120}
                   icon={<CheckCircle size="0.83cqi" />}
-                />
+                >
+                  <StableLocaleText as="span" locale={locale} visible={visible} en="Confirm" zh="確認" />
+                </Button>
               </div>
             </form>
           </div>

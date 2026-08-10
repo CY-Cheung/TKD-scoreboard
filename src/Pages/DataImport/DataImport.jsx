@@ -10,6 +10,7 @@ import { PlusCircle, Trash, FolderPlus, ExclamationTriangle, FileEarmarkArrowUp,
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 import { appendIvrQuotaToSettings, appendIvrQuotaToRules, formatIvrQuotaForInput } from '../../Api';
 import TournamentBracket from '../../Components/TournamentBracket/TournamentBracket';
+import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 
 // A helper function to parse name and club from old format
 const parseName = (fullName) => {
@@ -34,6 +35,7 @@ const DataImport = () => {
     const [currentMatches, setCurrentMatches] = useState({});
     const [selectedMatchId, setSelectedMatchId] = useState(null);
     const { showToast, showConfirm } = usePopup();
+    const { locale, visible: localeVisible } = useAlternatingLocale();
 
     // Date Filter State for Matches List
     const [selectedDateFilter, setSelectedDateFilter] = useState('all');
@@ -517,11 +519,12 @@ const DataImport = () => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.78cqi' }}>
                                 <Button 
                                     onClick={() => { setShowBracketModal(false); setBracketZoom(1); }}
-                                    text="Back (返回)"
                                     icon={<ArrowLeft size="0.83cqi" />}
                                     fontSize="0.77cqi"
                                     angle={180}
-                                />
+                                >
+                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Back" zh="返回" />
+                                </Button>
                                 <h2 style={{ margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.52cqi', fontSize: '1.19cqi' }}>
                                     <Diagram3 size="1.66cqi" color="#FFFF00" /> {eventsList.find(e => e.id === eventName)?.displayName || eventName || 'Event'}
                                 </h2>
@@ -530,7 +533,9 @@ const DataImport = () => {
                                 <Button onClick={() => setBracketZoom(z => Math.max(0.1, z - 0.1))} text="-" angle={0} style={{ padding: '2px 0.52cqi', minWidth: '2.08cqi' }} fontSize="0.8cqi" />
                                 <span style={{ color: '#fff', minWidth: '2.6cqi', textAlign: 'center', fontWeight: 'bold', fontSize: '0.8cqi' }}>{Math.round(bracketZoom * 100)}%</span>
                                 <Button onClick={() => setBracketZoom(z => Math.min(3, z + 0.1))} text="+" angle={180} style={{ padding: '2px 0.52cqi', minWidth: '2.08cqi' }} fontSize="0.8cqi" />
-                                <Button onClick={() => setBracketZoom(1)} text="Reset (重置)" angle={90} style={{ padding: '0.21cqi 0.78cqi', marginLeft: '0.52cqi' }} fontSize="0.77cqi" />
+                                <Button onClick={() => setBracketZoom(1)} angle={90} style={{ padding: '0.21cqi 0.78cqi', marginLeft: '0.52cqi' }} fontSize="0.77cqi">
+                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Reset" zh="重置" />
+                                </Button>
                             </div>
                         </div>
                         <div style={{ flex: 1, overflow: 'auto', padding: '1.04cqi 0' }}>
@@ -539,7 +544,9 @@ const DataImport = () => {
                                     <TournamentBracket matches={currentMatches} />
                                 </div>
                             ) : (
-                                <div style={{ color: '#ccc', textAlign: 'center', marginTop: '2.6cqi' }}>No matches available to display bracket.</div>
+                                <div style={{ color: '#ccc', textAlign: 'center', marginTop: '2.6cqi' }}>
+                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="No matches available to display bracket." zh="沒有可顯示的賽程表。" />
+                                </div>
                             )}
                         </div>
                     </div>
@@ -547,105 +554,123 @@ const DataImport = () => {
                     <div className="di-form-and-list-container">
 
                     <div className="di-form-section">
-                        <h2 style={{ fontSize: '1.5cqi', margin: '0 0 0.5cqi 0', color: '#ffffff', fontWeight: '800', lineHeight: '1.1', letterSpacing: '0.026cqi' }}>Import Event Data</h2>
+                        <StableLocaleText
+                            as="h2"
+                            locale={locale}
+                            visible={localeVisible}
+                            className="di-page-title"
+                            en="Manage Match"
+                            zh="管理賽事"
+                        />
 
                         {/* Match Configuration Form */}
                         <div className="match-form">
                             <fieldset>
-                                <legend>Match Configuration</legend>
-                                <div className="fieldset-content">
-                                    <div className="form-group">
-                                        <label>Match ID</label>
-                                        <input list="match-ids" type="text" value={matchId} onChange={e => setMatchId(e.target.value)} placeholder="A1001" />
-                                        <datalist id="match-ids">
-                                            {Object.keys(currentMatches).map(mId => (
-                                                <option key={mId} value={mId} />
-                                            ))}
-                                        </datalist>
+                                <legend>
+                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Match Configuration" zh="比賽設定" />
+                                </legend>
+                                <div className="di-config-rows">
+                                    <div className="fieldset-content">
+                                        <div className="form-group">
+                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Match ID" zh="比賽編號" />
+                                            <input list="match-ids" type="text" value={matchId} onChange={e => setMatchId(e.target.value)} placeholder="A1001" />
+                                            <datalist id="match-ids">
+                                                {Object.keys(currentMatches).map(mId => (
+                                                    <option key={mId} value={mId} />
+                                                ))}
+                                            </datalist>
+                                        </div>
+                                        <div className="form-group">
+                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Next Match ID" zh="下一場比賽編號" />
+                                            <input type="text" value={nextMatchId} onChange={e => setNextMatchId(e.target.value)} placeholder={locale === 'en' ? 'e.g. A2001 (optional)' : '例如: A2001（選填）'} />
+                                        </div>
+                                        <div className="form-group">
+                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Next Match Slot" zh="下一場席位" />
+                                            <select value={nextMatchSlot || ''} onChange={e => setNextMatchSlot(e.target.value)}>
+                                                <option value="">{locale === 'en' ? '(optional)' : '（選填）'}</option>
+                                                <option value="blue">{locale === 'en' ? 'Blue' : '藍方'}</option>
+                                                <option value="red">{locale === 'en' ? 'Red' : '紅方'}</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div className="form-group">
-                                        <label>Next Match ID</label>
-                                        <input type="text" value={nextMatchId} onChange={e => setNextMatchId(e.target.value)} placeholder="e.g. A2001 (optional)" />
+                                    <div className="fieldset-content">
+                                        <div className="form-group">
+                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Round Duration (sec)" zh="回合秒數" />
+                                            <input type="number" value={roundDuration} onChange={e => setRoundDuration(e.target.value)} />
+                                        </div>
+                                        <div className="form-group">
+                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Rest Duration (sec)" zh="休息秒數" />
+                                            <input type="number" value={restDuration} onChange={e => setRestDuration(e.target.value)} />
+                                        </div>
                                     </div>
-                                    <div className="form-group">
-                                        <label>Next Match Slot</label>
-                                        <select value={nextMatchSlot || ''} onChange={e => setNextMatchSlot(e.target.value)}>
-                                            <option value="">(optional)</option>
-                                            <option value="blue">Blue</option>
-                                            <option value="red">Red</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </fieldset>
-
-                            <fieldset>
-                                <legend>Rules</legend>
-                                <div className="fieldset-content">
-                                    <div className="form-group">
-                                        <label>Max Point Gap</label>
-                                        <input type="number" value={maxPointGap} onChange={e => setMaxPointGap(e.target.value)} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Max Gam-jeom</label>
-                                        <input type="number" value={maxGamjeom} onChange={e => setMaxGamjeom(e.target.value)} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Round Time (s)</label>
-                                        <input type="number" value={roundDuration} onChange={e => setRoundDuration(e.target.value)} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Rest Time (s)</label>
-                                        <input type="number" value={restDuration} onChange={e => setRestDuration(e.target.value)} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>IVR Quota (留空=無限)</label>
-                                        <input type="number" min="1" placeholder="留空 = 無限" value={ivrQuota} onChange={e => setIvrQuota(e.target.value)} />
+                                    <div className="fieldset-content">
+                                        <div className="form-group">
+                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Point Gap" zh="分差" />
+                                            <input type="number" value={maxPointGap} onChange={e => setMaxPointGap(e.target.value)} />
+                                        </div>
+                                        <div className="form-group">
+                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Max Gam-jeom" zh="犯規上限" />
+                                            <input type="number" value={maxGamjeom} onChange={e => setMaxGamjeom(e.target.value)} />
+                                        </div>
+                                        <div className="form-group">
+                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="IVR Quota" zh="IVR 配額" />
+                                            <input type="number" min="1" placeholder={locale === 'en' ? 'Empty = unlimited' : '留空 = 無限'} value={ivrQuota} onChange={e => setIvrQuota(e.target.value)} />
+                                        </div>
                                     </div>
                                 </div>
                             </fieldset>
 
                             <fieldset className="competitor-group blue">
-                                <legend>Blue Competitor</legend>
+                                <legend>
+                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Blue Competitor" zh="藍方選手" />
+                                </legend>
                                 <div className="fieldset-content">
                                     <div className="form-group">
-                                        <label>Name</label>
-                                        <input type="text" value={blueName} onChange={e => setBlueName(e.target.value)} placeholder="Blue Player Name" />
+                                        <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Name" zh="姓名" />
+                                        <input type="text" value={blueName} onChange={e => setBlueName(e.target.value)} placeholder={locale === 'en' ? 'Blue player name' : '藍方選手姓名'} />
                                     </div>
                                     <div className="form-group">
-                                        <label>Affiliated Club</label>
-                                        <input type="text" value={blueAffiliatedClub} onChange={e => setBlueAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
+                                        <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Affiliated Club" zh="屬會" />
+                                        <input type="text" value={blueAffiliatedClub} onChange={e => setBlueAffiliatedClub(e.target.value)} placeholder={locale === 'en' ? 'Club (optional)' : '屬會（選填）'} />
                                     </div>
                                     <div className="form-group">
-                                        <label>Source Match ID</label>
-                                        <input type="text" value={bluePreviousMatch} onChange={e => setBluePreviousMatch(e.target.value)} placeholder="Source Match (optional)" />
+                                        <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Source Match ID" zh="來源比賽編號" />
+                                        <input type="text" value={bluePreviousMatch} onChange={e => setBluePreviousMatch(e.target.value)} placeholder={locale === 'en' ? 'Source match (optional)' : '來源比賽（選填）'} />
                                     </div>
                                 </div>
                             </fieldset>
                             
                             <fieldset className="competitor-group red">
-                                <legend>Red Competitor</legend>
+                                <legend>
+                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Red Competitor" zh="紅方選手" />
+                                </legend>
                                 <div className="fieldset-content">
                                     <div className="form-group">
-                                        <label>Name</label>
-                                        <input type="text" value={redName} onChange={e => setRedName(e.target.value)} placeholder="Red Player Name" />
+                                        <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Name" zh="姓名" />
+                                        <input type="text" value={redName} onChange={e => setRedName(e.target.value)} placeholder={locale === 'en' ? 'Red player name' : '紅方選手姓名'} />
                                     </div>
                                     <div className="form-group">
-                                        <label>Affiliated Club</label>
-                                        <input type="text" value={redAffiliatedClub} onChange={e => setRedAffiliatedClub(e.target.value)} placeholder="Club (optional)" />
+                                        <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Affiliated Club" zh="屬會" />
+                                        <input type="text" value={redAffiliatedClub} onChange={e => setRedAffiliatedClub(e.target.value)} placeholder={locale === 'en' ? 'Club (optional)' : '屬會（選填）'} />
                                     </div>
                                     <div className="form-group">
-                                        <label>Source Match ID</label>
-                                        <input type="text" value={redPreviousMatch} onChange={e => setRedPreviousMatch(e.target.value)} placeholder="Source Match (optional)" />
+                                        <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Source Match ID" zh="來源比賽編號" />
+                                        <input type="text" value={redPreviousMatch} onChange={e => setRedPreviousMatch(e.target.value)} placeholder={locale === 'en' ? 'Source match (optional)' : '來源比賽（選填）'} />
                                     </div>
                                 </div>
                             </fieldset>
                         </div>
                         
                         <div className="di-action-buttons">
-                            <Button text="Add Match (新增賽事)" angle={260} onClick={handleAddMatch} icon={<PlusCircle size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi" }} />
-                            <Button text="Load (載入)" angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi" }} />
-                            <Button text="Home (主頁)" angle={150} onClick={() => navigate('/')} icon={<House size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi" }} />
-                            <Button text="Delete (刪除)" angle={350} onClick={promptDeleteMatch} disabled={!selectedMatchId} icon={<Trash size="0.83cqi" />} style={{ flex: 1, whiteSpace: "nowrap", padding: "0.42cqi 0.21cqi", fontSize: "0.72cqi", backgroundColor: "#ff3b30" }} />
+                            <Button angle={260} onClick={handleAddMatch} icon={<PlusCircle size="1.15cqi" />} fontSize="1.05cqi" style={{ flex: 1, whiteSpace: "nowrap", padding: "0.55cqi 0.35cqi" }}>
+                                <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Add Match" zh="新增比賽" />
+                            </Button>
+                            <Button angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size="1.15cqi" />} fontSize="1.05cqi" style={{ flex: 1, whiteSpace: "nowrap", padding: "0.55cqi 0.35cqi" }}>
+                                <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Load" zh="載入" />
+                            </Button>
+                            <Button angle={150} onClick={() => navigate('/home')} icon={<House size="1.15cqi" />} fontSize="1.05cqi" style={{ flex: 1, whiteSpace: "nowrap", padding: "0.55cqi 0.35cqi" }}>
+                                <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Home" zh="主頁" />
+                            </Button>
                         </div>
                     </div>
 
@@ -672,7 +697,7 @@ const DataImport = () => {
                                                 fontSize: '0.68cqi' 
                                             }}
                                         >
-                                            <option value="all">📅 All Dates</option>
+                                            <option value="all">{locale === 'en' ? '📅 All Dates' : '📅 所有日期'}</option>
                                             {availableDates.map(dStr => (
                                                 <option key={dStr} value={dStr}>📅 {dStr}</option>
                                             ))}
@@ -690,12 +715,13 @@ const DataImport = () => {
                                     return <span />;
                                 })()}
                                 <Button 
-                                    text="Bracket (賽程表)" 
                                     icon={<Diagram3 size="0.83cqi" />} 
                                     onClick={() => setShowBracketModal(true)}
                                     fontSize="0.81cqi"
                                     style={{ padding: '0.31cqi 0.62cqi' }}
-                                />
+                                >
+                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Bracket" zh="賽程表" />
+                                </Button>
                             </div>
                         </div>
                         <div className="matches-list">
@@ -715,13 +741,33 @@ const DataImport = () => {
                                         return competitor.name || '';
                                     };
 
+                                    const isSelected = selectedMatchId === mId;
+
                                     return (
-                                        <li key={mId} onClick={() => setSelectedMatchId(mId)} className={selectedMatchId === mId ? 'selected' : ''}>
-                                            <div style={{ fontSize: '1cqi', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                <strong style={{ color: '#fff', marginRight: '0.21cqi' }}>{mId}:</strong> 
-                                                <span style={{ color: '#3399ff' }}>{getDisplayText(blue)}</span> 
-                                                <span style={{ color: '#fff', margin: '0 0.5cqi', fontSize: '1cqi' }}>VS</span> 
-                                                <span style={{ color: '#ff3b30' }}>{getDisplayText(red)}</span>
+                                        <li key={mId} className={`match-row${isSelected ? ' is-selected' : ''}`}>
+                                            <div
+                                                className={`match-row-main${isSelected ? ' selected' : ''}`}
+                                                onClick={() => setSelectedMatchId(isSelected ? null : mId)}
+                                            >
+                                                <div className="match-row-text">
+                                                    <strong style={{ color: '#fff', marginRight: '0.21cqi' }}>{mId}:</strong>
+                                                    <span style={{ color: '#3399ff' }}>{getDisplayText(blue)}</span>
+                                                    <span style={{ color: '#fff', margin: '0 0.5cqi', fontSize: '1cqi' }}>VS</span>
+                                                    <span style={{ color: '#ff3b30' }}>{getDisplayText(red)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="match-row-delete">
+                                                <Button
+                                                    angle={350}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        promptDeleteMatch();
+                                                    }}
+                                                    icon={<Trash size="0.83cqi" />}
+                                                    style={{ whiteSpace: 'nowrap', padding: '0.35cqi 0.55cqi', fontSize: '0.72cqi', margin: 0, backgroundColor: '#ff3b30' }}
+                                                >
+                                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Delete" zh="刪除" />
+                                                </Button>
                                             </div>
                                         </li>
                                     );

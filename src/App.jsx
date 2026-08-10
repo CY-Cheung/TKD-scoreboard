@@ -6,6 +6,7 @@ import TargetCursor from './Components/TargetCursor/TargetCursor';
 import ProtectedRoute from './Components/ProtectedRoute/ProtectedRoute';
 
 // Pages
+import Landing from './Pages/Landing/Landing';
 import Home from './Pages/Home/Home';
 import CourtSetup from './Pages/CourtSetup/CourtSetup';
 import Controller from './Pages/Controller/Controller';
@@ -20,6 +21,7 @@ function App() {
           <TargetCursor targetSelector="input, select, .cursor-target" />
           <Routes>
           {/* --- Public Routes --- */}
+          <Route path="/" element={<Landing />} />
           <Route path="/court-setup" element={<CourtSetup />} />
 
           {/* --- Routes that require session info (Protected Routes) --- */}
@@ -32,7 +34,7 @@ function App() {
             } 
           />
           <Route 
-            path="/" 
+            path="/home" 
             element={
               <ProtectedRoute>
                 <Home />

@@ -11,6 +11,7 @@ import {
   Globe,
 } from "react-bootstrap-icons";
 import MarqueeText from "../MarqueeText";
+import { StableLocaleText, useAlternatingLocale } from "../AlternatingLocale/AlternatingLocale";
 import { ref, onValue, update, set } from "firebase/database";
 import { database } from "../../firebase";
 import { usePopup } from "../../Context/PopupContext";
@@ -29,6 +30,7 @@ function QRCodeDisplay({
   const [copied, setCopied] = useState(false);
   const [referees, setReferees] = useState(propRefereesData || {});
   const { showConfirm } = usePopup();
+  const { locale, visible: localeVisible } = useAlternatingLocale();
 
   // Custom Network Host state (for localhost dev environment mobile scans)
   const [customHost, setCustomHost] = useState(() => {
@@ -73,13 +75,9 @@ function QRCodeDisplay({
   const protocol = window.location.protocol;
   const host = customHost.trim() || window.location.host;
 
-  // Extract clean base path
+  // Extract clean base path for controller QR links
   let basePath = window.location.pathname;
-  if (basePath.includes("/screen")) {
-    basePath = basePath.replace(/\/screen\/?$/, "/");
-  } else if (basePath.includes("/controller")) {
-    basePath = basePath.replace(/\/controller\/?$/, "/");
-  }
+  basePath = basePath.replace(/\/(screen|controller|home)\/?$/, "/");
   if (!basePath.endsWith("/")) {
     basePath += "/";
   }
@@ -141,7 +139,13 @@ function QRCodeDisplay({
           <div className="qrcode-header">
             <div className="qrcode-title">
               <QrCode className="qrcode-icon" />
-              <span>Referee Controller QR Code</span>
+              <StableLocaleText
+                as="span"
+                locale={locale}
+                visible={localeVisible}
+                en="Referee Controller QR Code"
+                zh="邊裁控制器 QR 碼"
+              />
             </div>
           </div>
 
@@ -154,7 +158,13 @@ function QRCodeDisplay({
           >
             <div className="referee-status-title" style={{ fontSize: "1.8cqi", fontWeight: "bold" }}>
               <PeopleFill size="1.5cqi" />
-              <span>Corner Judges Connected: {occupiedCount}/3</span>
+              <StableLocaleText
+                as="span"
+                locale={locale}
+                visible={localeVisible}
+                en={`Corner Judges Connected: ${occupiedCount}/3`}
+                zh={`已連線邊裁：${occupiedCount}/3`}
+              />
               {isFull && <CheckCircleFill size="1.5cqi" className="full-icon" />}
             </div>
             <div className="referee-badges-row">
@@ -182,9 +192,17 @@ function QRCodeDisplay({
 
                 return (
                     <span key={slotName} className={`ref-slot-pill ${isConnected ? "online" : "vacant"}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                        <span>
-                            Corner Judge {index + 1} (邊裁{chineseLabel}) {isConnected ? `• ${deviceName} (已連線)` : "• Vacant (空缺)"}
-                        </span>
+                        <StableLocaleText
+                            as="span"
+                            locale={locale}
+                            visible={localeVisible}
+                            en={isConnected
+                                ? `Corner Judge ${index + 1} • ${deviceName}`
+                                : `Corner Judge ${index + 1} • Vacant`}
+                            zh={isConnected
+                                ? `邊裁${chineseLabel} • ${deviceName}（已連線）`
+                                : `邊裁${chineseLabel} • 空缺`}
+                        />
                         <Button 
                             onClick={handleDisconnect}
                             icon={<X size="1.5cqi" />}
@@ -198,32 +216,36 @@ function QRCodeDisplay({
             </div>
             {occupiedCount > 0 && (
               <Button
-                text="Disconnect All (斷開所有)"
                 variant="red"
                 onClick={handleDisconnectAll}
                 fontSize="1.4cqi"
                 style={{ marginTop: '0.52cqi', width: '100%' }}
-              />
+              >
+                <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Disconnect All" zh="斷開所有" />
+              </Button>
             )}
           </div>
 
           {/* Referee Mode Selection */}
           <div className="referee-mode-selector">
-            <span
+            <StableLocaleText
+              as="span"
+              locale={locale}
+              visible={localeVisible}
               style={{ fontSize: "1.8cqi", color: "#ccc", fontWeight: "bold" }}
-            >
-              Scoring Mode
-            </span>
+              en="Scoring Mode"
+              zh="計分模式"
+            />
             <div style={{ display: "flex", flexDirection: "column", gap: "0.52cqi", marginTop: "0.52cqi" }}>
               <Button
-                text="Single Corner Judge (一位邊緣裁判)"
                 variant={refereeMode === "single" ? "yellow" : "gray"}
                 onClick={() => handleModeChange("single")}
                 fontSize="1.6cqi"
                 style={{ flex: 1 }}
-              />
+              >
+                <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Single Corner Judge" zh="一位邊裁" />
+              </Button>
               <Button
-                text="Multiple Corner Judges (多位邊緣裁判)"
                 variant={refereeMode === "multiple" ? "yellow" : "gray"}
                 onClick={() => handleModeChange("multiple")}
                 disabled={occupiedCount < 2}
@@ -234,30 +256,38 @@ function QRCodeDisplay({
                     ? "Requires at least 2 referees"
                     : "2 or more referees must agree within 1 second to score"
                 }
-              />
+              >
+                <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Multiple Corner Judges" zh="多位邊裁" />
+              </Button>
             </div>
             {refereeMode === "multiple" && (
-              <div
+              <StableLocaleText
+                as="div"
+                locale={locale}
+                visible={localeVisible}
                 style={{
                   fontSize: "1.1cqi",
                   color: "#ffcc00",
                   marginTop: "0.52cqi",
                 }}
-              >
-                ✓ Valid Point Mode: 2+ judges must agree within 1 second.
-              </div>
+                en="✓ Valid Point Mode: 2+ judges must agree within 1 second."
+                zh="✓ 有效得分模式：至少 2 位邊裁須於 1 秒內一致確認。"
+              />
             )}
             {occupiedCount < 2 && (
-              <div
+              <StableLocaleText
+                as="div"
+                locale={locale}
+                visible={localeVisible}
                 style={{
                   fontSize: "1.2cqi",
                   color: "#ffc107",
                   marginTop: "0.52cqi",
                   textAlign: "center",
                 }}
-              >
-                ⚠️ Multiple mode requires at least 2 connected judges.
-              </div>
+                en="⚠️ Multiple mode requires at least 2 connected judges."
+                zh="⚠️ 多位模式需要至少 2 位已連線邊裁。"
+              />
             )}
           </div>
         </div>
@@ -314,9 +344,9 @@ function QRCodeDisplay({
                 })()}
           </div>
 
-            {/* Middle Section (QR Code absolutely centered relative to the flex distribution) */}
-            <div style={{ flex: 'none', display: 'flex', justifyContent: 'center', position: 'relative' }}>
-              <div className="qrcode-wrapper" style={{ width: "65%", aspectRatio: "1" }}>
+            {/* Middle Section: QR, Court label, scan instructions */}
+            <div className="qrcode-center-column">
+              <div className="qrcode-wrapper qrcode-wrapper--compact">
                 <QRCodeSVG
                   value={controllerUrl}
                   size="100%" style={{ width: '100%', height: '100%' }}
@@ -326,24 +356,34 @@ function QRCodeDisplay({
                   includeMargin={false}
                 />
               </div>
-              <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translate(-50%, 0)', fontSize: '2.6cqi', fontWeight: 'bold', color: '#fff', marginTop: '0.8cqi', whiteSpace: 'nowrap' }}>
-                Court {courtId ? courtId.toString().replace(/court\s*/i, '').trim() : "N/A"}
+              <div className="qrcode-court-label">
+                <StableLocaleText
+                  as="span"
+                  locale={locale}
+                  visible={localeVisible}
+                  en={`Court ${courtId ? courtId.toString().replace(/court\s*/i, '').trim() : "N/A"}`}
+                  zh={`場地 ${courtId ? courtId.toString().replace(/court\s*/i, '').trim() : "N/A"}`}
+                />
               </div>
-            </div>
-
-            {/* Bottom Section */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', width: '100%' }}>
-              <div className="qrcode-instructions" style={{ textAlign: 'center', width: '100%' }}>
+              <div className="qrcode-instructions">
                 {isFull ? (
-                  <span className="text-warning">
-                    ⚠️ 裁判席位已滿 (All 3 Referee Slots Occupied)
-                  </span>
+                  <StableLocaleText
+                    as="span"
+                    locale={locale}
+                    visible={localeVisible}
+                    className="text-warning"
+                    en="⚠️ All 3 Referee Slots Occupied"
+                    zh="⚠️ 裁判席位已滿"
+                  />
                 ) : (
-                  <div style={{ textAlign: 'center', width: '100%', lineHeight: '1.5' }}>
-                    <span style={{ fontSize: '1.4cqi', opacity: 0.9 }}>Scan to instantly become a referee!</span>
-                    <br />
-                    <span>拿出手機掃描，即刻成為裁判！</span>
-                  </div>
+                  <StableLocaleText
+                    as="div"
+                    locale={locale}
+                    visible={localeVisible}
+                    className="qrcode-scan-copy"
+                    en={'Scan this code.\nYour phone is now a score remote.\nNo assembly required.'}
+                    zh={'掃呢個碼。\n部手機即刻變裁判手掣。\n唔使裝嵌，唔使說明書。'}
+                  />
                 )}
               </div>
             </div>

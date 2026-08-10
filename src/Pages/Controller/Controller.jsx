@@ -291,7 +291,7 @@ function Controller() {
                     onClick={(e) => {
                         e.stopPropagation();
                         if (user) {
-                            navigate("/");
+                            navigate("/home");
                         } else {
                             navigate("/court-setup");
                         }
