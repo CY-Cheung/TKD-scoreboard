@@ -5,6 +5,7 @@ import { ref, get, set, remove, update } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
 import { FolderPlus, Trash, ExclamationTriangle, Key, FileEarmarkPdf, FileEarmarkArrowUp, BoxArrowRight, CheckCircle, House, XCircle, Github } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
+import { appendIvrQuotaToSettings, buildIvrQuotaUpdate, formatIvrQuotaForInput } from '../../Api';
 import { usePopup } from '../../Context/PopupContext';
 
 import './CourtSetup.css';
@@ -29,6 +30,8 @@ function CourtSetup() {
   const [newMaxGamjeom, setNewMaxGamjeom] = useState(5);
   const [newRoundDuration, setNewRoundDuration] = useState(90);
   const [newRestDuration, setNewRestDuration] = useState(60);
+  const [newIvrQuota, setNewIvrQuota] = useState('');
+  const [editEventIvrQuota, setEditEventIvrQuota] = useState('');
   const [courtCount, setCourtCount] = useState(4); // Default 4 courts
 
   const [isDeleting, setIsDeleting] = useState(false);
@@ -53,7 +56,7 @@ function CourtSetup() {
           const eventList = Object.keys(val).map(key => {
             const item = val[key];
             const displayName = item?.EventName || item?.eventName || item?.settings?.eventName || item?.name || key;
-            return { id: key, displayName, createdBy: item?.createdBy || null };
+            return { id: key, displayName, createdBy: item?.createdBy || null, createdByEmail: item?.createdByEmail || null };
           });
           setEvents(eventList);
 
@@ -103,6 +106,46 @@ function CourtSetup() {
       setCourtId('');
     }
   }, [selectedEvent, user]);
+
+  useEffect(() => {
+    if (!selectedEvent || !user) {
+      setEditEventIvrQuota('');
+      return;
+    }
+    const settingsRef = ref(database, `events/${selectedEvent}/settings`);
+    get(settingsRef).then((snapshot) => {
+      const settings = snapshot.val() || {};
+      setEditEventIvrQuota(formatIvrQuotaForInput(settings.ivrQuota));
+    }).catch(() => {
+      setEditEventIvrQuota('');
+    });
+  }, [selectedEvent, user]);
+
+  const selectedEventData = events.find((evt) => evt.id === selectedEvent);
+  const isSelectedEventCreator = Boolean(
+    user && selectedEventData && (user.uid === selectedEventData.createdBy || user.email === selectedEventData.createdByEmail)
+  );
+
+  const handleSaveEventIvrQuota = async () => {
+    if (!selectedEvent) {
+      showToast('請先選擇賽事。');
+      return;
+    }
+    if (!isSelectedEventCreator) {
+      showToast('只有賽事建立者可以修改 Event IVR Quota。');
+      return;
+    }
+    try {
+      await update(
+        ref(database, `events/${selectedEvent}/settings`),
+        buildIvrQuotaUpdate(editEventIvrQuota)
+      );
+      showToast('Event IVR Quota 已更新。');
+    } catch (err) {
+      console.error('Save Event IVR Quota Failed:', err);
+      showToast(`更新 Event IVR Quota 失敗: ${err.message}`);
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     setAuthError('');
@@ -177,6 +220,14 @@ function CourtSetup() {
         restDuration: parseInt(newRestDuration, 10) || 60
       };
 
+      const buildSettings = () => appendIvrQuotaToSettings({
+        setupPassword: newSetupPassword,
+        maxPointGap: parseInt(newMaxPointGap, 10) || 15,
+        maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+        roundDuration: parseInt(newRoundDuration, 10) || 90,
+        restDuration: parseInt(newRestDuration, 10) || 60
+      }, newIvrQuota);
+
       if (pdfParseResult) {
         if (pdfParseResult.dateGroups) {
           Object.values(pdfParseResult.dateGroups).forEach(group => {
@@ -218,13 +269,7 @@ function CourtSetup() {
               createdByEmail: user.email || '',
               createdAt: Date.now(),
               matchDate: formattedDate,
-              settings: {
-                setupPassword: newSetupPassword,
-                maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-                maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                roundDuration: parseInt(newRoundDuration, 10) || 90,
-                restDuration: parseInt(newRestDuration, 10) || 60
-              },
+              settings: buildSettings(),
               courts: generatedCourts,
               matches: pdfParseResult.dateGroups[dateStr].matches
             });
@@ -251,13 +296,7 @@ function CourtSetup() {
             createdByEmail: user.email || '',
             createdAt: Date.now(),
             matchDate: formattedDate,
-            settings: {
-              setupPassword: newSetupPassword,
-              maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-              maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-              roundDuration: parseInt(newRoundDuration, 10) || 90,
-              restDuration: parseInt(newRestDuration, 10) || 60
-            },
+            settings: buildSettings(),
             courts: generatedCourts,
             matches: pdfParseResult.matches
           });
@@ -271,13 +310,7 @@ function CourtSetup() {
           createdBy: user.uid,
           createdByEmail: user.email || '',
           createdAt: Date.now(),
-          settings: {
-            setupPassword: newSetupPassword,
-            maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-            maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-            roundDuration: parseInt(newRoundDuration, 10) || 90,
-            restDuration: parseInt(newRestDuration, 10) || 60
-          },
+          settings: buildSettings(),
           courts: generatedCourts,
           matches: {}
         });
@@ -292,6 +325,7 @@ function CourtSetup() {
       setNewMaxGamjeom(5);
       setNewRoundDuration(90);
       setNewRestDuration(60);
+      setNewIvrQuota('');
       setCourtCount(4);
       setPdfParseResult(null);
       setShowCreateModal(false);
@@ -545,6 +579,33 @@ function CourtSetup() {
                 </select>
               </div>
 
+              {isSelectedEventCreator && selectedEvent && (
+                <div className="form-group">
+                  <label htmlFor="edit-event-ivr-quota" style={{ fontSize: '1cqi' }}>Event IVR Quota (留空=無限)</label>
+                  <div style={{ display: 'flex', gap: '0.52cqi', alignItems: 'center' }}>
+                    <input
+                      id="edit-event-ivr-quota"
+                      type="number"
+                      min="1"
+                      className="datalist-input"
+                      placeholder="留空 = 無限"
+                      value={editEventIvrQuota}
+                      onChange={(e) => setEditEventIvrQuota(e.target.value)}
+                      style={{ flex: 1, padding: '0 0.62cqi', fontSize: '0.85cqi', height: '2.34cqi', boxSizing: 'border-box' }}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleSaveEventIvrQuota}
+                      text="Save"
+                      fontSize="0.77cqi"
+                      angle={120}
+                      icon={<CheckCircle size="0.83cqi" />}
+                      style={{ whiteSpace: 'nowrap', padding: '0.42cqi 0.83cqi' }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {(!user || (selectedEvent && events.find(e => e.id === selectedEvent) && events.find(e => e.id === selectedEvent).createdByEmail !== user?.email)) && (
                 <div className="form-group">
                   <label htmlFor="setup-password" style={{ fontSize: '1cqi' }}>Setup Password</label>
@@ -677,6 +738,10 @@ function CourtSetup() {
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Rest Duration (休息秒數)</label>
                   <input type="number" value={newRestDuration} onChange={e => setNewRestDuration(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>IVR Quota (留空=無限)</label>
+                  <input type="number" min="1" placeholder="留空 = 無限" value={newIvrQuota} onChange={e => setNewIvrQuota(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Courts Count (1~12)</label>

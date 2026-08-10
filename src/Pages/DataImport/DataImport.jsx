@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
 import { PlusCircle, Trash, FolderPlus, ExclamationTriangle, FileEarmarkArrowUp, FileEarmarkPdf, CheckCircleFill, Calendar3, Funnel, House, XCircle, CheckCircle, Display, Diagram3, X, ArrowLeft } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
+import { appendIvrQuotaToSettings, appendIvrQuotaToRules, formatIvrQuotaForInput } from '../../Api';
 import TournamentBracket from '../../Components/TournamentBracket/TournamentBracket';
 
 // A helper function to parse name and club from old format
@@ -29,6 +30,7 @@ const DataImport = () => {
     const [newMaxGamjeom, setNewMaxGamjeom] = useState(5);
     const [newRoundDuration, setNewRoundDuration] = useState(90);
     const [newRestDuration, setNewRestDuration] = useState(60);
+    const [newIvrQuota, setNewIvrQuota] = useState('');
     const [currentMatches, setCurrentMatches] = useState({});
     const [selectedMatchId, setSelectedMatchId] = useState(null);
     const { showToast, showConfirm } = usePopup();
@@ -59,6 +61,7 @@ const DataImport = () => {
     const [maxGamjeom, setMaxGamjeom] = useState(5);
     const [roundDuration, setRoundDuration] = useState(90);
     const [restDuration, setRestDuration] = useState(60);
+    const [ivrQuota, setIvrQuota] = useState('');
     const [blueName, setBlueName] = useState('');
     const [blueAffiliatedClub, setBlueAffiliatedClub] = useState('');
     const [bluePreviousMatch, setBluePreviousMatch] = useState('');
@@ -192,6 +195,14 @@ const DataImport = () => {
                 restDuration: parseInt(newRestDuration, 10) || 60
             };
 
+            const buildSettings = () => appendIvrQuotaToSettings({
+                setupPassword: newSetupPassword,
+                maxPointGap: parseInt(newMaxPointGap, 10) || 15,
+                maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
+                roundDuration: parseInt(newRoundDuration, 10) || 90,
+                restDuration: parseInt(newRestDuration, 10) || 60
+            }, newIvrQuota);
+
             if (pdfParseResult) {
                 if (pdfParseResult.dateGroups) {
                     Object.values(pdfParseResult.dateGroups).forEach(group => {
@@ -233,13 +244,7 @@ const DataImport = () => {
                             createdByEmail: user.email || '',
                             createdAt: Date.now(),
                             matchDate: formattedDate,
-                            settings: { 
-                                setupPassword: newSetupPassword,
-                                maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-                                maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                                roundDuration: parseInt(newRoundDuration, 10) || 90,
-                                restDuration: parseInt(newRestDuration, 10) || 60
-                            },
+                            settings: buildSettings(),
                             courts: { court1: { name: 'court1', currentMatchId: '' } },
                             matches: pdfParseResult.dateGroups[dateStr].matches
                         });
@@ -266,13 +271,7 @@ const DataImport = () => {
                         createdByEmail: user.email || '',
                         createdAt: Date.now(),
                         matchDate: formattedDate,
-                        settings: { 
-                            setupPassword: newSetupPassword,
-                            maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-                            maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                            roundDuration: parseInt(newRoundDuration, 10) || 90,
-                            restDuration: parseInt(newRestDuration, 10) || 60
-                        },
+                        settings: buildSettings(),
                         courts: { court1: { name: 'court1', currentMatchId: '' } },
                         matches: pdfParseResult.matches
                     });
@@ -286,13 +285,7 @@ const DataImport = () => {
                     createdBy: user.uid,
                     createdByEmail: user.email || '',
                     createdAt: Date.now(),
-                    settings: { 
-                        setupPassword: newSetupPassword,
-                        maxPointGap: parseInt(newMaxPointGap, 10) || 15,
-                        maxGamjeom: parseInt(newMaxGamjeom, 10) || 5,
-                        roundDuration: parseInt(newRoundDuration, 10) || 90,
-                        restDuration: parseInt(newRestDuration, 10) || 60
-                    },
+                    settings: buildSettings(),
                     courts: { court1: { name: 'court1', currentMatchId: '' } },
                     matches: {}
                 });
@@ -307,6 +300,7 @@ const DataImport = () => {
             setNewMaxGamjeom(5);
             setNewRoundDuration(90);
             setNewRestDuration(60);
+            setNewIvrQuota('');
             setPdfParseResult(null);
             setShowCreateEventModal(false);
             fetchEventsList();
@@ -378,6 +372,7 @@ const DataImport = () => {
             setMaxGamjeom(rules.maxGamjeom || 5);
             setRoundDuration(rules.roundDuration || 90);
             setRestDuration(rules.restDuration || 60);
+            setIvrQuota(formatIvrQuotaForInput(rules.ivrQuota));
     
             const blueCompetitor = competitors.blue;
             if (blueCompetitor.affiliatedClub !== undefined) {
@@ -422,12 +417,12 @@ const DataImport = () => {
                     matchId: matchId,
                     nextMatchId: nextMatchId || null,
                     nextMatchSlot: nextMatchSlot || null,
-                    rules: {
+                    rules: appendIvrQuotaToRules({
                         maxPointGap: parseInt(maxPointGap, 10),
                         maxGamjeom: parseInt(maxGamjeom, 10),
                         roundDuration: parseInt(roundDuration, 10),
                         restDuration: parseInt(restDuration, 10),
-                    },
+                    }, ivrQuota),
                     competitors: {
                         blue: { 
                             name: blueName, 
@@ -601,6 +596,10 @@ const DataImport = () => {
                                     <div className="form-group">
                                         <label>Rest Time (s)</label>
                                         <input type="number" value={restDuration} onChange={e => setRestDuration(e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>IVR Quota (留空=無限)</label>
+                                        <input type="number" min="1" placeholder="留空 = 無限" value={ivrQuota} onChange={e => setIvrQuota(e.target.value)} />
                                     </div>
                                 </div>
                             </fieldset>
@@ -834,6 +833,10 @@ const DataImport = () => {
                                 <div className="form-group" style={{ marginBottom: 0 }}>
                                     <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Rest Time (休息秒數)</label>
                                     <input type="number" value={newRestDuration} onChange={e => setNewRestDuration(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>IVR Quota (留空=無限)</label>
+                                    <input type="number" min="1" placeholder="留空 = 無限" value={newIvrQuota} onChange={e => setNewIvrQuota(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
                                 </div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.52cqi', marginTop: '0.52cqi' }}>

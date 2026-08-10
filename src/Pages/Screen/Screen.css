@@ -233,6 +233,24 @@
 	/* 加入置中屬性 */
 }
 
+.screen-ivr-status {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.12em;
+	color: #ffffff;
+	line-height: 1;
+	font-size: 3.1cqi;
+	font-weight: 800;
+	letter-spacing: 0.02em;
+}
+
+.screen-ivr-icon {
+	width: 1em;
+	height: 1em;
+	flex-shrink: 0;
+}
+
 .red-ref-log {
 	display: flex;
 	flex-direction: column;

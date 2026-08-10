@@ -20,7 +20,7 @@
 
 .edit-grid {
     display: grid;
-    /* 修正重點：統一其餘 8 個欄位（2 個新功能 + 6 個計分）各佔 1 份 (1fr)，確保寬度完全一致 */
+    /* side label + IVR + Technical + 6 scoring columns */
     grid-template-columns: auto repeat(8, 1fr);
     gap: 0.521cqi;
     width: 95%;
@@ -48,6 +48,27 @@
 
 .grid-cell .buttons {
     display: flex;
+    align-items: center;
+    gap: 0.21cqi;
+}
+
+.edit-ivr-quota-input {
+    width: 2.6cqi;
+    min-width: 2.6cqi;
+    padding: 0.15cqi 0.2cqi;
+    font-size: 1.4cqi;
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: center;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 0.25cqi;
+    box-sizing: border-box;
+}
+
+.edit-ivr-quota-input:disabled {
+    opacity: 0.35;
 }
 
 .blue {

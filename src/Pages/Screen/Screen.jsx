@@ -6,9 +6,10 @@ import "../../App.css";
 import Edit from "./Edit";
 import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
 import Button from "../../Components/Button/Button";
-import { ArrowLeft, Icon1CircleFill, Icon2CircleFill, Icon3CircleFill, Icon1Square, Icon2Square, Icon3Square, Icon1SquareFill, Icon2SquareFill, Icon3SquareFill } from "react-bootstrap-icons";
-import { startNextRound, VOTE_WINDOW_MS, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi } from "../../Api";
+import { ArrowLeft, Icon1CircleFill, Icon2CircleFill, Icon3CircleFill, Icon1Square, Icon2Square, Icon3Square, Icon1SquareFill, Icon2SquareFill, Icon3SquareFill, Files, File, FileExcel } from "react-bootstrap-icons";
+import { startNextRound, VOTE_WINDOW_MS, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement, getEffectiveIvrRemaining, isIvrUnlimited } from "../../Api";
 import TechnicalCardAnnouncement from "../../Components/TechnicalCardFlow/TechnicalCardAnnouncement";
+import IVRAnnouncement from "../../Components/IVRFlow/IVRAnnouncement";
 import PunchIcon from "../../assets/icons/PunchIcon.png";
 import TrunkIcon from "../../assets/icons/TrunkIcon.png";
 import HelmetIcon from "../../assets/icons/HelmetIcon.png";
@@ -80,12 +81,16 @@ function Screen() {
     const [currentMatchId, setCurrentMatchId] = useState(null);
     const [refereesData, setRefereesData] = useState({});
 
+    const [eventSettings, setEventSettings] = useState({});
     const [refereeMode, setRefereeMode] = useState('single');
     const [toastMessages, setToastMessages] = useState([]);
     const prevRefereesRef = useRef({});
 
     const techCardAnnouncement = matchData?.state?.techCardAnnouncement ?? null;
     const isTechCardFlowActive = techCardAnnouncement !== null;
+    const ivrAnnouncement = matchData?.state?.ivrAnnouncement ?? null;
+    const isIvrFlowActive = ivrAnnouncement !== null;
+    const matchRules = matchData?.config?.rules || {};
 
     const animationFrameRef = useRef();
     const isMatchLoaded = !!matchData;
@@ -127,8 +132,10 @@ function Screen() {
             const val = snapshot.val();
             if (val) {
                 setEventName(val?.EventName || val?.eventName || val?.settings?.eventName || val?.name || selectedEvent);
+                setEventSettings(val?.settings || {});
             } else {
                 setEventName(selectedEvent);
+                setEventSettings({});
             }
         });
         return () => unsubscribe();
@@ -277,14 +284,24 @@ function Screen() {
     const toggleDirection = () => setDirection((prev) => (prev === "row" ? "row-reverse" : "row"));
 
     const handleTechCardConfirm = useCallback(({ side, decision }) => {
-        if (showQRCode || !selectedEvent || !currentMatchId || techCardAnnouncement) return;
+        if (showQRCode || !selectedEvent || !currentMatchId || techCardAnnouncement || ivrAnnouncement) return;
         startTechCardAnnouncement(selectedEvent, currentMatchId, { side, decision });
-    }, [showQRCode, selectedEvent, currentMatchId, techCardAnnouncement]);
+    }, [showQRCode, selectedEvent, currentMatchId, techCardAnnouncement, ivrAnnouncement]);
 
     const handleTechCardAnnouncementComplete = useCallback(() => {
         if (!selectedEvent || !currentMatchId) return;
         finalizeTechCardAnnouncement(selectedEvent, currentMatchId);
     }, [selectedEvent, currentMatchId]);
+
+    const handleIvrConfirm = useCallback(({ side, decision }) => {
+        if (showQRCode || !selectedEvent || !currentMatchId || ivrAnnouncement || techCardAnnouncement) return;
+        startIvrAnnouncement(selectedEvent, currentMatchId, { side, decision });
+    }, [showQRCode, selectedEvent, currentMatchId, ivrAnnouncement, techCardAnnouncement]);
+
+    const handleIvrAnnouncementComplete = useCallback(() => {
+        if (!selectedEvent || !currentMatchId) return;
+        finalizeIvrAnnouncement(selectedEvent, currentMatchId, eventSettings);
+    }, [selectedEvent, currentMatchId, eventSettings]);
 
     const toggleTimer = async (force = false) => {
         if (!isMatchLoaded) return;
@@ -381,6 +398,8 @@ function Screen() {
 
     const redGamJeom = stats.red?.gamjeom ?? 0;
     const blueGamJeom = stats.blue?.gamjeom ?? 0;
+    const redIvrRemaining = getEffectiveIvrRemaining(stats, "red", eventSettings, matchRules);
+    const blueIvrRemaining = getEffectiveIvrRemaining(stats, "blue", eventSettings, matchRules);
 
     const redTotalScore = isMatchLoaded ? calculateScore(stats.red, stats.blue) : 0;
     const blueTotalScore = isMatchLoaded ? calculateScore(stats.blue, stats.red) : 0;
@@ -391,6 +410,25 @@ function Screen() {
     const timerColor = isPaused ? "#FFFF00" : "#FFFFFF";
     const redScoreColor = !isResting && dominantSide === 'red' ? '#FFFF00' : '#FFFFFF';
     const blueScoreColor = !isResting && dominantSide === 'blue' ? '#FFFF00' : '#FFFFFF';
+
+    const renderIvrBottomStatus = (remaining) => {
+        if (isIvrUnlimited(remaining)) {
+            return (
+                <div className="screen-ivr-status" aria-label="IVR quota unlimited">
+                    <Files className="screen-ivr-icon" aria-hidden />
+                </div>
+            );
+        }
+
+        const n = Math.max(0, remaining ?? 0);
+        const Icon = n > 1 ? Files : n === 1 ? File : FileExcel;
+
+        return (
+            <div className="screen-ivr-status" aria-label={`IVR quota ${n}`}>
+                <Icon className="screen-ivr-icon" aria-hidden />
+            </div>
+        );
+    };
 
     const renderTimerContent = () => {
         if (winReason) return winReason;
@@ -644,10 +682,8 @@ function Screen() {
                     </div>
 
                     {/* Red Side: IVR Logo */}
-                    <div className="red-score-info red-bg cursor-target">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="4cqi" height="4cqi" fill="currentColor" className="bi bi-files" viewBox="0 0 16 16">
-                            <path d="M13 0H6a2 2 0 0 0-2 2 2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 2 2 0 0 0 2-2V2a2 2 0 0 0-2-2m0 13V4a2 2 0 0 0-2-2H5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1M3 4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
-                        </svg>
+                    <div className="red-score-info red-bg cursor-target" onClick={() => setShowEdit(true)}>
+                        {renderIvrBottomStatus(redIvrRemaining)}
                     </div>
 
                     {/* Center: Round Info */}
@@ -659,10 +695,8 @@ function Screen() {
                     </div>
 
                     {/* Blue Side: IVR Logo */}
-                    <div className="blue-score-info blue-bg cursor-target">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="4cqi" height="4cqi" fill="currentColor" className="bi bi-files" viewBox="0 0 16 16">
-                            <path d="M13 0H6a2 2 0 0 0-2 2 2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 2 2 0 0 0 2-2V2a2 2 0 0 0-2-2m0 13V4a2 2 0 0 0-2-2H5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1M3 4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
-                        </svg>
+                    <div className="blue-score-info blue-bg cursor-target" onClick={() => setShowEdit(true)}>
+                        {renderIvrBottomStatus(blueIvrRemaining)}
                     </div>
 
                     {/* Blue Side: Gam-jeom */}
@@ -688,6 +722,9 @@ function Screen() {
                 kyeShiActive={isKyeShiActive}
                 onTechCardConfirm={handleTechCardConfirm}
                 isTechnicalCardFlowActive={isTechCardFlowActive}
+                onIvrConfirm={handleIvrConfirm}
+                isIvrFlowActive={isIvrFlowActive}
+                eventSettings={eventSettings}
             />
 
             <TechnicalCardAnnouncement
@@ -696,6 +733,20 @@ function Screen() {
                 decision={techCardAnnouncement?.decision}
                 startedAt={techCardAnnouncement?.startedAt}
                 onComplete={handleTechCardAnnouncementComplete}
+            />
+
+            <IVRAnnouncement
+                visible={ivrAnnouncement !== null}
+                side={ivrAnnouncement?.side}
+                decision={ivrAnnouncement?.decision}
+                startedAt={ivrAnnouncement?.startedAt}
+                ivrRemaining={getEffectiveIvrRemaining(
+                    matchData?.stats,
+                    ivrAnnouncement?.side,
+                    eventSettings,
+                    matchRules
+                )}
+                onComplete={handleIvrAnnouncementComplete}
             />
 
             {/* Controller Connection QR Code Modal */}

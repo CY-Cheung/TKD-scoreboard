@@ -7,7 +7,8 @@ import { usePopup } from "../../Context/PopupContext";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
 import TechnicalCardConfirm from "../../Components/TechnicalCardFlow/TechnicalCardConfirm";
-import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner } from '../../Api';
+import IVRConfirm from "../../Components/IVRFlow/IVRConfirm";
+import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner, getEffectiveIvrRemaining, formatIvrQuotaForEdit, isIvrUnlimited, setIvrRemaining } from '../../Api';
 
 const Edit = ({
     visible,
@@ -25,6 +26,9 @@ const Edit = ({
     session,
     onTechCardConfirm,
     isTechnicalCardFlowActive = false,
+    onIvrConfirm,
+    isIvrFlowActive = false,
+    eventSettings = {},
 }) => {
     const { showToast } = usePopup();
     const [matchMin, setMatchMin] = useState(0);
@@ -34,6 +38,9 @@ const Edit = ({
     const [showSuperiorityVote, setShowSuperiorityVote] = useState(false);
     const [showAvoidingPopup, setShowAvoidingPopup] = useState(false);
     const [techCardConfirmSide, setTechCardConfirmSide] = useState(null);
+    const [ivrConfirmSide, setIvrConfirmSide] = useState(null);
+    const [ivrQuotaInputs, setIvrQuotaInputs] = useState({ blue: '', red: '' });
+    const [ivrQuotaFocused, setIvrQuotaFocused] = useState(null);
     const [avoidingSide, setAvoidingSide] = useState(null);
     const [avoidingAction, setAvoidingAction] = useState(1);
     const navigate = useNavigate();
@@ -90,15 +97,95 @@ const Edit = ({
         setAvoidingSide(null);
     };
 
-    // --- IVR 與 Technical Card 點擊邏輯預留區域 ---
+    const matchRules = matchData?.config?.rules || {};
+    const getSideIvrRemaining = (side) =>
+        getEffectiveIvrRemaining(matchData?.stats, side, eventSettings, matchRules);
+
+    useEffect(() => {
+        if (!matchData) {
+            setIvrQuotaInputs({ blue: '', red: '' });
+            return;
+        }
+        setIvrQuotaInputs((prev) => ({
+            blue: ivrQuotaFocused === 'blue'
+                ? prev.blue
+                : formatIvrQuotaForEdit(getEffectiveIvrRemaining(matchData.stats, 'blue', eventSettings, matchRules)),
+            red: ivrQuotaFocused === 'red'
+                ? prev.red
+                : formatIvrQuotaForEdit(getEffectiveIvrRemaining(matchData.stats, 'red', eventSettings, matchRules)),
+        }));
+    }, [
+        matchData,
+        eventSettings,
+        matchRules,
+        ivrQuotaFocused,
+        matchData?.stats?.blue?.ivrRemaining,
+        matchData?.stats?.red?.ivrRemaining,
+    ]);
+
+    const ivrQuotaControlsDisabled = !matchData || isIvrFlowActive || ivrConfirmSide;
+
+    const handleIvrQuotaInputChange = (side, value) => {
+        if (!/^\d*$/.test(value)) return;
+        setIvrQuotaInputs((prev) => ({ ...prev, [side]: value }));
+    };
+
+    const commitIvrQuota = (side, value) => {
+        if (!eventName || !matchId) return;
+        if (value === null || value === '') {
+            setIvrRemaining(eventName, matchId, side, null);
+            setIvrQuotaInputs((prev) => ({ ...prev, [side]: '' }));
+            return;
+        }
+        const next = Math.max(0, Math.floor(Number(value) || 0));
+        setIvrRemaining(eventName, matchId, side, next);
+        setIvrQuotaInputs((prev) => ({ ...prev, [side]: String(next) }));
+    };
+
+    const handleIvrQuotaBlur = (side) => {
+        setIvrQuotaFocused(null);
+        const raw = ivrQuotaInputs[side];
+        if (raw === '') {
+            commitIvrQuota(side, null);
+            return;
+        }
+        const parsed = parseInt(raw, 10);
+        const next = Number.isNaN(parsed) ? getSideIvrRemaining(side) : parsed;
+        commitIvrQuota(side, isIvrUnlimited(next) ? null : next);
+    };
+
+    const isIvrBlocked = () =>
+        !matchData
+        || showAvoidingPopup
+        || isTechnicalCardFlowActive
+        || isIvrFlowActive
+        || techCardConfirmSide
+        || ivrConfirmSide;
+
     const handleIVRAction = (side) => {
-        if (!matchData) return;
-        console.log(`Triggered IVR for ${side}`);
-        // TODO: 在這裡實作扣除預設 IVR 挑戰次數的邏輯，或呼叫 API
+        const remaining = getSideIvrRemaining(side);
+        if (isIvrBlocked() || (!isIvrUnlimited(remaining) && remaining <= 0)) return;
+        setIvrConfirmSide(side);
+    };
+
+    const handleIvrAccept = () => {
+        const side = ivrConfirmSide;
+        setIvrConfirmSide(null);
+        onIvrConfirm?.({ side, decision: "accept" });
+    };
+
+    const handleIvrReject = () => {
+        const side = ivrConfirmSide;
+        setIvrConfirmSide(null);
+        onIvrConfirm?.({ side, decision: "reject" });
+    };
+
+    const handleIvrCancel = () => {
+        setIvrConfirmSide(null);
     };
 
     const handleTechnicalCardAction = (side) => {
-        if (!matchData || showAvoidingPopup || isTechnicalCardFlowActive || techCardConfirmSide) return;
+        if (!matchData || showAvoidingPopup || isTechnicalCardFlowActive || isIvrFlowActive || techCardConfirmSide || ivrConfirmSide) return;
         setTechCardConfirmSide(side);
     };
 
@@ -124,6 +211,7 @@ const Edit = ({
             setShowAvoidingPopup(false);
             setAvoidingSide(null);
             setTechCardConfirmSide(null);
+            setIvrConfirmSide(null);
             return;
         }
 
@@ -254,6 +342,26 @@ const Edit = ({
         }
     };
 
+    const ivrButtonDisabled = (side) => {
+        const remaining = getSideIvrRemaining(side);
+        return isIvrBlocked() || (!isIvrUnlimited(remaining) && remaining <= 0);
+    };
+    const techCardButtonDisabled = !matchData || showAvoidingPopup || isTechnicalCardFlowActive || isIvrFlowActive || techCardConfirmSide || ivrConfirmSide;
+
+    const renderIvrQuotaInput = (side) => (
+        <input
+            type="text"
+            inputMode="numeric"
+            className="edit-ivr-quota-input"
+            value={ivrQuotaInputs[side]}
+            onChange={(e) => handleIvrQuotaInputChange(side, e.target.value)}
+            onFocus={() => setIvrQuotaFocused(side)}
+            onBlur={() => handleIvrQuotaBlur(side)}
+            disabled={ivrQuotaControlsDisabled}
+            aria-label={`${side} IVR quota`}
+        />
+    );
+
     return (
         <div className={`edit-bar ${visible ? 'visible' : ''}`}>
             <div className="edit-grid">
@@ -282,17 +390,18 @@ const Edit = ({
                 {/* Blue Row */}
                 <div className="grid-cell side-label blue">Blue</div>
 
-                {/* Blue IVR 按鈕 - 完全對齊加減制 */}
+                {/* Blue IVR 按鈕 + 剩餘 quota */}
                 <div className="grid-cell">
                     <div className="buttons">
                         <Button
                             icon={<FilePlayFill color="white" size="2cqi" />}
                             fontSize={buttonFontSize}
                             onClick={() => handleIVRAction('blue')}
-                            style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }}
+                            style={{ padding: '0.1cqi 1.2cqi', opacity: ivrButtonDisabled('blue') ? 0.3 : 1 }}
                             angle={220}
-                            disabled={!matchData}
+                            disabled={ivrButtonDisabled('blue')}
                         />
+                        {renderIvrQuotaInput('blue')}
                     </div>
                 </div>
                 {/* Blue Technical Card 按鈕 - 完全對齊加減制 */}
@@ -302,9 +411,9 @@ const Edit = ({
                             icon={<FileFontFill color="white" size="2cqi" />}
                             fontSize={buttonFontSize}
                             onClick={() => handleTechnicalCardAction('blue')}
-                            style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData || isTechnicalCardFlowActive || techCardConfirmSide ? 0.3 : 1 }}
+                            style={{ padding: '0.1cqi 1.2cqi', opacity: techCardButtonDisabled ? 0.3 : 1 }}
                             angle={220}
-                            disabled={!matchData || isTechnicalCardFlowActive || techCardConfirmSide}
+                            disabled={techCardButtonDisabled}
                         />
                     </div>
                 </div>
@@ -321,17 +430,18 @@ const Edit = ({
                 {/* Red Row */}
                 <div className="grid-cell side-label red">Red</div>
 
-                {/* Red IVR 按鈕 - 完全對齊加減制 */}
+                {/* Red IVR 按鈕 + 剩餘 quota */}
                 <div className="grid-cell">
                     <div className="buttons">
                         <Button
                             icon={<FilePlayFill color="white" size="2cqi" />}
                             fontSize={buttonFontSize}
                             onClick={() => handleIVRAction('red')}
-                            style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }}
+                            style={{ padding: '0.1cqi 1.2cqi', opacity: ivrButtonDisabled('red') ? 0.3 : 1 }}
                             angle={0}
-                            disabled={!matchData}
+                            disabled={ivrButtonDisabled('red')}
                         />
+                        {renderIvrQuotaInput('red')}
                     </div>
                 </div>
                 {/* Red Technical Card 按鈕 - 完全對齊加減制 */}
@@ -341,9 +451,9 @@ const Edit = ({
                             icon={<FileFontFill color="white" size="2cqi" />}
                             fontSize={buttonFontSize}
                             onClick={() => handleTechnicalCardAction('red')}
-                            style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData || isTechnicalCardFlowActive || techCardConfirmSide ? 0.3 : 1 }}
+                            style={{ padding: '0.1cqi 1.2cqi', opacity: techCardButtonDisabled ? 0.3 : 1 }}
                             angle={0}
-                            disabled={!matchData || isTechnicalCardFlowActive || techCardConfirmSide}
+                            disabled={techCardButtonDisabled}
                         />
                     </div>
                 </div>
@@ -447,6 +557,15 @@ const Edit = ({
                     onAccept={handleTechCardAccept}
                     onReject={handleTechCardReject}
                     onCancel={handleTechCardCancel}
+                />
+            )}
+
+            {ivrConfirmSide && (
+                <IVRConfirm
+                    side={ivrConfirmSide}
+                    onAccept={handleIvrAccept}
+                    onReject={handleIvrReject}
+                    onCancel={handleIvrCancel}
                 />
             )}
 

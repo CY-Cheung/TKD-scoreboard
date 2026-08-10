@@ -108,8 +108,8 @@
 }
 
 .tc-announce-right-inner.tc-reject-rows .tc-announce-status-icon {
-    width: 7cqi;
-    height: 7cqi;
+    width: 10.5cqi;
+    height: 10.5cqi;
     margin: 0.25cqi 0;
 }
 
@@ -130,8 +130,8 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 9cqi;
-    height: 9cqi;
+    width: 10.5cqi;
+    height: 10.5cqi;
     margin: 0.2cqi 0;
 }
 

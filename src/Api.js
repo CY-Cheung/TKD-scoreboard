@@ -314,3 +314,125 @@ export const stopKyeShi = (eventName, matchId) => {
     const stateRef = ref(database, `events/${eventName}/matches/${matchId}/state`);
     return update(stateRef, { kyeShi: null });
 };
+
+const isIvrQuotaEmpty = (value) => value === null || value === undefined || value === "";
+
+/** Edit textbox empty = unlimited WT quota (stored as -1). */
+export const IVR_UNLIMITED = -1;
+
+export const isIvrUnlimited = (value) =>
+    value === IVR_UNLIMITED || isIvrQuotaEmpty(value);
+
+export const parseIvrQuotaInput = (value) => {
+    if (isIvrQuotaEmpty(value)) return null;
+    const trimmed = String(value).trim();
+    if (trimmed === "") return null;
+    const n = parseInt(trimmed, 10);
+    if (Number.isNaN(n) || n < 1) return null;
+    return n;
+};
+
+export const formatIvrQuotaForInput = (value) => {
+    if (isIvrQuotaEmpty(value) || isIvrUnlimited(value)) return "";
+    return String(value);
+};
+
+export const appendIvrQuotaToSettings = (settings, ivrQuotaInput) => {
+    const parsed = parseIvrQuotaInput(ivrQuotaInput);
+    if (parsed !== null) {
+        settings.ivrQuota = parsed;
+    } else {
+        delete settings.ivrQuota;
+    }
+    return settings;
+};
+
+export const appendIvrQuotaToRules = (rules, ivrQuotaInput) => {
+    const parsed = parseIvrQuotaInput(ivrQuotaInput);
+    if (parsed !== null) {
+        rules.ivrQuota = parsed;
+    } else {
+        delete rules.ivrQuota;
+    }
+    return rules;
+};
+
+export const buildIvrQuotaUpdate = (ivrQuotaInput) => {
+    const parsed = parseIvrQuotaInput(ivrQuotaInput);
+    return { ivrQuota: parsed !== null ? parsed : null };
+};
+
+export const isIvrWtMode = (eventSettings = {}, matchRules = {}) =>
+    isIvrUnlimited(eventSettings?.ivrQuota) && isIvrUnlimited(matchRules?.ivrQuota);
+
+export const resolveIvrQuotaCap = (eventSettings = {}, matchRules = {}) => {
+    const matchQ = matchRules?.ivrQuota;
+    if (!isIvrUnlimited(matchQ)) return Number(matchQ);
+    const eventQ = eventSettings?.ivrQuota;
+    if (!isIvrUnlimited(eventQ)) return Number(eventQ);
+    return IVR_UNLIMITED;
+};
+
+export const getEffectiveIvrRemaining = (stats, side, eventSettings = {}, matchRules = {}) => {
+    const stored = stats?.[side]?.ivrRemaining;
+    if (stored === IVR_UNLIMITED) return IVR_UNLIMITED;
+    if (typeof stored === "number" && !Number.isNaN(stored)) return stored;
+    return resolveIvrQuotaCap(eventSettings, matchRules);
+};
+
+export const formatIvrQuotaForEdit = (remaining) => {
+    if (isIvrUnlimited(remaining)) return "";
+    return String(Math.max(0, remaining ?? 0));
+};
+
+export const projectIvrRemaining = (current, decision) => {
+    if (isIvrUnlimited(current)) {
+        return decision === "reject" ? 0 : IVR_UNLIMITED;
+    }
+    if (decision === "reject") {
+        return 0;
+    }
+    return Math.max(0, current - 1);
+};
+
+export const setIvrRemaining = (eventName, matchId, side, value) => {
+    const statsRef = ref(database, `events/${eventName}/matches/${matchId}/stats/${side}`);
+    if (value === null || value === undefined || value === "") {
+        return update(statsRef, { ivrRemaining: IVR_UNLIMITED });
+    }
+    const next = Math.max(0, Math.floor(Number(value) || 0));
+    return update(statsRef, { ivrRemaining: next });
+};
+
+export const startIvrAnnouncement = (eventName, matchId, { side, decision }) => {
+    const stateRef = ref(database, `events/${eventName}/matches/${matchId}/state`);
+    return update(stateRef, {
+        ivrAnnouncement: {
+            side,
+            decision,
+            startedAt: Date.now(),
+        },
+    });
+};
+
+export const finalizeIvrAnnouncement = async (eventName, matchId, eventSettings = {}) => {
+    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
+
+    await runTransaction(matchRef, (matchData) => {
+        if (!matchData?.state?.ivrAnnouncement) return undefined;
+
+        const ann = matchData.state.ivrAnnouncement;
+        const side = ann.side;
+        const decision = ann.decision;
+        delete matchData.state.ivrAnnouncement;
+
+        if (!matchData.stats) matchData.stats = { red: {}, blue: {} };
+        if (!matchData.stats[side]) matchData.stats[side] = {};
+
+        const rules = matchData.config?.rules || {};
+        const current = getEffectiveIvrRemaining(matchData.stats, side, eventSettings, rules);
+        matchData.stats[side].ivrRemaining = projectIvrRemaining(current, decision);
+
+        return matchData;
+    });
+};
