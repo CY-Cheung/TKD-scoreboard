@@ -1,14 +1,11 @@
 // src/Api.js
 import { ref, runTransaction, update, get, onValue } from "firebase/database";
 import { database } from './firebase';
-import { getScoreValue } from './domain/scoreMath.js';
+import { applyScoreAndCheckRules } from './domain/scoreTransaction.js';
 import {
-    resetSideStatsForNextRound,
-    resolveMatchRules,
-} from './domain/matchRules.js';
-
-/** Multiple-referee vote window: judges must agree within this period (ms). */
-export const VOTE_WINDOW_MS = 1000;
+    applyDeclareRoundWinner,
+    applyStartNextRound,
+} from './domain/roundTransaction.js';
 
 let globalServerTimeOffset = 0;
 const offsetRef = ref(database, ".info/serverTimeOffset");
@@ -25,146 +22,24 @@ export {
     getFinalWinnerSide,
     isMatchFinal,
 } from './domain/matchRules.js';
+export {
+    VOTE_WINDOW_MS,
+    applyScoreAndCheckRules,
+} from './domain/scoreTransaction.js';
 
 export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, courtId = null, deviceId = null, seatName = null, mode = 'single') => {
     const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
 
     runTransaction(matchRef, (matchData) => {
-        if (!matchData) return;
-        
-        if (courtId && deviceId) {
-            matchData.providedCourtId = courtId;
-            matchData.providedDeviceId = deviceId;
-        }
-
-        // Ensure state exists before reading from it
-        if (!matchData.state) matchData.state = {
-            isFinished: false, isPaused: true, timer: 0, winReason: null, lastStartTime: null, dominantSide: 'none'
-        };
-        
-        if (!matchData.stats) matchData.stats = {
-            red: { pointsStat: [0,0,0,0,0], gamjeom: 0 },
-            blue: { pointsStat: [0,0,0,0,0], gamjeom: 0 }
-        };
-
-        if (matchData.state.phase === 'REST') return;
-
-        const targetSide = matchData.stats[side];
-
-        if (type === 'gamjeom') {
-            targetSide.gamjeom = (targetSide.gamjeom || 0) + delta;
-            if (targetSide.gamjeom < 0) targetSide.gamjeom = 0;
-        } else if (type === 'gamjeomAvoiding') {
-            targetSide.gamjeom = (targetSide.gamjeom || 0) + delta;
-            if (targetSide.gamjeom < 0) targetSide.gamjeom = 0;
-            targetSide.gamjeomAvoiding = (targetSide.gamjeomAvoiding || 0) + delta;
-            if (targetSide.gamjeomAvoiding < 0) targetSide.gamjeomAvoiding = 0;
-        } else if (type === 'pointsStat') {
-            const now = Date.now() + globalServerTimeOffset;
-            if (mode === 'multiple' && seatName) {
-                // Handle Valid Point Voting Mechanism
-                if (!matchData.votes) matchData.votes = [];
-                
-                
-                // Add the new vote
-                matchData.votes.push({ side, index, seatName, deviceId, timestamp: now });
-                
-                // Keep only votes from the last VOTE_WINDOW_MS (1 second valid-point window)
-                matchData.votes = matchData.votes.filter(v => now - v.timestamp <= VOTE_WINDOW_MS);
-                
-                // Check if there are 2 or more UNIQUE referees who voted for the exact same side & index
-                const matchingVotes = matchData.votes.filter(v => v.side === side && v.index === index);
-                const uniqueSeats = new Set(matchingVotes.map(v => v.deviceId)); // Use deviceId to support testing with multiple Admin tabs
-                
-                if (uniqueSeats.size >= 2) {
-                    // Valid Point achieved!
-                    // Add score
-                    if (!targetSide.pointsStat || targetSide.pointsStat.length < 5) {
-                        const oldStats = targetSide.pointsStat || [];
-                        targetSide.pointsStat = [
-                            oldStats[0] || 0, oldStats[1] || 0, oldStats[2] || 0,
-                            oldStats[3] || 0, oldStats[4] || 0
-                        ];
-                    }
-                    targetSide.pointsStat[index] = (targetSide.pointsStat[index] || 0) + delta;
-                    if (targetSide.pointsStat[index] < 0) targetSide.pointsStat[index] = 0;
-                    
-                    // Clear the votes for this specific score to prevent double-scoring
-                    matchData.votes = matchData.votes.filter(v => !(v.side === side && v.index === index));
-                    
-                    // Add to recentScores
-                    if (!matchData.recentScores) matchData.recentScores = [];
-                    const actualSeatNames = Array.from(new Set(matchingVotes.map(v => v.seatName)));
-                    matchData.recentScores.push({ side, index, seatNames: actualSeatNames, timestamp: now });
-                } else {
-                    // Not enough votes yet, just return and save the vote array
-                    return matchData;
-                }
-            } else {
-                // Single mode or direct score
-                if (!targetSide.pointsStat || targetSide.pointsStat.length < 5) {
-                     const oldStats = targetSide.pointsStat || [];
-                     targetSide.pointsStat = [
-                        oldStats[0] || 0, oldStats[1] || 0, oldStats[2] || 0,
-                        oldStats[3] || 0, oldStats[4] || 0
-                     ];
-                }
-                targetSide.pointsStat[index] = (targetSide.pointsStat[index] || 0) + delta;
-                if (targetSide.pointsStat[index] < 0) targetSide.pointsStat[index] = 0;
-                
-                // Add to recentScores in single mode if delta > 0
-                if (delta > 0) {
-                    if (!matchData.recentScores) matchData.recentScores = [];
-                    matchData.recentScores.push({ side, index, seatNames: [seatName || 'J1'], timestamp: now });
-                }
+        // voteNow uses server offset; pauseNow stays wall-clock (legacy quirk).
+        return applyScoreAndCheckRules(
+            matchData,
+            { side, type, index, delta, courtId, deviceId, seatName, mode },
+            {
+                voteNow: Date.now() + globalServerTimeOffset,
+                pauseNow: Date.now(),
             }
-        }
-
-        const redGamjeom = matchData.stats.red.gamjeom;
-        const blueGamjeom = matchData.stats.blue.gamjeom;
-        const redScore = getScoreValue(matchData.stats.red, matchData.stats.blue);
-        const blueScore = getScoreValue(matchData.stats.blue, matchData.stats.red);
-
-        const pauseTimerForEvent = () => {
-            if (!matchData.state.isPaused && matchData.state.lastStartTime) {
-                const now = Date.now();
-                const elapsed = Math.floor((now - matchData.state.lastStartTime) / 1000);
-
-                matchData.state.timer = (matchData.state.timer || 0) - elapsed;
-                if (matchData.state.timer < 0) matchData.state.timer = 0;
-            }
-            matchData.state.isPaused = true;
-            matchData.state.lastStartTime = null;
-        };
-
-        const { maxPointGap: maxGap, maxGamjeom: maxGJ } = resolveMatchRules(
-            matchData.config?.rules
         );
-
-        const isPUN = redGamjeom >= maxGJ || blueGamjeom >= maxGJ;
-        const isPTG = Math.abs(redScore - blueScore) >= maxGap;
-
-        matchData.state.dominantSide = 'none'; // Reset dominance
-
-        if (isPUN) {
-            pauseTimerForEvent();
-            matchData.state.winReason = 'PUN';
-            if (redGamjeom >= maxGJ) matchData.state.dominantSide = 'blue';
-            if (blueGamjeom >= maxGJ) matchData.state.dominantSide = 'red';
-        }
-        else if (isPTG) {
-            pauseTimerForEvent();
-            matchData.state.winReason = 'PTG';
-            if (redScore > blueScore) matchData.state.dominantSide = 'red';
-            if (blueScore > redScore) matchData.state.dominantSide = 'blue';
-        }
-        else {
-            if (matchData.state.winReason === 'PTG' || matchData.state.winReason === 'PUN') {
-                matchData.state.winReason = null;
-            }
-        }
-
-        return matchData;
     })
     .catch((err) => console.error("Transaction failed:", err));
 };
@@ -172,78 +47,14 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
 export const declareRoundWinner = (eventName, matchId, winnerSide) => {
     const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
 
-    runTransaction(matchRef, (matchData) => {
-        if (!matchData) return;
-        if (!matchData.state) matchData.state = {};
-        if (!matchData.stats) matchData.stats = {};
-        if (!matchData.stats.roundWins) matchData.stats.roundWins = { red: 0, blue: 0 };
-        if (!matchData.stats.roundScores) matchData.stats.roundScores = {};
-
-        const currentRound = matchData.state.currentRound || 1;
-        matchData.stats.roundScores[`R${currentRound}`] = {
-            red: getScoreValue(matchData.stats.red, matchData.stats.blue),
-            blue: getScoreValue(matchData.stats.blue, matchData.stats.red)
-        };
-
-        if (winnerSide === 'red') {
-            matchData.stats.roundWins.red = (matchData.stats.roundWins.red || 0) + 1;
-        } else if (winnerSide === 'blue') {
-            matchData.stats.roundWins.blue = (matchData.stats.roundWins.blue || 0) + 1;
-        }
-
-        const redWins = matchData.stats.roundWins.red;
-        const blueWins = matchData.stats.roundWins.blue;
-        const { roundsToWin, restDuration } = resolveMatchRules(
-            matchData.config?.rules
-        );
-
-        if (redWins >= roundsToWin || blueWins >= roundsToWin) {
-            matchData.state.isFinished = true;
-            matchData.state.winReason = 'PTF';
-            matchData.state.isPaused = true;
-            matchData.state.timer = 0;
-            matchData.state.phase = 'ROUND';
-        } else {
-            const originalStats = { ...matchData.stats };
-            matchData.stats = {
-                ...originalStats,
-                red: resetSideStatsForNextRound(originalStats.red),
-                blue: resetSideStatsForNextRound(originalStats.blue),
-            };
-            
-            matchData.recentScores = [];
-            
-            matchData.state.phase = "REST";
-            matchData.state.timer = restDuration;
-            matchData.state.isPaused = false;
-            matchData.state.lastStartTime = Date.now();
-            matchData.state.isFinished = false;
-            matchData.state.winReason = null;
-            matchData.state.dominantSide = 'none';
-        }
-
-        return matchData;
-    });
+    runTransaction(matchRef, (matchData) =>
+        applyDeclareRoundWinner(matchData, winnerSide, Date.now())
+    );
 };
 
 export const startNextRound = (eventName, matchId) => {
     const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
-    runTransaction(matchRef, (matchData) => {
-        if (!matchData) return;
-
-        matchData.stats.red = resetSideStatsForNextRound(matchData.stats.red);
-        matchData.stats.blue = resetSideStatsForNextRound(matchData.stats.blue);
-
-        matchData.state.currentRound = (matchData.state.currentRound || 1) + 1;
-        matchData.state.phase = "ROUND";
-        matchData.state.timer = resolveMatchRules(matchData.config?.rules).roundDuration;
-        matchData.state.isPaused = true;
-        matchData.state.lastStartTime = null;
-        matchData.state.isFinished = false;
-        matchData.state.dominantSide = 'none';
-
-        return matchData;
-    });
+    runTransaction(matchRef, (matchData) => applyStartNextRound(matchData));
 };
 
 export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
