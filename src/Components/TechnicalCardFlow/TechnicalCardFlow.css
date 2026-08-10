@@ -1,0 +1,250 @@
+/* Technical Card flow — announcement polish */
+
+/* --- Step 2: Announcement --- */
+
+.tc-announce-overlay-exiting {
+    animation: tcOverlayOut 0.38s ease-in forwards;
+}
+
+.tc-announce-overlay-exiting .tc-announce-card {
+    animation: tcCardOut 0.38s ease-in forwards;
+}
+
+.tc-announce-card {
+    pointer-events: auto;
+    position: relative;
+    overflow: hidden;
+    --tc-text-glow:
+        0 0 0.2cqi rgba(255, 255, 255, 0.5),
+        0 0 0.55cqi rgba(255, 255, 255, 0.28),
+        0 0 1cqi rgba(255, 255, 255, 0.12);
+    --tc-icon-glow:
+        drop-shadow(0 0 0.15cqi rgba(255, 255, 255, 0.5))
+        drop-shadow(0 0 0.45cqi rgba(255, 255, 255, 0.28))
+        drop-shadow(0 0 0.85cqi rgba(255, 255, 255, 0.14));
+}
+
+.tc-announce-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.tc-announce-card.tc-side-blue::before {
+    background: radial-gradient(circle at 20% 50%, rgba(0, 0, 170, 0.9), transparent 62%);
+}
+
+.tc-announce-card.tc-side-red::before {
+    background: radial-gradient(circle at 20% 50%, rgba(170, 0, 0, 0.9), transparent 62%);
+}
+
+.tc-announce-left,
+.tc-announce-right,
+.tc-announce-left-inner,
+.tc-announce-icons,
+.tc-announce-right-inner {
+    position: relative;
+    z-index: 1;
+}
+
+.tc-announce-left {
+    justify-content: center;
+    align-items: center;
+    padding: 2cqi 2.5cqi;
+}
+
+.tc-announce-left-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2cqi;
+    width: 100%;
+    height: 100%;
+}
+
+.tc-announce-icons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 2.8cqi;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.tc-announce-title {
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 4.2cqi;
+    letter-spacing: 0.08cqi;
+    text-align: center;
+    line-height: 1.1;
+    text-shadow: var(--tc-text-glow);
+    animation: tcRowIn 0.45s ease-out 0.12s backwards;
+}
+
+.tc-announce-icons svg {
+    width: 10.5cqi;
+    height: 10.5cqi;
+    filter: var(--tc-icon-glow);
+    animation: tcIconPairIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.tc-announce-icons svg:nth-child(2) {
+    animation-delay: 0.07s;
+}
+
+.tc-announce-right {
+    justify-content: center;
+}
+
+.tc-announce-right-inner.tc-reject-rows {
+    gap: 0.75cqi;
+}
+
+.tc-announce-right-inner.tc-reject-rows .tc-announce-status-icon {
+    width: 7.5cqi;
+    height: 7.5cqi;
+}
+
+.tc-announce-right-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.1cqi;
+    width: 100%;
+    height: 100%;
+    padding: 1.5cqi 2cqi;
+    box-sizing: border-box;
+}
+
+.tc-announce-status-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 9cqi;
+    height: 9cqi;
+}
+
+.tc-announce-status-icon svg {
+    width: 100%;
+    height: 100%;
+    filter: var(--tc-icon-glow);
+    animation: tcStatusPop 0.48s cubic-bezier(0.16, 1, 0.3, 1) 0.24s backwards;
+}
+
+.tc-announce-card.tc-decision-reject .tc-announce-status-icon svg {
+    filter:
+        var(--tc-icon-glow)
+        drop-shadow(0 0 0.6cqi rgba(255, 255, 0, 0.35));
+}
+
+.tc-row {
+    color: #ffffff;
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+    text-shadow: var(--tc-text-glow);
+    animation: tcRowIn 0.45s ease-out backwards;
+}
+
+.tc-row-2 {
+    font-size: 3cqi;
+    opacity: 0.95;
+    animation-delay: 0.18s;
+}
+
+.tc-row-3 {
+    font-size: 2.8cqi;
+    font-weight: 800;
+    letter-spacing: 0.05cqi;
+    animation-delay: 0.32s;
+}
+
+.tc-row-4 {
+    font-size: 2.8cqi;
+    font-weight: 800;
+    letter-spacing: 0.05cqi;
+    animation-delay: 0.4s;
+}
+
+.tc-command-word {
+    font-weight: 900;
+    letter-spacing: 0.1cqi;
+}
+
+.tc-command-word.blue {
+    color: var(--blue-primary, #0000aa);
+    text-shadow:
+        0 0 0.2cqi rgba(255, 255, 255, 0.45),
+        0 0 0.55cqi rgba(255, 255, 255, 0.2),
+        0 0 0.85cqi rgba(0, 0, 170, 0.45);
+}
+
+.tc-command-word.red {
+    color: var(--red-primary, #aa0000);
+    text-shadow:
+        0 0 0.2cqi rgba(255, 255, 255, 0.45),
+        0 0 0.55cqi rgba(255, 255, 255, 0.2),
+        0 0 0.85cqi rgba(170, 0, 0, 0.45);
+}
+
+/* --- Animations --- */
+
+@keyframes tcOverlayOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes tcIconPairIn {
+    from {
+        opacity: 0;
+        transform: translateY(1.2cqi) scale(0.85);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes tcStatusPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.35);
+    }
+    65% {
+        transform: scale(1.12);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes tcRowIn {
+    from {
+        opacity: 0;
+        transform: translateX(1.2cqi);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes tcCardOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-0.8cqi) scale(0.96);
+    }
+}

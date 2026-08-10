@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { ref, onValue, update, get } from "firebase/database";
 import { database } from "../../firebase";
 import "./Screen.css";
@@ -7,7 +7,8 @@ import Edit from "./Edit";
 import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
 import Button from "../../Components/Button/Button";
 import { ArrowLeft, Icon1CircleFill, Icon2CircleFill, Icon3CircleFill, Icon1Square, Icon2Square, Icon3Square, Icon1SquareFill, Icon2SquareFill, Icon3SquareFill } from "react-bootstrap-icons";
-import { startNextRound } from "../../Api";
+import { startNextRound, VOTE_WINDOW_MS, startTechCardAnnouncement, finalizeTechCardAnnouncement } from "../../Api";
+import TechnicalCardAnnouncement from "../../Components/TechnicalCardFlow/TechnicalCardAnnouncement";
 import PunchIcon from "../../assets/icons/PunchIcon.png";
 import TrunkIcon from "../../assets/icons/TrunkIcon.png";
 import HelmetIcon from "../../assets/icons/HelmetIcon.png";
@@ -83,6 +84,9 @@ function Screen() {
     const [toastMessages, setToastMessages] = useState([]);
     const [kyeShiTimer, setKyeShiTimer] = useState(null);
     const prevRefereesRef = useRef({});
+
+    const techCardAnnouncement = matchData?.state?.techCardAnnouncement ?? null;
+    const isTechCardFlowActive = techCardAnnouncement !== null;
 
     const animationFrameRef = useRef();
     const isMatchLoaded = !!matchData;
@@ -265,6 +269,16 @@ function Screen() {
 
     const toggleDirection = () => setDirection((prev) => (prev === "row" ? "row-reverse" : "row"));
 
+    const handleTechCardConfirm = useCallback(({ side, decision }) => {
+        if (showQRCode || !selectedEvent || !currentMatchId || techCardAnnouncement) return;
+        startTechCardAnnouncement(selectedEvent, currentMatchId, { side, decision });
+    }, [showQRCode, selectedEvent, currentMatchId, techCardAnnouncement]);
+
+    const handleTechCardAnnouncementComplete = useCallback(() => {
+        if (!selectedEvent || !currentMatchId) return;
+        finalizeTechCardAnnouncement(selectedEvent, currentMatchId);
+    }, [selectedEvent, currentMatchId]);
+
     const toggleTimer = async (force = false) => {
         if (!isMatchLoaded) return;
         if (kyeShiTimer !== null && !force) return; // Block timer toggling during Kye-shi
@@ -407,8 +421,8 @@ function Screen() {
 
         const combinedLogs = [];
 
-        // 1. Pending Votes (expire after 1000ms)
-        const activeVotes = (matchData.votes || []).filter(v => v.side === side && now - v.timestamp <= 1000);
+        // 1. Pending Votes (expire after VOTE_WINDOW_MS)
+        const activeVotes = (matchData.votes || []).filter(v => v.side === side && now - v.timestamp <= VOTE_WINDOW_MS);
         // Group by index
         const pendingGroups = activeVotes.reduce((acc, v) => {
             if (!acc[v.index]) acc[v.index] = { index: v.index, seatNames: new Set(), timestamp: v.timestamp };
@@ -658,6 +672,16 @@ function Screen() {
                 toggleDirection={toggleDirection}
                 toggleKyeShi={toggleKyeShi}
                 kyeShiActive={kyeShiTimer !== null}
+                onTechCardConfirm={handleTechCardConfirm}
+                isTechnicalCardFlowActive={isTechCardFlowActive}
+            />
+
+            <TechnicalCardAnnouncement
+                visible={techCardAnnouncement !== null}
+                side={techCardAnnouncement?.side}
+                decision={techCardAnnouncement?.decision}
+                startedAt={techCardAnnouncement?.startedAt}
+                onComplete={handleTechCardAnnouncementComplete}
             />
 
             {/* Controller Connection QR Code Modal */}

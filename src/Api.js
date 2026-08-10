@@ -2,6 +2,9 @@
 import { ref, runTransaction, update, get, onValue } from "firebase/database";
 import { database } from './firebase';
 
+/** Multiple-referee vote window: judges must agree within this period (ms). */
+export const VOTE_WINDOW_MS = 1000;
+
 let globalServerTimeOffset = 0;
 const offsetRef = ref(database, ".info/serverTimeOffset");
 onValue(offsetRef, (snap) => {
@@ -57,8 +60,8 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
                 // Add the new vote
                 matchData.votes.push({ side, index, seatName, deviceId, timestamp: now });
                 
-                // Keep only votes from the last 1000ms (1 second valid-point window)
-                matchData.votes = matchData.votes.filter(v => now - v.timestamp <= 1000);
+                // Keep only votes from the last VOTE_WINDOW_MS (1 second valid-point window)
+                matchData.votes = matchData.votes.filter(v => now - v.timestamp <= VOTE_WINDOW_MS);
                 
                 // Check if there are 2 or more UNIQUE referees who voted for the exact same side & index
                 const matchingVotes = matchData.votes.filter(v => v.side === side && v.index === index);
@@ -263,5 +266,36 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
     } catch (e) {
         console.error(e);
         throw e;
+    }
+};
+
+export const startTechCardAnnouncement = (eventName, matchId, { side, decision }) => {
+    const stateRef = ref(database, `events/${eventName}/matches/${matchId}/state`);
+    return update(stateRef, {
+        techCardAnnouncement: {
+            side,
+            decision,
+            startedAt: Date.now(),
+        },
+    });
+};
+
+export const finalizeTechCardAnnouncement = async (eventName, matchId) => {
+    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
+    let payload = null;
+
+    const result = await runTransaction(matchRef, (matchData) => {
+        if (!matchData?.state?.techCardAnnouncement) return undefined;
+
+        const ann = matchData.state.techCardAnnouncement;
+        payload = { side: ann.side, decision: ann.decision };
+        delete matchData.state.techCardAnnouncement;
+        return matchData;
+    });
+
+    if (!result.committed || !payload) return;
+
+    if (payload.decision === "reject") {
+        updateScoreAndCheckRules(eventName, matchId, payload.side, "gamjeom", null, 1);
     }
 };

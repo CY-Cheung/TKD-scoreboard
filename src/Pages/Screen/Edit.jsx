@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
 import { ref, get, update } from "firebase/database";
-import { QrCode, PeopleFill, Trophy, PersonFill, CheckCircle, ArrowLeft, FileFill, RecordCircleFill, ShieldFill, PersonCircle, ArrowRepeat, FilePlayFill, FileFontFill } from "react-bootstrap-icons";
+import { QrCode, PeopleFill, Trophy, PersonFill, CheckCircle, ArrowLeft, FileFill, RecordCircleFill, ShieldFill, PersonCircle, ArrowRepeat, FilePlayFill, FileFontFill, Stopwatch } from "react-bootstrap-icons";
 import { usePopup } from "../../Context/PopupContext";
 import "./Edit.css";
 import Button from "../../Components/Button/Button";
+import TechnicalCardConfirm from "../../Components/TechnicalCardFlow/TechnicalCardConfirm";
 import { updateScoreAndCheckRules, declareRoundWinner, startNextRound, promoteWinner } from '../../Api';
 
 const Edit = ({
@@ -21,7 +22,9 @@ const Edit = ({
     toggleKyeShi,
     kyeShiActive,
     courtId,
-    session
+    session,
+    onTechCardConfirm,
+    isTechnicalCardFlowActive = false,
 }) => {
     const { showToast } = usePopup();
     const [matchMin, setMatchMin] = useState(0);
@@ -30,6 +33,7 @@ const Edit = ({
     const [restSec, setRestSec] = useState(0);
     const [showSuperiorityVote, setShowSuperiorityVote] = useState(false);
     const [showAvoidingPopup, setShowAvoidingPopup] = useState(false);
+    const [techCardConfirmSide, setTechCardConfirmSide] = useState(null);
     const [avoidingSide, setAvoidingSide] = useState(null);
     const [avoidingAction, setAvoidingAction] = useState(1);
     const navigate = useNavigate();
@@ -94,9 +98,24 @@ const Edit = ({
     };
 
     const handleTechnicalCardAction = (side) => {
-        if (!matchData) return;
-        console.log(`Triggered Technical Card for ${side}`);
-        // TODO: 在這裡實作 Technical Card 的警告顯示或扣分機制
+        if (!matchData || showAvoidingPopup || isTechnicalCardFlowActive || techCardConfirmSide) return;
+        setTechCardConfirmSide(side);
+    };
+
+    const handleTechCardAccept = () => {
+        const side = techCardConfirmSide;
+        setTechCardConfirmSide(null);
+        onTechCardConfirm?.({ side, decision: "accept" });
+    };
+
+    const handleTechCardReject = () => {
+        const side = techCardConfirmSide;
+        setTechCardConfirmSide(null);
+        onTechCardConfirm?.({ side, decision: "reject" });
+    };
+
+    const handleTechCardCancel = () => {
+        setTechCardConfirmSide(null);
     };
 
     useEffect(() => {
@@ -104,6 +123,7 @@ const Edit = ({
             setShowSuperiorityVote(false);
             setShowAvoidingPopup(false);
             setAvoidingSide(null);
+            setTechCardConfirmSide(null);
             return;
         }
 
@@ -282,9 +302,9 @@ const Edit = ({
                             icon={<FileFontFill color="white" size="2cqi" />}
                             fontSize={buttonFontSize}
                             onClick={() => handleTechnicalCardAction('blue')}
-                            style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }}
+                            style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData || isTechnicalCardFlowActive || techCardConfirmSide ? 0.3 : 1 }}
                             angle={220}
-                            disabled={!matchData}
+                            disabled={!matchData || isTechnicalCardFlowActive || techCardConfirmSide}
                         />
                     </div>
                 </div>
@@ -321,9 +341,9 @@ const Edit = ({
                             icon={<FileFontFill color="white" size="2cqi" />}
                             fontSize={buttonFontSize}
                             onClick={() => handleTechnicalCardAction('red')}
-                            style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData ? 0.3 : 1 }}
+                            style={{ padding: '0.1cqi 1.2cqi', opacity: !matchData || isTechnicalCardFlowActive || techCardConfirmSide ? 0.3 : 1 }}
                             angle={0}
-                            disabled={!matchData}
+                            disabled={!matchData || isTechnicalCardFlowActive || techCardConfirmSide}
                         />
                     </div>
                 </div>
@@ -360,6 +380,7 @@ const Edit = ({
                 {toggleKyeShi && (
                     <Button
                         text={kyeShiActive ? "Stop Kye-shi" : "Kye-shi"}
+                        icon={<Stopwatch size="1.4cqi" />}
                         fontSize="1.4cqi"
                         onClick={toggleKyeShi}
                         style={{
@@ -419,6 +440,15 @@ const Edit = ({
 
                 <Button text="Done (完成)" fontSize="1.4cqi" onClick={() => setVisible(false)} icon={<CheckCircle size="1.4cqi" />} />
             </div>
+
+            {techCardConfirmSide && (
+                <TechnicalCardConfirm
+                    side={techCardConfirmSide}
+                    onAccept={handleTechCardAccept}
+                    onReject={handleTechCardReject}
+                    onCancel={handleTechCardCancel}
+                />
+            )}
 
             {showAvoidingPopup && (
                 <div style={{
