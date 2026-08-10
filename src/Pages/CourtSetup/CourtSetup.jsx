@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
 import { ref, get, set, remove, update } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
+import { useEventSession } from '../../Context/EventSessionContext';
 import { FolderPlus, Trash, ExclamationTriangle, FileEarmarkPdf, FileEarmarkArrowUp, BoxArrowRight, CheckCircle, House, XCircle, Github, Key } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 import { appendIvrQuotaToSettings } from '../../Api';
@@ -47,14 +48,15 @@ function CourtSetup() {
   const [pdfParseResult, setPdfParseResult] = useState(null);
 
   const navigate = useNavigate();
-  const { user, userLoading, googleLogin, googleLogout, login, logout } = useAuth();
+  const { user, userLoading, googleLogin, googleLogout } = useAuth();
+  const { setEventSession, clearEventSession } = useEventSession();
   const { locale, visible } = useAlternatingLocale();
   const [signingIn, setSigningIn] = useState(false);
 
   // Reset event/court session when entering setup (e.g. from Home).
   // Must not clear Google auth — that would bounce us to Landing.
   useEffect(() => {
-    logout();
+    clearEventSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -79,7 +81,7 @@ function CourtSetup() {
     } catch (err) {
       console.error('Google logout error:', err);
     } finally {
-      logout();
+      clearEventSession();
       navigate('/', { replace: true });
     }
   };
@@ -368,7 +370,7 @@ function CourtSetup() {
       const selectedEventData = events.find(evt => evt.id === selectedEvent);
       const eventDisplayName = selectedEventData?.displayName || selectedEvent;
 
-      login({
+      setEventSession({
         eventId: selectedEvent,
         courtId: courtId,
         eventName: eventDisplayName

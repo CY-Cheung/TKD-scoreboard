@@ -13,11 +13,11 @@ export function getDeviceName(userAgent = navigator.userAgent) {
 
 /**
  * Resolve event/court from React Router searchParams, window search,
- * hash query, or sessionStorage fallback.
+ * hash query, EventSession, or sessionStorage fallback.
  */
 export function resolveControllerParam(
   key,
-  { searchParams, sessionStorage: storage = sessionStorage } = {}
+  { searchParams, session, sessionStorage: storage = sessionStorage } = {}
 ) {
   const fromSearch = searchParams?.get?.(key);
   if (fromSearch) return fromSearch;
@@ -31,8 +31,12 @@ export function resolveControllerParam(
     if (hashParams.get(key)) return hashParams.get(key);
   }
 
-  if (key === "event") return storage.getItem("selectedEvent") || "";
-  if (key === "court") return storage.getItem("selectedCourt") || "";
+  if (key === "event") {
+    return session?.eventId || storage.getItem("selectedEvent") || "";
+  }
+  if (key === "court") {
+    return session?.courtId || storage.getItem("selectedCourt") || "";
+  }
 
   return "";
 }

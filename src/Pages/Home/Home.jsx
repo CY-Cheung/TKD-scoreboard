@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
+import { useEventSession } from '../../Context/EventSessionContext';
 import { database } from '../../firebase';
 import { ref, get } from 'firebase/database';
 
@@ -16,7 +17,8 @@ import { Display, Controller, Diagram2, PersonBadge, BoxArrowRight, ArrowLeftRig
 
 function Home() {
     const navigate = useNavigate();
-    const { session, user, googleLogout, logout } = useAuth();
+    const { user, googleLogout } = useAuth();
+    const { session, clearEventSession } = useEventSession();
     const { locale, visible } = useAlternatingLocale();
     const [eventName, setEventName] = useState('');
     const [showQRCode, setShowQRCode] = useState(false);
@@ -66,7 +68,7 @@ function Home() {
         } catch (err) {
             console.error("Google logout error:", err);
         } finally {
-            logout();
+            clearEventSession();
             navigate('/', { replace: true });
         }
     };

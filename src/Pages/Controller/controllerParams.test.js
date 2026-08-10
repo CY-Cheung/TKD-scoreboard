@@ -22,6 +22,20 @@ describe("resolveControllerParam", () => {
     expect(resolveControllerParam("court", { searchParams })).toBe("court2");
   });
 
+  it("prefers EventSession over sessionStorage", () => {
+    const storage = {
+      getItem: vi.fn((k) => (k === "selectedEvent" ? "fromSS" : "")),
+    };
+    const searchParams = new URLSearchParams();
+    expect(
+      resolveControllerParam("event", {
+        searchParams,
+        session: { eventId: "fromSession", courtId: "court1" },
+        sessionStorage: storage,
+      })
+    ).toBe("fromSession");
+  });
+
   it("falls back to sessionStorage for event/court", () => {
     const storage = {
       getItem: vi.fn((k) => (k === "selectedEvent" ? "fromSS" : "")),

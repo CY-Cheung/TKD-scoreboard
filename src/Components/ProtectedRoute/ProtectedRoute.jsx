@@ -1,20 +1,21 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../Context/AuthContext';
+import {
+  hasStoredEventSession,
+  useEventSession,
+} from '../../Context/EventSessionContext';
 
 /**
- * ProtectedRoute Component
  * Guards routes that require an active Event ID and Court ID session.
- * Automatically checks:
- * 1. AuthContext session state
+ * Checks:
+ * 1. EventSessionContext state
  * 2. sessionStorage fallback
- * 3. URL query parameters (for direct QR Code scan access like /controller?event=X&court=Y)
+ * 3. URL query parameters (QR deep-link: /controller?event=X&court=Y)
  */
 function ProtectedRoute({ children }) {
-  const { session } = useAuth();
+  const { session } = useEventSession();
   const location = useLocation();
 
-  // Helper to check if URL query params contain event and court
   const hasUrlParams = () => {
     const searchParams = new URLSearchParams(location.search);
     const hasSearch = searchParams.get('event') && searchParams.get('court');
@@ -28,13 +29,9 @@ function ProtectedRoute({ children }) {
     return false;
   };
 
-  const hasSessionStorage = () => {
-    return !!(sessionStorage.getItem('selectedEvent') && sessionStorage.getItem('selectedCourt'));
-  };
+  const hasEventSession = !!session || hasStoredEventSession() || hasUrlParams();
 
-  const isAuthenticated = !!session || hasSessionStorage() || hasUrlParams();
-
-  if (!isAuthenticated) {
+  if (!hasEventSession) {
     // Prefer Court Setup over Landing so Google session is not wiped by Landing's mount logout.
     return <Navigate to="/court-setup" replace state={{ from: location.pathname }} />;
   }

@@ -18,17 +18,19 @@ import {
 } from "../../domain/matchRules.js";
 import { formatTime } from "./formatTime";
 import VoteLogRows from "./VoteLogRows";
+import { useEventSession } from "../../Context/EventSessionContext";
 
 function Screen() {
+    const { session } = useEventSession();
     const [matchData, setMatchData] = useState(null);
     const [direction, setDirection] = useState("row");
     const [showEdit, setShowEdit] = useState(false);
     const [showQRCode, setShowQRCode] = useState(false);
     const [displayTime, setDisplayTime] = useState(0);
 
-    const [selectedEvent, setSelectedEvent] = useState(sessionStorage.getItem('selectedEvent'));
+    const selectedEvent = session?.eventId || sessionStorage.getItem('selectedEvent');
+    const selectedCourt = session?.courtId || sessionStorage.getItem('selectedCourt');
     const [eventName, setEventName] = useState("");
-    const [selectedCourt, setSelectedCourt] = useState(sessionStorage.getItem('selectedCourt'));
     const [currentMatchId, setCurrentMatchId] = useState(null);
     const [refereesData, setRefereesData] = useState({});
 
