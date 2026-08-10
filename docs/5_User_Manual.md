@@ -5,6 +5,8 @@
 **線上示範：** [https://cy-cheung.github.io/TKD-scoreboard/](https://cy-cheung.github.io/TKD-scoreboard/)  
 **文件日期：** 2026-08-10
 
+> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。
+
 > 本指南用香港粵語寫俾**現場操作人員**睇。  
 > 標 **`[待確認]`** 嘅步驟：程式碼未能完全核實，或者視乎你哋賽會實際設定。
 

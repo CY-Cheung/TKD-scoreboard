@@ -6,6 +6,8 @@
 **Document status:** Reverse-engineered from source（`README.md`、`src/`、`database.rules.json`）  
 **Last reviewed against code:** 2026-08-10
 
+> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。
+
 > 凡標 **`[待確認]`** 者：程式碼或文件未能完全證實，請勿當已上線功能。
 
 ---
@@ -115,16 +117,16 @@
 | Area | Feature | Primary UI | Domain／API touchpoints |
 |------|---------|------------|-------------------------|
 | Auth | Google sign-in／sign-out | Landing, CourtSetup, Home | `AuthContext` |
-| Session | Event + Court `sessionStorage` | CourtSetup → Protected routes | `EventSessionContext` |
-| Event | Create／list／delete Event | CourtSetup, DataImport | `eventCreation` services |
+| Session | Event + Court `sessionStorage` | CourtSetup → Protected routes | `AuthContext`（`login`／`logout`／`session`） |
+| Event | Create／list／delete Event | CourtSetup, DataImport | 頁面內邏輯 + Firebase `set`／`update` |
 | Event | Setup password gate | CourtSetup | `settings.setupPassword` |
-| PDF | HKTKDA parse + multi-day split | CourtSetup, DataImport | `pdfParser`, `eventCreation` |
+| PDF | HKTKDA parse + multi-day split | CourtSetup, DataImport | `Utils/pdfParser.js` + 頁面流程 |
 | Match | CRUD、Rules、IVR quota、Load | DataImport (`/import`) | Firebase `matches`／`courts` |
 | Bracket | Tournament tree + Promote | DataImport, Edit | `promoteWinner` |
 | Screen | Scoreboard、timer、vote log、QR | `/screen` | listeners + `Api` |
 | Edit | Manual score、判勝、TC、IVR、Kye-shi | Screen overlay | `Edit.jsx`, DecisionFlow |
 | Controller | Seat grab、score pad | `/controller` | `Controller.jsx`, `updateScoreAndCheckRules` |
-| Scoring | Weights 1／2／3／4／6；PUN／PTG／PTF；vote window 1000ms | Api + domain | `scoreMath`, `scoreTransaction`, `roundTransaction` |
+| Scoring | Weights 1／2／3／4／6；PUN／PTG／PTF；vote window 1000ms | `Api.js` | `updateScoreAndCheckRules`／`declareRoundWinner`／`startNextRound` |
 | i18n | Chi／Eng alternating fade | Landing 等 | `AlternatingLocale` |
 
 ### 4.3 Default match rules（預設規則；可被 Event／Match 覆寫）
@@ -195,7 +197,7 @@ Landing（Google）
 
 ## 8. Out-of-scope smells tracked elsewhere
 
-結構／複雜度重構見 `docs/REFACTORING_PLAN.md`（唔屬本 PRD 功能範圍）。  
+結構／複雜度重構若有平行分支計劃，唔屬本 PRD 功能範圍 → `[待確認]` 合入進度。  
 多裝置同步細節見 `docs/FIREBASE_MULTI_DEVICE_DESIGN.md`。
 
 ---

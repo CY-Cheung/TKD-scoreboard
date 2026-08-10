@@ -1,12 +1,15 @@
 # Test Plan（測試計劃）
 
 **Product:** Taekwondo Cloud Scoring System  
-**Runner (current):** Vitest (`npm test` / `npm run test:watch`)  
-**Baseline at doc time:** **77** unit tests，**14** files，all green（2026-08-10）  
-**Document status:** Reverse-engineered + forward-looking plan  
+**Runner (current on `main`):** **無** — `package.json` 未有 `test` script  
+**Baseline at doc time:** **0** automated tests on `main`  
+**Document status:** Reverse-engineered gaps + forward-looking plan  
 **Last reviewed against code:** 2026-08-10
 
-> **`[待確認]`** = 計劃建議但尚未實作／未自動化嘅項目。
+> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。
+
+> **`[待確認]`** = 計劃建議但尚未實作／未自動化嘅項目。  
+> 平行 refactor 分支或已引入 Vitest；**合入前唔好當 `main` 已有 77 tests**。
 
 ---
 
@@ -23,39 +26,39 @@
 
 | Layer | Tooling（現況／建議） | Scope |
 |-------|----------------------|-------|
-| **Unit** | Vitest（**已有**） | `domain/*`, helpers, pure services |
-| **Component** | Vitest + Testing Library | `[待確認]` 未見正式 RTL setup |
-| **Integration** | Vitest + Firebase emulator **或** 契約測試 | `[待確認]` 未見 emulator CI |
+| **Unit** | Vitest／Jest（**建議新增**） | 先抽純函式：score／vote／round／IVR |
+| **Component** | Testing Library | `[待確認]` 未見正式 RTL setup |
+| **Integration** | Firebase emulator **或** 契約測試 | `[待確認]` 未見 emulator CI |
 | **E2E / Manual smoke** | 人手 checklist（本文件 §6） | 真實 Google／RTDB／多機 |
 
 ---
 
 ## 3. Current automated coverage map（現有自動化）
 
-| Area | File | Focus |
-|------|------|--------|
-| Defaults | `domain/defaultRules.test.js` | 預設規則 resolve |
-| Score math | `domain/scoreMath.test.js` | weights + opponent gamjeom |
-| Match rules | `domain/matchRules.test.js` | dominant／final／reset／resolve |
-| Score TX | `domain/scoreTransaction.test.js` | vote window、PUN／PTG、REST abort、single／multiple |
-| Round TX | `domain/roundTransaction.test.js` | REST vs PTF、start next round、IVR keep |
-| Event create | `services/eventCreation.test.js` | form／PDF／multi-day records |
-| Match factory | `services/matchFactory.test.js` | empty match shape／courts map |
-| Controller params | `Pages/Controller/controllerParams.test.js` | URL／session fallback（jsdom） |
-| Controller scores | `Pages/Controller/controllerScoreActions.test.js` | action mapping helpers |
-| Screen helpers | `formatTime`／`voteLogUtils`／`editPointTypes` tests | presentational pure logic |
-| DecisionFlow | `announcementTiming.test.js` | 3s timing helpers |
-| Session storage | `Context/eventSessionStorage.test.js` | read／write／clear keys |
+| Area | Status on `main` |
+|------|------------------|
+| Unit / component / e2e | **None**（無 test files、無 `npm test`） |
+| Manual | 依賴開發者現場同 PR checklist |
 
-**Not covered by automation today（高風險）：**
+**建議最先自動化嘅純邏輯（而家仍嵌喺 `Api.js`／頁面）：**
 
-- `Controller.jsx` seat grab transaction + 400ms delay + `onDisconnect`
+| Area | Suggested extract／test focus |
+|------|-------------------------------|
+| Score math | weights `[1,2,3,4,6]` + opponent gamjeom |
+| Score transaction | vote window、unique `deviceId`、PUN／PTG、REST abort |
+| Round transaction | REST vs PTF；保留 `ivrRemaining` |
+| IVR helpers | unlimited／cap／`projectIvrRemaining` |
+| PDF／event create | multi-day split naming |
+| Controller params | URL／hash／sessionStorage fallback |
+| Announcement timing | 3000ms TC／IVR |
+
+**高風險仍未自動化：**
+
+- `Controller.jsx` seat grab + 400ms delay + `onDisconnect`
 - Screen timer `requestAnimationFrame` + REST → `startNextRound`
-- `finalizeTechCardAnnouncement`／`finalizeIvrAnnouncement` multi-tab races
-- `promoteWinner` Firebase get／update
-- PDF geometry parse against real fixture PDFs（integration）
-- Google Auth／`ProtectedRoute` navigation
-- `database.rules.json` rule unit tests
+- TC／IVR multi-tab finalize races
+- `promoteWinner`
+- `database.rules.json` rule tests
 
 ---
 
@@ -74,7 +77,7 @@
 | UT-S07 | Declare round winner（未達 roundsToWin） | REST、`restDuration`、reset points／gamjeom、保留 `ivrRemaining` |
 | UT-S08 | Declare至 `roundsToWin` | `winReason=PTF`、`isFinished`、phase ROUND |
 
-**Status:** 大部分已由 `scoreTransaction`／`roundTransaction`／`scoreMath`／`matchRules` 覆蓋。
+**Status on `main`:** **未自動化** — 以上為目標案例。
 
 ### 4.2 Scoring — Edge Cases
 
@@ -91,7 +94,7 @@
 | UT-E09 | `gamjeomAvoiding` | 同時加 gamjeom + avoiding；計入對方總分 |
 | UT-E10 | IVR `projectIvrRemaining`：unlimited + reject | → 0；unlimited + accept → 仍 unlimited |
 
-**Status:** UT-E01–E09 多數已有；UT-E10 部分喺 Api helpers — **擴充單元測試建議** `[待確認]` 是否加獨立 `ivrQuota.test.js`。
+**Status on `main`:** **未自動化**；建議抽純函式後先覆蓋 UT-E01–E10。
 
 ### 4.3 Event creation — Happy / Edge
 
@@ -223,7 +226,7 @@
 | Lint | `npm run lint` |
 | Emulator suite | `[待確認]` 未接入 |
 
-PR #4 refactor 已用 unit+build 作門檻；整合層尚未強制。
+建議 CI 最少跑 lint + build；有測試後再加 `npm test`。
 
 ---
 
@@ -244,4 +247,4 @@ PR #4 refactor 已用 unit+build 作門檻；整合層尚未強制。
 
 | Date | Change |
 |------|--------|
-| 2026-08-10 | Initial test plan from current Vitest suite + business-risk gaps |
+| 2026-08-10 | Initial test plan：`main` 零自動化；列出目標案例同風險缺口 |

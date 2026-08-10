@@ -4,6 +4,8 @@
 **Document status:** Reverse-engineered from source  
 **Last reviewed against code:** 2026-08-10
 
+> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。
+
 ---
 
 ## 0. Important finding（重要結論）
@@ -43,9 +45,9 @@ SPA 路由由瀏覽器 `history` 處理；server 只提供靜態檔（GitHub Pag
 
 ### 1.1 Controller deep-link parameters
 
-| Parameter | Required | Source priority（`controllerParams.js`） | Meaning |
+| Parameter | Required | Source priority（Controller 參數解析邏輯；檔案位置以 repo 為準） | Meaning |
 |-----------|----------|------------------------------------------|---------|
-| `event` | Yes（實務） | React Router search → `window.location.search` → hash `?...` → `EventSession.eventId` → `sessionStorage.selectedEvent` | Event id |
+| `event` | Yes（實務） | React Router search → `window.location.search` → hash `?...` → Auth session／`sessionStorage.selectedEvent` | Event id |
 | `court` | Yes（實務） | 同上（court keys） | Court id，如 `court1` |
 
 **Example URL**
@@ -185,14 +187,11 @@ Firebase-backed：
 | **Side effects** | 刪公告；`projectIvrRemaining` 寫入 `ivrRemaining` |
 | **Return** | `Promise`（transaction） |
 
-### 2.5 Re-exported domain constants／functions
+### 2.5 Other exports from `Api.js`
 
-從 `Api.js` 再 export（畀舊 import path 相容）：
-
-- `VOTE_WINDOW_MS`, `applyScoreAndCheckRules`
-- `getScoreValue`, `resetSideStatsForNextRound`, `resolveMatchRules`
-- `determineDominantSide`, `getFinalWinnerSide`, `isMatchFinal`
-- `IVR_UNLIMITED`
+- `VOTE_WINDOW_MS`
+- `IVR_UNLIMITED` 同 IVR helper 函數（見 §2.4）
+- `getScoreValue`／`resetSideStatsForNextRound` 喺 **`main` 為 Api 內部函式**（未必 export）→ 以檔案實際 `export` 為準
 
 ---
 

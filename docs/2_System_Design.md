@@ -5,6 +5,8 @@
 **Document status:** Reverse-engineered from source  
 **Last reviewed against code:** 2026-08-10
 
+> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。
+
 > 標 **`[待確認]`** = 未能由程式完全證實。  
 > 更細嘅多裝置行為亦可對照 `docs/FIREBASE_MULTI_DEVICE_DESIGN.md`（若同本文衝突，**以現行 `src/` 為準**）。
 
@@ -15,7 +17,7 @@
 1. **低摩擦現場部署**：瀏覽器即可；邊裁掃 QR，無須安裝 App。  
 2. **多裝置強一致感**：同一 Court 嘅 Screen／Edit／Controller 訂閱同一 Match。  
 3. **無自建 server**：計分／回合邏輯喺 client 用 `runTransaction` 執行；授權靠 RTDB Rules。  
-4. **可拆 domain**：規則、計分、回合純函數逐步抽到 `src/domain/`（見 refactor 計劃）。
+4. **可維護性**：長遠可將規則／計分抽成純模組；**`main` 現時仍集中喺 `Api.js` 同各 Page**。
 
 ---
 
@@ -31,7 +33,7 @@
 | PDF | `pdfjs-dist` | `^3.11.174` | HKTKDA drawsheet parse |
 | QR | `qrcode.react` | `^4.2.0` | Controller deep-link |
 | Motion / FX | `gsap`, `ogl` | — | Landing／視覺效果 |
-| Test | Vitest（+ jsdom） | `^2.1.9` | Unit tests for domain／helpers |
+| Test | **未接入** Vitest／Jest | — | `package.json` 無 `test` script |
 | Deploy | `gh-pages` | `^6.3.0` | GitHub Pages；`base: '/TKD-scoreboard/'` |
 | Style | Vanilla CSS | — | Per-page CSS；glass／aurora patterns |
 
@@ -55,12 +57,10 @@ flowchart TB
   end
 
   subgraph AppShell["React app shell"]
-    AuthCtx["AuthContext Google"]
-    EventCtx["EventSessionContext event+court"]
+    AuthCtx["AuthContext Google + event/court session"]
     PopupCtx["PopupContext toasts"]
-    Api["Api.js Firebase facade"]
-    Domain["domain/* pure rules"]
-    Services["services/* eventCreation matchFactory"]
+    Api["Api.js scoring + IVR/TC facade"]
+    Utils["Utils/pdfParser.js"]
   end
 
   subgraph Firebase["Firebase project tkd-react-app"]
@@ -75,20 +75,17 @@ flowchart TB
 
   Landing --> AuthCtx
   Setup --> AuthCtx
-  Setup --> EventCtx
-  Home --> EventCtx
+  Home --> AuthCtx
   Import --> Api
-  Import --> Services
+  Import --> Utils
   Screen --> Api
-  Screen --> Domain
   Ctrl --> Api
-  Api --> Domain
-  Services --> RTDB
   Api --> RTDB
+  Utils --> Import
   AuthCtx --> FAuth
-  EventCtx --> EventCtx
   Ctrl --> RTDB
   Screen --> RTDB
+  Setup --> RTDB
   Rules -.-> RTDB
   GHP --> Clients
 ```
@@ -121,35 +118,23 @@ sequenceDiagram
 src/
 ├── App.jsx                 # Providers + Routes
 ├── firebase.js             # app / auth / database init
-├── Api.js                  # Thin Firebase facades (score, round, IVR, TC, promote)
+├── Api.js                  # Scoring, rounds, IVR, TC, promote (Firebase + rules)
 ├── Context/
-│   ├── AuthContext.jsx     # Google only
-│   ├── EventSessionContext.jsx
-│   ├── eventSessionStorage.js
+│   ├── AuthContext.jsx     # Google Auth + event/court sessionStorage
 │   └── PopupContext.jsx
-├── domain/                 # Pure business logic (testable)
-│   ├── defaultRules.js
-│   ├── scoreMath.js
-│   ├── matchRules.js
-│   ├── scoreTransaction.js
-│   └── roundTransaction.js
-├── services/
-│   ├── eventCreation.js
-│   └── matchFactory.js
-├── Pages/                  # Route-level UI
+├── Pages/                  # Route-level UI (incl. Create Event / PDF flows)
 ├── Components/             # Shared UI (QR, DecisionFlow, Bracket, …)
-└── Utils/pdfParser.js
+└── Utils/pdfParser.js      # HKTKDA PDF parse
 ```
 
 ### 4.2 Dependency rules（建議邊界）
 
 | From → To | Allowed? |
 |-----------|----------|
-| Pages → Api / Context / Components / domain / services | Yes |
-| Api → firebase + domain | Yes |
-| domain → firebase | **No**（保持純函數） |
-| services → firebase + domain／matchFactory | Yes |
+| Pages → Api / Context / Components / Utils | Yes |
+| Api → firebase | Yes |
 | Components → Api（DecisionFlow finalize 等） | Yes（現況） |
+| 未來 `domain/` 純模組 → firebase | **應禁止**（建議） |
 
 ### 4.3 Key page collaborations
 
@@ -159,7 +144,7 @@ src/
 | Home | event + court | Mostly navigation／QR | — |
 | DataImport | event + court | Match CRUD、Load `currentMatchId`、bracket | Large page |
 | Screen | event + court | Timer、listeners、announcements | Hosts Edit |
-| Controller | session **or** URL `event`/`court` | Seat grab、score transactions | May sync EventSession from QR |
+| Controller | session **or** URL `event`/`court` | Seat grab、score transactions | QR params 可寫入／補齊 `AuthContext` session |
 
 ---
 
