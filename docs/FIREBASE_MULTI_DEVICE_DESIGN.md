@@ -24,7 +24,7 @@
 - **onDisconnect Cleanup (斷線清理)**：離線時 `remove()` 席位節點
 - **Valid Point Voting (有效得分投票)**：Multiple Mode 下 2+ 裁判 **1 秒內**（`VOTE_WINDOW_MS = 1000`）同意先加分
 - **Court-level Match Binding (場地綁定比賽)**：`courts/{courtId}/currentMatchId` 驅動 Screen／Controller
-- **Technical Card Announcement Sync (技術警告牌公告同步)**：`state.techCardAnnouncement` 廣播 Step 2 glass card 到同一 Match 嘅所有 Screen；5 秒後 `finalizeTechCardAnnouncement` 原子清除（Reject 延遲 Gam-jeom +1）
+- **Technical Card Announcement Sync (技術警告牌公告同步)**：`state.techCardAnnouncement` 廣播 Step 2 glass card 到同一 Match 嘅所有 Screen；3 秒後 `finalizeTechCardAnnouncement` 原子清除（Reject 延遲 Gam-jeom +1）
 
 **〔計劃中，未實作〕**：
 
@@ -132,7 +132,7 @@ Step 2 glass card 同步用；由主裁 Screen 寫入，所有訂閱同一 Match
 |------|------|
 | `side` | `"blue"` \| `"red"` |
 | `decision` | `"accept"` \| `"reject"` |
-| `startedAt` | 公告開始時間（ms）；各 Screen 用於計算剩餘 5 秒 |
+| `startedAt` | 公告開始時間（ms）；各 Screen 用於計算剩餘 3 秒 |
 
 清除：`finalizeTechCardAnnouncement` 以 `runTransaction` 刪除節點；若 `decision === "reject"` 再呼叫 `updateScoreAndCheckRules(..., 'gamjeom', null, 1)`。多 Screen 同時 finalize 時只有首個 transaction 成功，避免重複加分。
 
@@ -177,7 +177,7 @@ Controller.handleScore()
 Edit.jsx（主裁）Accept/Reject
   → Api.startTechCardAnnouncement(event, matchId, { side, decision })
   → update state.techCardAnnouncement { side, decision, startedAt }
-  → 所有 Screen onValue(matchRef) 顯示 TechnicalCardAnnouncement（5 秒，startedAt 同步倒數）
+  → 所有 Screen onValue(matchRef) 顯示 TechnicalCardAnnouncement（3 秒，startedAt 同步倒數）
   → 任一 Screen 倒數完 → Api.finalizeTechCardAnnouncement(event, matchId)
   → runTransaction 刪除 techCardAnnouncement
   → Reject：updateScoreAndCheckRules(..., 'gamjeom', null, 1)

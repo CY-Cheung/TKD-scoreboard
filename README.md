@@ -11,7 +11,7 @@
 
 * **Live Scoreboard (大螢幕)**：Firebase 實時同步；玻璃質感 QR Code；HKTKDA PDF 自動解析 Match 同選手
 * **Mobile Controller (手機遙控)**：免裝 App；Transaction 搶 J1–J3 席位，斷線自動讓座；Multiple Mode 下 2+ 裁判 **1 秒內**同分先加
-* **Technical Card (技術警告牌)**：主裁 Edit 確認 → Firebase 同步公告 glass card 到**同一場地所有 Screen**（5 秒；Reject 延遲 Gam-jeom +1）
+* **Technical Card (技術警告牌)**：主裁 Edit 確認 → Firebase 同步公告 glass card 到**同一場地所有 Screen**（3 秒；Reject 延遲 Gam-jeom +1）
 * **Admin (管理後台)**：Toast / Modal 取代醜樣 Alert；Delete 只刪單場 Match；淘汰樹狀圖自動排版晉級路徑
 
 ---
@@ -41,7 +41,7 @@ Court Setup → Data Import (Load Match) → Screen 開波 (Space 計時, Q 出 
 
 **Load Match**：寫入 `courts/{courtId}/currentMatchId`，Screen / Controller 即時跟住變。
 
-**Technical Card**：主裁喺 Edit 按 Accept/Reject → `state.techCardAnnouncement` 寫入 Firebase → 同 Court 所有 `/screen` 顯示 5 秒 glass card → `finalizeTechCardAnnouncement` 清除（Reject 先加 Gam-jeom）。
+**Technical Card**：主裁喺 Edit 按 Accept/Reject → `state.techCardAnnouncement` 寫入 Firebase → 同 Court 所有 `/screen` 顯示 3 秒 glass card → `finalizeTechCardAnnouncement` 清除（Reject 先加 Gam-jeom）。
 
 ---
 

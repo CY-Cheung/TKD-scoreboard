@@ -27,8 +27,8 @@
 
 * **觸發位置**：`Edit.jsx` 主裁面板內，Blue / Red 的 **Technical Card** 按鈕。
 * **業務規則**：
-  * **Accept**：顯示 Step 2 公告 → **5 秒**後關閉 → **分數不變**。
-  * **Reject**：顯示 Step 2 公告 → **5 秒**後關閉 → **`updateScoreAndCheckRules(..., 'gamjeom', null, 1)`** 對該 side 加 1 Gam-jeom（**唔好**在按下 Reject 當下立即加分）。
+  * **Accept**：顯示 Step 2 公告 → **3 秒**後關閉 → **分數不變**。
+  * **Reject**：顯示 Step 2 公告 → **3 秒**後關閉 → **`updateScoreAndCheckRules(..., 'gamjeom', null, 1)`** 對該 side 加 1 Gam-jeom（**唔好**在按下 Reject 當下立即加分）。
 * **多 Screen 同步**：Step 2 寫入 Firebase `state.techCardAnnouncement`；同一 Event + Court + Match 嘅**所有 Screen** 一齊顯示 glass card（唔限操作嗰部機）。
 
 ### 流程狀態機
@@ -37,8 +37,8 @@
 idle
   → 點擊 Blue/Red Technical Card 按鈕
 Step 1：確認 popup（Edit 底欄內，同 avoiding gam-jeom）
-  → Accept  → 寫入 Firebase → Step 2（accept）→ 5 秒 → finalize → idle
-  → Reject  → 寫入 Firebase → Step 2（reject）→ 5 秒 → finalize → Gam-jeom +1 → idle
+  → Accept  → 寫入 Firebase → Step 2（accept）→ 3 秒 → finalize → idle
+  → Reject  → 寫入 Firebase → Step 2（reject）→ 3 秒 → finalize → Gam-jeom +1 → idle
   → Cancel  → idle
 ```
 
@@ -58,13 +58,13 @@ Step 1：確認 popup（Edit 底欄內，同 avoiding gam-jeom）
 
 ---
 
-### Step 2 — 結果公告 Glass Card（5 秒）
+### Step 2 — 結果公告 Glass Card（3 秒）
 
 | 項目 | 規格 |
 |------|------|
 | **位置** | **主屏 Screen 中央**（`createPortal(document.body)` + `.qrcode-modal-overlay`） |
 | **尺寸／UI** | 與 QR Code glass card 相同：`.qrcode-split-card`（`max-width: 65cqi`、`aspect-ratio: 16/9`） |
-| **顯示時長** | **5 秒**（`ANNOUNCEMENT_DURATION_MS = 5000`）；以 Firebase `startedAt` 計剩餘時間，後加入嘅 Screen 同步倒數 |
+| **顯示時長** | **3 秒**（`ANNOUNCEMENT_DURATION_MS = 3000`）；以 Firebase `startedAt` 計剩餘時間，後加入嘅 Screen 同步倒數 |
 | **同步** | `Api.startTechCardAnnouncement` 寫入；`Api.finalizeTechCardAnnouncement` 清除並（Reject 時）加分 |
 
 #### 左半（50%）
@@ -91,7 +91,7 @@ Step 1：確認 popup（Edit 底欄內，同 avoiding gam-jeom）
 | 檔案 | 職責 |
 |------|------|
 | `src/Components/TechnicalCardFlow/TechnicalCardConfirm.jsx` | Step 1（Edit 底欄） |
-| `src/Components/TechnicalCardFlow/TechnicalCardAnnouncement.jsx` | Step 2（5 秒 glass card） |
+| `src/Components/TechnicalCardFlow/TechnicalCardAnnouncement.jsx` | Step 2（3 秒 glass card） |
 | `src/Components/TechnicalCardFlow/TechnicalCardFlow.css` | 公告樣式、glow、動畫 |
 | `src/Pages/Screen/Edit.jsx` | 按鈕、Step 1 state、`onTechCardConfirm` |
 | `src/Pages/Screen/Screen.jsx` | 訂閱 `techCardAnnouncement`、掛載 Step 2 |
@@ -102,11 +102,11 @@ Step 1：確認 popup（Edit 底欄內，同 avoiding gam-jeom）
 ### 驗收清單 (Acceptance Checklist)
 
 - [x] Blue / Red Technical 按鈕可開啟 Step 1（Edit 底欄 glass popup，同 avoiding 一致）
-- [x] Accept：Step 2 白圈 + Return card to Blue/Red Coach；5 秒後消失；**分數不變**
-- [x] Reject：Step 2 四行（含 Chung/Hung Gam-jeom）→ 5 秒後消失 → **然後** Gam-jeom +1
+- [x] Accept：Step 2 白圈 + Return card to Blue/Red Coach；3 秒後消失；**分數不變**
+- [x] Reject：Step 2 四行（含 Chung/Hung Gam-jeom）→ 3 秒後消失 → **然後** Gam-jeom +1
 - [x] Step 2 在主屏中央、尺寸與 QR glass card 一致
 - [x] 同一 Court + Match 嘅所有 Screen 同步顯示 Step 2
-- [x] 5 秒自動關閉；flow 進行中不可重複觸發
+- [x] 3 秒自動關閉；flow 進行中不可重複觸發
 
 ---
 
@@ -117,4 +117,4 @@ IVR 規格仍待後續補充。
 ---
 
 *備忘錄建立：2026-08-08*  
-*Technical Card 完成：2026-08-10（Firebase 多 Screen 同步、5 秒、Reject 四行 layout）*
+*Technical Card 完成：2026-08-10（Firebase 多 Screen 同步、3 秒、Reject 四行 layout）*

@@ -4,7 +4,7 @@ import { FilePlayFill, FileFontFill, Circle, XLg } from "react-bootstrap-icons";
 import "../QRCodeDisplay/QRCodeDisplay.css";
 import "./TechnicalCardFlow.css";
 
-const ANNOUNCEMENT_DURATION_MS = 5000;
+const ANNOUNCEMENT_DURATION_MS = 3000;
 const ANNOUNCEMENT_EXIT_MS = 380;
 
 function TechnicalCardAnnouncement({ visible, side, decision, startedAt, onComplete }) {
