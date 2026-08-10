@@ -57,8 +57,8 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
                 // Add the new vote
                 matchData.votes.push({ side, index, seatName, deviceId, timestamp: now });
                 
-                // Keep only votes from the last 1500ms
-                matchData.votes = matchData.votes.filter(v => now - v.timestamp <= 1500);
+                // Keep only votes from the last 1000ms (1 second valid-point window)
+                matchData.votes = matchData.votes.filter(v => now - v.timestamp <= 1000);
                 
                 // Check if there are 2 or more UNIQUE referees who voted for the exact same side & index
                 const matchingVotes = matchData.votes.filter(v => v.side === side && v.index === index);
