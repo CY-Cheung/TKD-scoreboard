@@ -4,6 +4,12 @@
  * stay orchestrated in Controller.jsx.
  */
 
+import {
+  flatRefereeSeatPath,
+  legacyRefereeSeatPath,
+  refereeSeatPath,
+} from "../../services/courtPaths.js";
+
 export const REFEREE_SEAT_ORDER = Object.freeze(["J1", "J2", "J3"]);
 
 /** Delay before grab attempts — bypasses React StrictMode double-mount races. */
@@ -11,12 +17,14 @@ export const SEAT_GRAB_STRICT_MODE_DELAY_MS = 400;
 
 export const ADMIN_SEAT = "Admin";
 
+export {
+  flatRefereeSeatPath,
+  legacyRefereeSeatPath,
+  refereeSeatPath,
+};
+
 export function isAdminSeat(seatName) {
   return seatName === ADMIN_SEAT;
-}
-
-export function refereeSeatPath(eventId, courtId, seatName) {
-  return `events/${eventId}/courts/${courtId}/referees/${seatName}`;
 }
 
 /**

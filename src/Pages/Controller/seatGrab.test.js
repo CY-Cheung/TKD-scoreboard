@@ -74,9 +74,9 @@ describe("ids and paths", () => {
     });
   });
 
-  it("refereeSeatPath", () => {
+  it("refereeSeatPath uses flat courts tree", () => {
     expect(refereeSeatPath("evt", "court1", "J2")).toBe(
-      "events/evt/courts/court1/referees/J2"
+      "courts/evt/court1/referees/J2"
     );
   });
 

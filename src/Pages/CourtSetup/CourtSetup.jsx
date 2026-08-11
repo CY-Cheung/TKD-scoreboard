@@ -18,6 +18,12 @@ import {
   removeEventIndexEntry,
   writeEventIndexEntry,
 } from '../../services/eventIndexFirebase';
+import {
+  fetchCourtIds,
+  mirrorCourtsMapToFlat,
+  removeFlatCourtsForEvent,
+  dualUpdateCourtField,
+} from '../../services/courtFirebase';
 
 import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
@@ -112,18 +118,12 @@ function CourtSetup() {
 
   useEffect(() => {
     if (selectedEvent && user) {
-      const courtsRef = ref(database, `events/${selectedEvent}/courts`);
-      get(courtsRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          setCourtOptions(Object.keys(snapshot.val()));
-          const lastCourt = sessionStorage.getItem('selectedCourt');
-          if (lastCourt && Object.keys(snapshot.val()).includes(lastCourt)) {
-            setCourtId(lastCourt);
-          } else {
-            setCourtId('');
-          }
+      fetchCourtIds(database, selectedEvent).then((ids) => {
+        setCourtOptions(ids);
+        const lastCourt = sessionStorage.getItem('selectedCourt');
+        if (lastCourt && ids.includes(lastCourt)) {
+          setCourtId(lastCourt);
         } else {
-          setCourtOptions([]);
           setCourtId('');
         }
       });
@@ -223,6 +223,7 @@ function CourtSetup() {
       for (const record of records) {
         await set(ref(database, `events/${record.id}`), record.data);
         await writeEventIndexEntry(database, record.id, record.data);
+        await mirrorCourtsMapToFlat(database, record.id, record.data.courts);
       }
 
       if (mode === 'multi') {
@@ -289,6 +290,11 @@ function CourtSetup() {
       } catch (indexErr) {
         console.warn('eventIndex remove before delete:', indexErr);
       }
+      try {
+        await removeFlatCourtsForEvent(database, selectedEvent);
+      } catch (courtsErr) {
+        console.warn('flat courts remove before delete:', courtsErr);
+      }
       const eventRef = ref(database, `events/${selectedEvent}`);
       await remove(eventRef);
       showToast(`🗑️ 賽事 ${selectedEvent} 已成功刪除！`);
@@ -322,10 +328,9 @@ function CourtSetup() {
     }
 
     const performLogin = async () => {
-      const courtRef = ref(database, `events/${selectedEvent}/courts/${courtId}`);
-      // 只更新 name，避免覆蓋正在進行的比賽狀態 (currentMatchId)
-      await update(courtRef, {
-        name: courtId
+      // Dual-write court name only — avoid clobbering currentMatchId
+      await dualUpdateCourtField(database, selectedEvent, courtId, [], {
+        name: courtId,
       });
 
       const selectedEventData = events.find(evt => evt.id === selectedEvent);

@@ -23,6 +23,11 @@ import {
     buildTimerPausePatch,
     buildRoundExpiredStatePatch,
 } from "./matchTimer";
+import {
+    dualUpdateCourtField,
+    subscribePreferFlatCourt,
+    getPreferFlatCourt,
+} from "../../services/courtFirebase";
 import VoteLogRows from "./VoteLogRows";
 import { useEventSession } from "../../Context/EventSessionContext";
 
@@ -73,14 +78,16 @@ function Screen() {
         return () => clearInterval(intervalId);
     }, []);
 
-    // Listen to refereeMode
+    // Listen to refereeMode (prefer flat courts)
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
-        const modeRef = ref(database, `events/${selectedEvent}/courts/${selectedCourt}/config/refereeMode`);
-        const unsubscribe = onValue(modeRef, (snapshot) => {
-            setRefereeMode(snapshot.val() || 'single');
-        });
-        return () => unsubscribe();
+        return subscribePreferFlatCourt(
+            database,
+            selectedEvent,
+            selectedCourt,
+            ["config", "refereeMode"],
+            (val) => setRefereeMode(val || "single")
+        );
     }, [selectedEvent, selectedCourt]);
 
     // Fetch Event Name + settings (narrow paths — avoid whole event tree)
@@ -120,12 +127,16 @@ function Screen() {
         }
     }, [matchData?.state?.kyeShi, now, selectedEvent, currentMatchId]);
 
-    // Listen to referees status on current court
+    // Listen to referees status on current court (prefer flat)
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
-        const refereesRef = ref(database, `events/${selectedEvent}/courts/${selectedCourt}/referees`);
-        const unsubscribe = onValue(refereesRef, (snapshot) => {
-            const currentData = snapshot.val() || {};
+        return subscribePreferFlatCourt(
+            database,
+            selectedEvent,
+            selectedCourt,
+            "referees",
+            (val) => {
+            const currentData = val || {};
             const prevData = prevRefereesRef.current;
 
             // Check for disconnections
@@ -145,10 +156,20 @@ function Screen() {
 
             // Auto-downgrade check
             if (occupiedCount < 2) {
-                const modeRef = ref(database, `events/${selectedEvent}/courts/${selectedCourt}/config/refereeMode`);
-                get(modeRef).then(snap => {
-                    if (snap.val() === 'multiple') {
-                        update(ref(database, `events/${selectedEvent}/courts/${selectedCourt}/config`), { refereeMode: 'single' });
+                getPreferFlatCourt(
+                    database,
+                    selectedEvent,
+                    selectedCourt,
+                    ["config", "refereeMode"]
+                ).then((mode) => {
+                    if (mode === 'multiple') {
+                        dualUpdateCourtField(
+                            database,
+                            selectedEvent,
+                            selectedCourt,
+                            "config",
+                            { refereeMode: 'single' }
+                        );
                         setToastMessages(prev => [...prev, { id: Date.now() + 1, text: "Only 1 referee remaining. Auto-downgraded to Single Referee Mode." }]);
                     }
                 });
@@ -156,23 +177,26 @@ function Screen() {
 
             setRefereesData(currentData);
             prevRefereesRef.current = currentData;
-        });
-        return () => unsubscribe();
+            }
+        );
     }, [selectedEvent, selectedCourt]);
 
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
-        const courtMatchIdRef = ref(database, `events/${selectedEvent}/courts/${selectedCourt}/currentMatchId`);
-        const unsubscribe = onValue(courtMatchIdRef, (snapshot) => {
-            const newMatchId = snapshot.val();
+        return subscribePreferFlatCourt(
+            database,
+            selectedEvent,
+            selectedCourt,
+            "currentMatchId",
+            (newMatchId) => {
             if (newMatchId) {
                 setCurrentMatchId(newMatchId);
             } else {
                 setCurrentMatchId(null);
                 setMatchData(null);
             }
-        });
-        return () => unsubscribe();
+            }
+        );
     }, [selectedEvent, selectedCourt]);
 
     useEffect(() => {

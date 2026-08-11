@@ -22,6 +22,10 @@ import {
     fetchEventList,
     writeEventIndexEntry,
 } from '../../services/eventIndexFirebase';
+import {
+    dualSetCourtField,
+    mirrorCourtsMapToFlat,
+} from '../../services/courtFirebase';
 
 // A helper function to parse name and club from old format
 const parseName = (fullName) => {
@@ -217,6 +221,7 @@ const DataImport = () => {
             for (const record of records) {
                 await set(ref(database, `events/${record.id}`), record.data);
                 await writeEventIndexEntry(database, record.id, record.data);
+                await mirrorCourtsMapToFlat(database, record.id, record.data.courts);
             }
 
             if (mode === 'multi') {
@@ -406,8 +411,13 @@ const DataImport = () => {
         }
     
         try {
-            const courtMatchIdRef = ref(database, `events/${eventName}/courts/${session.courtId}/currentMatchId`);
-            await set(courtMatchIdRef, selectedMatchId);
+            await dualSetCourtField(
+                database,
+                eventName,
+                session.courtId,
+                "currentMatchId",
+                selectedMatchId
+            );
     
             localStorage.setItem('selectedMatchId', selectedMatchId);
             

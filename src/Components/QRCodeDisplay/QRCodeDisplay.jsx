@@ -12,9 +12,13 @@ import {
 } from "react-bootstrap-icons";
 import MarqueeText from "../MarqueeText";
 import { StableLocaleText, useAlternatingLocale } from "../AlternatingLocale/AlternatingLocale";
-import { ref, onValue, update, set } from "firebase/database";
 import { database } from "../../firebase";
 import { usePopup } from "../../Context/PopupContext";
+import {
+  dualSetCourtField,
+  dualUpdateCourtField,
+  subscribePreferFlatCourt,
+} from "../../services/courtFirebase";
 import "./QRCodeDisplay.css";
 import Button from "../Button/Button";
 
@@ -46,15 +50,13 @@ function QRCodeDisplay({
 
     if (!eventId || !courtId) return;
 
-    const refereesRef = ref(
+    return subscribePreferFlatCourt(
       database,
-      `events/${eventId}/courts/${courtId}/referees`,
+      eventId,
+      courtId,
+      "referees",
+      (val) => setReferees(val || {})
     );
-    const unsubscribe = onValue(refereesRef, (snapshot) => {
-      setReferees(snapshot.val() || {});
-    });
-
-    return () => unsubscribe();
   }, [eventId, courtId, propRefereesData]);
 
   if (!visible) return null;
@@ -99,7 +101,7 @@ function QRCodeDisplay({
 
   const handleModeChange = (mode) => {
     if (mode === "multiple" && occupiedCount < 2) return;
-    update(ref(database, `events/${eventId}/courts/${courtId}/config`), {
+    dualUpdateCourtField(database, eventId, courtId, "config", {
       refereeMode: mode,
     });
   };
@@ -111,7 +113,13 @@ function QRCodeDisplay({
       message: `Are you sure you want to forcefully disconnect all ${occupiedCount} connected corner judge(s)?`,
       onConfirm: () => {
         ['J1', 'J2', 'J3'].forEach(slotName => {
-          set(ref(database, `events/${eventId}/courts/${courtId}/referees/${slotName}`), null);
+          dualSetCourtField(
+            database,
+            eventId,
+            courtId,
+            ["referees", slotName],
+            null
+          );
         });
       },
       confirmText: 'Disconnect All',
@@ -183,7 +191,13 @@ function QRCodeDisplay({
                         title: 'Force Disconnect (強制斷線)',
                         message: `Are you sure you want to forcefully disconnect Corner Judge ${index + 1}?`,
                         onConfirm: () => {
-                            set(ref(database, `events/${eventId}/courts/${courtId}/referees/${slotName}`), null);
+                            dualSetCourtField(
+                              database,
+                              eventId,
+                              courtId,
+                              ["referees", slotName],
+                              null
+                            );
                         },
                         confirmText: 'Disconnect',
                         cancelText: 'Cancel'

@@ -18,9 +18,13 @@ import {
     createAdminDeviceId,
     createRefereeDeviceId,
     isAdminSeat,
+    legacyRefereeSeatPath,
     refereeSeatPath,
     shouldKickFromSeat,
 } from "./seatGrab";
+import {
+    subscribePreferFlatCourt,
+} from "../../services/courtFirebase";
 import ControllerScorePad from "./ControllerScorePad";
 import "./Controller.css";
 
@@ -64,14 +68,16 @@ function Controller() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
-    // Listen to refereeMode
+    // Listen to refereeMode (prefer flat courts path)
     useEffect(() => {
         if (!eventId || !courtId) return;
-        const modeRef = ref(database, `events/${eventId}/courts/${courtId}/config/refereeMode`);
-        const unsubscribe = onValue(modeRef, (snapshot) => {
-            setRefereeMode(snapshot.val() || 'single');
-        });
-        return () => unsubscribe();
+        return subscribePreferFlatCourt(
+            database,
+            eventId,
+            courtId,
+            ["config", "refereeMode"],
+            (val) => setRefereeMode(val || "single")
+        );
     }, [eventId, courtId]);
 
     // Fetch Event Name (leaf path only — avoid whole event tree)
@@ -107,12 +113,17 @@ function Controller() {
                 database,
                 refereeSeatPath(eventId, courtId, seatName)
             );
+            const legacySeatRef = ref(
+                database,
+                legacyRefereeSeatPath(eventId, courtId, seatName)
+            );
             try {
                 const deviceData = buildSeatDevicePayload(
                     newDeviceId,
                     getDeviceName()
                 );
 
+                // Canonical claim on flat path; mirror to legacy for dual-write.
                 const result = await runTransaction(seatRef, (currentData) =>
                     applySeatClaimTransaction(currentData, deviceData)
                 );
@@ -120,9 +131,12 @@ function Controller() {
                 if (result.committed) {
                     if (!isMounted) {
                         set(seatRef, null);
+                        set(legacySeatRef, null).catch(() => {});
                         return false;
                     }
+                    set(legacySeatRef, deviceData).catch(() => {});
                     onDisconnect(seatRef).remove();
+                    onDisconnect(legacySeatRef).remove();
                     setMySeat(seatName);
                     grabbedSeat = seatName;
                     return true;
@@ -155,6 +169,13 @@ function Controller() {
                     ref(
                         database,
                         refereeSeatPath(eventId, courtId, grabbedSeat)
+                    ),
+                    null
+                ).catch(() => {});
+                set(
+                    ref(
+                        database,
+                        legacyRefereeSeatPath(eventId, courtId, grabbedSeat)
                     ),
                     null
                 ).catch(() => {});
@@ -191,22 +212,17 @@ function Controller() {
             return;
         }
 
-        const courtMatchIdRef = ref(database, `events/${eventId}/courts/${courtId}/currentMatchId`);
-        const unsubscribe = onValue(
-            courtMatchIdRef,
-            (snapshot) => {
+        return subscribePreferFlatCourt(
+            database,
+            eventId,
+            courtId,
+            "currentMatchId",
+            (matchId) => {
                 setIsConnected(true);
-                const matchId = snapshot.val();
                 setCurrentMatchId(matchId || null);
                 if (!matchId) setMatchData(null);
-            },
-            (error) => {
-                console.error("Court match ID listener error:", error);
-                setIsConnected(false);
             }
         );
-
-        return () => unsubscribe();
     }, [eventId, courtId]);
 
     // Listen to matchData

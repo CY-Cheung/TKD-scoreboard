@@ -1,10 +1,10 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
-> **Status:** Stage 1 **in progress** on branch `cursor/firebase-event-index-8215`  
-> （`eventIndex` + 收窄 EventName／settings 讀取；matches／courts **未搬**）。  
-> 現行 production schema 仍見 `docs/FIREBASE_MULTI_DEVICE_DESIGN.md` §3。  
-> 完整新 path 規則骨架：`database.rules.flattened.skeleton.json`（未部署）。  
-> Stage 1 已把 `eventIndex` 規則併入 production `database.rules.json`（需喺 Firebase Console 部署 rules）。
+> **Status:** Stage 2 **in progress** on branch `cursor/firebase-courts-dual-write-8215`  
+> Stage 1（`eventIndex`）已合入 `main`。  
+> 現行 production schema 仍見 `docs/FIREBASE_MULTI_DEVICE_DESIGN.md` §3（legacy courts 仍喺 `events/…/courts`；Stage 2 雙寫頂層 `courts/`）。  
+> 完整新 path 規則骨架：`database.rules.flattened.skeleton.json`。  
+> **部署提醒：** 更新後嘅 `database.rules.json`（含頂層 `courts`）需喺 Firebase Console Publish。
 
 ---
 
@@ -152,16 +152,19 @@ Prefer Admin SDK 或維護窗腳本。
 
 ---
 
-## 6. Recommended first slice（建議第一刀）
+## 6. Stage progress
 
-**Stage 1（實作中／見 PR）：**
+**Stage 1（已合入 main）：** `eventIndex` + 收窄 EventName／settings 讀取。
 
-1. ~~寫入／補齊 `eventIndex/{eventId}`。~~  
-2. ~~Court Setup／Data Import 列表改 `fetchEventList`（prefer `eventIndex`；空則 fallback `/events` + backfill）。~~  
-3. ~~Screen／Controller／Home 取 EventName 改細 path（Screen 另聽 `settings`）。~~  
-4. **唔搬** matches／courts（正式資料零 migration 風險）。
+**Stage 2（本分支）：dual-write `courts`**
 
-Rules：`database.rules.json` 已加 `eventIndex`；舊 `events` 規則保持。**記得喺 Firebase 部署 rules。**
+1. 頂層 `courts/{eventId}/{courtId}` 與 legacy `events/…/courts/…` **雙寫**  
+2. 讀取 prefer flat、fallback legacy（`subscribePreferFlatCourt`／`fetchCourtIds`）  
+3. 建立／刪 Event 同步 flat courts；Load Match／席位／refereeMode 雙寫  
+4. Seat grab：flat path 做 transaction，成功後 mirror legacy  
+5. **未搬** matches／matchLive  
+
+Rules：`database.rules.json` 已加頂層 `courts`；match write 接受 flat **或** legacy 席位 deviceId。**記得 Publish rules。**
 
 ---
 
