@@ -83,21 +83,22 @@ function Screen() {
         return () => unsubscribe();
     }, [selectedEvent, selectedCourt]);
 
-    // Fetch Event Name
+    // Fetch Event Name + settings (narrow paths — avoid whole event tree)
     useEffect(() => {
         if (!selectedEvent) return;
-        const eventRef = ref(database, `events/${selectedEvent}`);
-        const unsubscribe = onValue(eventRef, (snapshot) => {
+        const nameRef = ref(database, `events/${selectedEvent}/EventName`);
+        const settingsRef = ref(database, `events/${selectedEvent}/settings`);
+        const unsubName = onValue(nameRef, (snapshot) => {
             const val = snapshot.val();
-            if (val) {
-                setEventName(val?.EventName || val?.eventName || val?.settings?.eventName || val?.name || selectedEvent);
-                setEventSettings(val?.settings || {});
-            } else {
-                setEventName(selectedEvent);
-                setEventSettings({});
-            }
+            setEventName(val || selectedEvent);
         });
-        return () => unsubscribe();
+        const unsubSettings = onValue(settingsRef, (snapshot) => {
+            setEventSettings(snapshot.val() || {});
+        });
+        return () => {
+            unsubName();
+            unsubSettings();
+        };
     }, [selectedEvent]);
 
     // Clear toasts after 4 seconds

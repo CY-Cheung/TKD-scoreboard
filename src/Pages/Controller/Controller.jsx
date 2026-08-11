@@ -74,17 +74,12 @@ function Controller() {
         return () => unsubscribe();
     }, [eventId, courtId]);
 
-    // Fetch Event Name
+    // Fetch Event Name (leaf path only — avoid whole event tree)
     useEffect(() => {
         if (!eventId) return;
-        const eventRef = ref(database, `events/${eventId}`);
-        const unsubscribe = onValue(eventRef, (snapshot) => {
-            const val = snapshot.val();
-            if (val) {
-                setEventName(val.EventName || val.eventName || val.name || eventId);
-            } else {
-                setEventName(eventId);
-            }
+        const nameRef = ref(database, `events/${eventId}/EventName`);
+        const unsubscribe = onValue(nameRef, (snapshot) => {
+            setEventName(snapshot.val() || eventId);
         });
         return () => unsubscribe();
     }, [eventId]);

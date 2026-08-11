@@ -1,8 +1,10 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
-> **Status:** Planning only（計劃中）。現行 production schema 仍見  
-> `docs/FIREBASE_MULTI_DEVICE_DESIGN.md` §3 同 `docs/2_System_Design.md` §6。  
-> 新 path 規則骨架：`database.rules.flattened.skeleton.json`（**未部署**）。
+> **Status:** Stage 1 **in progress** on branch `cursor/firebase-event-index-8215`  
+> （`eventIndex` + 收窄 EventName／settings 讀取；matches／courts **未搬**）。  
+> 現行 production schema 仍見 `docs/FIREBASE_MULTI_DEVICE_DESIGN.md` §3。  
+> 完整新 path 規則骨架：`database.rules.flattened.skeleton.json`（未部署）。  
+> Stage 1 已把 `eventIndex` 規則併入 production `database.rules.json`（需喺 Firebase Console 部署 rules）。
 
 ---
 
@@ -152,14 +154,14 @@ Prefer Admin SDK 或維護窗腳本。
 
 ## 6. Recommended first slice（建議第一刀）
 
-**只做 Stage 1：**
+**Stage 1（實作中／見 PR）：**
 
-1. 寫入／補齊 `eventIndex/{eventId}`。  
-2. Court Setup／Data Import 列表改 `get('eventIndex')`。  
-3. Screen／Controller／Home 取 EventName 改細 path。  
+1. ~~寫入／補齊 `eventIndex/{eventId}`。~~  
+2. ~~Court Setup／Data Import 列表改 `fetchEventList`（prefer `eventIndex`；空則 fallback `/events` + backfill）。~~  
+3. ~~Screen／Controller／Home 取 EventName 改細 path（Screen 另聽 `settings`）。~~  
 4. **唔搬** matches／courts（正式資料零 migration 風險）。
 
-Rules：可先加 `eventIndex` 讀寫（見 skeleton）；舊 `events` 規則保持。
+Rules：`database.rules.json` 已加 `eventIndex`；舊 `events` 規則保持。**記得喺 Firebase 部署 rules。**
 
 ---
 

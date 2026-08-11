@@ -1,5 +1,22 @@
 {
   "rules": {
+    "eventIndex": {
+      ".read": true,
+      "$eventId": {
+        ".write": "auth != null && (
+          (!data.exists() && newData.hasChildren(['EventName']) && root.child('events').child($eventId).exists()) ||
+          (data.exists() && newData.val() === null && (
+            !root.child('events').child($eventId).exists() ||
+            root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+            root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+          )) ||
+          (data.exists() && newData.hasChildren(['EventName']) && (
+            root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+            root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+          ))
+        )"
+      }
+    },
     "events": {
       ".read": true,
       "$eventId": {

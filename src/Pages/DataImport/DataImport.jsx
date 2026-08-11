@@ -18,6 +18,10 @@ import {
     normalizeRulesFromForm,
 } from '../../services/eventCreation';
 import { createMatchDocument } from '../../services/matchFactory';
+import {
+    fetchEventList,
+    writeEventIndexEntry,
+} from '../../services/eventIndexFirebase';
 
 // A helper function to parse name and club from old format
 const parseName = (fullName) => {
@@ -79,34 +83,24 @@ const DataImport = () => {
     const [redAffiliatedClub, setRedAffiliatedClub] = useState('');
     const [redPreviousMatch, setRedPreviousMatch] = useState('');
 
-    // Fetch All Events from Firebase
+    // Fetch All Events from Firebase (prefer light eventIndex)
     const fetchEventsList = () => {
-        const eventsRef = ref(database, 'events');
-        get(eventsRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                const val = snapshot.val();
-                const list = Object.keys(val).map(key => {
-                    const item = val[key];
-                    return {
-                        id: key,
-                        displayName: item?.EventName || item?.eventName || key,
-                        createdBy: item?.createdBy || null
-                    };
-                });
-                setEventsList(list);
+        fetchEventList(database).then((list) => {
+            setEventsList(list);
 
-                if (!eventName) {
-                    if (session?.eventId && val[session.eventId]) {
-                        setEventName(session.eventId);
-                    } else if (list.length > 0) {
-                        setEventName(list[0].id);
-                    }
-                }
-            } else {
-                setEventsList([]);
+            if (list.length === 0) {
                 setEventName('');
+                return;
             }
-        }).catch(err => {
+
+            if (!eventName) {
+                if (session?.eventId && list.some((e) => e.id === session.eventId)) {
+                    setEventName(session.eventId);
+                } else {
+                    setEventName(list[0].id);
+                }
+            }
+        }).catch((err) => {
             console.error("Error fetching events list:", err);
         });
     };
@@ -222,6 +216,7 @@ const DataImport = () => {
 
             for (const record of records) {
                 await set(ref(database, `events/${record.id}`), record.data);
+                await writeEventIndexEntry(database, record.id, record.data);
             }
 
             if (mode === 'multi') {

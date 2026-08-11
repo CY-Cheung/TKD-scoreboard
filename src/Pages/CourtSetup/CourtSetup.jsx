@@ -13,6 +13,11 @@ import {
   buildEventRecords,
   normalizeRulesFromForm,
 } from '../../services/eventCreation';
+import {
+  fetchEventList,
+  removeEventIndexEntry,
+  writeEventIndexEntry,
+} from '../../services/eventIndexFirebase';
 
 import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
@@ -71,38 +76,31 @@ function CourtSetup() {
     }
   };
 
-  // Load events from Firebase
+  // Load events from Firebase (prefer light eventIndex)
   const fetchEvents = () => {
     if (!user) return;
     setError('');
 
-    const eventsRef = ref(database, 'events');
-    get(eventsRef)
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          const val = snapshot.val();
-          const eventList = Object.keys(val).map(key => {
-            const item = val[key];
-            const displayName = item?.EventName || item?.eventName || item?.settings?.eventName || item?.name || key;
-            return { id: key, displayName, createdBy: item?.createdBy || null, createdByEmail: item?.createdByEmail || null };
-          });
-          setEvents(eventList);
+    fetchEventList(database)
+      .then((eventList) => {
+        setEvents(eventList);
 
-          const lastEvent = sessionStorage.getItem('selectedEvent');
-          const validIds = eventList.map(e => e.id);
-          if (selectedEvent && validIds.includes(selectedEvent)) {
-            // Keep current selection
-          } else if (lastEvent && validIds.includes(lastEvent)) {
-            setSelectedEvent(lastEvent);
-          } else if (eventList.length > 0) {
-            setSelectedEvent(eventList[0].id);
-          }
-        } else {
-          setEvents([]);
+        if (eventList.length === 0) {
           setSelectedEvent('');
+          return;
+        }
+
+        const lastEvent = sessionStorage.getItem('selectedEvent');
+        const validIds = eventList.map((e) => e.id);
+        if (selectedEvent && validIds.includes(selectedEvent)) {
+          // Keep current selection
+        } else if (lastEvent && validIds.includes(lastEvent)) {
+          setSelectedEvent(lastEvent);
+        } else {
+          setSelectedEvent(eventList[0].id);
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error fetching events:", err);
         setError("Failed to fetch events from database. Please check your network or login.");
       });
@@ -224,6 +222,7 @@ function CourtSetup() {
 
       for (const record of records) {
         await set(ref(database, `events/${record.id}`), record.data);
+        await writeEventIndexEntry(database, record.id, record.data);
       }
 
       if (mode === 'multi') {
@@ -285,6 +284,11 @@ function CourtSetup() {
     setIsDeleting(true);
 
     try {
+      try {
+        await removeEventIndexEntry(database, selectedEvent);
+      } catch (indexErr) {
+        console.warn('eventIndex remove before delete:', indexErr);
+      }
       const eventRef = ref(database, `events/${selectedEvent}`);
       await remove(eventRef);
       showToast(`🗑️ 賽事 ${selectedEvent} 已成功刪除！`);

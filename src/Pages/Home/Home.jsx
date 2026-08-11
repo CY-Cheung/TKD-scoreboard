@@ -4,6 +4,7 @@ import { useAuth } from '../../Context/AuthContext';
 import { useEventSession } from '../../Context/EventSessionContext';
 import { database } from '../../firebase';
 import { ref, get } from 'firebase/database';
+import { resolveEventDisplayName } from '../../services/eventIndex';
 
 import './Home.css';
 import Button from '../../Components/Button/Button';
@@ -29,16 +30,20 @@ function Home() {
             return;
         }
 
-        // Fetch Event Name from Database
-        const eventRef = ref(database, `events/${session.eventId}`);
-        get(eventRef).then((snapshot) => {
+        // Prefer light eventIndex; fall back to EventName leaf (not whole event tree)
+        const indexRef = ref(database, `eventIndex/${session.eventId}`);
+        get(indexRef).then((snapshot) => {
             if (snapshot.exists()) {
-                const val = snapshot.val();
-                const fetchedName = val?.EventName || val?.eventName || val?.settings?.eventName || val?.name || session.eventId;
-                setEventName(fetchedName);
-            } else {
-                setEventName(session.eventId);
+                setEventName(resolveEventDisplayName(snapshot.val(), session.eventId));
+                return;
             }
+            return get(ref(database, `events/${session.eventId}/EventName`)).then((nameSnap) => {
+                if (nameSnap.exists()) {
+                    setEventName(nameSnap.val() || session.eventId);
+                } else {
+                    setEventName(session.eventId);
+                }
+            });
         }).catch(() => {
             setEventName(session.eventId);
         });
