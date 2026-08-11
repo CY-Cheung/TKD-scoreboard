@@ -8,8 +8,7 @@ import {
 } from "./courtPaths.js";
 
 /**
- * Stage 5b: write court fields to flat `courts/{event}/{court}/…` only.
- * Legacy `events/…/courts` is no longer dual-written (reads may still fall back).
+ * Stage 5b/5: write court fields to flat `courts/{event}/{court}/…` only.
  * Function names keep `dual*` for call-site stability.
  */
 export async function dualSetCourtField(
@@ -54,53 +53,72 @@ export async function removeFlatCourtsForEvent(database, eventId) {
   await remove(ref(database, flatCourtsRoot(eventId)));
 }
 
-/** Optional: strip nested events/…/courts after cutover (Stage 5 delete). */
+/** Stage 5: strip nested events/…/courts after flat courts exist. */
 export async function removeLegacyCourtsForEvent(database, eventId) {
   await remove(ref(database, legacyCourtsRoot(eventId)));
 }
 
 /**
- * Clear one referee seat on flat (primary) and best-effort on legacy
- * so Stage 5b cutover does not leave dual-write ghosts.
+ * Ensure flat courts exist (backfill from legacy once), then delete nested courts.
+ * Safe to call repeatedly — no-op when legacy is already gone.
+ */
+export async function ensureFlatCourtsAndStripLegacy(database, eventId) {
+  const flatSnap = await get(ref(database, flatCourtsRoot(eventId)));
+  const legacySnap = await get(ref(database, legacyCourtsRoot(eventId)));
+
+  if (!flatSnap.exists() && legacySnap.exists()) {
+    await mirrorCourtsMapToFlat(database, eventId, legacySnap.val());
+  }
+
+  if (legacySnap.exists()) {
+    try {
+      await removeLegacyCourtsForEvent(database, eventId);
+      return {
+        stripped: true,
+        courtIds: courtIdsFromCourtsMap(
+          flatSnap.exists() ? flatSnap.val() : legacySnap.val()
+        ),
+      };
+    } catch (err) {
+      console.warn(
+        "[stage5] strip legacy courts failed:",
+        err?.code || err?.message || err
+      );
+      return {
+        stripped: false,
+        courtIds: courtIdsFromCourtsMap(
+          flatSnap.exists() ? flatSnap.val() : legacySnap.val()
+        ),
+      };
+    }
+  }
+
+  return {
+    stripped: false,
+    courtIds: courtIdsFromCourtsMap(flatSnap.exists() ? flatSnap.val() : null),
+  };
+}
+
+/**
+ * Clear one referee seat on flat courts (Stage 5: legacy nested courts removed).
  */
 export async function clearRefereeSeat(database, eventId, courtId, seatName) {
   await set(
     ref(database, flatCourtPath(eventId, courtId, "referees", seatName)),
     null
   );
-  try {
-    await set(
-      ref(database, legacyCourtPath(eventId, courtId, "referees", seatName)),
-      null
-    );
-  } catch {
-    // legacy may already be gone or rules-denied; flat is source of truth
-  }
 }
 
 /**
- * Prefer flat courts list; fallback legacy; best-effort backfill to flat.
+ * Prefer flat courts list; one-shot legacy backfill + strip if needed.
  */
 export async function fetchCourtIds(database, eventId) {
-  const flatSnap = await get(ref(database, flatCourtsRoot(eventId)));
-  if (flatSnap.exists()) {
-    return courtIdsFromCourtsMap(flatSnap.val());
-  }
-
-  const legacySnap = await get(ref(database, legacyCourtsRoot(eventId)));
-  if (!legacySnap.exists()) return [];
-
-  const legacyVal = legacySnap.val();
-  try {
-    await mirrorCourtsMapToFlat(database, eventId, legacyVal);
-  } catch (err) {
-    console.warn("courts flat backfill skipped:", err?.message || err);
-  }
-  return courtIdsFromCourtsMap(legacyVal);
+  const { courtIds } = await ensureFlatCourtsAndStripLegacy(database, eventId);
+  return courtIds;
 }
 
 /**
- * Subscribe preferring flat path; fall back to legacy while flat is absent.
+ * Subscribe to flat court path only (Stage 5 — nested courts deleted).
  * @returns unsubscribe
  */
 export function subscribePreferFlatCourt(
@@ -117,38 +135,15 @@ export function subscribePreferFlatCourt(
     database,
     flatCourtPath(eventId, courtId, ...segments)
   );
-  const legacyRef = ref(
-    database,
-    legacyCourtPath(eventId, courtId, ...segments)
-  );
 
-  let flatExists = false;
-  let flatVal = null;
-  let legacyVal = null;
-
-  const emit = () => {
-    onData(flatExists ? flatVal : legacyVal);
-  };
-
-  const unsubFlat = onValue(flatRef, (snap) => {
-    flatExists = snap.exists();
-    flatVal = snap.val();
-    emit();
+  return onValue(flatRef, (snap) => {
+    onData(snap.exists() ? snap.val() : null);
   });
-  const unsubLegacy = onValue(legacyRef, (snap) => {
-    legacyVal = snap.val();
-    emit();
-  });
-
-  return () => {
-    unsubFlat();
-    unsubLegacy();
-  };
 }
 
 const REFEREE_SEATS = Object.freeze(["J1", "J2", "J3"]);
 
-/** Merge flat + legacy referee maps (legacy only as read fallback during cutover). */
+/** Merge flat + legacy referee maps (legacy only as optional fill-in). */
 export function mergeRefereeMaps(flatVal, legacyVal) {
   const merged = {};
   for (const seat of REFEREE_SEATS) {
@@ -159,49 +154,20 @@ export function mergeRefereeMaps(flatVal, legacyVal) {
 }
 
 /**
- * Subscribe to J1–J3.
- * Stage 5b: emit flat seats when the flat referees node exists; otherwise
- * merge in legacy so pre-cutover seats still show until backfilled/cleared.
+ * Subscribe to J1–J3 on flat courts only (Stage 5).
  */
 export function subscribeCourtReferees(database, eventId, courtId, onData) {
   const flatRef = ref(
     database,
     flatCourtPath(eventId, courtId, "referees")
   );
-  const legacyRef = ref(
-    database,
-    legacyCourtPath(eventId, courtId, "referees")
-  );
 
-  let flatExists = false;
-  let flatVal = null;
-  let legacyVal = null;
-
-  const emit = () => {
-    if (flatExists) {
-      onData(mergeRefereeMaps(flatVal, null));
-    } else {
-      onData(mergeRefereeMaps(flatVal, legacyVal));
-    }
-  };
-
-  const unsubFlat = onValue(flatRef, (snap) => {
-    flatExists = snap.exists();
-    flatVal = snap.exists() ? snap.val() : null;
-    emit();
+  return onValue(flatRef, (snap) => {
+    onData(mergeRefereeMaps(snap.exists() ? snap.val() : null, null));
   });
-  const unsubLegacy = onValue(legacyRef, (snap) => {
-    legacyVal = snap.exists() ? snap.val() : null;
-    emit();
-  });
-
-  return () => {
-    unsubFlat();
-    unsubLegacy();
-  };
 }
 
-/** One-shot get: prefer flat, else legacy. */
+/** One-shot get: flat courts only (Stage 5). */
 export async function getPreferFlatCourt(
   database,
   eventId,
@@ -214,11 +180,7 @@ export async function getPreferFlatCourt(
   const flatSnap = await get(
     ref(database, flatCourtPath(eventId, courtId, ...segments))
   );
-  if (flatSnap.exists()) return flatSnap.val();
-  const legacySnap = await get(
-    ref(database, legacyCourtPath(eventId, courtId, ...segments))
-  );
-  return legacySnap.exists() ? legacySnap.val() : null;
+  return flatSnap.exists() ? flatSnap.val() : null;
 }
 
 /** Strip nested courts from an event payload before writing events/{id}. */

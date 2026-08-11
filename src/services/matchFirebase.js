@@ -216,8 +216,9 @@ export function buildMatchLiveTransactionCommit(
 }
 
 /**
- * Stage 5c: transaction on matchLive (primary).
- * Injects flat/legacy config for scoring rules; reverse-mirrors to legacy.
+ * Stage 5c/5: transaction on matchLive (primary).
+ * Injects flat/legacy config for scoring rules.
+ * Stage 5: no longer reverse-mirrors live fields onto legacy matches.
  */
 export async function runMatchLiveTransaction(
   database,
@@ -237,26 +238,9 @@ export async function runMatchLiveTransaction(
     );
   }
 
-  const result = await runTransaction(liveRef, (current) =>
+  return runTransaction(liveRef, (current) =>
     buildMatchLiveTransactionCommit(current, bootstrap, config, transactionUpdate)
   );
-
-  if (result.committed && result.snapshot.exists()) {
-    try {
-      await mirrorLiveFieldsToLegacy(
-        database,
-        eventId,
-        matchId,
-        result.snapshot.val()
-      );
-    } catch (err) {
-      console.warn(
-        "[stage5c] legacy reverse-mirror after live tx failed:",
-        err?.code || err?.message || err
-      );
-    }
-  }
-  return result;
 }
 
 /** Ensure matchLive node exists (bootstrap from legacy once). */
@@ -275,7 +259,7 @@ export async function ensureMatchLiveExists(database, eventId, matchId) {
 }
 
 export async function dualUpdateMatchState(database, eventId, matchId, patch) {
-  // Stage 5c: matchLive state is primary; legacy state is reverse-mirrored.
+  // Stage 5: matchLive-only state writes (no legacy reverse-mirror).
   try {
     await ensureMatchLiveExists(database, eventId, matchId);
     await update(ref(database, matchLivePath(eventId, matchId, "state")), patch);
@@ -284,14 +268,7 @@ export async function dualUpdateMatchState(database, eventId, matchId, patch) {
     });
   } catch (err) {
     logMatchLiveMirrorFailure("primary state update", err);
-  }
-  try {
-    await update(ref(database, legacyMatchPath(eventId, matchId, "state")), patch);
-  } catch (err) {
-    console.warn(
-      "[stage5c] legacy state reverse-mirror failed:",
-      err?.code || err?.message || err
-    );
+    throw err;
   }
 }
 
@@ -302,6 +279,7 @@ export async function dualUpdateMatchStatsSide(
   side,
   patch
 ) {
+  // Stage 5: matchLive-only stats writes (no legacy reverse-mirror).
   try {
     await ensureMatchLiveExists(database, eventId, matchId);
     await update(
@@ -313,17 +291,7 @@ export async function dualUpdateMatchStatsSide(
     });
   } catch (err) {
     logMatchLiveMirrorFailure("primary stats update", err);
-  }
-  try {
-    await update(
-      ref(database, legacyMatchPath(eventId, matchId, "stats", side)),
-      patch
-    );
-  } catch (err) {
-    console.warn(
-      "[stage5c] legacy stats reverse-mirror failed:",
-      err?.code || err?.message || err
-    );
+    throw err;
   }
 }
 

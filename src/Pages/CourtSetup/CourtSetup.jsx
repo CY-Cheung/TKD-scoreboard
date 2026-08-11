@@ -24,6 +24,7 @@ import {
   removeFlatCourtsForEvent,
   dualUpdateCourtField,
   eventPayloadWithoutCourts,
+  removeLegacyCourtsForEvent,
 } from '../../services/courtFirebase';
 import {
   mirrorMatchFlatArtifacts,
@@ -232,13 +233,14 @@ function CourtSetup() {
       });
 
       for (const record of records) {
-        // Stage 5b: events/{id} no longer stores nested courts — only courts/{e}/{c}.
+        // Stage 5b/5: events/{id} no longer stores nested courts — only courts/{e}/{c}.
         await set(
           ref(database, `events/${record.id}`),
           eventPayloadWithoutCourts(record.data)
         );
         await writeEventIndexEntry(database, record.id, record.data);
         await mirrorCourtsMapToFlat(database, record.id, record.data.courts);
+        await removeLegacyCourtsForEvent(database, record.id).catch(() => {});
         if (record.data.matches) {
           await Promise.all(
             Object.entries(record.data.matches).map(([mid, mdata]) =>
