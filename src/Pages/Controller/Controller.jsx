@@ -9,6 +9,18 @@ import Button from "../../Components/Button/Button";
 import { Wifi, WifiOff, ArrowLeft } from "react-bootstrap-icons";
 import { requestFullscreen } from "../../Utils/requestFullscreen";
 import { getDeviceName, resolveControllerParam } from "./controllerParams";
+import {
+    ADMIN_SEAT,
+    REFEREE_SEAT_ORDER,
+    SEAT_GRAB_STRICT_MODE_DELAY_MS,
+    applySeatClaimTransaction,
+    buildSeatDevicePayload,
+    createAdminDeviceId,
+    createRefereeDeviceId,
+    isAdminSeat,
+    refereeSeatPath,
+    shouldKickFromSeat,
+} from "./seatGrab";
 import ControllerScorePad from "./ControllerScorePad";
 import "./Controller.css";
 
@@ -82,14 +94,13 @@ function Controller() {
         if (!eventId || !courtId) return;
         
         if (user) {
-            setMySeat("Admin");
+            setMySeat(ADMIN_SEAT);
             // Admin also needs a deviceId for the scoring API
-            const adminDeviceId = `admin-${Math.random().toString(36).substring(2, 10)}`;
-            setDeviceId(adminDeviceId);
+            setDeviceId(createAdminDeviceId());
             return;
         }
 
-        const newDeviceId = Math.random().toString(36).substring(2, 12);
+        const newDeviceId = createRefereeDeviceId();
         setDeviceId(newDeviceId);
         setIsFull(false);
         let grabbedSeat = null;
@@ -97,17 +108,19 @@ function Controller() {
         let isMounted = true;
         const trySeat = async (seatName) => {
             if (!isMounted) return false;
-            const seatRef = ref(database, `events/${eventId}/courts/${courtId}/referees/${seatName}`);
+            const seatRef = ref(
+                database,
+                refereeSeatPath(eventId, courtId, seatName)
+            );
             try {
-                const deviceData = { deviceId: newDeviceId, deviceName: getDeviceName() };
-                let success = false;
-                
-                const result = await runTransaction(seatRef, (currentData) => {
-                    if (currentData === null) {
-                        return deviceData;
-                    }
-                    return; // Abort if occupied
-                });
+                const deviceData = buildSeatDevicePayload(
+                    newDeviceId,
+                    getDeviceName()
+                );
+
+                const result = await runTransaction(seatRef, (currentData) =>
+                    applySeatClaimTransaction(currentData, deviceData)
+                );
 
                 if (result.committed) {
                     if (!isMounted) {
@@ -126,13 +139,15 @@ function Controller() {
         };
 
         const grabSeat = async () => {
-            // Add a small delay to bypass React StrictMode double-mount race condition
-            await new Promise(resolve => setTimeout(resolve, 400));
+            // Delay bypasses React StrictMode double-mount race condition
+            await new Promise((resolve) =>
+                setTimeout(resolve, SEAT_GRAB_STRICT_MODE_DELAY_MS)
+            );
             if (!isMounted) return;
 
-            if (await trySeat('J1')) return;
-            if (await trySeat('J2')) return;
-            if (await trySeat('J3')) return;
+            for (const seatName of REFEREE_SEAT_ORDER) {
+                if (await trySeat(seatName)) return;
+            }
             if (isMounted) setIsFull(true);
         };
 
@@ -141,7 +156,13 @@ function Controller() {
         return () => {
             isMounted = false;
             if (grabbedSeat) {
-                set(ref(database, `events/${eventId}/courts/${courtId}/referees/${grabbedSeat}`), null).catch(() => {});
+                set(
+                    ref(
+                        database,
+                        refereeSeatPath(eventId, courtId, grabbedSeat)
+                    ),
+                    null
+                ).catch(() => {});
             }
         };
     }, [eventId, courtId, user]);
@@ -150,16 +171,14 @@ function Controller() {
     // Skip for Admin users - they don't occupy a referee seat in Firebase
     useEffect(() => {
         if (!eventId || !courtId || !mySeat || !deviceId) return;
-        if (mySeat === "Admin") return; // Admin doesn't have a Firebase referee slot
+        if (isAdminSeat(mySeat)) return;
 
-        const seatRef = ref(database, `events/${eventId}/courts/${courtId}/referees/${mySeat}`);
+        const seatRef = ref(
+            database,
+            refereeSeatPath(eventId, courtId, mySeat)
+        );
         const unsubscribe = onValue(seatRef, (snapshot) => {
-            const currentSeatData = snapshot.val();
-            const seatDeviceId = typeof currentSeatData === 'object' && currentSeatData !== null 
-                ? currentSeatData.deviceId 
-                : currentSeatData;
-                
-            if (seatDeviceId !== deviceId) {
+            if (shouldKickFromSeat(snapshot.val(), deviceId)) {
                 setIsConnected(false);
                 setMySeat(null);
                 setDeviceId(null); // Force regenerate next time

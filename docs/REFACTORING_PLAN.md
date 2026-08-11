@@ -1,6 +1,6 @@
 # Refactoring Plan — TKD Scoreboard
 
-> **Status:** Phase 2 Waves 0–7 complete (P0 seat-grab still deferred).  
+> **Status:** Phase 2 Waves 0–8 complete (planned P0 extracts done; smoke/PR still open).  
 > **Branch:** `cursor/clean-code-refactor-8215`  
 > **Base:** `main` @ `84fb26e`  
 > **Completed:**  
@@ -11,7 +11,8 @@
 > - Wave 4: Screen `formatTime` / `voteLogUtils` / `VoteLogRows` (timer rAF / Firebase listeners unchanged)  
 > - Wave 5: `AuthContext` (Google only) + `EventSessionContext` (event/court); `AUTH_SESSION_KEY` workaround preserved  
 > - Wave 6: `scoreTransaction` / `roundTransaction` pure bodies; `Api` thin Firebase wrappers (voteNow vs pauseNow clocks preserved)  
-> - Wave 7: Screen `matchTimer` pure frame/toggle helpers; rAF + Firebase I/O stay in `Screen.jsx`
+> - Wave 7: Screen `matchTimer` pure frame/toggle helpers; rAF + Firebase I/O stay in `Screen.jsx`  
+> - Wave 8: Controller `seatGrab` helpers (J1→J3 order, 400ms delay const, claim tx, kick-out); Firebase orchestration stays in page
 
 This document is the Phase 1 deliverable for a Clean Code / complexity-reduction refactor. Phase 2 (test-driven execution) must not start without approval.
 
@@ -196,11 +197,19 @@ flowchart TB
 | 7.2 | `Screen.jsx` rAF loop calls `resolveMatchTimerFrame` | Facade — keep `requestAnimationFrame` + Firebase side effects in page |
 | 7.3 | Preserve REST → `startNextRound`; ROUND → finalize state | Regression |
 
+### Wave 8 — Controller seat grab pure extract (P0 helpers)
+
+| Step | Target | Pattern |
+|------|--------|---------|
+| 8.1 | `Pages/Controller/seatGrab.js` + tests | Extract Module — seat order, 400ms const, claim tx, kick detection |
+| 8.2 | `Controller.jsx` uses helpers; keeps `runTransaction` / `onDisconnect` / delay | Facade — no semantic change |
+| 8.3 | Preserve Admin non-seat path + unmount clear | Regression |
+
 ### Explicitly deferred (until strong tests)
 
 - ~~Rewriting internals of `updateScoreAndCheckRules` transactions~~ → Wave 6 extracted pure bodies; Firebase wiring unchanged
 - ~~Rewriting Screen timer rAF state machine~~ → Wave 7 extracted pure decisions; rAF loop shell unchanged
-- Rewriting Controller seat grab / `onDisconnect` order or delays
+- ~~Rewriting Controller seat grab / `onDisconnect` order or delays~~ → Wave 8 extracted helpers; order/delay/`onDisconnect` orchestration unchanged
 
 ---
 
@@ -255,3 +264,4 @@ flowchart TB
 | 2026-08-10 | Phase 1 plan written from full-repo complexity scan; no `src/` changes |
 | 2026-08-10 | Wave 6: score/round transaction pure extract + 24 new unit tests |
 | 2026-08-11 | Wave 7: Screen matchTimer pure extract (rAF decisions + toggle patches) |
+| 2026-08-11 | Wave 8: Controller seatGrab helpers (400ms / J1–J3 / kick-out) |
