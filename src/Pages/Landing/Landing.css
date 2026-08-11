@@ -2,11 +2,15 @@
 
 .landing-page {
     position: relative;
-    height: 100dvh;
-    max-height: 100dvh;
+    box-sizing: border-box;
     width: 100%;
-    overflow: hidden;
+    min-height: 100dvh;
+    height: 100dvh;
+    /* Full-bleed marketing layout: allow vertical scroll on short/narrow viewports. */
+    overflow-x: hidden;
+    overflow-y: auto;
     color: #ffffff;
+    /* cqi follows real inline size (no global min-width: 1024px). */
     container-type: inline-size;
     display: flex;
     flex-direction: column;
@@ -36,12 +40,12 @@
 .landing-main {
     position: relative;
     z-index: 1;
-    flex: 1;
-    min-height: 0;
+    flex: 1 0 auto;
+    min-height: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 0 4cqi;
+    justify-content: safe center;
+    padding: 3cqi 4cqi 5cqi;
     box-sizing: border-box;
 }
 
@@ -234,8 +238,98 @@
     color: rgba(255, 255, 255, 0.52);
 }
 
+/*
+ * Narrow viewports: keep full-bleed marketing stack, but add rem floors so
+ * copy stays readable once cqi tracks the real (smaller) container width.
+ */
 @media (max-width: 768px) {
+    .landing-main {
+        padding: 1.5rem 1.25rem 4rem;
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+
+    .landing-center {
+        max-width: 100%;
+    }
+
+    .landing-vspace {
+        height: 1rem;
+    }
+
+    .landing-hero-content {
+        max-width: 100%;
+    }
+
+    .landing-hero-title {
+        font-size: max(1.75rem, 4.2cqi);
+    }
+
+    .landing-hero-subtitle {
+        font-size: max(0.95rem, 1.5cqi);
+        letter-spacing: 0.12em;
+    }
+
+    .landing-hero-login-hint {
+        font-size: max(0.95rem, 1.5cqi);
+        max-width: 100%;
+    }
+
+    .landing-hero-content .google-btn-wrapper button.landing-google-btn.tkd-btn {
+        font-size: max(1.05rem, 2cqi) !important;
+        padding: 0.85rem 1.35rem !important;
+    }
+
+    .landing-google-btn .locale-slot {
+        min-width: 0;
+    }
+
+    .landing-error {
+        font-size: max(0.8rem, 0.85cqi);
+    }
+
     .landing-trust-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .landing-trust-card {
+        padding: 0.9rem 0.85rem;
+        border-radius: 0.75rem;
+        gap: 0.55rem;
+    }
+
+    .landing-trust-icon {
+        width: max(1.35rem, 2.45cqi);
+        height: max(1.35rem, 2.45cqi);
+    }
+
+    .landing-trust-title {
+        font-size: max(0.95rem, 1.38cqi);
+    }
+
+    .landing-trust-text {
+        font-size: max(0.8rem, 1.05cqi);
+    }
+
+    .landing-footer {
+        left: 1.25rem;
+        bottom: 1rem;
+    }
+
+    .landing-repo-link {
+        font-size: max(0.8rem, 0.95cqi);
+        gap: 0.4rem;
+    }
+
+    .landing-repo-icon {
+        width: max(1rem, 1.35cqi);
+        height: max(1rem, 1.35cqi);
+    }
+}
+
+@media (max-width: 480px) {
+    .landing-trust-grid {
+        grid-template-columns: 1fr;
     }
 }
