@@ -17,6 +17,12 @@ import {
     resolveMatchRules,
 } from "../../domain/matchRules.js";
 import { formatTime } from "./formatTime";
+import {
+    resolveMatchTimerFrame,
+    buildTimerResumePatch,
+    buildTimerPausePatch,
+    buildRoundExpiredStatePatch,
+} from "./matchTimer";
 import VoteLogRows from "./VoteLogRows";
 import { useEventSession } from "../../Context/EventSessionContext";
 
@@ -184,54 +190,35 @@ function Screen() {
         if (!matchData?.state) {
             setDisplayTime(0);
             return;
-        };
+        }
 
         const state = matchData.state;
-        const { timer, isPaused, lastStartTime, isFinished, phase } = state;
 
         const updateTimer = () => {
-            if (isFinished && phase !== 'REST') {
-                setDisplayTime(0);
+            const frame = resolveMatchTimerFrame(state, Date.now());
+            setDisplayTime(frame.displayTime);
+
+            if (!frame.continueRaf) {
                 cancelAnimationFrame(animationFrameRef.current);
-                return;
-            }
-
-            if (isPaused) {
-                setDisplayTime(timer || 0);
-                cancelAnimationFrame(animationFrameRef.current);
-                return;
-            }
-
-            const now = Date.now();
-            const elapsed = Math.floor((now - lastStartTime) / 1000);
-            const remaining = (timer || 0) - elapsed;
-
-            if (remaining <= 0) {
-                setDisplayTime(0);
-                cancelAnimationFrame(animationFrameRef.current);
-
-                if (phase !== 'REST') {
-                    const matchStateRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}/state`);
-                    update(matchStateRef, {
-                        isFinished: true,
-                        isPaused: true,
-                        timer: 0,
-                        lastStartTime: null
-                    });
-                } else {
+                if (frame.onExpire === "finalize_round") {
+                    const matchStateRef = ref(
+                        database,
+                        `events/${selectedEvent}/matches/${currentMatchId}/state`
+                    );
+                    update(matchStateRef, buildRoundExpiredStatePatch());
+                } else if (frame.onExpire === "start_next_round") {
                     // Auto-start the next round when rest time ends
                     startNextRound(selectedEvent, currentMatchId);
                 }
-            } else {
-                setDisplayTime(remaining);
-                animationFrameRef.current = requestAnimationFrame(updateTimer);
+                return;
             }
+
+            animationFrameRef.current = requestAnimationFrame(updateTimer);
         };
 
         animationFrameRef.current = requestAnimationFrame(updateTimer);
 
         return () => cancelAnimationFrame(animationFrameRef.current);
-
     }, [matchData?.state, selectedEvent, currentMatchId]);
 
     const toggleDirection = () => setDirection((prev) => (prev === "row" ? "row-reverse" : "row"));
@@ -262,20 +249,12 @@ function Screen() {
         const stateRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}/state`);
         const currentState = matchData?.state || {};
         const isPaused = currentState.isPaused ?? true;
+        const now = Date.now();
 
         if (isPaused) {
-            update(stateRef, {
-                isPaused: false,
-                lastStartTime: Date.now()
-            });
+            update(stateRef, buildTimerResumePatch(now));
         } else {
-            const elapsed = Math.floor((Date.now() - (currentState.lastStartTime || Date.now())) / 1000);
-            const newTimer = Math.max(0, (currentState.timer || 0) - elapsed);
-            update(stateRef, {
-                isPaused: true,
-                timer: newTimer,
-                lastStartTime: null
-            });
+            update(stateRef, buildTimerPausePatch(currentState, now));
         }
     };
 

@@ -1,6 +1,6 @@
 # Refactoring Plan — TKD Scoreboard
 
-> **Status:** Phase 2 Waves 0–6 complete (P0 timer rAF / seat-grab still deferred).  
+> **Status:** Phase 2 Waves 0–7 complete (P0 seat-grab still deferred).  
 > **Branch:** `cursor/clean-code-refactor-8215`  
 > **Base:** `main` @ `84fb26e`  
 > **Completed:**  
@@ -10,7 +10,8 @@
 > - Wave 3: Controller score-pad/params; Edit grid pieces; DecisionFlow Confirm + announcement timing  
 > - Wave 4: Screen `formatTime` / `voteLogUtils` / `VoteLogRows` (timer rAF / Firebase listeners unchanged)  
 > - Wave 5: `AuthContext` (Google only) + `EventSessionContext` (event/court); `AUTH_SESSION_KEY` workaround preserved  
-> - Wave 6: `scoreTransaction` / `roundTransaction` pure bodies; `Api` thin Firebase wrappers (voteNow vs pauseNow clocks preserved)
+> - Wave 6: `scoreTransaction` / `roundTransaction` pure bodies; `Api` thin Firebase wrappers (voteNow vs pauseNow clocks preserved)  
+> - Wave 7: Screen `matchTimer` pure frame/toggle helpers; rAF + Firebase I/O stay in `Screen.jsx`
 
 This document is the Phase 1 deliverable for a Clean Code / complexity-reduction refactor. Phase 2 (test-driven execution) must not start without approval.
 
@@ -187,10 +188,18 @@ flowchart TB
 | 6.2 | `domain/roundTransaction.js` + tests | Extract Method — declare winner / start next round |
 | 6.3 | `Api.js` wrappers keep `runTransaction` + dual clocks | Facade — no semantic change |
 
+### Wave 7 — Screen timer rAF pure extract (P0 helpers)
+
+| Step | Target | Pattern |
+|------|--------|---------|
+| 7.1 | `Pages/Screen/matchTimer.js` + tests | Extract Method — frame resolve, pause/resume patches, ROUND expire patch |
+| 7.2 | `Screen.jsx` rAF loop calls `resolveMatchTimerFrame` | Facade — keep `requestAnimationFrame` + Firebase side effects in page |
+| 7.3 | Preserve REST → `startNextRound`; ROUND → finalize state | Regression |
+
 ### Explicitly deferred (until strong tests)
 
 - ~~Rewriting internals of `updateScoreAndCheckRules` transactions~~ → Wave 6 extracted pure bodies; Firebase wiring unchanged
-- Rewriting Screen timer rAF state machine
+- ~~Rewriting Screen timer rAF state machine~~ → Wave 7 extracted pure decisions; rAF loop shell unchanged
 - Rewriting Controller seat grab / `onDisconnect` order or delays
 
 ---
@@ -245,3 +254,4 @@ flowchart TB
 |------|--------|
 | 2026-08-10 | Phase 1 plan written from full-repo complexity scan; no `src/` changes |
 | 2026-08-10 | Wave 6: score/round transaction pure extract + 24 new unit tests |
+| 2026-08-11 | Wave 7: Screen matchTimer pure extract (rAF decisions + toggle patches) |
