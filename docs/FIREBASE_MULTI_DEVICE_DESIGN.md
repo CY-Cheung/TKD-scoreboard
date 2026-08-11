@@ -55,6 +55,9 @@
 
 ---
 
+> **扁平化計劃（未實作）：** 見 [`docs/FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)；  
+> 新 path rules 骨架（未部署）：`database.rules.flattened.skeleton.json`。
+
 ## 3. 資料庫 Schema (現行結構)
 
 ```
