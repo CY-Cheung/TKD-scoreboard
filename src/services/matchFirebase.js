@@ -50,18 +50,18 @@ export async function runLegacyMatchTransaction(
 }
 
 export async function dualUpdateMatchState(database, eventId, matchId, patch) {
-  const results = await Promise.allSettled([
-    update(ref(database, legacyMatchPath(eventId, matchId, "state")), patch),
-    update(ref(database, matchLivePath(eventId, matchId, "state")), patch),
-  ]);
-  const legacyResult = results[0];
-  if (legacyResult.status === "rejected") {
-    throw legacyResult.reason;
-  }
-  if (results[1].status === "rejected") {
+  await update(ref(database, legacyMatchPath(eventId, matchId, "state")), patch);
+  // Prefer full mirror so matchLive/{event}/{match} always appears as a node
+  // (child-only update is easy to miss in Console and fails when parent is absent).
+  try {
+    const snap = await get(ref(database, legacyMatchPath(eventId, matchId)));
+    if (snap.exists()) {
+      await mirrorMatchLive(database, eventId, matchId, snap.val());
+    }
+  } catch (err) {
     console.warn(
-      "matchLive state dual-write skipped:",
-      results[1].reason?.message || results[1].reason
+      "matchLive mirror after state update failed:",
+      err?.message || err
     );
   }
 }
@@ -73,23 +73,19 @@ export async function dualUpdateMatchStatsSide(
   side,
   patch
 ) {
-  const results = await Promise.allSettled([
-    update(
-      ref(database, legacyMatchPath(eventId, matchId, "stats", side)),
-      patch
-    ),
-    update(
-      ref(database, matchLivePath(eventId, matchId, "stats", side)),
-      patch
-    ),
-  ]);
-  if (results[0].status === "rejected") {
-    throw results[0].reason;
-  }
-  if (results[1].status === "rejected") {
+  await update(
+    ref(database, legacyMatchPath(eventId, matchId, "stats", side)),
+    patch
+  );
+  try {
+    const snap = await get(ref(database, legacyMatchPath(eventId, matchId)));
+    if (snap.exists()) {
+      await mirrorMatchLive(database, eventId, matchId, snap.val());
+    }
+  } catch (err) {
     console.warn(
-      "matchLive stats dual-write skipped:",
-      results[1].reason?.message || results[1].reason
+      "matchLive mirror after stats update failed:",
+      err?.message || err
     );
   }
 }
