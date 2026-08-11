@@ -9,6 +9,7 @@ import {
 import {
     dualUpdateMatchState,
     dualUpdateMatchStatsSide,
+    dualUpdateMatchConfigCompetitors,
     mirrorMatchLive,
     runLegacyMatchTransaction,
 } from './services/matchFirebase.js';
@@ -91,12 +92,16 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
             throw new Error("此場次未設定下一場比賽路徑 (Next Match ID/Slot missing)");
         }
 
-        const targetPath = `${matchRoot}/${nextMatchId}/config/competitors/${nextMatchSlot}`;
-        
-        await update(ref(database, targetPath), {
-            name: winnerData.name,
-            affiliatedClub: winnerData.affiliatedClub || ""
-        });
+        await dualUpdateMatchConfigCompetitors(
+            database,
+            eventName,
+            nextMatchId,
+            nextMatchSlot,
+            {
+                name: winnerData.name,
+                affiliatedClub: winnerData.affiliatedClub || ""
+            }
+        );
 
         // ALSO update the current match's state to record the winner!
         await dualUpdateMatchState(database, eventName, currentMatchId, {

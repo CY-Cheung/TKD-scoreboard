@@ -27,8 +27,9 @@ import {
     mirrorCourtsMapToFlat,
 } from '../../services/courtFirebase';
 import {
-    mirrorMatchLive,
-    removeMatchLive,
+    mirrorMatchFlatArtifacts,
+    removeMatchFlatArtifacts,
+    fetchMatchesForEvent,
 } from '../../services/matchFirebase';
 
 // A helper function to parse name and club from old format
@@ -117,21 +118,14 @@ const DataImport = () => {
         fetchEventsList();
     }, [session?.eventId]);
 
-    // Fetch Matches when eventName changes
+    // Fetch Matches when eventName changes (prefer flat matches + matchLive)
     useEffect(() => {
         setSelectedMatchId(null);
         setSelectedDateFilter('all');
         if (eventName) {
-            const matchesRef = ref(database, `events/${eventName}/matches`);
-            get(matchesRef).then((snapshot) => {
-                if (snapshot.exists()) {
-                    setCurrentMatches(snapshot.val());
-                } else {
-                    setCurrentMatches({});
-                }
-            }).catch(() => {
-                setCurrentMatches({});
-            });
+            fetchMatchesForEvent(database, eventName)
+                .then((matches) => setCurrentMatches(matches || {}))
+                .catch(() => setCurrentMatches({}));
         } else {
             setCurrentMatches({});
         }
@@ -229,7 +223,7 @@ const DataImport = () => {
                 if (record.data.matches) {
                     await Promise.all(
                         Object.entries(record.data.matches).map(([mid, mdata]) =>
-                            mirrorMatchLive(database, record.id, mid, mdata)
+                            mirrorMatchFlatArtifacts(database, record.id, mid, mdata)
                         )
                     );
                 }
@@ -291,11 +285,7 @@ const DataImport = () => {
         try {
             const matchRef = ref(database, `events/${eventName}/matches/${selectedMatchId}`);
             await remove(matchRef);
-            try {
-                await removeMatchLive(database, eventName, selectedMatchId);
-            } catch (liveErr) {
-                console.warn('matchLive remove after match delete:', liveErr);
-            }
+            await removeMatchFlatArtifacts(database, eventName, selectedMatchId);
             showToast(`🗑️ 場次 ${selectedMatchId} 已成功刪除！`);
             setSelectedMatchId(null);
             
@@ -395,7 +385,7 @@ const DataImport = () => {
 
             const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
             await set(matchRef, newMatch);
-            await mirrorMatchLive(database, eventName, matchId, newMatch);
+            await mirrorMatchFlatArtifacts(database, eventName, matchId, newMatch);
             
             showToast(`Match ${matchId} added to event ${eventName} in Firebase!`);
             setCurrentMatches(prev => ({...prev, [matchId]: newMatch}));

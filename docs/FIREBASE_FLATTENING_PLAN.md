@@ -1,9 +1,10 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
-> **Status:** Stage 3 **in progress** on branch `cursor/firebase-matchlive-dual-write-8215`  
+> **Status:** Stage 4 **in progress** on branch `cursor/firebase-stage4-matches-8215`  
 > Stage 1–2 已合入 `main`（`eventIndex` + dual-write `courts`）。  
-> Stage 3：計分 TX 仍喺 legacy `events/…/matches`（需要 config），成功後 mirror 去 `matchLive/`；state／stats 雙寫；UI prefer `matchLive` + legacy `config`。  
-> **部署提醒：** Publish 含 `matchLive` 嘅 `database.rules.json`。
+> Stage 3（`matchLive` dual-write）喺 `cursor/firebase-matchlive-dual-write-8215`／PR #10。  
+> Stage 4：dual-write 頂層 `matches/{e}/{m}/config` + `matchIndex/{e}/{m}`；列表 prefer flat；刪 Event／Match 清齊 orphan 頂層樹。  
+> **部署提醒：** Publish 含 `matchLive`／`matches`／`matchIndex` 嘅 `database.rules.json`。
 
 ---
 
@@ -23,16 +24,8 @@ Court Setup／Import 用 `get('events')` 時容易 **Over-fetching（過度獲�
 events/{eventId}/
 ├── EventName, createdBy, createdByEmail, coAdmins?
 ├── settings/…
-├── courts/{courtId}/
-│   ├── name, currentMatchId
-│   ├── config/refereeMode
-│   └── referees/J1|J2|J3
-└── matches/{matchId}/
-    ├── config/…
-    ├── state/…
-    ├── stats/…
-    ├── votes[]?, recentScores[]?
-    └── providedCourtId?, providedDeviceId?
+├── courts/{courtId}/          ← 仍 dual-write；flat 喺 /courts
+└── matches/{matchId}/         ← 仍 dual-write；flat config／live／index 已鏡像
 ```
 
 ---
@@ -43,7 +36,7 @@ events/{eventId}/
 eventIndex/{eventId}/                 ← 列表用（極輕）
 events/{eventId}/                     ← 只 meta + settings
 courts/{eventId}/{courtId}/           ← 場地運行時
-matchIndex/{eventId}/{matchId}/       ← 對陣表摘要（可選）
+matchIndex/{eventId}/{matchId}/       ← 對陣表摘要
 matches/{eventId}/{matchId}/config/   ← 比賽靜態
 matchLive/{eventId}/{matchId}/        ← state / stats / votes / recentScores
 ```
@@ -52,137 +45,53 @@ matchLive/{eventId}/{matchId}/        ← state / stats / votes / recentScores
 
 ## 4. Path mapping（而家 → 理想）
 
-### 4.1 Entity map
-
 | 資料 | 而家 | 理想 |
 |------|------|------|
 | 賽事列表摘要 | `events`（整樹） | `eventIndex/{eventId}` |
-| 賽事設定／名 | `events/{e}` | `events/{e}`（只 meta＋settings） |
 | Court | `events/{e}/courts/{c}` | `courts/{e}/{c}` |
-| 裁判席 | `events/{e}/courts/{c}/referees` | `courts/{e}/{c}/referees` |
 | 比賽設定 | `events/{e}/matches/{m}/config` | `matches/{e}/{m}/config` |
 | 對陣摘要 | 讀成個 `matches` | `matchIndex/{e}/{m}` |
-| 即時計分 | `events/{e}/matches/{m}` 下 live 欄位 | `matchLive/{e}/{m}/…` |
-| Server offset | `.info/serverTimeOffset` | 不變 |
-
-### 4.2 By screen
-
-#### Court Setup
-| 操作 | 而家 | 理想 |
-|------|------|------|
-| 列出賽事 | R `events` | R `eventIndex` |
-| 列 courts | R `events/{e}/courts` | R `courts/{e}` |
-| 建立 Event | W `events/{e}`（含 courts） | W `events` + `eventIndex` + `courts/{e}/…` |
-| 刪 Event | remove `events/{e}` | 清齊 index／events／courts／matches／matchLive／matchIndex |
-| setupPassword | R `events/{e}/settings/…` | 同左（收窄到 settings） |
-
-#### Home
-| 操作 | 而家 | 理想 |
-|------|------|------|
-| 賽事顯示 | R `events/{e}`（易過大） | R meta 或 `eventIndex/{e}` |
-
-#### Data Import
-| 操作 | 而家 | 理想 |
-|------|------|------|
-| 賽事列表 | R `events` | R `eventIndex` |
-| Match 列表 | R `events/{e}/matches` | R `matchIndex/{e}` 或只 config |
-| 新增／改 Match | W `events/{e}/matches/{m}` | W `matches/…/config` + `matchIndex`（+ init `matchLive`） |
-| Load 到 Court | W `…/courts/{c}/currentMatchId` | W `courts/{e}/{c}/currentMatchId` |
-
-#### Screen / Controller / Edit / Api
-| 操作 | 而家 | 理想 |
-|------|------|------|
-| EventName | R `events/{e}` | R `EventName` 細 path 或 index |
-| refereeMode／席位／currentMatchId | R/W `events/…/courts/…` | R/W `courts/{e}/{c}/…` |
-| 比賽＋計分 | R/W `events/…/matches/{m}` | config → `matches/…`；live → `matchLive/…` |
-| 加分／IVR／TC tx（Api.js） | `events/…/matches/{m}` | 多數改 `matchLive/{e}/{m}` |
-
-#### QR / mode 切換
-| 操作 | 而家 | 理想 |
-|------|------|------|
-| mode、清席 | W `events/…/courts/…` | W `courts/{e}/{c}/…` |
+| 即時計分 | `events/{e}/matches/{m}` live | `matchLive/{e}/{m}/…` |
 
 ---
 
-## 5. Migration（舊資料點搬）
+## 5. Migration stages
 
-### 5.1 Strategies
+0. Backup  
+1. `eventIndex`（已合入 main）  
+2. Dual-write `courts`（已合入 main）  
+3. Dual-write `matchLive`（PR #10）  
+4. Dual-write `matches/config` + `matchIndex` + backfill（**本分支**）  
+5. Delete old nested paths（未做）
 
-| 策略 | 做法 | 何時用 |
-|------|------|--------|
-| 只修讀 + `eventIndex` | 列表改讀 index；matches 暫留原位 | **最先做（Stage 1）** |
-| Dual-write | 新碼寫舊+新；讀優先新、fallback 舊 | courts／matchLive 搬家 |
-| 一次 script | 掃舊樹寫新樹 → 切碼 → 觀察 → 刪舊 | 歷史資料／收尾 |
+App 內 backfill：`backfillMatchFlatFromLegacyEvent`（Data Import 開 match 列表時 `fetchMatchesForEvent` 會 best-effort 觸發）。
 
-### 5.2 Stages
-
-0. **Backup** — Console export 或 script dump `events`。  
-1. **`eventIndex`** — 補寫摘要；列表改讀；create／delete／rename 同步。  
-2. **Dual-write `courts`** — 席位／`currentMatchId`／mode 雙寫；讀切新 path。  
-3. **Dual-write `matchLive`** — live 欄位雙寫或 flag 一次切（tx 最敏感）。  
-4. **Batch migrate history** — 掃全部 matches → `matches`／`matchLive`／`matchIndex`。  
-5. **Delete old paths** — 確認無 client 再用後先 `remove` 舊子樹。
-
-### 5.3 Script sketch
-
-```text
-for each eventId under /events:
-  write /eventIndex/{eventId} from EventName, createdBy, …
-  for each courtId: copy → /courts/{eventId}/{courtId}
-  for each matchId:
-    config → /matches/{eventId}/{matchId}/config
-    live  → /matchLive/{eventId}/{matchId}/…
-    summary → /matchIndex/{eventId}/{matchId}
-# 切 app + rules 後先唔刪舊；觀察期再刪
-```
-
-Prefer Admin SDK 或維護窗腳本。
-
-### 5.4 Consistency
-
-- 改 **EventName** → 同步 `eventIndex` + `events`。  
-- 刪 Event → 刪齊所有頂層分支。  
-- Load Match → 只改 `courts/…/currentMatchId`。  
-- 進行中比賽 → 唔好半搬 live；用 feature flag。
-
-### 5.5 Rollback
-
-保留舊樹；feature flag 切返舊讀寫；rules 同 app 同一變更集。
+刪 Event → 清 `eventIndex`／`courts`／`matches`／`matchLive`／`matchIndex` + `events`（防 orphan）。
 
 ---
 
-## 6. Stage progress
+## 6. Stage 4 progress（本分支）
 
-**Stage 1（已合入 main）：** `eventIndex` + 收窄 EventName／settings 讀取。
+1. 建立／匯入／改 Match → `mirrorMatchFlatArtifacts`（config + index + live）  
+2. Data Import 列表：`fetchMatchesForEvent` prefer flat，否則 legacy + backfill  
+3. `promoteWinner` dual-write flat config competitors + refresh index  
+4. 刪 Match／Event → `removeMatchFlatArtifacts(ForEvent)`  
+5. Rules：`matches` + `matchIndex`  
+6. Scoring TX 仍喺 legacy（需要成個 match）；**未**刪 `events/…/matches`
 
-**Stage 2（已合入 main）：** dual-write `courts`。
-
-**Stage 3（本分支）：dual-write `matchLive`**
-
-1. Scoring／round／IVR／TC **transaction** 仍喺 `events/…/matches/{id}`（需要 config）  
-2. TX committed 後 **mirror** live 欄位 → `matchLive/{eventId}/{matchId}`  
-3. Timer／announcement／IVR remaining：**dual-write** state／stats  
-4. Screen／Controller：`subscribeMatchView`（config leaf + matchLive；無 live 時 fallback 成個 legacy match）  
-5. 建／刪 match／event 同步 mirror／remove `matchLive`  
-6. **未**刪 legacy matches；**未**搬 config 去頂層 `matches/`
-
-Rules：`database.rules.json` 已加 `matchLive`。**記得喺 Firebase Console → Realtime Database → Rules 貼上並 Publish。**  
-若 Console 根層見唔到 `matchLive`：多數係 rules 未 publish，或 Screen 未 Google 登入（`auth != null`）。開瀏覽器 Console 睇 `[matchLive] … PERMISSION_DENIED`。
+**記得 Publish** `database.rules.json`。
 
 ---
 
 ## 7. Rules skeleton
 
-見 repo 根目錄 **`database.rules.flattened.skeleton.json`**。
-
-- **唔好**直接當 production `database.rules.json` 部署。  
-- Dual-write 期間：舊 `events/…/courts|matches` 規則要暫時保留。  
-- Judge 寫 `matchLive` 時，`providedCourtId`／`providedDeviceId` 應對 **`root.child('courts')`**（新 path），唔再對 `events/…/courts`。
+見 **`database.rules.flattened.skeleton.json`**（理想終態草圖）。  
+Dual-write 期間以 production `database.rules.json` 為準（保留 legacy nested rules）。
 
 ---
 
-## 8. Out of scope（呢份計劃唔包）
+## 8. Out of scope
 
-- 改 Firestore  
+- Firestore  
 - 一次過 breaking 切正式站  
 - 自動 migration GitHub Action（可後補）

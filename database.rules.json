@@ -100,6 +100,42 @@
           ))"
         }
       }
+    },
+    "matchIndex": {
+      ".read": true,
+      "$eventId": {
+        "$matchId": {
+          ".write": "auth != null && (
+            root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+            root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+          )"
+        },
+        ".write": "auth != null && (
+          root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+          root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+        )"
+      }
+    },
+    "matches": {
+      ".read": true,
+      "$eventId": {
+        "$matchId": {
+          "config": {
+            ".write": "auth != null && (
+              root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+              root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+            )"
+          },
+          ".write": "auth != null && (
+            root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+            root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+          )"
+        },
+        ".write": "auth != null && (
+          root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+          root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+        )"
+      }
     }
   }
 }
