@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ref, onValue, set, update, onDisconnect, runTransaction } from "firebase/database";
 import { database } from "../../firebase";
@@ -23,7 +23,7 @@ import {
     refereeSeatPath,
     shouldKickFromSeat,
 } from "./seatGrab";
-import { armScoreHaptic, triggerScoreHaptic } from "./scoreHaptic";
+import { armScoreHaptic, shouldVibrateForRecentScores, triggerScoreHaptic } from "./scoreHaptic";
 import {
     subscribePreferFlatCourt,
 } from "../../services/courtFirebase";
@@ -56,6 +56,8 @@ function Controller() {
     const [lastAction, setLastAction] = useState(null); // { side: 'red'|'blue', text: '...' }
     const [isConnected, setIsConnected] = useState(false);
     const [refereeMode, setRefereeMode] = useState('single');
+    // undefined = not seeded yet; null/string = last haptic'd recentScores key
+    const lastRecentScoreHapticKeyRef = useRef(undefined);
 
     // Sync state + EventSession when URL / QR deep-link params change
     useEffect(() => {
@@ -286,11 +288,26 @@ function Controller() {
     useEffect(() => {
         if (!eventId || !currentMatchId) {
             setMatchData(null);
+            lastRecentScoreHapticKeyRef.current = undefined;
             return;
         }
 
+        lastRecentScoreHapticKeyRef.current = undefined;
         return subscribeMatchView(database, eventId, currentMatchId, setMatchData);
     }, [currentMatchId, eventId]);
+
+    // Shared score haptic: every Controller vibrates when recentScores gains a new entry
+    // (covers multi-judge consensus within 1000ms — including phones that only voted).
+    useEffect(() => {
+        const { vibrate, nextKey } = shouldVibrateForRecentScores(
+            matchData?.recentScores,
+            lastRecentScoreHapticKeyRef.current
+        );
+        lastRecentScoreHapticKeyRef.current = nextKey;
+        if (vibrate) {
+            triggerScoreHaptic();
+        }
+    }, [matchData?.recentScores]);
 
     const handleScore = (side, index, label) => {
         if (!eventId || !currentMatchId) return;
@@ -300,18 +317,13 @@ function Controller() {
         if (isCurrentlyPaused) return;
         if (matchData?.state?.phase === "REST") return;
 
-        // Arm Vibration API inside the click gesture (helps older Samsung WebViews
-        // still accept a haptic after the async Firebase transaction settles).
+        // Arm Vibration API inside the click gesture so Samsung WebViews still
+        // accept a pulse when recentScores arrives shortly after (shared haptic).
         armScoreHaptic();
 
-        // Single mode applies points immediately → haptic in-gesture (S22+ friendly).
-        // Multiple mode may only record a vote → wait for scored===true.
-        const expectImmediateScore = refereeMode !== "multiple";
-        if (expectImmediateScore) {
-            triggerScoreHaptic();
-        }
-
         // Call scoring API (+1 point increment for selected point index).
+        // Haptic is broadcast via recentScores listener (all Controllers), not here —
+        // so multi-mode late consensus still vibrates every phone.
         updateScoreAndCheckRules(
             eventId,
             currentMatchId,
@@ -325,9 +337,6 @@ function Controller() {
             refereeMode
         ).then(({ scored }) => {
             if (!scored) return;
-            if (!expectImmediateScore) {
-                triggerScoreHaptic();
-            }
             const actionObj = { side, text: `${side.toUpperCase()} ${label}` };
             setLastAction(actionObj);
             setTimeout(() => {
