@@ -1,7 +1,6 @@
 import { get, set, update, remove, ref, onValue } from "firebase/database";
 import {
   flatCourtPath,
-  legacyCourtPath,
   flatCourtsRoot,
   legacyCourtsRoot,
   courtIdsFromCourtsMap,
@@ -61,6 +60,7 @@ export async function removeLegacyCourtsForEvent(database, eventId) {
 /**
  * Ensure flat courts exist (backfill from legacy once), then delete nested courts.
  * Safe to call repeatedly — no-op when legacy is already gone.
+ * @returns {{ stripped: boolean, courtIds: string[], error?: string }}
  */
 export async function ensureFlatCourtsAndStripLegacy(database, eventId) {
   const flatSnap = await get(ref(database, flatCourtsRoot(eventId)));
@@ -80,15 +80,14 @@ export async function ensureFlatCourtsAndStripLegacy(database, eventId) {
         ),
       };
     } catch (err) {
-      console.warn(
-        "[stage5] strip legacy courts failed:",
-        err?.code || err?.message || err
-      );
+      const error = err?.code || err?.message || String(err);
+      console.warn("[stage5] strip legacy courts failed:", error);
       return {
         stripped: false,
         courtIds: courtIdsFromCourtsMap(
           flatSnap.exists() ? flatSnap.val() : legacySnap.val()
         ),
+        error,
       };
     }
   }
@@ -97,6 +96,43 @@ export async function ensureFlatCourtsAndStripLegacy(database, eventId) {
     stripped: false,
     courtIds: courtIdsFromCourtsMap(flatSnap.exists() ? flatSnap.val() : null),
   };
+}
+
+/**
+ * Clear ghost referee seats (no deviceId, or stale lastSeen) under flat courts.
+ * @returns {{ cleared: string[] }}
+ */
+export async function clearGhostRefereeSeatsForEvent(database, eventId) {
+  const flatSnap = await get(ref(database, flatCourtsRoot(eventId)));
+  if (!flatSnap.exists()) return { cleared: [] };
+
+  const cleared = [];
+  const courtsMap = flatSnap.val() || {};
+  const seats = ["J1", "J2", "J3"];
+  const now = Date.now();
+  const STALE_MS = 20_000;
+
+  for (const [courtId, court] of Object.entries(courtsMap)) {
+    const referees = court?.referees || {};
+    for (const seat of seats) {
+      const data = referees[seat];
+      if (data == null) continue;
+      const deviceId =
+        typeof data === "object" && data !== null ? data.deviceId : data;
+      const lastSeen =
+        typeof data === "object" && data !== null
+          ? Number(data.lastSeen)
+          : null;
+      const isGhost = deviceId == null || deviceId === "";
+      const isStale =
+        Number.isFinite(lastSeen) && now - lastSeen > STALE_MS;
+      if (isGhost || isStale) {
+        await clearRefereeSeat(database, eventId, courtId, seat);
+        cleared.push(`${courtId}/${seat}`);
+      }
+    }
+  }
+  return { cleared };
 }
 
 /**

@@ -25,6 +25,8 @@ import {
   dualUpdateCourtField,
   eventPayloadWithoutCourts,
   removeLegacyCourtsForEvent,
+  ensureFlatCourtsAndStripLegacy,
+  clearGhostRefereeSeatsForEvent,
 } from '../../services/courtFirebase';
 import {
   mirrorMatchFlatArtifacts,
@@ -50,6 +52,7 @@ function CourtSetup() {
   const [courtOptions, setCourtOptions] = useState([]);
   const { showToast, showConfirm } = usePopup();
   const [isCleaningOrphans, setIsCleaningOrphans] = useState(false);
+  const [isFlattenCleaning, setIsFlattenCleaning] = useState(false);
 
   // Create Event Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -393,6 +396,45 @@ function CourtSetup() {
     }
   };
 
+  /** Stage 5: strip nested events/…/courts + clear ghost J1–J3 seats. */
+  const runFlattenCleanup = async () => {
+    if (!user) {
+      showToast('🔒 請先登入 Google 帳號。');
+      return;
+    }
+    if (!selectedEvent) {
+      showToast('請先選擇賽事。');
+      return;
+    }
+    setIsFlattenCleaning(true);
+    try {
+      const strip = await ensureFlatCourtsAndStripLegacy(database, selectedEvent);
+      const ghosts = await clearGhostRefereeSeatsForEvent(database, selectedEvent);
+      const ids = strip.courtIds || [];
+      setCourtOptions(ids);
+
+      const parts = [];
+      if (strip.stripped) {
+        parts.push('已刪 nested events/…/courts');
+      } else if (strip.error) {
+        parts.push(`刪 nested courts 失敗：${strip.error}`);
+      } else {
+        parts.push('nested courts 已唔存在（或早已刪）');
+      }
+      if (ghosts.cleared.length) {
+        parts.push(`清鬼位：${ghosts.cleared.join(', ')}`);
+      } else {
+        parts.push('冇鬼座位要清');
+      }
+      showToast(parts.join('。'));
+    } catch (err) {
+      console.error('Flatten cleanup failed:', err);
+      showToast(`Flatten 清理失敗：${err.message}`);
+    } finally {
+      setIsFlattenCleaning(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -595,6 +637,33 @@ function CourtSetup() {
                       visible={visible}
                       en={isCleaningOrphans ? 'Scanning…' : 'Clean Orphan Data'}
                       zh={isCleaningOrphans ? '掃描中…' : '清理 Orphan 資料'}
+                    />
+                  </Button>
+                </div>
+                <div style={{ marginTop: '0.52cqi' }}>
+                  <Button
+                    type="button"
+                    onClick={runFlattenCleanup}
+                    disabled={isFlattenCleaning || !user || !selectedEvent}
+                    fontSize="0.77cqi"
+                    angle={40}
+                    icon={<CheckCircle size="0.83cqi" />}
+                    style={{ width: '100%', whiteSpace: 'nowrap' }}
+                  >
+                    <StableLocaleText
+                      as="span"
+                      locale={locale}
+                      visible={visible}
+                      en={
+                        isFlattenCleaning
+                          ? 'Cleaning…'
+                          : 'Strip nested courts + ghosts'
+                      }
+                      zh={
+                        isFlattenCleaning
+                          ? '清理中…'
+                          : '清巢狀 courts＋鬼座位'
+                      }
                     />
                   </Button>
                 </div>
