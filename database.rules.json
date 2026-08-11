@@ -56,10 +56,12 @@
       ".read": true,
       "$eventId": {
         "$courtId": {
-          ".write": "auth != null && (
-            root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
-            root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
-          )",
+          "name": {
+            ".write": "auth != null && (
+              root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+              root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+            )"
+          },
           "referees": {
             "$judgeId": {
               ".write": "auth != null || (!data.exists() || data.val() === newData.val() || newData.val() === null)"
@@ -76,7 +78,11 @@
               root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
               root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
             )"
-          }
+          },
+          ".write": "auth != null && (
+            root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+            root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+          )"
         }
       }
     },

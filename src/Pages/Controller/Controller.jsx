@@ -110,13 +110,15 @@ function Controller() {
         let isMounted = true;
         const trySeat = async (seatName) => {
             if (!isMounted) return false;
-            const seatRef = ref(
-                database,
-                refereeSeatPath(eventId, courtId, seatName)
-            );
+            // Claim on legacy path (proven for unauthenticated judges).
+            // Mirror to flat courts tree for Stage 2 dual-write readers.
             const legacySeatRef = ref(
                 database,
                 legacyRefereeSeatPath(eventId, courtId, seatName)
+            );
+            const flatSeatRef = ref(
+                database,
+                refereeSeatPath(eventId, courtId, seatName)
             );
             try {
                 const deviceData = buildSeatDevicePayload(
@@ -124,26 +126,28 @@ function Controller() {
                     getDeviceName()
                 );
 
-                // Canonical claim on flat path; mirror to legacy for dual-write.
-                const result = await runTransaction(seatRef, (currentData) =>
+                const result = await runTransaction(legacySeatRef, (currentData) =>
                     applySeatClaimTransaction(currentData, deviceData)
                 );
 
                 if (result.committed) {
                     if (!isMounted) {
-                        set(seatRef, null);
-                        set(legacySeatRef, null).catch(() => {});
+                        set(legacySeatRef, null);
+                        set(flatSeatRef, null).catch(() => {});
                         return false;
                     }
-                    set(legacySeatRef, deviceData).catch(() => {});
-                    onDisconnect(seatRef).remove();
+                    set(flatSeatRef, deviceData).catch((err) => {
+                        console.warn("flat seat mirror failed:", err?.message || err);
+                    });
                     onDisconnect(legacySeatRef).remove();
+                    onDisconnect(flatSeatRef).remove();
                     setMySeat(seatName);
                     grabbedSeat = seatName;
                     return true;
                 }
                 return false;
             } catch (e) {
+                console.error("Seat grab failed:", seatName, e?.code || e?.message || e);
                 return false;
             }
         };
@@ -169,14 +173,14 @@ function Controller() {
                 set(
                     ref(
                         database,
-                        refereeSeatPath(eventId, courtId, grabbedSeat)
+                        legacyRefereeSeatPath(eventId, courtId, grabbedSeat)
                     ),
                     null
                 ).catch(() => {});
                 set(
                     ref(
                         database,
-                        legacyRefereeSeatPath(eventId, courtId, grabbedSeat)
+                        refereeSeatPath(eventId, courtId, grabbedSeat)
                     ),
                     null
                 ).catch(() => {});
@@ -192,7 +196,7 @@ function Controller() {
 
         const seatRef = ref(
             database,
-            refereeSeatPath(eventId, courtId, mySeat)
+            legacyRefereeSeatPath(eventId, courtId, mySeat)
         );
         const unsubscribe = onValue(seatRef, (snapshot) => {
             if (shouldKickFromSeat(snapshot.val(), deviceId)) {
