@@ -251,6 +251,7 @@ describe("applyScoreAndCheckRules", () => {
 
   it("applies single-mode pointsStat and recentScores", () => {
     const match = baseMatch();
+    const meta = { scored: false };
     applyScoreAndCheckRules(
       match,
       {
@@ -261,11 +262,34 @@ describe("applyScoreAndCheckRules", () => {
         seatName: "J1",
         mode: "single",
       },
-      clocks
+      clocks,
+      meta
     );
     expect(match.stats.blue.pointsStat[0]).toBe(1);
     expect(match.recentScores).toHaveLength(1);
     expect(match.recentScores[0].timestamp).toBe(clocks.voteNow);
+    expect(meta.scored).toBe(true);
+  });
+
+  it("meta.scored is false for multiple-mode vote-only taps", () => {
+    const match = baseMatch();
+    const meta = { scored: true };
+    applyScoreAndCheckRules(
+      match,
+      {
+        side: "red",
+        type: "pointsStat",
+        index: 0,
+        delta: 1,
+        deviceId: "d1",
+        seatName: "J1",
+        mode: "multiple",
+      },
+      clocks,
+      meta
+    );
+    expect(meta.scored).toBe(false);
+    expect(match.stats.red.pointsStat[0]).toBe(0);
   });
 
   it("does not push recentScores when delta <= 0 in single mode", () => {

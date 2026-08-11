@@ -22,6 +22,7 @@ import {
     refereeSeatPath,
     shouldKickFromSeat,
 } from "./seatGrab";
+import { armScoreHaptic, triggerScoreHaptic } from "./scoreHaptic";
 import {
     subscribePreferFlatCourt,
 } from "../../services/courtFirebase";
@@ -246,21 +247,42 @@ function Controller() {
         // Block remote input when timer is not running
         const isCurrentlyPaused = matchData?.state?.isPaused ?? true;
         if (isCurrentlyPaused) return;
+        if (matchData?.state?.phase === "REST") return;
 
-        // Mobile haptic vibration feedback
-        if (navigator.vibrate) {
-            navigator.vibrate([70]);
+        // Arm Vibration API inside the click gesture (helps older Samsung WebViews
+        // still accept a haptic after the async Firebase transaction settles).
+        armScoreHaptic();
+
+        // Single mode applies points immediately → haptic in-gesture (S22+ friendly).
+        // Multiple mode may only record a vote → wait for scored===true.
+        const expectImmediateScore = refereeMode !== "multiple";
+        if (expectImmediateScore) {
+            triggerScoreHaptic();
         }
 
-        // Call scoring API (+1 point increment for selected point index)
-        updateScoreAndCheckRules(eventId, currentMatchId, side, "pointsStat", index, 1, courtId, deviceId, mySeat, refereeMode);
-
-        const actionObj = { side, text: `${side.toUpperCase()} ${label}` };
-        setLastAction(actionObj);
-
-        setTimeout(() => {
-            setLastAction((prev) => (prev?.text === actionObj.text ? null : prev));
-        }, 1800);
+        // Call scoring API (+1 point increment for selected point index).
+        updateScoreAndCheckRules(
+            eventId,
+            currentMatchId,
+            side,
+            "pointsStat",
+            index,
+            1,
+            courtId,
+            deviceId,
+            mySeat,
+            refereeMode
+        ).then(({ scored }) => {
+            if (!scored) return;
+            if (!expectImmediateScore) {
+                triggerScoreHaptic();
+            }
+            const actionObj = { side, text: `${side.toUpperCase()} ${label}` };
+            setLastAction(actionObj);
+            setTimeout(() => {
+                setLastAction((prev) => (prev?.text === actionObj.text ? null : prev));
+            }, 1800);
+        });
     };
 
     const redName = matchData?.config?.competitors?.red?.name || "Hong (Red)";

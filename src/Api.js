@@ -27,10 +27,16 @@ export {
     applyScoreAndCheckRules,
 } from './domain/scoreTransaction.js';
 
+/**
+ * Apply a score/vote transaction.
+ * @returns {Promise<{ committed: boolean, scored: boolean }>}
+ *   scored=true only when points were actually applied (not vote-only / aborted).
+ */
 export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, courtId = null, deviceId = null, seatName = null, mode = 'single') => {
     const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
+    const meta = { scored: false };
 
-    runTransaction(matchRef, (matchData) => {
+    return runTransaction(matchRef, (matchData) => {
         // voteNow uses server offset; pauseNow stays wall-clock (legacy quirk).
         return applyScoreAndCheckRules(
             matchData,
@@ -38,10 +44,18 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
             {
                 voteNow: Date.now() + globalServerTimeOffset,
                 pauseNow: Date.now(),
-            }
+            },
+            meta
         );
     })
-    .catch((err) => console.error("Transaction failed:", err));
+    .then((result) => ({
+        committed: Boolean(result?.committed),
+        scored: Boolean(result?.committed && meta.scored),
+    }))
+    .catch((err) => {
+        console.error("Transaction failed:", err);
+        return { committed: false, scored: false };
+    });
 };
 
 export const declareRoundWinner = (eventName, matchId, winnerSide) => {
