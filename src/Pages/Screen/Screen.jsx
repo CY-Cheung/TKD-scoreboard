@@ -35,6 +35,8 @@ import {
 import VoteLogRows from "./VoteLogRows";
 import { useEventSession } from "../../Context/EventSessionContext";
 
+const EMPTY_MATCH_RULES = Object.freeze({});
+
 function Screen() {
     const { session } = useEventSession();
     const [matchData, setMatchData] = useState(null);
@@ -58,7 +60,7 @@ function Screen() {
     const isTechCardFlowActive = techCardAnnouncement !== null;
     const ivrAnnouncement = matchData?.state?.ivrAnnouncement ?? null;
     const isIvrFlowActive = ivrAnnouncement !== null;
-    const matchRules = matchData?.config?.rules || {};
+    const matchRules = matchData?.config?.rules || EMPTY_MATCH_RULES;
 
     const animationFrameRef = useRef();
     const isMatchLoaded = !!matchData;

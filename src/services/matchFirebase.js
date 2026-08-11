@@ -13,7 +13,6 @@ import {
   legacyMatchPath,
   matchLivePath,
   matchLiveRoot,
-  mergeMatchView,
 } from "./matchPaths.js";
 
 export async function mirrorMatchLive(database, eventId, matchId, matchData) {
@@ -51,10 +50,20 @@ export async function runLegacyMatchTransaction(
 }
 
 export async function dualUpdateMatchState(database, eventId, matchId, patch) {
-  await Promise.all([
+  const results = await Promise.allSettled([
     update(ref(database, legacyMatchPath(eventId, matchId, "state")), patch),
     update(ref(database, matchLivePath(eventId, matchId, "state")), patch),
   ]);
+  const legacyResult = results[0];
+  if (legacyResult.status === "rejected") {
+    throw legacyResult.reason;
+  }
+  if (results[1].status === "rejected") {
+    console.warn(
+      "matchLive state dual-write skipped:",
+      results[1].reason?.message || results[1].reason
+    );
+  }
 }
 
 export async function dualUpdateMatchStatsSide(
@@ -64,7 +73,7 @@ export async function dualUpdateMatchStatsSide(
   side,
   patch
 ) {
-  await Promise.all([
+  const results = await Promise.allSettled([
     update(
       ref(database, legacyMatchPath(eventId, matchId, "stats", side)),
       patch
@@ -74,44 +83,67 @@ export async function dualUpdateMatchStatsSide(
       patch
     ),
   ]);
+  if (results[0].status === "rejected") {
+    throw results[0].reason;
+  }
+  if (results[1].status === "rejected") {
+    console.warn(
+      "matchLive stats dual-write skipped:",
+      results[1].reason?.message || results[1].reason
+    );
+  }
 }
 
 /**
- * Subscribe to match view: config (legacy) + matchLive, with legacy full-match fallback.
+ * Subscribe to match view: always keep legacy full match as base,
+ * overlay non-null fields from matchLive when present.
  */
 export function subscribeMatchView(database, eventId, matchId, onData) {
   let config = null;
   let live = null;
-  let liveExists = false;
-  let legacyFallback = null;
-  let legacyUnsub = null;
+  let legacy = null;
+  let lastEmitJson = undefined;
 
   const emit = () => {
-    if (liveExists) {
-      onData(mergeMatchView(config, live, legacyFallback));
+    if (!legacy && !config && !live) {
+      if (lastEmitJson !== "null") {
+        lastEmitJson = "null";
+        onData(null);
+      }
       return;
     }
-    if (legacyFallback) {
-      onData(legacyFallback);
-      return;
+
+    const merged = {
+      ...(legacy || {}),
+      config: config ?? legacy?.config ?? null,
+    };
+
+    if (live) {
+      if (live.state != null) merged.state = live.state;
+      if (live.stats != null) merged.stats = live.stats;
+      if (live.votes != null) merged.votes = live.votes;
+      if (live.recentScores != null) merged.recentScores = live.recentScores;
+      if (live.providedCourtId != null) {
+        merged.providedCourtId = live.providedCourtId;
+      }
+      if (live.providedDeviceId != null) {
+        merged.providedDeviceId = live.providedDeviceId;
+      }
     }
-    if (config) {
-      onData({ config, state: null, stats: null });
-      return;
-    }
-    onData(null);
+
+    const nextJson = JSON.stringify(merged);
+    if (nextJson === lastEmitJson) return;
+    lastEmitJson = nextJson;
+    onData(merged);
   };
 
-  const ensureLegacyFallback = () => {
-    if (legacyUnsub || liveExists) return;
-    legacyUnsub = onValue(
-      ref(database, legacyMatchPath(eventId, matchId)),
-      (snap) => {
-        legacyFallback = snap.exists() ? snap.val() : null;
-        emit();
-      }
-    );
-  };
+  const unsubLegacy = onValue(
+    ref(database, legacyMatchPath(eventId, matchId)),
+    (snap) => {
+      legacy = snap.exists() ? snap.val() : null;
+      emit();
+    }
+  );
 
   const unsubConfig = onValue(
     ref(database, legacyMatchConfigPath(eventId, matchId)),
@@ -124,26 +156,15 @@ export function subscribeMatchView(database, eventId, matchId, onData) {
   const unsubLive = onValue(
     ref(database, matchLivePath(eventId, matchId)),
     (snap) => {
-      liveExists = snap.exists();
       live = snap.exists() ? snap.val() : null;
-      if (!liveExists) {
-        ensureLegacyFallback();
-      } else if (legacyUnsub) {
-        legacyUnsub();
-        legacyUnsub = null;
-        legacyFallback = null;
-      }
       emit();
     }
   );
 
-  // If live never fires quickly, still attach legacy fallback once
-  ensureLegacyFallback();
-
   return () => {
+    unsubLegacy();
     unsubConfig();
     unsubLive();
-    if (legacyUnsub) legacyUnsub();
   };
 }
 

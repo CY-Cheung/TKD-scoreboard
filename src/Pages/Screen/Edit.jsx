@@ -17,6 +17,8 @@ import { EDIT_POINT_TYPES } from './editPointTypes';
 import EditSideScoreRow from './EditSideScoreRow';
 import AvoidingPenaltyPopup from './AvoidingPenaltyPopup';
 
+const EMPTY_MATCH_RULES = Object.freeze({});
+
 const Edit = ({
     visible,
     setVisible,
@@ -105,7 +107,7 @@ const Edit = ({
         setAvoidingSide(null);
     };
 
-    const matchRules = matchData?.config?.rules || {};
+    const matchRules = matchData?.config?.rules || EMPTY_MATCH_RULES;
     const getSideIvrRemaining = (side) =>
         getEffectiveIvrRemaining(matchData?.stats, side, eventSettings, matchRules);
 
@@ -125,7 +127,7 @@ const Edit = ({
     }, [
         matchData,
         eventSettings,
-        matchRules,
+        matchData?.config?.rules,
         ivrQuotaFocused,
         matchData?.stats?.blue?.ivrRemaining,
         matchData?.stats?.red?.ivrRemaining,
