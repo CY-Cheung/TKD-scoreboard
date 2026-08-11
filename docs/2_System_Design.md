@@ -154,7 +154,7 @@ src/
 | Path | Component | Guard |
 |------|-----------|--------|
 | `/` | Landing | Public；已 Google 登入 → navigate `/court-setup` |
-| `/court-setup` | CourtSetup | Router public；頁內要求 Google |
+| `/court-setup` | CourtSetup | 需已 Google 登入，否則 `<Navigate to="/" />`；Google CTA 只喺 Landing |
 | `/home` | Home | `ProtectedRoute`（event+court session） |
 | `/screen` | Screen（含 Edit） | `ProtectedRoute` |
 | `/controller` | Controller | `ProtectedRoute`；URL query 可建立／補齊 session |
@@ -162,7 +162,7 @@ src/
 | `*` | → `/` | — |
 
 **Session keys**（`sessionStorage`）：`selectedEvent`、`selectedCourt`、`selectedEventName`。  
-無 session → `/court-setup`（避免誤清 Google）。
+無 event/court session → `/`（Landing）；已登入用戶會由 Landing 自動轉去 `/court-setup`。
 
 ---
 

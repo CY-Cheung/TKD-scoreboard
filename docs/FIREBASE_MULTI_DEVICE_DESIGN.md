@@ -37,7 +37,7 @@
 ## 2. 應用路由同 Session (工作階段)
 
 ```
-/court-setup     → 公開；Google 登入、建立／選擇 Event、選 Court
+/court-setup     → 需已 Google 登入（否則導回 Landing）；建立／選擇 Event、選 Court
 /                → Home 導航（需 session）
 /screen          → 大螢幕計分（需 session）
 /controller      → 裁判遙控（需 session 或 URL query）
@@ -143,7 +143,7 @@ Step 2 glass card 同步用；由主裁 Screen 寫入，所有訂閱同一 Match
 
 ### Phase A — 賽事建立
 
-1. 管理員喺 `/court-setup` Google 登入
+1. 管理員喺 Landing Google 登入 → 自動去 `/court-setup`
 2. 建立 Event（可上傳 **HKTKDA PDF**，`pdfParser.js` 解析；多日自動拆子 Event）
 3. 揀 Event + Court → 寫入 session → 進 Home
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
 import { ref, get, set, remove, update } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
 import { useEventSession } from '../../Context/EventSessionContext';
-import { FolderPlus, Trash, ExclamationTriangle, FileEarmarkPdf, FileEarmarkArrowUp, BoxArrowRight, CheckCircle, House, XCircle, Github, Key } from 'react-bootstrap-icons';
+import { FolderPlus, Trash, ExclamationTriangle, FileEarmarkPdf, FileEarmarkArrowUp, BoxArrowRight, CheckCircle, House, XCircle, Github } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 import { appendIvrQuotaToSettings } from '../../Api';
 import { usePopup } from '../../Context/PopupContext';
@@ -26,7 +26,6 @@ function CourtSetup() {
   const [selectedEvent, setSelectedEvent] = useState('');
   const [courtId, setCourtId] = useState('');
   const [courtOptions, setCourtOptions] = useState([]);
-  const [authError, setAuthError] = useState('');
   const { showToast, showConfirm } = usePopup();
 
   // Create Event Modal State
@@ -48,10 +47,9 @@ function CourtSetup() {
   const [pdfParseResult, setPdfParseResult] = useState(null);
 
   const navigate = useNavigate();
-  const { user, userLoading, googleLogin, googleLogout } = useAuth();
+  const { user, userLoading, googleLogout } = useAuth();
   const { setEventSession, clearEventSession } = useEventSession();
   const { locale, visible } = useAlternatingLocale();
-  const [signingIn, setSigningIn] = useState(false);
 
   // Reset event/court session when entering setup (e.g. from Home).
   // Must not clear Google auth — that would bounce us to Landing.
@@ -59,19 +57,6 @@ function CourtSetup() {
     clearEventSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const handleGoogleSignIn = async () => {
-    setAuthError('');
-    setSigningIn(true);
-    try {
-      await googleLogin();
-    } catch (err) {
-      console.error('Google Sign-In Error:', err);
-      setAuthError(`Login failed: ${err.message}`);
-    } finally {
-      setSigningIn(false);
-    }
-  };
 
   // Sign out Google then go to Landing — must clear user before navigate,
   // otherwise Landing auto-forwards signed-in users back to Court Setup.
@@ -89,7 +74,7 @@ function CourtSetup() {
   // Load events from Firebase
   const fetchEvents = () => {
     if (!user) return;
-    setAuthError('');
+    setError('');
 
     const eventsRef = ref(database, 'events');
     get(eventsRef)
@@ -119,7 +104,7 @@ function CourtSetup() {
       })
       .catch(err => {
         console.error("Error fetching events:", err);
-        setAuthError("Failed to fetch events from database. Please check your network or login.");
+        setError("Failed to fetch events from database. Please check your network or login.");
       });
   };
 
@@ -160,37 +145,9 @@ function CourtSetup() {
     );
   }
 
+  // Google sign-in lives on Landing only — never show a Court Setup login wall.
   if (!user) {
-    return (
-      <div className="cs-container aurora-bg">
-        <div className="cs-content glass-card" style={{ padding: '3cqi', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2cqi' }}>
-          <StableLocaleText
-            as="p"
-            locale={locale}
-            visible={visible}
-            en="Sign in with Google to set up a court."
-            zh="請用 Google 登入以設置場地。"
-          />
-          <Button
-            onClick={handleGoogleSignIn}
-            disabled={signingIn}
-            text={signingIn ? 'Signing in…' : 'Google (登入)'}
-            icon={<Key size="1.4cqi" />}
-            fontSize="1.2cqi"
-            variant="gemini"
-            style={{ padding: '0.9cqi 1.8cqi' }}
-          />
-          {authError && <p style={{ color: '#ff6b6b', margin: 0 }}>{authError}</p>}
-          <Button
-            onClick={() => navigate('/', { replace: true })}
-            text="Back (返回)"
-            fontSize="1cqi"
-            variant="gray"
-            style={{ padding: '0.6cqi 1.2cqi' }}
-          />
-        </div>
-      </div>
-    );
+    return <Navigate to="/" replace />;
   }
 
   // PDF File Upload Handler

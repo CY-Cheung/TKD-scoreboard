@@ -32,8 +32,9 @@ function ProtectedRoute({ children }) {
   const hasEventSession = !!session || hasStoredEventSession() || hasUrlParams();
 
   if (!hasEventSession) {
-    // Prefer Court Setup over Landing so Google session is not wiped by Landing's mount logout.
-    return <Navigate to="/court-setup" replace state={{ from: location.pathname }} />;
+    // Send guests to Landing (Google CTA). Signed-in users are auto-forwarded
+    // from Landing → /court-setup. Do not show Court Setup's old login wall.
+    return <Navigate to="/" replace state={{ from: location.pathname }} />;
   }
 
   return children;

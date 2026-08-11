@@ -47,7 +47,7 @@
 
 ### 3.2 Court Setup（場地設定）
 
-1. 確認你已 Google 登入。  
+1. 你應已喺 Landing 完成 Google 登入（未登入會被帶回 Landing，唔會見到 Court Setup 登入牆）。  
 2. **建立新賽事**：填賽事名稱、規則（例如回合時間、分差上限、Gam-jeom 上限等）、setup password（如有）。  
 3. （可選）上傳 **HKTKDA** 格式對陣 **PDF**；若 PDF 含多日，系統可能拆成多個子賽事 → 細節以畫面提示為準。  
 4. 喺列表揀已有 Event。  
