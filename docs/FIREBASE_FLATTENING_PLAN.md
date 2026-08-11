@@ -1,9 +1,9 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
-> **Status:** Stage 5+（flat config only；刪 nested `events/…/matches`）on `cursor/firebase-flat-config-only-8215`  
-> Stage 1–2 已合入 `main`。Stage 3–5／seat／haptic 見 PR #10–#18。  
-> **Stage 5+：** 新建／訂閱／寫 config 只認 flat `matches/…/config` + `matchLive`；`events/{id}` 只留 meta + settings。  
-> Court Setup「清 courts／鬼位／legacy matches」會 backfill flat 後 **刪** 成個 `events/…/matches` 樹。
+> **Status:** Stage 5+ flat tree verified in production；rules tighten on `cursor/firebase-rules-tighten-8215`  
+> Stage 1–2 已合入 `main`。Stage 3–5+／seat／haptic 見 PR #10–#19。  
+> **App：** 新建／訂閱／寫 config 只認 flat `matches/…/config` + `matchLive`；`events/{id}` 只留 meta + settings。  
+> **Rules：** 已移除 nested courts／matches write；`events` validate 禁止寫入 nested trees；`matchLive` 只認 flat seats。
 
 ---
 
@@ -66,11 +66,17 @@ matchLive/{eventId}/{matchId}/
 5. Court Setup cleanup → `removeLegacyMatchesForEvent`（先 backfill flat，再 `remove(events/…/matches)`）  
 6. Screen／Edit timer／config 讀 `matchData`／flat，唔再讀 legacy path  
 
-**可選後續：** 收緊 `database.rules.json`（刪 nested matches write rules）；合入 `main`。
+**可選後續：** 合入 `main`（Stage 3–5+ PR stack）。
 
 ---
 
-## 6. Rules
+## 6. Rules（Stage 5+ tightened）
 
-Production `database.rules.json` 仍保留部分 legacy nested write rules（過渡／cleanup）。  
-終態草圖：`database.rules.flattened.skeleton.json`。
+Production `database.rules.json`（同 `database.rules.flattened.skeleton.json`）已：
+
+1. **刪** nested `events/…/courts`／`events/…/matches` 專用 write rules（唔再畀 unauth 寫 legacy）  
+2. `events/{id}` `.validate`：**禁止** root write 帶 `courts`／`matches`  
+3. `matchLive` unauth 路徑：只認 **flat** `courts/…/referees`；要 `data.exists()`（唔畀裁判憑空 create）  
+4. Flat `courts/…/referees` 仍要求 `deviceId` `.validate`
+
+Publish：Firebase Console → Realtime Database → Rules，或 `firebase deploy --only database`。
