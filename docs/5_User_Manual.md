@@ -127,13 +127,13 @@
 - **宣判局勝**（紅／藍）。  
 - **Promote Winner**：將勝者寫入下一場（該場要已設晉級路徑）。  
 - **Kye-shi**。  
-- **Technical Card（技術警告牌）** — 見下節。  
+- **Technical Card（技術牌）** — 見下節。  
 - **IVR（錄影重播挑戰）** — 見下節。  
 - 微調時間、IVR 剩餘次數等（以畫面上有嘅欄位為準）。
 
 ---
 
-## 8. Technical Card（技術警告牌）
+## 8. Technical Card（技術牌）
 
 1. 喺 Edit 揀藍或紅嘅 Technical Card。  
 2. **Step 1 確認**：  
