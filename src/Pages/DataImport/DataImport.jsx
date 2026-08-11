@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ref, set, get, remove } from "firebase/database";
+import { ref, set, remove } from "firebase/database";
 import { database } from '../../firebase';
 import { usePopup } from '../../Context/PopupContext';
 import './DataImport.css';
