@@ -26,7 +26,7 @@ import {
 } from "./seatGrab";
 import { armScoreHaptic, shouldVibrateForRecentScores, triggerScoreHaptic } from "./scoreHaptic";
 import {
-    subscribePreferFlatCourt,
+    subscribeCourt,
 } from "../../services/courtFirebase";
 import { subscribeMatchView } from "../../services/matchFirebase";
 import ControllerScorePad from "./ControllerScorePad";
@@ -79,7 +79,7 @@ function Controller() {
     // Listen to refereeMode (prefer flat courts path)
     useEffect(() => {
         if (!eventId || !courtId) return;
-        return subscribePreferFlatCourt(
+        return subscribeCourt(
             database,
             eventId,
             courtId,
@@ -295,7 +295,7 @@ function Controller() {
             return;
         }
 
-        return subscribePreferFlatCourt(
+        return subscribeCourt(
             database,
             eventId,
             courtId,

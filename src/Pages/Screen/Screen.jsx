@@ -24,14 +24,14 @@ import {
     buildRoundExpiredStatePatch,
 } from "./matchTimer";
 import {
-    dualUpdateCourtField,
+    updateCourtField,
     clearRefereeSeat,
-    subscribePreferFlatCourt,
+    subscribeCourt,
     subscribeCourtReferees,
-    getPreferFlatCourt,
+    getCourt,
 } from "../../services/courtFirebase";
 import {
-    dualUpdateMatchState,
+    updateMatchLiveState,
     subscribeMatchView,
     ensureMatchLiveExists,
 } from "../../services/matchFirebase";
@@ -95,7 +95,7 @@ function Screen() {
     // Listen to refereeMode (prefer flat courts)
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
-        return subscribePreferFlatCourt(
+        return subscribeCourt(
             database,
             selectedEvent,
             selectedCourt,
@@ -168,14 +168,14 @@ function Screen() {
 
             // Auto-downgrade check
             if (occupiedCount < 2) {
-                getPreferFlatCourt(
+                getCourt(
                     database,
                     selectedEvent,
                     selectedCourt,
                     ["config", "refereeMode"]
                 ).then((mode) => {
                     if (mode === 'multiple') {
-                        dualUpdateCourtField(
+                        updateCourtField(
                             database,
                             selectedEvent,
                             selectedCourt,
@@ -244,7 +244,7 @@ function Screen() {
 
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
-        return subscribePreferFlatCourt(
+        return subscribeCourt(
             database,
             selectedEvent,
             selectedCourt,
@@ -288,7 +288,7 @@ function Screen() {
             if (!frame.continueRaf) {
                 cancelAnimationFrame(animationFrameRef.current);
                 if (frame.onExpire === "finalize_round") {
-                    dualUpdateMatchState(
+                    updateMatchLiveState(
                         database,
                         selectedEvent,
                         currentMatchId,
@@ -339,14 +339,14 @@ function Screen() {
         const now = Date.now();
 
         if (isPaused) {
-            dualUpdateMatchState(
+            updateMatchLiveState(
                 database,
                 selectedEvent,
                 currentMatchId,
                 buildTimerResumePatch(now)
             );
         } else {
-            dualUpdateMatchState(
+            updateMatchLiveState(
                 database,
                 selectedEvent,
                 currentMatchId,

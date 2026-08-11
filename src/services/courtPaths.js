@@ -1,5 +1,5 @@
 /**
- * Court path helpers — Stage 2 RTDB flattening (dual-write courts).
+ * Court path helpers — flat RTDB courts tree.
  * @see docs/FIREBASE_FLATTENING_PLAN.md
  */
 

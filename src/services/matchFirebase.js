@@ -14,7 +14,6 @@ import {
   extractMatchLivePayload,
   flatMatchConfigPath,
   flatMatchesRoot,
-  legacyMatchesRoot,
   matchIndexPath,
   matchIndexRoot,
   matchLivePath,
@@ -187,7 +186,7 @@ export async function runMatchLiveTransaction(
   );
 }
 
-export async function dualUpdateMatchState(database, eventId, matchId, patch) {
+export async function updateMatchLiveState(database, eventId, matchId, patch) {
   try {
     await ensureMatchLiveExists(database, eventId, matchId);
     await update(ref(database, matchLivePath(eventId, matchId, "state")), patch);
@@ -200,7 +199,7 @@ export async function dualUpdateMatchState(database, eventId, matchId, patch) {
   }
 }
 
-export async function dualUpdateMatchStatsSide(
+export async function updateMatchLiveStatsSide(
   database,
   eventId,
   matchId,
@@ -222,8 +221,8 @@ export async function dualUpdateMatchStatsSide(
   }
 }
 
-/** Flat-only competitor patch + refresh matchIndex. */
-export async function dualUpdateMatchConfigCompetitors(
+/** Patch competitors under flat matches/…/config + refresh matchIndex. */
+export async function updateMatchConfigCompetitors(
   database,
   eventId,
   matchId,
@@ -309,22 +308,6 @@ export function subscribeMatchView(database, eventId, matchId, onData) {
 }
 
 /**
- * One-shot cleanup helper: copy every legacy nested match into flat trees.
- * Kept for Court Setup strip of leftover events/…/matches.
- */
-export async function backfillMatchFlatFromLegacyEvent(database, eventId) {
-  const snap = await get(ref(database, legacyMatchesRoot(eventId)));
-  if (!snap.exists()) return 0;
-  const matches = snap.val() || {};
-  let count = 0;
-  for (const [matchId, matchData] of Object.entries(matches)) {
-    await mirrorMatchFlatArtifacts(database, eventId, matchId, matchData);
-    count += 1;
-  }
-  return count;
-}
-
-/**
  * Load UI matches from flat matches + matchLive only.
  * Returns UI-shaped { [matchId]: { config, state, stats, … } }.
  */
@@ -336,26 +319,4 @@ export async function fetchMatchesForEvent(database, eventId) {
     flatSnap.val(),
     liveSnap.exists() ? liveSnap.val() : {}
   );
-}
-
-/**
- * Cleanup: backfill flat artifacts from leftover legacy matches, then delete
- * the entire events/{eventId}/matches tree.
- */
-export async function removeLegacyMatchesForEvent(database, eventId) {
-  const snap = await get(ref(database, legacyMatchesRoot(eventId)));
-  if (!snap.exists()) {
-    return { stripped: false, matchCount: 0 };
-  }
-  const matchCount = Object.keys(snap.val() || {}).length;
-  try {
-    await backfillMatchFlatFromLegacyEvent(database, eventId);
-  } catch (err) {
-    console.warn(
-      "[cleanup] flat backfill before legacy matches remove:",
-      err?.message || err
-    );
-  }
-  await remove(ref(database, legacyMatchesRoot(eventId)));
-  return { stripped: true, matchCount };
 }

@@ -7,9 +7,9 @@ import {
     applyStartNextRound,
 } from './domain/roundTransaction.js';
 import {
-    dualUpdateMatchState,
-    dualUpdateMatchStatsSide,
-    dualUpdateMatchConfigCompetitors,
+    updateMatchLiveState,
+    updateMatchLiveStatsSide,
+    updateMatchConfigCompetitors,
     runMatchLiveTransaction,
     fetchMatchConfigForRules,
 } from './services/matchFirebase.js';
@@ -92,7 +92,7 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
             throw new Error("此場次未設定下一場比賽路徑 (Next Match ID/Slot missing)");
         }
 
-        await dualUpdateMatchConfigCompetitors(
+        await updateMatchConfigCompetitors(
             database,
             eventName,
             nextMatchId,
@@ -103,7 +103,7 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
             }
         );
 
-        await dualUpdateMatchState(database, eventName, currentMatchId, {
+        await updateMatchLiveState(database, eventName, currentMatchId, {
             winnerSide: winnerSide
         });
 
@@ -116,7 +116,7 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
 };
 
 export const startTechCardAnnouncement = (eventName, matchId, { side, decision }) => {
-    return dualUpdateMatchState(database, eventName, matchId, {
+    return updateMatchLiveState(database, eventName, matchId, {
         techCardAnnouncement: {
             side,
             decision,
@@ -145,7 +145,7 @@ export const finalizeTechCardAnnouncement = async (eventName, matchId) => {
 };
 
 export const startKyeShi = (eventName, matchId, durationSeconds = 60) => {
-    return dualUpdateMatchState(database, eventName, matchId, {
+    return updateMatchLiveState(database, eventName, matchId, {
         kyeShi: {
             startedAt: Date.now(),
             duration: durationSeconds,
@@ -154,7 +154,7 @@ export const startKyeShi = (eventName, matchId, durationSeconds = 60) => {
 };
 
 export const stopKyeShi = (eventName, matchId) => {
-    return dualUpdateMatchState(database, eventName, matchId, { kyeShi: null });
+    return updateMatchLiveState(database, eventName, matchId, { kyeShi: null });
 };
 
 const isIvrQuotaEmpty = (value) => value === null || value === undefined || value === "";
@@ -239,18 +239,18 @@ export const projectIvrRemaining = (current, decision) => {
 
 export const setIvrRemaining = (eventName, matchId, side, value) => {
     if (value === null || value === undefined || value === "") {
-        return dualUpdateMatchStatsSide(database, eventName, matchId, side, {
+        return updateMatchLiveStatsSide(database, eventName, matchId, side, {
             ivrRemaining: IVR_UNLIMITED,
         });
     }
     const next = Math.max(0, Math.floor(Number(value) || 0));
-    return dualUpdateMatchStatsSide(database, eventName, matchId, side, {
+    return updateMatchLiveStatsSide(database, eventName, matchId, side, {
         ivrRemaining: next,
     });
 };
 
 export const startIvrAnnouncement = (eventName, matchId, { side, decision }) => {
-    return dualUpdateMatchState(database, eventName, matchId, {
+    return updateMatchLiveState(database, eventName, matchId, {
         ivrAnnouncement: {
             side,
             decision,

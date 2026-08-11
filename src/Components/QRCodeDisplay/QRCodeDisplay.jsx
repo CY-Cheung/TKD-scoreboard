@@ -15,8 +15,8 @@ import { StableLocaleText, useAlternatingLocale } from "../AlternatingLocale/Alt
 import { database } from "../../firebase";
 import { usePopup } from "../../Context/PopupContext";
 import {
-  dualSetCourtField,
-  dualUpdateCourtField,
+  setCourtField,
+  updateCourtField,
   subscribeCourtReferees,
 } from "../../services/courtFirebase";
 import { filterLiveReferees } from "../../Pages/Controller/seatGrab";
@@ -103,7 +103,7 @@ function QRCodeDisplay({
 
   const handleModeChange = (mode) => {
     if (mode === "multiple" && occupiedCount < 2) return;
-    dualUpdateCourtField(database, eventId, courtId, "config", {
+    updateCourtField(database, eventId, courtId, "config", {
       refereeMode: mode,
     });
   };
@@ -115,7 +115,7 @@ function QRCodeDisplay({
       message: `Are you sure you want to forcefully disconnect all ${occupiedCount} connected corner judge(s)?`,
       onConfirm: () => {
         ['J1', 'J2', 'J3'].forEach(slotName => {
-          dualSetCourtField(
+          setCourtField(
             database,
             eventId,
             courtId,
@@ -193,7 +193,7 @@ function QRCodeDisplay({
                         title: 'Force Disconnect (強制斷線)',
                         message: `Are you sure you want to forcefully disconnect Corner Judge ${index + 1}?`,
                         onConfirm: () => {
-                            dualSetCourtField(
+                            setCourtField(
                               database,
                               eventId,
                               courtId,

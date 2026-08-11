@@ -2,15 +2,11 @@ import { get, set, update, remove, ref, onValue } from "firebase/database";
 import {
   flatCourtPath,
   flatCourtsRoot,
-  legacyCourtsRoot,
   courtIdsFromCourtsMap,
 } from "./courtPaths.js";
 
-/**
- * Stage 5b/5: write court fields to flat `courts/{event}/{court}/…` only.
- * Function names keep `dual*` for call-site stability.
- */
-export async function dualSetCourtField(
+/** Write a court field under `courts/{event}/{court}/…`. */
+export async function setCourtField(
   database,
   eventId,
   courtId,
@@ -23,7 +19,8 @@ export async function dualSetCourtField(
   await set(ref(database, flatCourtPath(eventId, courtId, ...segments)), value);
 }
 
-export async function dualUpdateCourtField(
+/** Update court fields under `courts/{event}/{court}/…`. */
+export async function updateCourtField(
   database,
   eventId,
   courtId,
@@ -39,7 +36,7 @@ export async function dualUpdateCourtField(
   );
 }
 
-/** Mirror a full court object map under courts/{eventId}/… */
+/** Write a full court object map under courts/{eventId}/… */
 export async function mirrorCourtsMapToFlat(database, eventId, courtsMap) {
   if (!courtsMap || typeof courtsMap !== "object") return;
   const writes = Object.entries(courtsMap).map(([courtId, data]) =>
@@ -52,92 +49,7 @@ export async function removeFlatCourtsForEvent(database, eventId) {
   await remove(ref(database, flatCourtsRoot(eventId)));
 }
 
-/** Stage 5: strip nested events/…/courts after flat courts exist. */
-export async function removeLegacyCourtsForEvent(database, eventId) {
-  await remove(ref(database, legacyCourtsRoot(eventId)));
-}
-
-/**
- * Ensure flat courts exist (backfill from legacy once), then delete nested courts.
- * Safe to call repeatedly — no-op when legacy is already gone.
- * @returns {{ stripped: boolean, courtIds: string[], error?: string }}
- */
-export async function ensureFlatCourtsAndStripLegacy(database, eventId) {
-  const flatSnap = await get(ref(database, flatCourtsRoot(eventId)));
-  const legacySnap = await get(ref(database, legacyCourtsRoot(eventId)));
-
-  if (!flatSnap.exists() && legacySnap.exists()) {
-    await mirrorCourtsMapToFlat(database, eventId, legacySnap.val());
-  }
-
-  if (legacySnap.exists()) {
-    try {
-      await removeLegacyCourtsForEvent(database, eventId);
-      return {
-        stripped: true,
-        courtIds: courtIdsFromCourtsMap(
-          flatSnap.exists() ? flatSnap.val() : legacySnap.val()
-        ),
-      };
-    } catch (err) {
-      const error = err?.code || err?.message || String(err);
-      console.warn("[stage5] strip legacy courts failed:", error);
-      return {
-        stripped: false,
-        courtIds: courtIdsFromCourtsMap(
-          flatSnap.exists() ? flatSnap.val() : legacySnap.val()
-        ),
-        error,
-      };
-    }
-  }
-
-  return {
-    stripped: false,
-    courtIds: courtIdsFromCourtsMap(flatSnap.exists() ? flatSnap.val() : null),
-  };
-}
-
-/**
- * Clear ghost referee seats (no deviceId, or stale lastSeen) under flat courts.
- * @returns {{ cleared: string[] }}
- */
-export async function clearGhostRefereeSeatsForEvent(database, eventId) {
-  const flatSnap = await get(ref(database, flatCourtsRoot(eventId)));
-  if (!flatSnap.exists()) return { cleared: [] };
-
-  const cleared = [];
-  const courtsMap = flatSnap.val() || {};
-  const seats = ["J1", "J2", "J3"];
-  const now = Date.now();
-  const STALE_MS = 20_000;
-
-  for (const [courtId, court] of Object.entries(courtsMap)) {
-    const referees = court?.referees || {};
-    for (const seat of seats) {
-      const data = referees[seat];
-      if (data == null) continue;
-      const deviceId =
-        typeof data === "object" && data !== null ? data.deviceId : data;
-      const lastSeen =
-        typeof data === "object" && data !== null
-          ? Number(data.lastSeen)
-          : null;
-      const isGhost = deviceId == null || deviceId === "";
-      const isStale =
-        Number.isFinite(lastSeen) && now - lastSeen > STALE_MS;
-      if (isGhost || isStale) {
-        await clearRefereeSeat(database, eventId, courtId, seat);
-        cleared.push(`${courtId}/${seat}`);
-      }
-    }
-  }
-  return { cleared };
-}
-
-/**
- * Clear one referee seat on flat courts (Stage 5: legacy nested courts removed).
- */
+/** Clear one referee seat on flat courts. */
 export async function clearRefereeSeat(database, eventId, courtId, seatName) {
   await set(
     ref(database, flatCourtPath(eventId, courtId, "referees", seatName)),
@@ -145,19 +57,17 @@ export async function clearRefereeSeat(database, eventId, courtId, seatName) {
   );
 }
 
-/**
- * Prefer flat courts list; one-shot legacy backfill + strip if needed.
- */
+/** List court ids from flat `courts/{eventId}`. */
 export async function fetchCourtIds(database, eventId) {
-  const { courtIds } = await ensureFlatCourtsAndStripLegacy(database, eventId);
-  return courtIds;
+  const flatSnap = await get(ref(database, flatCourtsRoot(eventId)));
+  return courtIdsFromCourtsMap(flatSnap.exists() ? flatSnap.val() : null);
 }
 
 /**
- * Subscribe to flat court path only (Stage 5 — nested courts deleted).
+ * Subscribe to a flat court path.
  * @returns unsubscribe
  */
-export function subscribePreferFlatCourt(
+export function subscribeCourt(
   database,
   eventId,
   courtId,
@@ -189,14 +99,7 @@ export function normalizeRefereeMap(refereesVal) {
   return out;
 }
 
-/** @deprecated Use normalizeRefereeMap — second arg ignored. */
-export function mergeRefereeMaps(flatVal, _legacyVal) {
-  return normalizeRefereeMap(flatVal);
-}
-
-/**
- * Subscribe to J1–J3 on flat courts only.
- */
+/** Subscribe to J1–J3 on flat courts. */
 export function subscribeCourtReferees(database, eventId, courtId, onData) {
   const flatRef = ref(
     database,
@@ -208,8 +111,8 @@ export function subscribeCourtReferees(database, eventId, courtId, onData) {
   });
 }
 
-/** One-shot get: flat courts only (Stage 5). */
-export async function getPreferFlatCourt(
+/** One-shot get from flat courts. */
+export async function getCourt(
   database,
   eventId,
   courtId,
@@ -241,6 +144,3 @@ export function eventMetaPayloadForWrite(eventData) {
   const { matches: _ignoredMatches, ...rest } = base;
   return rest;
 }
-
-/** @deprecated Use eventMetaPayloadForWrite */
-export const eventPayloadForLegacyWrite = eventMetaPayloadForWrite;

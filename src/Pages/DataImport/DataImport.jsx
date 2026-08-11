@@ -23,10 +23,9 @@ import {
     writeEventIndexEntry,
 } from '../../services/eventIndexFirebase';
 import {
-    dualSetCourtField,
+    setCourtField,
     mirrorCourtsMapToFlat,
     eventMetaPayloadForWrite,
-    removeLegacyCourtsForEvent,
 } from '../../services/courtFirebase';
 import {
     mirrorMatchFlatArtifacts,
@@ -226,7 +225,6 @@ const DataImport = () => {
                 );
                 await writeEventIndexEntry(database, record.id, record.data);
                 await mirrorCourtsMapToFlat(database, record.id, record.data.courts);
-                await removeLegacyCourtsForEvent(database, record.id).catch(() => {});
                 if (record.data.matches) {
                     await Promise.all(
                         Object.entries(record.data.matches).map(([mid, mdata]) =>
@@ -422,7 +420,7 @@ const DataImport = () => {
         }
     
         try {
-            await dualSetCourtField(
+            await setCourtField(
                 database,
                 eventName,
                 session.courtId,

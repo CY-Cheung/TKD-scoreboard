@@ -3,7 +3,6 @@ import {
   eventPayloadWithoutCourts,
   eventMetaPayloadForWrite,
   normalizeRefereeMap,
-  mergeRefereeMaps,
 } from "./courtFirebase.js";
 
 describe("eventPayloadWithoutCourts", () => {
@@ -72,11 +71,5 @@ describe("normalizeRefereeMap", () => {
       J1: { deviceId: "a" },
       J2: { deviceId: "b" },
     });
-  });
-
-  it("mergeRefereeMaps ignores legacy second arg", () => {
-    expect(
-      mergeRefereeMaps({ J1: { deviceId: "flat" } }, { J1: { deviceId: "legacy" } })
-    ).toEqual({ J1: { deviceId: "flat" } });
   });
 });
