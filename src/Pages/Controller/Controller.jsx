@@ -48,6 +48,7 @@ function Controller() {
     const [deviceId, setDeviceId] = useState("");
     const [mySeat, setMySeat] = useState(null);
     const [isFull, setIsFull] = useState(false);
+    const [seatGrabError, setSeatGrabError] = useState(null);
     const [matchData, setMatchData] = useState(null);
     const [lastAction, setLastAction] = useState(null); // { side: 'red'|'blue', text: '...' }
     const [isConnected, setIsConnected] = useState(false);
@@ -105,7 +106,9 @@ function Controller() {
         const newDeviceId = createRefereeDeviceId();
         setDeviceId(newDeviceId);
         setIsFull(false);
+        setSeatGrabError(null);
         let grabbedSeat = null;
+        let lastGrabError = null;
 
         let isMounted = true;
         const trySeat = async (seatName) => {
@@ -136,18 +139,22 @@ function Controller() {
                         set(flatSeatRef, null).catch(() => {});
                         return false;
                     }
-                    set(flatSeatRef, deviceData).catch((err) => {
+                    try {
+                        await set(flatSeatRef, deviceData);
+                    } catch (err) {
                         console.warn("flat seat mirror failed:", err?.message || err);
-                    });
+                    }
                     onDisconnect(legacySeatRef).remove();
                     onDisconnect(flatSeatRef).remove();
                     setMySeat(seatName);
+                    setSeatGrabError(null);
                     grabbedSeat = seatName;
                     return true;
                 }
                 return false;
             } catch (e) {
-                console.error("Seat grab failed:", seatName, e?.code || e?.message || e);
+                lastGrabError = e?.code || e?.message || String(e);
+                console.error("Seat grab failed:", seatName, lastGrabError);
                 return false;
             }
         };
@@ -162,7 +169,13 @@ function Controller() {
             for (const seatName of REFEREE_SEAT_ORDER) {
                 if (await trySeat(seatName)) return;
             }
-            if (isMounted) setIsFull(true);
+            if (!isMounted) return;
+            if (lastGrabError) {
+                setSeatGrabError(lastGrabError);
+                setIsFull(false);
+            } else {
+                setIsFull(true);
+            }
         };
 
         grabSeat();
@@ -268,6 +281,17 @@ function Controller() {
     const matchNo = matchData?.config?.matchId || currentMatchId || "N/A";
     const currentRound = matchData?.state?.currentRound || 1;
     const isPaused = matchData?.state?.isPaused ?? true;
+
+    if (seatGrabError) {
+        return (
+            <div className="controller" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white', padding: '20px', textAlign: 'center' }}>
+                <h1 style={{ color: '#ff3b30' }}>Seat Grab Failed</h1>
+                <p>搶位失敗。請確認 Firebase rules 已 publish，並重新掃 QR。</p>
+                <p style={{ opacity: 0.7, fontSize: '0.9rem', wordBreak: 'break-all' }}>{seatGrabError}</p>
+                <Button text="Retry (重試)" onClick={() => window.location.reload()} variant="yellow" />
+            </div>
+        );
+    }
 
     if (isFull) {
         return (

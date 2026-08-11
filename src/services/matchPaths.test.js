@@ -16,19 +16,23 @@ describe("matchPaths", () => {
     );
   });
 
-  it("extractMatchLivePayload strips config", () => {
-    const live = extractMatchLivePayload({
-      config: { matchId: "m1" },
-      state: { timer: 90 },
-      stats: { red: {} },
-      votes: [],
-      recentScores: [],
-      providedCourtId: "court1",
-      providedDeviceId: "d1",
-    });
+  it("extractMatchLivePayload strips config and stamps updatedAt", () => {
+    const live = extractMatchLivePayload(
+      {
+        config: { matchId: "m1" },
+        state: { timer: 90 },
+        stats: { red: {} },
+        votes: [],
+        recentScores: [],
+        providedCourtId: "court1",
+        providedDeviceId: "d1",
+      },
+      12345
+    );
     expect(live.config).toBeUndefined();
     expect(live.state.timer).toBe(90);
     expect(live.providedCourtId).toBe("court1");
+    expect(live.updatedAt).toBe(12345);
   });
 
   it("mergeMatchView prefers live over legacy", () => {

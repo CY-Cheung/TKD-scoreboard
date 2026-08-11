@@ -166,7 +166,8 @@ Prefer Admin SDK 或維護窗腳本。
 5. 建／刪 match／event 同步 mirror／remove `matchLive`  
 6. **未**刪 legacy matches；**未**搬 config 去頂層 `matches/`
 
-Rules：`database.rules.json` 已加 `matchLive`。**記得 Publish。**
+Rules：`database.rules.json` 已加 `matchLive`。**記得喺 Firebase Console → Realtime Database → Rules 貼上並 Publish。**  
+若 Console 根層見唔到 `matchLive`：多數係 rules 未 publish，或 Screen 未 Google 登入（`auth != null`）。開瀏覽器 Console 睇 `[matchLive] … PERMISSION_DENIED`。
 
 ---
 

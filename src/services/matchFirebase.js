@@ -20,6 +20,15 @@ export async function mirrorMatchLive(database, eventId, matchId, matchData) {
   await set(ref(database, matchLivePath(eventId, matchId)), payload);
 }
 
+function logMatchLiveMirrorFailure(context, err) {
+  const code = err?.code || err?.message || err;
+  console.error(
+    `[matchLive] ${context} failed (${code}). ` +
+      "If PERMISSION_DENIED: publish database.rules.json that includes matchLive, " +
+      "and ensure Screen is signed in with Google."
+  );
+}
+
 export async function removeMatchLive(database, eventId, matchId) {
   await remove(ref(database, matchLivePath(eventId, matchId)));
 }
@@ -43,7 +52,7 @@ export async function runLegacyMatchTransaction(
     try {
       await mirrorMatchLive(database, eventId, matchId, result.snapshot.val());
     } catch (err) {
-      console.warn("matchLive mirror after tx failed:", err?.message || err);
+      logMatchLiveMirrorFailure("mirror after tx", err);
     }
   }
   return result;
@@ -59,10 +68,7 @@ export async function dualUpdateMatchState(database, eventId, matchId, patch) {
       await mirrorMatchLive(database, eventId, matchId, snap.val());
     }
   } catch (err) {
-    console.warn(
-      "matchLive mirror after state update failed:",
-      err?.message || err
-    );
+    logMatchLiveMirrorFailure("mirror after state update", err);
   }
 }
 
@@ -83,10 +89,7 @@ export async function dualUpdateMatchStatsSide(
       await mirrorMatchLive(database, eventId, matchId, snap.val());
     }
   } catch (err) {
-    console.warn(
-      "matchLive mirror after stats update failed:",
-      err?.message || err
-    );
+    logMatchLiveMirrorFailure("mirror after stats update", err);
   }
 }
 
@@ -168,6 +171,11 @@ export function subscribeMatchView(database, eventId, matchId, onData) {
 export async function backfillMatchLiveFromLegacy(database, eventId, matchId) {
   const snap = await get(ref(database, legacyMatchPath(eventId, matchId)));
   if (!snap.exists()) return false;
-  await mirrorMatchLive(database, eventId, matchId, snap.val());
-  return true;
+  try {
+    await mirrorMatchLive(database, eventId, matchId, snap.val());
+    return true;
+  } catch (err) {
+    logMatchLiveMirrorFailure("backfill from legacy", err);
+    return false;
+  }
 }

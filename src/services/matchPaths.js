@@ -35,10 +35,13 @@ export const MATCH_LIVE_KEYS = Object.freeze([
   "recentScores",
   "providedCourtId",
   "providedDeviceId",
+  "updatedAt",
 ]);
 
 /** Pull live fields from a full legacy match object. */
-export function extractMatchLivePayload(matchData) {
+export function extractMatchLivePayload(matchData, now = Date.now()) {
+  // Always include updatedAt so matchLive/{event}/{match} materializes in Console
+  // even when other live fields are still null (Firebase omits all-null sets).
   if (!matchData || typeof matchData !== "object") {
     return {
       state: null,
@@ -47,6 +50,7 @@ export function extractMatchLivePayload(matchData) {
       recentScores: null,
       providedCourtId: null,
       providedDeviceId: null,
+      updatedAt: now,
     };
   }
   return {
@@ -56,6 +60,7 @@ export function extractMatchLivePayload(matchData) {
     recentScores: matchData.recentScores ?? null,
     providedCourtId: matchData.providedCourtId ?? null,
     providedDeviceId: matchData.providedDeviceId ?? null,
+    updatedAt: now,
   };
 }
 

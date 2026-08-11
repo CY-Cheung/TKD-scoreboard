@@ -26,11 +26,13 @@ import {
 import {
     dualUpdateCourtField,
     subscribePreferFlatCourt,
+    subscribeCourtReferees,
     getPreferFlatCourt,
 } from "../../services/courtFirebase";
 import {
     dualUpdateMatchState,
     subscribeMatchView,
+    backfillMatchLiveFromLegacy,
 } from "../../services/matchFirebase";
 import VoteLogRows from "./VoteLogRows";
 import { useEventSession } from "../../Context/EventSessionContext";
@@ -133,14 +135,13 @@ function Screen() {
         }
     }, [matchData?.state?.kyeShi, now, selectedEvent, currentMatchId]);
 
-    // Listen to referees status on current court (prefer flat)
+    // Listen to referees status (merge flat + legacy so either path shows)
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
-        return subscribePreferFlatCourt(
+        return subscribeCourtReferees(
             database,
             selectedEvent,
             selectedCourt,
-            "referees",
             (val) => {
             const currentData = val || {};
             const prevData = prevRefereesRef.current;
@@ -186,6 +187,12 @@ function Screen() {
             }
         );
     }, [selectedEvent, selectedCourt]);
+
+    // Stage 3: ensure matchLive node exists when Screen opens a match (auth required)
+    useEffect(() => {
+        if (!selectedEvent || !currentMatchId) return;
+        backfillMatchLiveFromLegacy(database, selectedEvent, currentMatchId);
+    }, [selectedEvent, currentMatchId]);
 
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;

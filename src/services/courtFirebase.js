@@ -126,6 +126,54 @@ export function subscribePreferFlatCourt(
   };
 }
 
+const REFEREE_SEATS = Object.freeze(["J1", "J2", "J3"]);
+
+/** Merge flat + legacy referee maps so a seat claimed on either path is visible. */
+export function mergeRefereeMaps(flatVal, legacyVal) {
+  const merged = {};
+  for (const seat of REFEREE_SEATS) {
+    const value = flatVal?.[seat] ?? legacyVal?.[seat] ?? null;
+    if (value != null) merged[seat] = value;
+  }
+  return merged;
+}
+
+/**
+ * Subscribe to J1–J3 by merging flat + legacy (Stage 2 dual-write safe).
+ * Prefer-flat alone can hide a legacy-only seat claim.
+ */
+export function subscribeCourtReferees(database, eventId, courtId, onData) {
+  const flatRef = ref(
+    database,
+    flatCourtPath(eventId, courtId, "referees")
+  );
+  const legacyRef = ref(
+    database,
+    legacyCourtPath(eventId, courtId, "referees")
+  );
+
+  let flatVal = null;
+  let legacyVal = null;
+
+  const emit = () => {
+    onData(mergeRefereeMaps(flatVal, legacyVal));
+  };
+
+  const unsubFlat = onValue(flatRef, (snap) => {
+    flatVal = snap.exists() ? snap.val() : null;
+    emit();
+  });
+  const unsubLegacy = onValue(legacyRef, (snap) => {
+    legacyVal = snap.exists() ? snap.val() : null;
+    emit();
+  });
+
+  return () => {
+    unsubFlat();
+    unsubLegacy();
+  };
+}
+
 /** One-shot get: prefer flat, else legacy. */
 export async function getPreferFlatCourt(
   database,

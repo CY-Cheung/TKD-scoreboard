@@ -17,10 +17,19 @@ import { usePopup } from "../../Context/PopupContext";
 import {
   dualSetCourtField,
   dualUpdateCourtField,
-  subscribePreferFlatCourt,
+  subscribeCourtReferees,
 } from "../../services/courtFirebase";
 import "./QRCodeDisplay.css";
 import Button from "../Button/Button";
+
+function isPhoneUnreachableHost(hostname) {
+  if (!hostname) return true;
+  if (hostname === "localhost" || hostname === "127.0.0.1") return true;
+  if (hostname.endsWith(".agent.cvm.dev") || hostname.endsWith(".cursorvm.com")) {
+    return true;
+  }
+  return false;
+}
 
 function QRCodeDisplay({
   eventId,
@@ -36,7 +45,7 @@ function QRCodeDisplay({
   const { showConfirm } = usePopup();
   const { locale, visible: localeVisible } = useAlternatingLocale();
 
-  // Custom Network Host state (for localhost dev environment mobile scans)
+  // Custom Network Host state (for localhost / preview hosts mobile scans)
   const [customHost, setCustomHost] = useState(() => {
     return localStorage.getItem("qrCustomHost") || "";
   });
@@ -50,12 +59,8 @@ function QRCodeDisplay({
 
     if (!eventId || !courtId) return;
 
-    return subscribePreferFlatCourt(
-      database,
-      eventId,
-      courtId,
-      "referees",
-      (val) => setReferees(val || {})
+    return subscribeCourtReferees(database, eventId, courtId, (val) =>
+      setReferees(val || {})
     );
   }, [eventId, courtId, propRefereesData]);
 
@@ -68,10 +73,12 @@ function QRCodeDisplay({
   const occupiedCount = (isJ1 ? 1 : 0) + (isJ2 ? 1 : 0) + (isJ3 ? 1 : 0);
   const isFull = occupiedCount === 3;
 
-  // Detect localhost
+  // Detect localhost / Cloud Agent preview (phones often cannot open these)
   const isLocalhost =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1";
+  const needsCustomHost =
+    isPhoneUnreachableHost(window.location.hostname) || !!customHost.trim();
 
   // Use custom host if set, otherwise current location host
   const protocol = window.location.protocol;
@@ -310,7 +317,43 @@ function QRCodeDisplay({
 
         {/* Right Panel: QR Code and Config */}
         <div className="qrcode-right-panel">
-          {/* Network Host Config Section (Removed) */}
+          {(needsCustomHost || isLocalhost) && (
+            <div className="qrcode-host-config" style={{ marginBottom: "0.8cqi" }}>
+              <label className="qrcode-host-label">
+                <Globe size="1.2cqi" />
+                <span>Network Host / IP（手機連線網址）</span>
+              </label>
+              <input
+                type="text"
+                className="qrcode-host-input cursor-target"
+                placeholder="例: 192.168.1.104:5173 或 cy-cheung.github.io"
+                value={customHost}
+                onChange={handleHostChange}
+              />
+              {needsCustomHost && !customHost.trim() && (
+                <div className="qrcode-host-warning" style={{ fontSize: "1.1cqi" }}>
+                  ⚠️ 而家 host（localhost / Cloud Agent preview）手機多數開唔到。
+                  請填 LAN IP（同 Wi‑Fi）或已 deploy 嘅 GitHub Pages host，再掃 QR。
+                </div>
+              )}
+              <div className="qrcode-url-box" style={{ marginTop: "0.5cqi" }}>
+                <input
+                  className="qrcode-url-input"
+                  readOnly
+                  value={controllerUrl}
+                  title={controllerUrl}
+                />
+                <Button
+                  onClick={handleCopy}
+                  icon={copied ? <Check size="1.2cqi" /> : <Copy size="1.2cqi" />}
+                  variant="yellow"
+                  fontSize="1.2cqi"
+                  style={{ padding: "0.4cqi 0.8cqi", minHeight: "unset" }}
+                  aria-label="Copy controller URL"
+                />
+              </div>
+            </div>
+          )}
 
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
             
