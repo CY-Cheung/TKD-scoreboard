@@ -25,6 +25,7 @@ import {
 } from "./matchTimer";
 import {
     dualUpdateCourtField,
+    dualSetCourtField,
     subscribePreferFlatCourt,
     subscribeCourtReferees,
     getPreferFlatCourt,
@@ -34,6 +35,11 @@ import {
     subscribeMatchView,
     backfillMatchLiveFromLegacy,
 } from "../../services/matchFirebase";
+import {
+    filterLiveReferees,
+    listStaleRefereeSeats,
+    SEAT_HEARTBEAT_INTERVAL_MS,
+} from "../Controller/seatGrab";
 import VoteLogRows from "./VoteLogRows";
 import { useEventSession } from "../../Context/EventSessionContext";
 
@@ -135,15 +141,14 @@ function Screen() {
         }
     }, [matchData?.state?.kyeShi, now, selectedEvent, currentMatchId]);
 
-    // Listen to referees status (merge flat + legacy so either path shows)
+    // Listen to referees status (merge flat + legacy; hide stale ghosts)
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
-        return subscribeCourtReferees(
-            database,
-            selectedEvent,
-            selectedCourt,
-            (val) => {
-            const currentData = val || {};
+        let rawReferees = {};
+
+        const applyReferees = (val) => {
+            rawReferees = val || {};
+            const currentData = filterLiveReferees(rawReferees);
             const prevData = prevRefereesRef.current;
 
             // Check for disconnections
@@ -184,8 +189,37 @@ function Screen() {
 
             setRefereesData(currentData);
             prevRefereesRef.current = currentData;
-            }
+        };
+
+        const unsub = subscribeCourtReferees(
+            database,
+            selectedEvent,
+            selectedCourt,
+            applyReferees
         );
+
+        // Force-kill / backgrounded phones may not run onDisconnect for minutes.
+        // Clear seats whose lastSeen heartbeat went stale so QR/Screen free the slot.
+        const janitorId = setInterval(() => {
+            const staleSeats = listStaleRefereeSeats(rawReferees);
+            staleSeats.forEach((seat) => {
+                dualSetCourtField(
+                    database,
+                    selectedEvent,
+                    selectedCourt,
+                    ["referees", seat],
+                    null
+                ).catch(() => {});
+            });
+            if (staleSeats.length > 0) {
+                applyReferees(rawReferees);
+            }
+        }, SEAT_HEARTBEAT_INTERVAL_MS);
+
+        return () => {
+            unsub();
+            clearInterval(janitorId);
+        };
     }, [selectedEvent, selectedCourt]);
 
     // Stage 3: ensure matchLive node exists when Screen opens a match (auth required)

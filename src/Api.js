@@ -40,14 +40,9 @@ export {
  *   scored=true only when points were actually applied (not vote-only / aborted).
  */
 export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, courtId = null, deviceId = null, seatName = null, mode = 'single') => {
-<<<<<<< HEAD
-    runLegacyMatchTransaction(database, eventName, matchId, (matchData) => {
-=======
-    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
     const meta = { scored: false };
 
-    return runTransaction(matchRef, (matchData) => {
->>>>>>> 7d81dff (Vibrate Controller only when a score is actually applied.)
+    return runLegacyMatchTransaction(database, eventName, matchId, (matchData) => {
         // voteNow uses server offset; pauseNow stays wall-clock (legacy quirk).
         return applyScoreAndCheckRules(
             matchData,

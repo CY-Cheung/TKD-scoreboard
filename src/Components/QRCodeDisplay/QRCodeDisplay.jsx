@@ -19,6 +19,7 @@ import {
   dualUpdateCourtField,
   subscribeCourtReferees,
 } from "../../services/courtFirebase";
+import { filterLiveReferees } from "../../Pages/Controller/seatGrab";
 import {
   PUBLIC_PAGES_HOST,
   isPhoneUnreachableHost,
@@ -56,7 +57,7 @@ function QRCodeDisplay({
     if (!eventId || !courtId) return;
 
     return subscribeCourtReferees(database, eventId, courtId, (val) =>
-      setReferees(val || {})
+      setReferees(filterLiveReferees(val || {}))
     );
   }, [eventId, courtId, propRefereesData]);
 

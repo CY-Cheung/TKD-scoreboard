@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ref, onValue, set, onDisconnect, runTransaction } from "firebase/database";
+import { ref, onValue, set, update, onDisconnect, runTransaction } from "firebase/database";
 import { database } from "../../firebase";
 import { updateScoreAndCheckRules } from "../../Api";
 import { useAuth } from "../../Context/AuthContext";
@@ -13,6 +13,7 @@ import {
     ADMIN_SEAT,
     REFEREE_SEAT_ORDER,
     SEAT_GRAB_STRICT_MODE_DELAY_MS,
+    SEAT_HEARTBEAT_INTERVAL_MS,
     applySeatClaimTransaction,
     buildSeatDevicePayload,
     createAdminDeviceId,
@@ -113,17 +114,71 @@ function Controller() {
         setSeatGrabPending(true);
         let grabbedSeat = null;
         let lastGrabError = null;
+        let legacySeatRef = null;
+        let flatSeatRef = null;
+        let heartbeatId = null;
+        let connectedUnsub = null;
 
         let isMounted = true;
+
+        const clearSeatPaths = () => {
+            if (!grabbedSeat) return;
+            const legacyPath = legacyRefereeSeatPath(eventId, courtId, grabbedSeat);
+            const flatPath = refereeSeatPath(eventId, courtId, grabbedSeat);
+            set(ref(database, legacyPath), null).catch(() => {});
+            set(ref(database, flatPath), null).catch(() => {});
+        };
+
+        const registerDisconnectHandlers = () => {
+            if (!legacySeatRef) return;
+            onDisconnect(legacySeatRef).remove().catch(() => {});
+            if (flatSeatRef) {
+                onDisconnect(flatSeatRef).remove().catch(() => {});
+            }
+        };
+
+        const startPresence = (seatName, deviceData) => {
+            legacySeatRef = ref(
+                database,
+                legacyRefereeSeatPath(eventId, courtId, seatName)
+            );
+            flatSeatRef = ref(
+                database,
+                refereeSeatPath(eventId, courtId, seatName)
+            );
+
+            // Re-arm onDisconnect whenever Firebase reconnects (mobile browsers).
+            const connectedRef = ref(database, ".info/connected");
+            connectedUnsub = onValue(connectedRef, (snap) => {
+                if (snap.val() === true) {
+                    registerDisconnectHandlers();
+                }
+            });
+
+            registerDisconnectHandlers();
+
+            heartbeatId = setInterval(() => {
+                if (!isMounted || !grabbedSeat) return;
+                const patch = { lastSeen: Date.now() };
+                update(legacySeatRef, patch).catch(() => {});
+                update(flatSeatRef, patch).catch(() => {});
+            }, SEAT_HEARTBEAT_INTERVAL_MS);
+
+            // pagehide/beforeunload often fire when the phone closes the tab;
+            // React effect cleanup frequently does NOT run in that case.
+            window.addEventListener("pagehide", clearSeatPaths);
+            window.addEventListener("beforeunload", clearSeatPaths);
+        };
+
         const trySeat = async (seatName) => {
             if (!isMounted) return false;
             // Claim on legacy path (proven for unauthenticated judges).
             // Mirror to flat courts tree for Stage 2 dual-write readers.
-            const legacySeatRef = ref(
+            const legacyRefForClaim = ref(
                 database,
                 legacyRefereeSeatPath(eventId, courtId, seatName)
             );
-            const flatSeatRef = ref(
+            const flatRefForClaim = ref(
                 database,
                 refereeSeatPath(eventId, courtId, seatName)
             );
@@ -133,26 +188,25 @@ function Controller() {
                     getDeviceName()
                 );
 
-                const result = await runTransaction(legacySeatRef, (currentData) =>
+                const result = await runTransaction(legacyRefForClaim, (currentData) =>
                     applySeatClaimTransaction(currentData, deviceData)
                 );
 
                 if (result.committed) {
                     if (!isMounted) {
-                        set(legacySeatRef, null);
-                        set(flatSeatRef, null).catch(() => {});
+                        set(legacyRefForClaim, null);
+                        set(flatRefForClaim, null).catch(() => {});
                         return false;
                     }
                     try {
-                        await set(flatSeatRef, deviceData);
+                        await set(flatRefForClaim, deviceData);
                     } catch (err) {
                         console.warn("flat seat mirror failed:", err?.message || err);
                     }
-                    onDisconnect(legacySeatRef).remove();
-                    onDisconnect(flatSeatRef).remove();
                     setMySeat(seatName);
                     setSeatGrabError(null);
                     grabbedSeat = seatName;
+                    startPresence(seatName, deviceData);
                     return true;
                 }
                 return false;
@@ -191,22 +245,11 @@ function Controller() {
         return () => {
             isMounted = false;
             setSeatGrabPending(false);
-            if (grabbedSeat) {
-                set(
-                    ref(
-                        database,
-                        legacyRefereeSeatPath(eventId, courtId, grabbedSeat)
-                    ),
-                    null
-                ).catch(() => {});
-                set(
-                    ref(
-                        database,
-                        refereeSeatPath(eventId, courtId, grabbedSeat)
-                    ),
-                    null
-                ).catch(() => {});
-            }
+            if (heartbeatId) clearInterval(heartbeatId);
+            if (connectedUnsub) connectedUnsub();
+            window.removeEventListener("pagehide", clearSeatPaths);
+            window.removeEventListener("beforeunload", clearSeatPaths);
+            clearSeatPaths();
         };
     }, [eventId, courtId, user]);
 
