@@ -166,17 +166,18 @@ function Controller() {
 
             heartbeatId = setInterval(() => {
                 if (!isMounted || !presenceActive || !grabbedSeat) return;
-                // Transaction: only refresh lastSeen while we still own the seat.
-                // Prevents post-leave update({lastSeen}) from spawning a ghost node.
+                // Always write full seat payload (deviceId required by rules).
+                // Abort if we no longer own the seat or presence stopped.
                 runTransaction(flatSeatRef, (current) => {
                     if (!presenceActive) return;
-                    if (!current || extractSeatDeviceId(current) !== newDeviceId) {
+                    if (current != null && extractSeatDeviceId(current) !== newDeviceId) {
                         return;
                     }
-                    return {
-                        ...current,
-                        lastSeen: Date.now(),
-                    };
+                    return buildSeatDevicePayload(
+                        newDeviceId,
+                        getDeviceName(),
+                        Date.now()
+                    );
                 }).catch(() => {});
             }, SEAT_HEARTBEAT_INTERVAL_MS);
 

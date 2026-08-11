@@ -33,7 +33,8 @@
           "$courtId": {
             "referees": {
               "$judgeId": {
-                ".write": "auth != null || !data.exists() || newData.val() === null || !data.child('deviceId').exists() || data.child('deviceId').val() === null || data.child('deviceId').val() === newData.child('deviceId').val()"
+                ".write": "auth != null || !data.exists() || newData.val() === null || !data.child('deviceId').exists() || data.child('deviceId').val() === null || data.child('deviceId').val() === newData.child('deviceId').val()",
+                ".validate": "!newData.exists() || newData.hasChild('deviceId')"
               }
             }
           }
