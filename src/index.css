@@ -121,20 +121,13 @@ select option {
     box-shadow: 0 1.562cqi 3.125cqi -0.781cqi rgba(0, 0, 0, 0.6);
 }
 
-.home-container, .court-setup-container, .data-import-container, .screen-container, .landing-page {
+/* Legacy page shells (unused by current Home/CourtSetup/Screen/Landing class names). */
+.home-container, .court-setup-container, .data-import-container, .screen-container {
     container-type: inline-size;
     min-width: 1024px;
     width: 100%;
-}
-
-.home-container, .court-setup-container, .data-import-container, .screen-container {
     height: 100vh;
     overflow-x: auto;
-}
-
-.landing-page {
-    height: 100dvh;
-    overflow: hidden;
 }
 
 /* Hide scrollbar globally but keep functionality */
