@@ -28,29 +28,7 @@
             data.child('coAdmins').hasChild(auth.uid)
           ))
         )",
-        ".validate": "!newData.exists() || newData.hasChild('createdBy')",
-        "courts": {
-          "$courtId": {
-            "referees": {
-              "$judgeId": {
-                ".write": "auth != null || !data.exists() || newData.val() === null || !data.child('deviceId').exists() || data.child('deviceId').val() === null || data.child('deviceId').val() === newData.child('deviceId').val()",
-                ".validate": "!newData.exists() || newData.hasChild('deviceId')"
-              }
-            }
-          }
-        },
-        "matches": {
-          "$matchId": {
-            ".write": "auth != null || (newData.exists() && data.exists() && newData.hasChild('providedCourtId') && newData.hasChild('providedDeviceId') && (
-              root.child('courts').child($eventId).child(newData.child('providedCourtId').val()).child('referees').child('J1').child('deviceId').val() === newData.child('providedDeviceId').val() ||
-              root.child('courts').child($eventId).child(newData.child('providedCourtId').val()).child('referees').child('J2').child('deviceId').val() === newData.child('providedDeviceId').val() ||
-              root.child('courts').child($eventId).child(newData.child('providedCourtId').val()).child('referees').child('J3').child('deviceId').val() === newData.child('providedDeviceId').val() ||
-              root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J1').child('deviceId').val() === newData.child('providedDeviceId').val() ||
-              root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J2').child('deviceId').val() === newData.child('providedDeviceId').val() ||
-              root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J3').child('deviceId').val() === newData.child('providedDeviceId').val()
-            ))"
-          }
-        }
+        ".validate": "!newData.exists() || (newData.hasChild('createdBy') && !newData.hasChild('courts') && !newData.hasChild('matches'))"
       }
     },
     "courts": {
@@ -106,13 +84,10 @@
           root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
         )",
         "$matchId": {
-          ".write": "auth != null || (newData.exists() && newData.hasChild('providedCourtId') && newData.hasChild('providedDeviceId') && (
+          ".write": "auth != null || (data.exists() && newData.exists() && newData.hasChild('providedCourtId') && newData.hasChild('providedDeviceId') && (
             root.child('courts').child($eventId).child(newData.child('providedCourtId').val()).child('referees').child('J1').child('deviceId').val() === newData.child('providedDeviceId').val() ||
             root.child('courts').child($eventId).child(newData.child('providedCourtId').val()).child('referees').child('J2').child('deviceId').val() === newData.child('providedDeviceId').val() ||
-            root.child('courts').child($eventId).child(newData.child('providedCourtId').val()).child('referees').child('J3').child('deviceId').val() === newData.child('providedDeviceId').val() ||
-            root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J1').child('deviceId').val() === newData.child('providedDeviceId').val() ||
-            root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J2').child('deviceId').val() === newData.child('providedDeviceId').val() ||
-            root.child('events').child($eventId).child('courts').child(newData.child('providedCourtId').val()).child('referees').child('J3').child('deviceId').val() === newData.child('providedDeviceId').val()
+            root.child('courts').child($eventId).child(newData.child('providedCourtId').val()).child('referees').child('J3').child('deviceId').val() === newData.child('providedDeviceId').val()
           ))"
         }
       }
