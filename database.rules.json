@@ -55,9 +55,15 @@
     "courts": {
       ".read": true,
       "$eventId": {
+        ".write": "auth != null && (
+          !root.child('events').child($eventId).exists() ||
+          root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+          root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+        )",
         "$courtId": {
           "name": {
             ".write": "auth != null && (
+              !root.child('events').child($eventId).exists() ||
               root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
               root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
             )"
@@ -69,17 +75,20 @@
           },
           "currentMatchId": {
             ".write": "auth != null && (
+              !root.child('events').child($eventId).exists() ||
               root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
               root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
             )"
           },
           "config": {
             ".write": "auth != null && (
+              !root.child('events').child($eventId).exists() ||
               root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
               root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
             )"
           },
           ".write": "auth != null && (
+            !root.child('events').child($eventId).exists() ||
             root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
             root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
           )"
@@ -89,6 +98,11 @@
     "matchLive": {
       ".read": true,
       "$eventId": {
+        ".write": "auth != null && (
+          !root.child('events').child($eventId).exists() ||
+          root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+          root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+        )",
         "$matchId": {
           ".write": "auth != null || (newData.exists() && newData.hasChild('providedCourtId') && newData.hasChild('providedDeviceId') && (
             root.child('courts').child($eventId).child(newData.child('providedCourtId').val()).child('referees').child('J1').child('deviceId').val() === newData.child('providedDeviceId').val() ||
@@ -104,37 +118,42 @@
     "matchIndex": {
       ".read": true,
       "$eventId": {
+        ".write": "auth != null && (
+          !root.child('events').child($eventId).exists() ||
+          root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+          root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+        )",
         "$matchId": {
           ".write": "auth != null && (
+            !root.child('events').child($eventId).exists() ||
             root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
             root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
           )"
-        },
-        ".write": "auth != null && (
-          root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
-          root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
-        )"
+        }
       }
     },
     "matches": {
       ".read": true,
       "$eventId": {
+        ".write": "auth != null && (
+          !root.child('events').child($eventId).exists() ||
+          root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
+          root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
+        )",
         "$matchId": {
           "config": {
             ".write": "auth != null && (
+              !root.child('events').child($eventId).exists() ||
               root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
               root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
             )"
           },
           ".write": "auth != null && (
+            !root.child('events').child($eventId).exists() ||
             root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
             root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
           )"
-        },
-        ".write": "auth != null && (
-          root.child('events').child($eventId).child('createdBy').val() === auth.uid ||
-          root.child('events').child($eventId).child('coAdmins').hasChild(auth.uid)
-        )"
+        }
       }
     }
   }
