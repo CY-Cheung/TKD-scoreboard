@@ -201,10 +201,12 @@ export function applyDirectPointsStat(matchData, {
  * @param {object} action side, type, index, delta, courtId, deviceId, seatName, mode
  * @param {{ voteNow: number, pauseNow: number }} clocks
  *   voteNow = Date.now() + serverOffset; pauseNow = Date.now() (legacy)
+ * @param {{ scored?: boolean }|null} [meta] optional out-param: meta.scored = points applied
  * @returns {object|undefined} matchData to commit, or undefined to abort
  */
-export function applyScoreAndCheckRules(matchData, action, clocks) {
+export function applyScoreAndCheckRules(matchData, action, clocks, meta = null) {
   if (!matchData) return;
+  if (meta) meta.scored = false;
 
   const {
     side,
@@ -231,8 +233,10 @@ export function applyScoreAndCheckRules(matchData, action, clocks) {
 
   if (type === "gamjeom") {
     applyGamjeomDelta(targetSide, delta, { avoiding: false });
+    if (meta) meta.scored = delta !== 0;
   } else if (type === "gamjeomAvoiding") {
     applyGamjeomDelta(targetSide, delta, { avoiding: true });
+    if (meta) meta.scored = delta !== 0;
   } else if (type === "pointsStat") {
     if (mode === "multiple" && seatName) {
       const voteResult = applyMultipleModeVote(matchData, {
@@ -244,8 +248,10 @@ export function applyScoreAndCheckRules(matchData, action, clocks) {
         voteNow,
       });
       if (voteResult.earlyReturn) {
+        if (meta) meta.scored = false;
         return matchData;
       }
+      if (meta) meta.scored = voteResult.scored === true;
     } else {
       applyDirectPointsStat(matchData, {
         side,
@@ -254,6 +260,7 @@ export function applyScoreAndCheckRules(matchData, action, clocks) {
         seatName,
         voteNow,
       });
+      if (meta) meta.scored = delta > 0;
     }
   }
 
