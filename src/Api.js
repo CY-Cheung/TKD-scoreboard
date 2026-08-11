@@ -10,7 +10,6 @@ import {
     dualUpdateMatchState,
     dualUpdateMatchStatsSide,
     dualUpdateMatchConfigCompetitors,
-    mirrorMatchLive,
     runMatchLiveTransaction,
     fetchMatchConfigForRules,
 } from './services/matchFirebase.js';
@@ -279,6 +278,3 @@ export const finalizeIvrAnnouncement = async (eventName, matchId, eventSettings 
         return matchData;
     });
 };
-
-/** Re-export for callers that create matches and need an initial live mirror. */
-export { mirrorMatchLive };

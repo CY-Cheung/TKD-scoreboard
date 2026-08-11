@@ -179,18 +179,23 @@ export function subscribePreferFlatCourt(
 
 const REFEREE_SEATS = Object.freeze(["J1", "J2", "J3"]);
 
-/** Merge flat + legacy referee maps (legacy only as optional fill-in). */
-export function mergeRefereeMaps(flatVal, legacyVal) {
-  const merged = {};
+/** Normalize a referees map to J1–J3 keys only. */
+export function normalizeRefereeMap(refereesVal) {
+  const out = {};
   for (const seat of REFEREE_SEATS) {
-    const value = flatVal?.[seat] ?? legacyVal?.[seat] ?? null;
-    if (value != null) merged[seat] = value;
+    const value = refereesVal?.[seat] ?? null;
+    if (value != null) out[seat] = value;
   }
-  return merged;
+  return out;
+}
+
+/** @deprecated Use normalizeRefereeMap — second arg ignored. */
+export function mergeRefereeMaps(flatVal, _legacyVal) {
+  return normalizeRefereeMap(flatVal);
 }
 
 /**
- * Subscribe to J1–J3 on flat courts only (Stage 5).
+ * Subscribe to J1–J3 on flat courts only.
  */
 export function subscribeCourtReferees(database, eventId, courtId, onData) {
   const flatRef = ref(
@@ -199,7 +204,7 @@ export function subscribeCourtReferees(database, eventId, courtId, onData) {
   );
 
   return onValue(flatRef, (snap) => {
-    onData(mergeRefereeMaps(snap.exists() ? snap.val() : null, null));
+    onData(normalizeRefereeMap(snap.exists() ? snap.val() : null));
   });
 }
 
@@ -227,13 +232,15 @@ export function eventPayloadWithoutCourts(eventData) {
 }
 
 /**
- * Stage 5+ write shape for events/{id}: meta + settings only.
+ * Write shape for events/{id}: meta + settings only.
  * Courts → top-level courts/; matches → matches/…/config + matchLive + matchIndex.
- * `matchConfigOnly` kept for call-site compatibility (ignored).
  */
-export function eventPayloadForLegacyWrite(eventData, _matchConfigOnly) {
+export function eventMetaPayloadForWrite(eventData) {
   const base = eventPayloadWithoutCourts(eventData);
   if (!base || typeof base !== "object") return base;
   const { matches: _ignoredMatches, ...rest } = base;
   return rest;
 }
+
+/** @deprecated Use eventMetaPayloadForWrite */
+export const eventPayloadForLegacyWrite = eventMetaPayloadForWrite;

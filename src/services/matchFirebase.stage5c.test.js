@@ -23,7 +23,7 @@ describe("buildMatchLiveTransactionCommit (Stage 5c)", () => {
     ).toBeUndefined();
   });
 
-  it("bootstraps from legacy payload when live is null", () => {
+  it("bootstraps from empty shell when live is null", () => {
     const commit = buildMatchLiveTransactionCommit(
       null,
       live,

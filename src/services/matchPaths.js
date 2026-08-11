@@ -1,9 +1,9 @@
 /**
- * Match path helpers — Stage 3–4 RTDB flattening.
+ * Match path helpers — flat RTDB layout.
  * @see docs/FIREBASE_FLATTENING_PLAN.md
  */
 
-/** Legacy full match (config + live): events/{eventId}/matches/{matchId} */
+/** Leftover nested match path (cleanup only): events/{eventId}/matches/{matchId} */
 export function legacyMatchPath(eventId, matchId, ...segments) {
   const base = `events/${eventId}/matches/${matchId}`;
   return segments.length ? `${base}/${segments.join("/")}` : base;
@@ -23,12 +23,7 @@ export function matchLiveRoot(eventId) {
   return `matchLive/${eventId}`;
 }
 
-/** Static config under legacy match. */
-export function legacyMatchConfigPath(eventId, matchId) {
-  return legacyMatchPath(eventId, matchId, "config");
-}
-
-/** Stage 4: static config only — matches/{eventId}/{matchId}/config */
+/** Static config: matches/{eventId}/{matchId}/config */
 export function flatMatchConfigPath(eventId, matchId, ...segments) {
   const base = `matches/${eventId}/${matchId}/config`;
   return segments.length ? `${base}/${segments.join("/")}` : base;
@@ -38,7 +33,7 @@ export function flatMatchesRoot(eventId) {
   return `matches/${eventId}`;
 }
 
-/** Stage 4: bracket/list summary — matchIndex/{eventId}/{matchId} */
+/** Bracket/list summary: matchIndex/{eventId}/{matchId} */
 export function matchIndexPath(eventId, matchId) {
   return `matchIndex/${eventId}/${matchId}`;
 }
@@ -57,35 +52,7 @@ export const MATCH_LIVE_KEYS = Object.freeze([
   "updatedAt",
 ]);
 
-/** Live keys stored under legacy events/…/matches (no updatedAt). */
-export const LEGACY_MATCH_LIVE_STRIP_KEYS = Object.freeze([
-  "state",
-  "stats",
-  "votes",
-  "recentScores",
-  "providedCourtId",
-  "providedDeviceId",
-]);
-
-/** Firebase update patch that deletes legacy live fields (keeps config). */
-export function buildLegacyMatchLiveStripPatch() {
-  const patch = {};
-  for (const key of LEGACY_MATCH_LIVE_STRIP_KEYS) {
-    patch[key] = null;
-  }
-  return patch;
-}
-
-/**
- * Legacy helper: config-only shape under events/…/matches/{id}.
- * Stage 5+ no longer writes nested matches; kept for tests / one-off cleanup.
- */
-export function legacyMatchConfigOnlyPayload(matchData) {
-  const config = extractMatchConfig(matchData);
-  return config ? { config } : {};
-}
-
-/** Pull live fields from a full legacy match object. */
+/** Pull live fields from a match document (or live node). */
 export function extractMatchLivePayload(matchData, now = Date.now()) {
   // Always include updatedAt so matchLive/{event}/{match} materializes in Console
   // even when other live fields are still null (Firebase omits all-null sets).
@@ -169,22 +136,4 @@ export function assembleMatchesFromFlat(flatMatchesVal, liveVal) {
     };
   }
   return out;
-}
-
-/** Merge legacy config + live payload into the shape UI expects. */
-export function mergeMatchView(config, livePayload, legacyFallback = null) {
-  if (livePayload) {
-    return {
-      config: config ?? legacyFallback?.config ?? null,
-      state: livePayload.state ?? legacyFallback?.state ?? null,
-      stats: livePayload.stats ?? legacyFallback?.stats ?? null,
-      votes: livePayload.votes ?? legacyFallback?.votes ?? null,
-      recentScores: livePayload.recentScores ?? legacyFallback?.recentScores ?? null,
-      providedCourtId:
-        livePayload.providedCourtId ?? legacyFallback?.providedCourtId ?? null,
-      providedDeviceId:
-        livePayload.providedDeviceId ?? legacyFallback?.providedDeviceId ?? null,
-    };
-  }
-  return legacyFallback;
 }

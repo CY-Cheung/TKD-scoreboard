@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ref, set, remove } from "firebase/database";
+import { ref, set } from "firebase/database";
 import { database } from '../../firebase';
 import { usePopup } from '../../Context/PopupContext';
 import './DataImport.css';
@@ -25,7 +25,7 @@ import {
 import {
     dualSetCourtField,
     mirrorCourtsMapToFlat,
-    eventPayloadForLegacyWrite,
+    eventMetaPayloadForWrite,
     removeLegacyCourtsForEvent,
 } from '../../services/courtFirebase';
 import {
@@ -222,7 +222,7 @@ const DataImport = () => {
                 // Stage 5+: events/{id} meta + settings only; matches → flat.
                 await set(
                     ref(database, `events/${record.id}`),
-                    eventPayloadForLegacyWrite(record.data)
+                    eventMetaPayloadForWrite(record.data)
                 );
                 await writeEventIndexEntry(database, record.id, record.data);
                 await mirrorCourtsMapToFlat(database, record.id, record.data.courts);
@@ -290,8 +290,6 @@ const DataImport = () => {
         setIsDeleting(true);
 
         try {
-            const matchRef = ref(database, `events/${eventName}/matches/${selectedMatchId}`);
-            await remove(matchRef);
             await removeMatchFlatArtifacts(database, eventName, selectedMatchId);
             showToast(`🗑️ 場次 ${selectedMatchId} 已成功刪除！`);
             setSelectedMatchId(null);

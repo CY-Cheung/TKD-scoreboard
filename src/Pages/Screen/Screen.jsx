@@ -33,7 +33,6 @@ import {
 import {
     dualUpdateMatchState,
     subscribeMatchView,
-    backfillMatchLiveFromLegacy,
     ensureMatchLiveExists,
 } from "../../services/matchFirebase";
 import {
@@ -227,9 +226,6 @@ function Screen() {
         if (!selectedEvent || !currentMatchId) return;
         let cancelled = false;
         ensureMatchLiveExists(database, selectedEvent, currentMatchId)
-            .then(() =>
-                backfillMatchLiveFromLegacy(database, selectedEvent, currentMatchId)
-            )
             .catch((err) => {
                 if (cancelled) return;
                 console.error("matchLive ensure failed:", err);
@@ -237,7 +233,7 @@ function Screen() {
                     ...prev,
                     {
                         id: Date.now(),
-                        text: "matchLive write failed — publish rules + stay Google-signed-in (see console)",
+                        text: "matchLive write failed — publish database.rules.json + stay Google-signed-in (see console)",
                     },
                 ]);
             });

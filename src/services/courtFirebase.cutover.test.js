@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
   eventPayloadWithoutCourts,
-  eventPayloadForLegacyWrite,
+  eventMetaPayloadForWrite,
+  normalizeRefereeMap,
   mergeRefereeMaps,
 } from "./courtFirebase.js";
 
-describe("eventPayloadWithoutCourts (Stage 5b)", () => {
+describe("eventPayloadWithoutCourts", () => {
   it("strips nested courts and keeps other event fields", () => {
     expect(
       eventPayloadWithoutCourts({
@@ -36,24 +37,21 @@ describe("eventPayloadWithoutCourts (Stage 5b)", () => {
   });
 });
 
-describe("eventPayloadForLegacyWrite (Stage 5+)", () => {
+describe("eventMetaPayloadForWrite", () => {
   it("strips courts and matches; keeps meta/settings only", () => {
-    const out = eventPayloadForLegacyWrite(
-      {
-        EventName: "Day1",
-        createdBy: "uid1",
-        settings: { maxGamjeom: 5 },
-        courts: { court1: {} },
-        matches: {
-          A1: {
-            config: { matchId: "A1" },
-            state: { isPaused: true },
-            stats: { red: {} },
-          },
+    const out = eventMetaPayloadForWrite({
+      EventName: "Day1",
+      createdBy: "uid1",
+      settings: { maxGamjeom: 5 },
+      courts: { court1: {} },
+      matches: {
+        A1: {
+          config: { matchId: "A1" },
+          state: { isPaused: true },
+          stats: { red: {} },
         },
       },
-      (m) => ({ config: m.config })
-    );
+    });
     expect(out).toEqual({
       EventName: "Day1",
       createdBy: "uid1",
@@ -62,19 +60,23 @@ describe("eventPayloadForLegacyWrite (Stage 5+)", () => {
   });
 });
 
-describe("mergeRefereeMaps cutover preference", () => {
-  it("fills missing flat seats from legacy when both maps provided", () => {
+describe("normalizeRefereeMap", () => {
+  it("keeps only J1–J3 seats", () => {
     expect(
-      mergeRefereeMaps({ J1: { deviceId: "a" } }, { J2: { deviceId: "b" } })
+      normalizeRefereeMap({
+        J1: { deviceId: "a" },
+        J2: { deviceId: "b" },
+        extra: { deviceId: "x" },
+      })
     ).toEqual({
       J1: { deviceId: "a" },
       J2: { deviceId: "b" },
     });
   });
 
-  it("ignores legacy when caller passes null (flat-primary emit)", () => {
+  it("mergeRefereeMaps ignores legacy second arg", () => {
     expect(
-      mergeRefereeMaps({ J1: { deviceId: "flat" } }, null)
+      mergeRefereeMaps({ J1: { deviceId: "flat" } }, { J1: { deviceId: "legacy" } })
     ).toEqual({ J1: { deviceId: "flat" } });
   });
 });

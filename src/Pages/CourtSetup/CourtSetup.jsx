@@ -23,7 +23,7 @@ import {
   mirrorCourtsMapToFlat,
   removeFlatCourtsForEvent,
   dualUpdateCourtField,
-  eventPayloadForLegacyWrite,
+  eventMetaPayloadForWrite,
   removeLegacyCourtsForEvent,
   ensureFlatCourtsAndStripLegacy,
   clearGhostRefereeSeatsForEvent,
@@ -240,7 +240,7 @@ function CourtSetup() {
         // Stage 5+: events/{id} = meta + settings only; matches → flat.
         await set(
           ref(database, `events/${record.id}`),
-          eventPayloadForLegacyWrite(record.data)
+          eventMetaPayloadForWrite(record.data)
         );
         await writeEventIndexEntry(database, record.id, record.data);
         await mirrorCourtsMapToFlat(database, record.id, record.data.courts);

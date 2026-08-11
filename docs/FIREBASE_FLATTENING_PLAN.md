@@ -66,7 +66,7 @@ matchLive/{eventId}/{matchId}/
 5. Court Setup cleanup → `removeLegacyMatchesForEvent`（先 backfill flat，再 `remove(events/…/matches)`）  
 6. Screen／Edit timer／config 讀 `matchData`／flat，唔再讀 legacy path  
 
-**可選後續：** 合入 `main`（Stage 3–5+ PR stack）。
+**可選後續：** 合入 `main`（Stage 3–5+／rules／dead-code PR stack）。
 
 ---
 
@@ -80,3 +80,17 @@ Production `database.rules.json`（同 `database.rules.flattened.skeleton.json`�
 4. Flat `courts/…/referees` 仍要求 `deviceId` `.validate`
 
 Publish：Firebase Console → Realtime Database → Rules，或 `firebase deploy --only database`。
+
+---
+
+## 7. Dead-code cleanup
+
+已刪／簡化（`cursor/firebase-legacy-deadcode-8215`）：
+
+- `runLegacyMatchTransaction`、`mirrorLiveFieldsToLegacy`、legacy matchLive bootstrap／backfill／strip-live-fields  
+- `fetchMatchConfigForRules`／`fetchMatchesForEvent`／Screen ensure → **flat-only**  
+- `legacyMatchConfigOnlyPayload`、`mergeMatchView`、strip-live patch helpers  
+- DataImport 刪場次只清 flat artifacts  
+- `eventMetaPayloadForWrite`（取代 legacy write helper 名）
+
+**仍保留（cleanup only）：** `removeLegacyMatchesForEvent`、`backfillMatchFlatFromLegacyEvent`、`removeLegacyCourtsForEvent`／`ensureFlatCourtsAndStripLegacy`。

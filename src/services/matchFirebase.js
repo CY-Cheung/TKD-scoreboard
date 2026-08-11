@@ -9,15 +9,11 @@ import {
 } from "firebase/database";
 import {
   assembleMatchesFromFlat,
-  buildLegacyMatchLiveStripPatch,
   extractMatchConfig,
   extractMatchIndexPayload,
   extractMatchLivePayload,
   flatMatchConfigPath,
   flatMatchesRoot,
-  LEGACY_MATCH_LIVE_STRIP_KEYS,
-  legacyMatchConfigPath,
-  legacyMatchPath,
   legacyMatchesRoot,
   matchIndexPath,
   matchIndexRoot,
@@ -42,7 +38,7 @@ export async function mirrorMatchIndex(database, eventId, matchId, matchData) {
 }
 
 /**
- * Stage 4: after writing a full legacy match, mirror config + index + live.
+ * Write flat match artifacts: matches/…/config + matchIndex + matchLive.
  * Soft-fails individually so one path cannot block the others.
  */
 export async function mirrorMatchFlatArtifacts(
@@ -101,7 +97,7 @@ export async function removeMatchIndexForEvent(database, eventId) {
   await remove(ref(database, matchIndexRoot(eventId)));
 }
 
-/** Remove Stage 3–4 top-level match trees for one match. */
+/** Remove top-level match trees for one match. */
 export async function removeMatchFlatArtifacts(database, eventId, matchId) {
   const tasks = [
     () => removeMatchLive(database, eventId, matchId),
@@ -117,7 +113,7 @@ export async function removeMatchFlatArtifacts(database, eventId, matchId) {
   }
 }
 
-/** Remove Stage 3–4 top-level match trees for a whole event (orphan cleanup). */
+/** Remove top-level match trees for a whole event (orphan cleanup). */
 export async function removeMatchFlatArtifactsForEvent(database, eventId) {
   const tasks = [
     () => removeMatchLiveForEvent(database, eventId),
@@ -133,68 +129,14 @@ export async function removeMatchFlatArtifactsForEvent(database, eventId) {
   }
 }
 
-/**
- * Run transaction on legacy full match (needs config), then mirror live tree.
- * @deprecated Stage 5c — prefer runMatchLiveTransaction
- */
-export async function runLegacyMatchTransaction(
-  database,
-  eventId,
-  matchId,
-  transactionUpdate
-) {
-  const matchRef = ref(database, legacyMatchPath(eventId, matchId));
-  const result = await runTransaction(matchRef, transactionUpdate);
-  if (result.committed && result.snapshot.exists()) {
-    try {
-      await mirrorMatchLive(database, eventId, matchId, result.snapshot.val());
-    } catch (err) {
-      logMatchLiveMirrorFailure("mirror after tx", err);
-    }
-  }
-  return result;
-}
-
-/** Prefer flat matches/…/config; fallback legacy events/…/matches/…/config. */
+/** Flat matches/…/config only (rules inject for scoring TX). */
 export async function fetchMatchConfigForRules(database, eventId, matchId) {
   const flatSnap = await get(ref(database, flatMatchConfigPath(eventId, matchId)));
-  if (flatSnap.exists()) return flatSnap.val();
-  const legacySnap = await get(
-    ref(database, legacyMatchConfigPath(eventId, matchId))
-  );
-  return legacySnap.exists() ? legacySnap.val() : null;
-}
-
-export async function bootstrapMatchLivePayloadFromLegacy(
-  database,
-  eventId,
-  matchId
-) {
-  const snap = await get(ref(database, legacyMatchPath(eventId, matchId)));
-  if (!snap.exists()) return null;
-  return extractMatchLivePayload(snap.val());
-}
-
-/** Reverse dual-write: copy live fields onto legacy match (keep config). */
-export async function mirrorLiveFieldsToLegacy(
-  database,
-  eventId,
-  matchId,
-  liveData
-) {
-  const payload = extractMatchLivePayload(liveData);
-  await update(ref(database, legacyMatchPath(eventId, matchId)), {
-    state: payload.state,
-    stats: payload.stats,
-    votes: payload.votes,
-    recentScores: payload.recentScores,
-    providedCourtId: payload.providedCourtId,
-    providedDeviceId: payload.providedDeviceId,
-  });
+  return flatSnap.exists() ? flatSnap.val() : null;
 }
 
 /**
- * Pure helper for Stage 5c live TX view:
+ * Pure helper for matchLive TX view:
  * inject config for rules, commit only MATCH_LIVE_KEYS.
  * @returns {object|undefined} payload to write at matchLive path
  */
@@ -217,22 +159,17 @@ export function buildMatchLiveTransactionCommit(
   return extractMatchLivePayload(updated, now);
 }
 
-/** Ensure matchLive node exists (bootstrap from legacy once, else empty shell). */
+/** Ensure matchLive node exists (empty shell if missing). */
 export async function ensureMatchLiveExists(database, eventId, matchId) {
   const liveRef = ref(database, matchLivePath(eventId, matchId));
   const snap = await get(liveRef);
   if (snap.exists()) return;
-  const boot = await bootstrapMatchLivePayloadFromLegacy(
-    database,
-    eventId,
-    matchId
-  );
-  await set(liveRef, boot || extractMatchLivePayload({}));
+  await set(liveRef, extractMatchLivePayload({}));
 }
 
 /**
- * Stage 5c/5: transaction on matchLive (primary).
- * Injects flat/legacy config for scoring rules.
+ * Transaction on matchLive (primary).
+ * Injects flat config for scoring rules.
  */
 export async function runMatchLiveTransaction(
   database,
@@ -243,12 +180,7 @@ export async function runMatchLiveTransaction(
   const config = await fetchMatchConfigForRules(database, eventId, matchId);
   const liveRef = ref(database, matchLivePath(eventId, matchId));
   const liveSnap = await get(liveRef);
-  let bootstrap = null;
-  if (!liveSnap.exists()) {
-    bootstrap =
-      (await bootstrapMatchLivePayloadFromLegacy(database, eventId, matchId)) ||
-      extractMatchLivePayload({});
-  }
+  const bootstrap = liveSnap.exists() ? null : extractMatchLivePayload({});
 
   return runTransaction(liveRef, (current) =>
     buildMatchLiveTransactionCommit(current, bootstrap, config, transactionUpdate)
@@ -256,7 +188,6 @@ export async function runMatchLiveTransaction(
 }
 
 export async function dualUpdateMatchState(database, eventId, matchId, patch) {
-  // Stage 5: matchLive-only state writes (no legacy reverse-mirror).
   try {
     await ensureMatchLiveExists(database, eventId, matchId);
     await update(ref(database, matchLivePath(eventId, matchId, "state")), patch);
@@ -276,7 +207,6 @@ export async function dualUpdateMatchStatsSide(
   side,
   patch
 ) {
-  // Stage 5: matchLive-only stats writes (no legacy reverse-mirror).
   try {
     await ensureMatchLiveExists(database, eventId, matchId);
     await update(
@@ -292,7 +222,7 @@ export async function dualUpdateMatchStatsSide(
   }
 }
 
-/** Flat-only competitor patch + refresh matchIndex (Stage 5+). */
+/** Flat-only competitor patch + refresh matchIndex. */
 export async function dualUpdateMatchConfigCompetitors(
   database,
   eventId,
@@ -317,7 +247,7 @@ export async function dualUpdateMatchConfigCompetitors(
 }
 
 /**
- * Subscribe to match view from flat config + matchLive only (Stage 5+).
+ * Subscribe to match view from flat config + matchLive only.
  */
 export function subscribeMatchView(database, eventId, matchId, onData) {
   let flatConfig = null;
@@ -379,24 +309,8 @@ export function subscribeMatchView(database, eventId, matchId, onData) {
 }
 
 /**
- * Best-effort: copy live fields from an existing legacy match into matchLive.
- * @returns {Promise<true|false|null>} true ok, false permission/write failed, null if no legacy match
- */
-export async function backfillMatchLiveFromLegacy(database, eventId, matchId) {
-  const snap = await get(ref(database, legacyMatchPath(eventId, matchId)));
-  if (!snap.exists()) return null;
-  try {
-    await mirrorMatchLive(database, eventId, matchId, snap.val());
-    return true;
-  } catch (err) {
-    logMatchLiveMirrorFailure("backfill from legacy", err);
-    return false;
-  }
-}
-
-/**
- * Stage 4 batch: copy every legacy match under an event into
- * matches/…/config + matchIndex + matchLive.
+ * One-shot cleanup helper: copy every legacy nested match into flat trees.
+ * Kept for Court Setup strip of leftover events/…/matches.
  */
 export async function backfillMatchFlatFromLegacyEvent(database, eventId) {
   const snap = await get(ref(database, legacyMatchesRoot(eventId)));
@@ -411,79 +325,21 @@ export async function backfillMatchFlatFromLegacyEvent(database, eventId) {
 }
 
 /**
- * Prefer flat matches+matchLive; fallback legacy and best-effort backfill.
+ * Load UI matches from flat matches + matchLive only.
  * Returns UI-shaped { [matchId]: { config, state, stats, … } }.
  */
 export async function fetchMatchesForEvent(database, eventId) {
   const flatSnap = await get(ref(database, flatMatchesRoot(eventId)));
-  if (flatSnap.exists()) {
-    const liveSnap = await get(ref(database, matchLiveRoot(eventId)));
-    return assembleMatchesFromFlat(
-      flatSnap.val(),
-      liveSnap.exists() ? liveSnap.val() : {}
-    );
-  }
-
-  const legacySnap = await get(ref(database, legacyMatchesRoot(eventId)));
-  if (!legacySnap.exists()) return {};
-
-  const legacyVal = legacySnap.val() || {};
-  try {
-    await backfillMatchFlatFromLegacyEvent(database, eventId);
-  } catch (err) {
-    console.warn("match flat backfill skipped:", err?.message || err);
-  }
-  return legacyVal;
+  if (!flatSnap.exists()) return {};
+  const liveSnap = await get(ref(database, matchLiveRoot(eventId)));
+  return assembleMatchesFromFlat(
+    flatSnap.val(),
+    liveSnap.exists() ? liveSnap.val() : {}
+  );
 }
 
 /**
- * Stage 5+: for each legacy match, ensure matchLive has a copy, then delete
- * state/stats/votes/recentScores/provided* from events/…/matches/{id}.
- * Keeps `config` on the legacy node.
- */
-export async function stripLegacyMatchLiveFieldsForEvent(database, eventId) {
-  const snap = await get(ref(database, legacyMatchesRoot(eventId)));
-  if (!snap.exists()) {
-    return { stripped: 0, ensuredLive: 0, skipped: 0, errors: [] };
-  }
-
-  const matches = snap.val() || {};
-  const patch = buildLegacyMatchLiveStripPatch();
-  let stripped = 0;
-  let ensuredLive = 0;
-  let skipped = 0;
-  const errors = [];
-
-  for (const [matchId, matchData] of Object.entries(matches)) {
-    const hasLive = LEGACY_MATCH_LIVE_STRIP_KEYS.some(
-      (key) => matchData?.[key] != null
-    );
-    if (!hasLive) {
-      skipped += 1;
-      continue;
-    }
-    try {
-      const liveRef = ref(database, matchLivePath(eventId, matchId));
-      const liveSnap = await get(liveRef);
-      if (!liveSnap.exists()) {
-        await mirrorMatchLive(database, eventId, matchId, matchData);
-        ensuredLive += 1;
-      }
-      await update(ref(database, legacyMatchPath(eventId, matchId)), patch);
-      stripped += 1;
-    } catch (err) {
-      errors.push({
-        matchId,
-        error: err?.code || err?.message || String(err),
-      });
-    }
-  }
-
-  return { stripped, ensuredLive, skipped, errors };
-}
-
-/**
- * Stage 5+: backfill flat artifacts from legacy if needed, then delete
+ * Cleanup: backfill flat artifacts from leftover legacy matches, then delete
  * the entire events/{eventId}/matches tree.
  */
 export async function removeLegacyMatchesForEvent(database, eventId) {
@@ -496,7 +352,7 @@ export async function removeLegacyMatchesForEvent(database, eventId) {
     await backfillMatchFlatFromLegacyEvent(database, eventId);
   } catch (err) {
     console.warn(
-      "[stage5+] flat backfill before legacy matches remove:",
+      "[cleanup] flat backfill before legacy matches remove:",
       err?.message || err
     );
   }

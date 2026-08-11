@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   legacyMatchPath,
+  legacyMatchesRoot,
   matchLivePath,
   flatMatchConfigPath,
   matchIndexPath,
@@ -8,16 +9,14 @@ import {
   extractMatchConfig,
   extractMatchIndexPayload,
   assembleMatchesFromFlat,
-  mergeMatchView,
-  buildLegacyMatchLiveStripPatch,
-  legacyMatchConfigOnlyPayload,
 } from "./matchPaths.js";
 
 describe("matchPaths", () => {
-  it("builds legacy, live, flat config, and index paths", () => {
+  it("builds legacy cleanup, live, flat config, and index paths", () => {
     expect(legacyMatchPath("e1", "m1", "state")).toBe(
       "events/e1/matches/m1/state"
     );
+    expect(legacyMatchesRoot("e1")).toBe("events/e1/matches");
     expect(matchLivePath("e1", "m1", "stats", "red")).toBe(
       "matchLive/e1/m1/stats/red"
     );
@@ -86,36 +85,5 @@ describe("matchPaths", () => {
     expect(assembled.m1.config.matchId).toBe("m1");
     expect(assembled.m1.state.timer).toBe(10);
     expect(assembled.m1.stats.red).toEqual({});
-  });
-
-  it("mergeMatchView prefers live over legacy", () => {
-    const merged = mergeMatchView(
-      { matchId: "m1" },
-      { state: { timer: 10 }, stats: null, votes: null, recentScores: null },
-      { config: { matchId: "old" }, state: { timer: 99 } }
-    );
-    expect(merged.config.matchId).toBe("m1");
-    expect(merged.state.timer).toBe(10);
-  });
-
-  it("buildLegacyMatchLiveStripPatch nulls live keys only", () => {
-    expect(buildLegacyMatchLiveStripPatch()).toEqual({
-      state: null,
-      stats: null,
-      votes: null,
-      recentScores: null,
-      providedCourtId: null,
-      providedDeviceId: null,
-    });
-  });
-
-  it("legacyMatchConfigOnlyPayload keeps config only", () => {
-    expect(
-      legacyMatchConfigOnlyPayload({
-        config: { matchId: "A1" },
-        state: { timer: 1 },
-        stats: {},
-      })
-    ).toEqual({ config: { matchId: "A1" } });
   });
 });
