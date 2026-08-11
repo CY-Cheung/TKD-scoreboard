@@ -68,6 +68,8 @@ App 內 backfill：`backfillMatchFlatFromLegacyEvent`（Data Import 開 match �
 
 刪 Event → 清 `eventIndex`／`courts`／`matches`／`matchLive`／`matchIndex` + `events`（防 orphan）。
 
+**Stage 5a（orphan cleanup）：** Court Setup → **Clean Orphan Data** — 掃描頂層 `courts`／`matches`／`matchIndex`／`matchLive` 入面、唔喺 `eventIndex∪events` 嘅 eventId，確認後刪除。
+
 ---
 
 ## 6. Stage 4 progress（本分支）
