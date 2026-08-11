@@ -23,7 +23,7 @@ import {
   mirrorCourtsMapToFlat,
   removeFlatCourtsForEvent,
   dualUpdateCourtField,
-  eventPayloadWithoutCourts,
+  eventPayloadForLegacyWrite,
   removeLegacyCourtsForEvent,
   ensureFlatCourtsAndStripLegacy,
   clearGhostRefereeSeatsForEvent,
@@ -31,7 +31,9 @@ import {
 import {
   mirrorMatchFlatArtifacts,
   removeMatchFlatArtifactsForEvent,
+  stripLegacyMatchLiveFieldsForEvent,
 } from '../../services/matchFirebase';
+import { legacyMatchConfigOnlyPayload } from '../../services/matchPaths';
 import {
   scanOrphanFirebaseTrees,
   removeAllOrphanTrees,
@@ -236,10 +238,10 @@ function CourtSetup() {
       });
 
       for (const record of records) {
-        // Stage 5b/5: events/{id} no longer stores nested courts — only courts/{e}/{c}.
+        // Stage 5: events/{id} = meta + settings + matches/{id}/config only.
         await set(
           ref(database, `events/${record.id}`),
-          eventPayloadWithoutCourts(record.data)
+          eventPayloadForLegacyWrite(record.data, legacyMatchConfigOnlyPayload)
         );
         await writeEventIndexEntry(database, record.id, record.data);
         await mirrorCourtsMapToFlat(database, record.id, record.data.courts);
@@ -396,7 +398,7 @@ function CourtSetup() {
     }
   };
 
-  /** Stage 5: strip nested events/…/courts + clear ghost J1–J3 seats. */
+  /** Stage 5: strip nested courts, ghost seats, and legacy match live fields. */
   const runFlattenCleanup = async () => {
     if (!user) {
       showToast('🔒 請先登入 Google 帳號。');
@@ -410,6 +412,10 @@ function CourtSetup() {
     try {
       const strip = await ensureFlatCourtsAndStripLegacy(database, selectedEvent);
       const ghosts = await clearGhostRefereeSeatsForEvent(database, selectedEvent);
+      const liveStrip = await stripLegacyMatchLiveFieldsForEvent(
+        database,
+        selectedEvent
+      );
       const ids = strip.courtIds || [];
       setCourtOptions(ids);
 
@@ -426,6 +432,15 @@ function CourtSetup() {
       } else {
         parts.push('冇鬼座位要清');
       }
+      parts.push(
+        `legacy match live：清咗 ${liveStrip.stripped}` +
+          (liveStrip.ensuredLive
+            ? `（先補 matchLive ${liveStrip.ensuredLive}）`
+            : '') +
+          (liveStrip.errors.length
+            ? `；失敗 ${liveStrip.errors.length}`
+            : '')
+      );
       showToast(parts.join('。'));
     } catch (err) {
       console.error('Flatten cleanup failed:', err);
@@ -657,12 +672,12 @@ function CourtSetup() {
                       en={
                         isFlattenCleaning
                           ? 'Cleaning…'
-                          : 'Strip nested courts + ghosts'
+                          : 'Strip courts / ghosts / match live'
                       }
                       zh={
                         isFlattenCleaning
                           ? '清理中…'
-                          : '清巢狀 courts＋鬼座位'
+                          : '清 courts／鬼位／match live'
                       }
                     />
                   </Button>

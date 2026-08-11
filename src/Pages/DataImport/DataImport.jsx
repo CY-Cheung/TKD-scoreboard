@@ -25,7 +25,7 @@ import {
 import {
     dualSetCourtField,
     mirrorCourtsMapToFlat,
-    eventPayloadWithoutCourts,
+    eventPayloadForLegacyWrite,
     removeLegacyCourtsForEvent,
 } from '../../services/courtFirebase';
 import {
@@ -33,6 +33,7 @@ import {
     removeMatchFlatArtifacts,
     fetchMatchesForEvent,
 } from '../../services/matchFirebase';
+import { legacyMatchConfigOnlyPayload } from '../../services/matchPaths';
 
 // A helper function to parse name and club from old format
 const parseName = (fullName) => {
@@ -219,10 +220,10 @@ const DataImport = () => {
             });
 
             for (const record of records) {
-                // Stage 5b/5: strip nested courts from events/{id}; courts live under courts/.
+                // Stage 5: events/{id} meta + match config only; live → matchLive.
                 await set(
                     ref(database, `events/${record.id}`),
-                    eventPayloadWithoutCourts(record.data)
+                    eventPayloadForLegacyWrite(record.data, legacyMatchConfigOnlyPayload)
                 );
                 await writeEventIndexEntry(database, record.id, record.data);
                 await mirrorCourtsMapToFlat(database, record.id, record.data.courts);
@@ -391,7 +392,7 @@ const DataImport = () => {
             });
 
             const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
-            await set(matchRef, newMatch);
+            await set(matchRef, legacyMatchConfigOnlyPayload(newMatch));
             await mirrorMatchFlatArtifacts(database, eventName, matchId, newMatch);
             
             showToast(`Match ${matchId} added to event ${eventName} in Firebase!`);

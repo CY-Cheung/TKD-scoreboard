@@ -9,11 +9,13 @@ import {
 } from "firebase/database";
 import {
   assembleMatchesFromFlat,
+  buildLegacyMatchLiveStripPatch,
   extractMatchConfig,
   extractMatchIndexPayload,
   extractMatchLivePayload,
   flatMatchConfigPath,
   flatMatchesRoot,
+  LEGACY_MATCH_LIVE_STRIP_KEYS,
   legacyMatchConfigPath,
   legacyMatchPath,
   legacyMatchesRoot,
@@ -466,4 +468,50 @@ export async function fetchMatchesForEvent(database, eventId) {
     console.warn("match flat backfill skipped:", err?.message || err);
   }
   return legacyVal;
+}
+
+/**
+ * Stage 5+: for each legacy match, ensure matchLive has a copy, then delete
+ * state/stats/votes/recentScores/provided* from events/…/matches/{id}.
+ * Keeps `config` on the legacy node.
+ */
+export async function stripLegacyMatchLiveFieldsForEvent(database, eventId) {
+  const snap = await get(ref(database, legacyMatchesRoot(eventId)));
+  if (!snap.exists()) {
+    return { stripped: 0, ensuredLive: 0, skipped: 0, errors: [] };
+  }
+
+  const matches = snap.val() || {};
+  const patch = buildLegacyMatchLiveStripPatch();
+  let stripped = 0;
+  let ensuredLive = 0;
+  let skipped = 0;
+  const errors = [];
+
+  for (const [matchId, matchData] of Object.entries(matches)) {
+    const hasLive = LEGACY_MATCH_LIVE_STRIP_KEYS.some(
+      (key) => matchData?.[key] != null
+    );
+    if (!hasLive) {
+      skipped += 1;
+      continue;
+    }
+    try {
+      const liveRef = ref(database, matchLivePath(eventId, matchId));
+      const liveSnap = await get(liveRef);
+      if (!liveSnap.exists()) {
+        await mirrorMatchLive(database, eventId, matchId, matchData);
+        ensuredLive += 1;
+      }
+      await update(ref(database, legacyMatchPath(eventId, matchId)), patch);
+      stripped += 1;
+    } catch (err) {
+      errors.push({
+        matchId,
+        error: err?.code || err?.message || String(err),
+      });
+    }
+  }
+
+  return { stripped, ensuredLive, skipped, errors };
 }

@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { eventPayloadWithoutCourts, mergeRefereeMaps } from "./courtFirebase.js";
+import {
+  eventPayloadWithoutCourts,
+  eventPayloadForLegacyWrite,
+  mergeRefereeMaps,
+} from "./courtFirebase.js";
 
 describe("eventPayloadWithoutCourts (Stage 5b)", () => {
   it("strips nested courts and keeps other event fields", () => {
@@ -29,6 +33,29 @@ describe("eventPayloadWithoutCourts (Stage 5b)", () => {
     const out = eventPayloadWithoutCourts(input);
     expect(out).toEqual(input);
     expect(out).not.toBe(input);
+  });
+});
+
+describe("eventPayloadForLegacyWrite (Stage 5)", () => {
+  it("strips courts and reduces matches to config-only via helper", () => {
+    const out = eventPayloadForLegacyWrite(
+      {
+        EventName: "Day1",
+        courts: { court1: {} },
+        matches: {
+          A1: {
+            config: { matchId: "A1" },
+            state: { isPaused: true },
+            stats: { red: {} },
+          },
+        },
+      },
+      (m) => ({ config: m.config })
+    );
+    expect(out).toEqual({
+      EventName: "Day1",
+      matches: { A1: { config: { matchId: "A1" } } },
+    });
   });
 });
 

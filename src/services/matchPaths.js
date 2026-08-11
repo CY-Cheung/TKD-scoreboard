@@ -57,6 +57,34 @@ export const MATCH_LIVE_KEYS = Object.freeze([
   "updatedAt",
 ]);
 
+/** Live keys stored under legacy events/…/matches (no updatedAt). */
+export const LEGACY_MATCH_LIVE_STRIP_KEYS = Object.freeze([
+  "state",
+  "stats",
+  "votes",
+  "recentScores",
+  "providedCourtId",
+  "providedDeviceId",
+]);
+
+/** Firebase update patch that deletes legacy live fields (keeps config). */
+export function buildLegacyMatchLiveStripPatch() {
+  const patch = {};
+  for (const key of LEGACY_MATCH_LIVE_STRIP_KEYS) {
+    patch[key] = null;
+  }
+  return patch;
+}
+
+/**
+ * Shape used when writing events/…/matches/{id} after Stage 5:
+ * config only — live data belongs in matchLive.
+ */
+export function legacyMatchConfigOnlyPayload(matchData) {
+  const config = extractMatchConfig(matchData);
+  return config ? { config } : {};
+}
+
 /** Pull live fields from a full legacy match object. */
 export function extractMatchLivePayload(matchData, now = Date.now()) {
   // Always include updatedAt so matchLive/{event}/{match} materializes in Console

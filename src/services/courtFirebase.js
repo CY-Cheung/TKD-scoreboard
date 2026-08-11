@@ -225,3 +225,20 @@ export function eventPayloadWithoutCourts(eventData) {
   const { courts: _ignored, ...rest } = eventData;
   return rest;
 }
+
+/**
+ * Stage 5 write shape for events/{id}: no courts; matches keep config only
+ * (live fields go to matchLive via mirrorMatchFlatArtifacts).
+ */
+export function eventPayloadForLegacyWrite(eventData, matchConfigOnly) {
+  const base = eventPayloadWithoutCourts(eventData);
+  if (!base || typeof base !== "object") return base;
+  if (!base.matches || typeof base.matches !== "object" || !matchConfigOnly) {
+    return base;
+  }
+  const matches = {};
+  for (const [matchId, matchData] of Object.entries(base.matches)) {
+    matches[matchId] = matchConfigOnly(matchData);
+  }
+  return { ...base, matches };
+}

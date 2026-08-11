@@ -9,6 +9,8 @@ import {
   extractMatchIndexPayload,
   assembleMatchesFromFlat,
   mergeMatchView,
+  buildLegacyMatchLiveStripPatch,
+  legacyMatchConfigOnlyPayload,
 } from "./matchPaths.js";
 
 describe("matchPaths", () => {
@@ -94,5 +96,26 @@ describe("matchPaths", () => {
     );
     expect(merged.config.matchId).toBe("m1");
     expect(merged.state.timer).toBe(10);
+  });
+
+  it("buildLegacyMatchLiveStripPatch nulls live keys only", () => {
+    expect(buildLegacyMatchLiveStripPatch()).toEqual({
+      state: null,
+      stats: null,
+      votes: null,
+      recentScores: null,
+      providedCourtId: null,
+      providedDeviceId: null,
+    });
+  });
+
+  it("legacyMatchConfigOnlyPayload keeps config only", () => {
+    expect(
+      legacyMatchConfigOnlyPayload({
+        config: { matchId: "A1" },
+        state: { timer: 1 },
+        stats: {},
+      })
+    ).toEqual({ config: { matchId: "A1" } });
   });
 });

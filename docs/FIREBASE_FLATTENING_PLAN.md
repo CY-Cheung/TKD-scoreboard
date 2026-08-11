@@ -64,9 +64,10 @@ matchLive/{eventId}/{matchId}/
 2. `ensureFlatCourtsAndStripLegacy` — backfill flat 後 `remove(events/…/courts)`  
 3. `fetchCourtIds`／Court Setup 選 event 會觸發 strip  
 4. `subscribePreferFlatCourt`／`subscribeCourtReferees`／`getPreferFlatCourt` → **flat-only**  
-5. 建立 event 後 `removeLegacyCourtsForEvent`  
+5. Court Setup 掣「清 courts／鬼位／match live」：strip nested courts、ghost seats、**legacy match live fields**（先確保 matchLive 有副本）  
+6. 新建 event／match：legacy 只寫 `matches/{id}/config`  
 
-**未做：** 刪 production 入面 legacy match 嘅 `state/stats/votes` 舊資料（可手動或後續工具）。
+**仍保留：** legacy `events/…/matches/{id}/config`（同 flat config dual）；可後續再刪。
 
 ---
 
