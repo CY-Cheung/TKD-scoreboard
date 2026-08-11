@@ -89,18 +89,32 @@ export function filterLiveReferees(
   return live;
 }
 
+/** Seat names that are stale ghosts OR lastSeen-only orphans (no deviceId). */
+export function listClearableRefereeSeats(
+  refereesMap,
+  now = Date.now(),
+  staleMs = SEAT_STALE_MS
+) {
+  const merged = refereesMap || {};
+  return REFEREE_SEAT_ORDER.filter((seat) => {
+    const data = merged[seat];
+    if (data == null) return false;
+    if (extractSeatDeviceId(data) == null) return true;
+    return isSeatStale(data, now, staleMs);
+  });
+}
+
 /** Seat names in map that are stale ghosts (have lastSeen but timed out). */
 export function listStaleRefereeSeats(
   refereesMap,
   now = Date.now(),
   staleMs = SEAT_STALE_MS
 ) {
-  const merged = refereesMap || {};
-  return REFEREE_SEAT_ORDER.filter((seat) => isSeatStale(merged[seat], now, staleMs));
+  return listClearableRefereeSeats(refereesMap, now, staleMs);
 }
 
 /**
- * Transaction body: claim empty or stale seat only.
+ * Transaction body: claim empty, deviceId-less ghost, or stale seat only.
  * @returns {object|undefined} device payload to write, or undefined to abort
  */
 export function applySeatClaimTransaction(
@@ -109,7 +123,11 @@ export function applySeatClaimTransaction(
   now = Date.now(),
   staleMs = SEAT_STALE_MS
 ) {
-  if (currentData === null || isSeatStale(currentData, now, staleMs)) {
+  // Vacant: null, or heartbeat ghost left with only lastSeen (no deviceId).
+  if (currentData === null || extractSeatDeviceId(currentData) == null) {
+    return deviceData;
+  }
+  if (isSeatStale(currentData, now, staleMs)) {
     return deviceData;
   }
   return undefined;

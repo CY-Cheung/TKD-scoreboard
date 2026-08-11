@@ -56,6 +56,16 @@ describe("applySeatClaimTransaction", () => {
     ).toEqual(payload);
   });
 
+  it("claims deviceId-less lastSeen ghost immediately", () => {
+    expect(
+      applySeatClaimTransaction(
+        { lastSeen: 9999 },
+        payload,
+        9999
+      )
+    ).toEqual(payload);
+  });
+
   it("aborts when seat is legacy non-null string", () => {
     expect(applySeatClaimTransaction("legacy-id", payload)).toBeUndefined();
   });
@@ -92,6 +102,19 @@ describe("presence / stale seats", () => {
     });
     expect(listStaleRefereeSeats(map, 25_000)).toEqual(["J2"]);
     expect(filterLiveReferees(map, 24_000 + SEAT_STALE_MS + 1)).toEqual({});
+  });
+
+  it("listStaleRefereeSeats clears deviceId-less orphans immediately", () => {
+    expect(
+      listStaleRefereeSeats(
+        {
+          J1: { deviceId: "a", lastSeen: 25_000 },
+          J2: { lastSeen: 25_000 },
+          J3: null,
+        },
+        25_000
+      )
+    ).toEqual(["J2"]);
   });
 });
 

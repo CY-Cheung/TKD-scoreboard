@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ref, onValue, set, update, onDisconnect, runTransaction } from "firebase/database";
+import { ref, onValue, set, onDisconnect, runTransaction } from "firebase/database";
 import { database } from "../../firebase";
 import { updateScoreAndCheckRules } from "../../Api";
 import { useAuth } from "../../Context/AuthContext";
@@ -18,6 +18,7 @@ import {
     buildSeatDevicePayload,
     createAdminDeviceId,
     createRefereeDeviceId,
+    extractSeatDeviceId,
     isAdminSeat,
     legacyRefereeSeatPath,
     refereeSeatPath,
@@ -119,20 +120,30 @@ function Controller() {
         let flatSeatRef = null;
         let heartbeatId = null;
         let connectedUnsub = null;
+        let presenceActive = false;
 
         let isMounted = true;
 
         const clearSeatPaths = () => {
+            // Stop heartbeats BEFORE nulling the seat so an in-flight
+            // update({ lastSeen }) cannot recreate a deviceId-less ghost.
+            presenceActive = false;
+            if (heartbeatId) {
+                clearInterval(heartbeatId);
+                heartbeatId = null;
+            }
             if (!grabbedSeat) return;
-            const flatPath = refereeSeatPath(eventId, courtId, grabbedSeat);
-            const legacyPath = legacyRefereeSeatPath(eventId, courtId, grabbedSeat);
+            const seatToClear = grabbedSeat;
+            grabbedSeat = null;
+            const flatPath = refereeSeatPath(eventId, courtId, seatToClear);
+            const legacyPath = legacyRefereeSeatPath(eventId, courtId, seatToClear);
             set(ref(database, flatPath), null).catch(() => {});
             // Best-effort: wipe leftover dual-write seat so Screen flat-primary UI stays clean.
             set(ref(database, legacyPath), null).catch(() => {});
         };
 
         const registerDisconnectHandlers = () => {
-            if (!flatSeatRef) return;
+            if (!flatSeatRef || !presenceActive) return;
             onDisconnect(flatSeatRef).remove().catch(() => {});
         };
 
@@ -141,6 +152,7 @@ function Controller() {
                 database,
                 refereeSeatPath(eventId, courtId, seatName)
             );
+            presenceActive = true;
 
             // Re-arm onDisconnect whenever Firebase reconnects (mobile browsers).
             const connectedRef = ref(database, ".info/connected");
@@ -153,8 +165,19 @@ function Controller() {
             registerDisconnectHandlers();
 
             heartbeatId = setInterval(() => {
-                if (!isMounted || !grabbedSeat) return;
-                update(flatSeatRef, { lastSeen: Date.now() }).catch(() => {});
+                if (!isMounted || !presenceActive || !grabbedSeat) return;
+                // Transaction: only refresh lastSeen while we still own the seat.
+                // Prevents post-leave update({lastSeen}) from spawning a ghost node.
+                runTransaction(flatSeatRef, (current) => {
+                    if (!presenceActive) return;
+                    if (!current || extractSeatDeviceId(current) !== newDeviceId) {
+                        return;
+                    }
+                    return {
+                        ...current,
+                        lastSeen: Date.now(),
+                    };
+                }).catch(() => {});
             }, SEAT_HEARTBEAT_INTERVAL_MS);
 
             // pagehide/beforeunload often fire when the phone closes the tab;
