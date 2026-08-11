@@ -167,10 +167,13 @@ export function subscribeMatchView(database, eventId, matchId, onData) {
   };
 }
 
-/** Best-effort: copy live fields from an existing legacy match into matchLive. */
+/**
+ * Best-effort: copy live fields from an existing legacy match into matchLive.
+ * @returns {Promise<true|false|null>} true ok, false permission/write failed, null if no legacy match
+ */
 export async function backfillMatchLiveFromLegacy(database, eventId, matchId) {
   const snap = await get(ref(database, legacyMatchPath(eventId, matchId)));
-  if (!snap.exists()) return false;
+  if (!snap.exists()) return null;
   try {
     await mirrorMatchLive(database, eventId, matchId, snap.val());
     return true;

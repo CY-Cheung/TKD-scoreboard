@@ -191,7 +191,22 @@ function Screen() {
     // Stage 3: ensure matchLive node exists when Screen opens a match (auth required)
     useEffect(() => {
         if (!selectedEvent || !currentMatchId) return;
-        backfillMatchLiveFromLegacy(database, selectedEvent, currentMatchId);
+        let cancelled = false;
+        backfillMatchLiveFromLegacy(database, selectedEvent, currentMatchId).then(
+            (ok) => {
+                if (cancelled || ok !== false) return;
+                setToastMessages((prev) => [
+                    ...prev,
+                    {
+                        id: Date.now(),
+                        text: "matchLive write failed — publish rules + stay Google-signed-in (see console)",
+                    },
+                ]);
+            }
+        );
+        return () => {
+            cancelled = true;
+        };
     }, [selectedEvent, currentMatchId]);
 
     useEffect(() => {

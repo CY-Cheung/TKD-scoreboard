@@ -19,17 +19,13 @@ import {
   dualUpdateCourtField,
   subscribeCourtReferees,
 } from "../../services/courtFirebase";
+import {
+  PUBLIC_PAGES_HOST,
+  isPhoneUnreachableHost,
+  buildControllerQrUrl,
+} from "./controllerQrUrl";
 import "./QRCodeDisplay.css";
 import Button from "../Button/Button";
-
-function isPhoneUnreachableHost(hostname) {
-  if (!hostname) return true;
-  if (hostname === "localhost" || hostname === "127.0.0.1") return true;
-  if (hostname.endsWith(".agent.cvm.dev") || hostname.endsWith(".cursorvm.com")) {
-    return true;
-  }
-  return false;
-}
 
 function QRCodeDisplay({
   eventId,
@@ -77,22 +73,20 @@ function QRCodeDisplay({
   const isLocalhost =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1";
+  const usingUnreachableDefault =
+    isPhoneUnreachableHost(window.location.hostname) && !customHost.trim();
   const needsCustomHost =
     isPhoneUnreachableHost(window.location.hostname) || !!customHost.trim();
 
-  // Use custom host if set, otherwise current location host
-  const protocol = window.location.protocol;
-  const host = customHost.trim() || window.location.host;
-
-  // Extract clean base path for controller QR links
-  let basePath = window.location.pathname;
-  basePath = basePath.replace(/\/(screen|controller|home)\/?$/, "/");
-  if (!basePath.endsWith("/")) {
-    basePath += "/";
-  }
-
-  // Build default BrowserRouter controller URL
-  let controllerUrl = `${protocol}//${host}${basePath}controller?event=${encodeURIComponent(eventId || "")}&court=${encodeURIComponent(courtId || "")}`;
+  const controllerUrl = buildControllerQrUrl({
+    eventId,
+    courtId,
+    hostname: window.location.hostname,
+    hostWithPort: window.location.host,
+    protocol: window.location.protocol,
+    pathname: window.location.pathname,
+    customHost,
+  });
 
   const handleCopy = () => {
     navigator.clipboard.writeText(controllerUrl);
@@ -326,14 +320,15 @@ function QRCodeDisplay({
               <input
                 type="text"
                 className="qrcode-host-input cursor-target"
-                placeholder="例: 192.168.1.104:5173 或 cy-cheung.github.io"
+                placeholder={`空白 = ${PUBLIC_PAGES_HOST}；或填 192.168.x.x:5173`}
                 value={customHost}
                 onChange={handleHostChange}
               />
-              {needsCustomHost && !customHost.trim() && (
+              {usingUnreachableDefault && (
                 <div className="qrcode-host-warning" style={{ fontSize: "1.1cqi" }}>
-                  ⚠️ 而家 host（localhost / Cloud Agent preview）手機多數開唔到。
-                  請填 LAN IP（同 Wi‑Fi）或已 deploy 嘅 GitHub Pages host，再掃 QR。
+                  ⚠️ Preview／localhost 手機開唔到。QR 已自動用 GitHub Pages：
+                  {PUBLIC_PAGES_HOST}
+                  。請先 deploy 呢個 branch，或改填同 Wi‑Fi 嘅 LAN IP。
                 </div>
               )}
               <div className="qrcode-url-box" style={{ marginTop: "0.5cqi" }}>

@@ -49,6 +49,7 @@ function Controller() {
     const [mySeat, setMySeat] = useState(null);
     const [isFull, setIsFull] = useState(false);
     const [seatGrabError, setSeatGrabError] = useState(null);
+    const [seatGrabPending, setSeatGrabPending] = useState(false);
     const [matchData, setMatchData] = useState(null);
     const [lastAction, setLastAction] = useState(null); // { side: 'red'|'blue', text: '...' }
     const [isConnected, setIsConnected] = useState(false);
@@ -98,6 +99,7 @@ function Controller() {
         
         if (user) {
             setMySeat(ADMIN_SEAT);
+            setSeatGrabPending(false);
             // Admin also needs a deviceId for the scoring API
             setDeviceId(createAdminDeviceId());
             return;
@@ -107,6 +109,7 @@ function Controller() {
         setDeviceId(newDeviceId);
         setIsFull(false);
         setSeatGrabError(null);
+        setSeatGrabPending(true);
         let grabbedSeat = null;
         let lastGrabError = null;
 
@@ -167,9 +170,13 @@ function Controller() {
             if (!isMounted) return;
 
             for (const seatName of REFEREE_SEAT_ORDER) {
-                if (await trySeat(seatName)) return;
+                if (await trySeat(seatName)) {
+                    if (isMounted) setSeatGrabPending(false);
+                    return;
+                }
             }
             if (!isMounted) return;
+            setSeatGrabPending(false);
             if (lastGrabError) {
                 setSeatGrabError(lastGrabError);
                 setIsFull(false);
@@ -182,6 +189,7 @@ function Controller() {
 
         return () => {
             isMounted = false;
+            setSeatGrabPending(false);
             if (grabbedSeat) {
                 set(
                     ref(
@@ -281,6 +289,15 @@ function Controller() {
     const matchNo = matchData?.config?.matchId || currentMatchId || "N/A";
     const currentRound = matchData?.state?.currentRound || 1;
     const isPaused = matchData?.state?.isPaused ?? true;
+
+    if (seatGrabPending && !mySeat && !user) {
+        return (
+            <div className="controller" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white', padding: '20px', textAlign: 'center' }}>
+                <h1>Connecting…</h1>
+                <p>正在搶裁判席位（J1–J3）…</p>
+            </div>
+        );
+    }
 
     if (seatGrabError) {
         return (
