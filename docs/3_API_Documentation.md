@@ -105,7 +105,7 @@ https://cy-cheung.github.io/TKD-scoreboard/controller?event=<eventId>&court=cour
 | **Failure** | `throw Error`（缺 config／缺 `nextMatchId`／`nextMatchSlot` 等） |
 | **Side effects** | 寫下一場 `competitors.{slot}`；寫 `state.winnerSide` |
 
-### 2.2 Technical Card
+### 2.2 Technical Card（技術卡）
 
 #### `startTechCardAnnouncement`
 

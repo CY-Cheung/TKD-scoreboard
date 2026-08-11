@@ -6,7 +6,8 @@
 **Document status:** Reverse-engineered from source（`README.md`、`src/`、`database.rules.json`）  
 **Last reviewed against code:** 2026-08-10
 
-> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。
+> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。  
+> **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
 
 > 凡標 **`[待確認]`** 者：程式碼或文件未能完全證實，請勿當已上線功能。
 
@@ -86,7 +87,7 @@
 
 | ID | As a… | I want to… | So that… |
 |----|-------|------------|----------|
-| US-30 | Centre Referee | 發起 Technical Card（Accept／Reject） | 所有 Screen 同步 3 秒公告；Reject 再 +1 Gam-jeom |
+| US-30 | Centre Referee | 發起 Technical Card（技術卡）並選擇 Accept／Reject | 所有 Screen 同步 3 秒公告；Reject 再 +1 Gam-jeom |
 | US-31 | Centre Referee | 發起 IVR（Accept／Reject）並管理配額 | 挑戰結果同剩餘次數同步 |
 | US-32 | Centre Referee | 啟動／停止 Kye-shi（預設 60 秒） | 處理傷停／暫停程序 |
 | US-33 | Centre Referee | 最後約 10 秒加 Gam-jeom 時選擇是否 Avoiding Penalty | 正確累加 `gamjeomAvoiding`（影響對方總分） |

@@ -5,7 +5,8 @@
 **線上示範：** [https://cy-cheung.github.io/TKD-scoreboard/](https://cy-cheung.github.io/TKD-scoreboard/)  
 **文件日期：** 2026-08-10
 
-> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。
+> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。  
+> **用語：** Technical Card 中文一律「技術卡」（同畫面 `Edit` 嘅「技術卡」一致）。
 
 > 本指南用香港粵語寫俾**現場操作人員**睇。  
 > 標 **`[待確認]`** 嘅步驟：程式碼未能完全核實，或者視乎你哋賽會實際設定。
@@ -32,7 +33,7 @@
 4. 進入 **Home（主頁）** → **Manage Match（管理場次）** → **Load** 今場比賽。  
 5. 開 **Scoreboard（大螢幕）**，按空白鍵開始計時。  
 6. 按 `Q` 或主頁按鈕顯示 **QR**，邊裁掃碼入 **Controller**。  
-7. 邊裁搶席後按得分掣；主裁用 Edit 處理 Gam-jeom、判勝、Technical Card、IVR 等。
+7. 邊裁搶席後按得分掣；主裁用 Edit 處理 Gam-jeom、判勝、Technical Card（技術卡）、IVR 等。
 
 ---
 
@@ -127,15 +128,15 @@
 - **宣判局勝**（紅／藍）。  
 - **Promote Winner**：將勝者寫入下一場（該場要已設晉級路徑）。  
 - **Kye-shi**。  
-- **Technical Card（技術牌）** — 見下節。  
-- **IVR（錄影重播挑戰）** — 見下節。  
+- **Technical Card（技術卡）** — 見下節。  
+- **IVR（Instant Video Replay／錄影重播挑戰）** — 見下節。  
 - 微調時間、IVR 剩餘次數等（以畫面上有嘅欄位為準）。
 
 ---
 
-## 8. Technical Card（技術牌）
+## 8. Technical Card（技術卡）
 
-1. 喺 Edit 揀藍或紅嘅 Technical Card。  
+1. 喺 Edit 揀藍或紅嘅 Technical Card（技術卡）。  
 2. **Step 1 確認**：  
    - **Accept**：接受請求  
    - **Reject**：拒絕，之後會加 1 個 Gam-jeom  
@@ -254,3 +255,4 @@ A：而家呢套系統定位係 **Kyorugi（搏擊）**；品勢功能未見。
 | 日期 | 變更 |
 |------|------|
 | 2026-08-10 | 初版：由介面同程式反向整理嘅粵語操作指南 |
+| 2026-08-11 | 用語統一：Technical Card 中文一律「技術卡」 |

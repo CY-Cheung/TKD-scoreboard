@@ -6,7 +6,8 @@
 **Document status:** Reverse-engineered gaps + forward-looking plan  
 **Last reviewed against code:** 2026-08-10
 
-> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。
+> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。  
+> **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
 
 > **`[待確認]`** = 計劃建議但尚未實作／未自動化嘅項目。  
 > 平行 refactor 分支或已引入 Vitest；**合入前唔好當 `main` 已有 77 tests**。
@@ -146,7 +147,7 @@
 | React StrictMode double mount | 400ms delay 避免誤雙搶／誤清 → **回歸必測** |
 | 搶席 race（兩機同時搶同一空席） | 只有一個 transaction 成功 |
 
-### 5.3 Most complex feature C — Technical Card reject（多 Screen）
+### 5.3 Most complex feature C — Technical Card（技術卡）reject（多 Screen）
 
 **Happy Path**
 
@@ -192,7 +193,7 @@
 - [ ] Space 計時；Controller QR 搶 J1；single mode 得分即現
 - [ ] 切 multiple：兩機 1 秒內同分先加
 - [ ] Gam-jeom 至 PUN；分差至 PTG；判勝 → REST → 下一回合 → PTF
-- [ ] Technical Card Accept／Reject（多 Screen 若可）
+- [ ] Technical Card（技術卡）Accept／Reject（多 Screen 若可）
 - [ ] IVR Accept／Reject 同配額顯示
 - [ ] Kye-shi 倒數完自動停
 - [ ] Promote Winner 寫入下一場

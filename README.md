@@ -21,8 +21,10 @@
 
 **亦已支援**
 
-- **Technical Card（技術警告牌）**：主裁於 Edit 確認 → Firebase 同步公告到同一場地所有 Screen（3 秒；Reject 延遲 Gam-jeom +1）
+- **Technical Card（技術卡）**：主裁於 Edit 確認 → Firebase 同步公告到同一場地所有 Screen（3 秒；Reject 延遲 Gam-jeom +1）
 - **IVR（Instant Video Replay）**：挑戰卡流程、配額（可無限）、多 Screen 公告
+
+> **用語：** 中文一律用「技術卡」對譯 Technical Card（唔用「技術警告牌」「技術牌」）。英文專有名詞保留 `Technical Card`；雙語標籤格式：`English（中文）`。
 - **HKTKDA PDF 匯入**：解析對陣表 → Match／選手
 - **Tournament Bracket**：晉級路徑、Promote Winner
 - **中英交替 UI**：關鍵頁面 Chi／Eng fade（`AlternatingLocale`）

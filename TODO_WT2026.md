@@ -1,14 +1,16 @@
-# 📝 WT 2026 新賽例開發備忘錄 (TODO)
+# WT 2026 新賽例開發備忘錄（TODO）
 
 本檔案記錄 WT 2026 新賽例功能之開發清單與規格（Spec）。
+
+> **用語：** Technical Card 中文一律「技術卡」（唔用「技術警告牌」「技術牌」）。英文 UI 字串維持 `Technical Card`。雙語標籤用 `English（中文）`。
 
 ---
 
 ## 待開發功能清單
 
-- [x] **1. Instant Video Replay (IVR) 錄影重播挑戰卡** — **已實作**；詳細規格見下方 **[IVR UI Flow Spec](#ivr-ui-flow-spec)**
+- [x] **1. Instant Video Replay（IVR）錄影重播挑戰卡** — **已實作**；詳細規格見下方 **[IVR UI Flow Spec](#ivr-ui-flow-spec)**
 
-- [x] **2. Technical Card (技術警告牌)** — **已實作**；現況摘要見下方 **[Technical Card（已實作）](#technical-card已實作)**
+- [x] **2. Technical Card（技術卡）** — **已實作**；現況摘要見下方 **[Technical Card（技術卡）](#technical-card技術卡)**
 
 - [ ] **3. 微調裁判紀錄顯示**
   * match 裁判紀錄顯示在 red log 和 blue log 已完成。
@@ -16,13 +18,13 @@
 
 ---
 
-## Technical Card（已實作）
+## Technical Card（技術卡）
 
-> **狀態**：2026-08-10 已合入主線；詳細多裝置同步見 [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md) §4.1。
+> **狀態**：2026-08-10 已合入主線（已實作）；詳細多裝置同步見 [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md) §4.1。
 
 ### 概述
 
-* **觸發位置**：`Edit.jsx` 主裁面板內，Blue / Red 的 **Technical Card** 按鈕。
+* **觸發位置**：`Edit.jsx` 主裁面板內，Blue / Red 的 **Technical Card（技術卡）** 按鈕。
 * **業務規則**：
   * **Accept**：顯示 Step 2 公告 → **3 秒**後關閉 → **分數不變**。
   * **Reject**：顯示 Step 2 公告 → **3 秒**後關閉 → **`updateScoreAndCheckRules(..., 'gamjeom', null, 1)`** 對該 side 加 1 Gam-jeom（**唔好**在按下 Reject 當下立即加分）。
@@ -110,7 +112,7 @@ Step 1：確認 popup（Edit 底欄內，同 avoiding gam-jeom）
 ## IVR UI Flow Spec
 
 > **狀態**：2026-08-10 **已實作**（Step 1 Confirm + Step 2 glass card + quota transaction）。  
-> **與 Technical Card 之分**：IVR = Coach 舉 **Blue/Red card** 申請 **Instant Video Replay**（WT Art. 21 相關）；Technical Card = **Technical Review Request**（§4），兩者 flow 類似但 **quota 規則不同**。
+> **與 Technical Card（技術卡）之分**：IVR = Coach 舉 **Blue/Red card** 申請 **Instant Video Replay**（WT Art. 21 相關）；Technical Card（技術卡）= **Technical Review Request**（§4），兩者 flow 類似但 **quota 規則不同**。
 
 ### WT 賽例背景（軟件相關摘要）
 
@@ -363,5 +365,5 @@ matches/{matchId}/config/rules/
 ---
 
 *備忘錄建立：2026-08-08*  
-*Technical Card 完成：2026-08-10（Firebase 多 Screen 同步、3 秒、Reject 四行 layout）*  
+*Technical Card（技術卡）完成：2026-08-10（Firebase 多 Screen 同步、3 秒、Reject 四行 layout）；用語於 2026-08-11 統一為「技術卡」*  
 *IVR Spec 更新：2026-08-10（Video Replay 標題、Accept 2–3 行 conditional Return card、Reject 2 行）*

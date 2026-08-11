@@ -2,7 +2,8 @@
 (TKD-scoreboard Multi-device Real-time Interaction Design Document)
 
 > **文件狀態**：反映 **2026-08** 源碼現況（`src/`、`database.rules.json`）。  
-> 標有 **〔計劃中〕** 嘅功能尚未實作。
+> 標有 **〔計劃中〕** 嘅功能尚未實作。  
+> **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
 
 ---
 
@@ -18,17 +19,17 @@
 
 **已實作核心能力**：
 
-- **Dynamic QR Code (動態二維碼)**：`QRCodeDisplay` 產生 `/controller?event=&court=` 連結
-- **Slot-based Referee Seats (席位制)**：每 Court 固定 `J1`、`J2`、`J3`
-- **Atomic Transaction (原子事務) 搶位**：`Controller.jsx` 對每個席位獨立 `runTransaction()`
-- **onDisconnect Cleanup (斷線清理)**：離線時 `remove()` 席位節點
-- **Valid Point Voting (有效得分投票)**：Multiple Mode 下 2+ 裁判 **1 秒內**（`VOTE_WINDOW_MS = 1000`）同意先加分
-- **Court-level Match Binding (場地綁定比賽)**：`courts/{courtId}/currentMatchId` 驅動 Screen／Controller
-- **Technical Card Announcement Sync (技術警告牌公告同步)**：`state.techCardAnnouncement` 廣播 Step 2 glass card 到同一 Match 嘅所有 Screen；3 秒後 `finalizeTechCardAnnouncement` 原子清除（Reject 延遲 Gam-jeom +1）
+- **Dynamic QR Code（動態二維碼）**：`QRCodeDisplay` 產生 `/controller?event=&court=` 連結
+- **Slot-based Referee Seats（席位制）**：每 Court 固定 `J1`、`J2`、`J3`
+- **Atomic Transaction（原子事務）搶位**：`Controller.jsx` 對每個席位獨立 `runTransaction()`
+- **onDisconnect Cleanup（斷線清理）**：離線時 `remove()` 席位節點
+- **Valid Point Voting（有效得分投票）**：Multiple Mode 下 2+ 裁判 **1 秒內**（`VOTE_WINDOW_MS = 1000`）同意先加分
+- **Court-level Match Binding（場地綁定比賽）**：`courts/{courtId}/currentMatchId` 驅動 Screen／Controller
+- **Technical Card Announcement Sync（技術卡公告同步）**：`state.techCardAnnouncement` 廣播 Step 2 glass card 到同一 Match 嘅所有 Screen；3 秒後 `finalizeTechCardAnnouncement` 原子清除（Reject 延遲 Gam-jeom +1）
 
 **〔計劃中，未實作〕**：
 
-- **Persistent Token (持久化權杖)** + `localStorage` 重連
+- **Persistent Token（持久化權杖）** + `localStorage` 重連
 - **`hostStatus`** 大螢幕在線心跳同 Controller 離線警示
 
 ---
@@ -116,7 +117,7 @@ score = Σ(pointsStat[i] × [1,2,3,4,6]) + opponent.gamjeom + opponent.gamjeomAv
 
 **winReason**：`PUN`（Gam-jeom 上限）、`PTG`（分差）、`PTF`（局數勝出）
 
-### 3.3 Technical Card 公告欄位
+### 3.3 Technical Card（技術卡）公告欄位
 
 Step 2 glass card 同步用；由主裁 Screen 寫入，所有訂閱同一 Match 嘅 Screen 讀取：
 
@@ -171,7 +172,7 @@ Controller.handleScore()
 **Single Mode**：一次按鈕即加分。  
 **Multiple Mode**：寫入 `votes`；2+ 不同 `deviceId` 在 **1 秒**內投同一 `side+index` 先真正加分，並寫入 `recentScores`。
 
-### Phase D.1 — Technical Card 公告同步
+### Phase D.1 — Technical Card（技術卡）公告同步
 
 ```
 Edit.jsx（主裁）Accept/Reject
@@ -285,5 +286,5 @@ export const VOTE_WINDOW_MS = 1000;  // Multiple Mode 有效得分投票窗口
 ---
 
 *文件建立：2026-07-30*  
-*最後更新：2026-08-10（Technical Card Firebase 同步、schema §3.3）*  
+*最後更新：2026-08-11（Technical Card／技術卡 用語統一；Firebase 同步、schema §3.3）*  
 *專案：TKD-scoreboard*
