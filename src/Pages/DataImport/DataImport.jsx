@@ -26,6 +26,10 @@ import {
     dualSetCourtField,
     mirrorCourtsMapToFlat,
 } from '../../services/courtFirebase';
+import {
+    mirrorMatchLive,
+    removeMatchLive,
+} from '../../services/matchFirebase';
 
 // A helper function to parse name and club from old format
 const parseName = (fullName) => {
@@ -222,6 +226,13 @@ const DataImport = () => {
                 await set(ref(database, `events/${record.id}`), record.data);
                 await writeEventIndexEntry(database, record.id, record.data);
                 await mirrorCourtsMapToFlat(database, record.id, record.data.courts);
+                if (record.data.matches) {
+                    await Promise.all(
+                        Object.entries(record.data.matches).map(([mid, mdata]) =>
+                            mirrorMatchLive(database, record.id, mid, mdata)
+                        )
+                    );
+                }
             }
 
             if (mode === 'multi') {
@@ -280,6 +291,11 @@ const DataImport = () => {
         try {
             const matchRef = ref(database, `events/${eventName}/matches/${selectedMatchId}`);
             await remove(matchRef);
+            try {
+                await removeMatchLive(database, eventName, selectedMatchId);
+            } catch (liveErr) {
+                console.warn('matchLive remove after match delete:', liveErr);
+            }
             showToast(`🗑️ 場次 ${selectedMatchId} 已成功刪除！`);
             setSelectedMatchId(null);
             
@@ -379,6 +395,7 @@ const DataImport = () => {
 
             const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
             await set(matchRef, newMatch);
+            await mirrorMatchLive(database, eventName, matchId, newMatch);
             
             showToast(`Match ${matchId} added to event ${eventName} in Firebase!`);
             setCurrentMatches(prev => ({...prev, [matchId]: newMatch}));

@@ -28,6 +28,10 @@ import {
     subscribePreferFlatCourt,
     getPreferFlatCourt,
 } from "../../services/courtFirebase";
+import {
+    dualUpdateMatchState,
+    subscribeMatchView,
+} from "../../services/matchFirebase";
 import VoteLogRows from "./VoteLogRows";
 import { useEventSession } from "../../Context/EventSessionContext";
 
@@ -204,11 +208,12 @@ function Screen() {
             setMatchData(null);
             return;
         }
-        const matchRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}`);
-        const unsubscribe = onValue(matchRef, (snapshot) => {
-            setMatchData(snapshot.val());
-        });
-        return () => unsubscribe();
+        return subscribeMatchView(
+            database,
+            selectedEvent,
+            currentMatchId,
+            setMatchData
+        );
     }, [currentMatchId, selectedEvent]);
 
     useEffect(() => {
@@ -226,11 +231,12 @@ function Screen() {
             if (!frame.continueRaf) {
                 cancelAnimationFrame(animationFrameRef.current);
                 if (frame.onExpire === "finalize_round") {
-                    const matchStateRef = ref(
+                    dualUpdateMatchState(
                         database,
-                        `events/${selectedEvent}/matches/${currentMatchId}/state`
+                        selectedEvent,
+                        currentMatchId,
+                        buildRoundExpiredStatePatch()
                     );
-                    update(matchStateRef, buildRoundExpiredStatePatch());
                 } else if (frame.onExpire === "start_next_round") {
                     // Auto-start the next round when rest time ends
                     startNextRound(selectedEvent, currentMatchId);
@@ -271,15 +277,24 @@ function Screen() {
     const toggleTimer = async (force = false) => {
         if (!isMatchLoaded) return;
         if (isKyeShiActive && !force) return;
-        const stateRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}/state`);
         const currentState = matchData?.state || {};
         const isPaused = currentState.isPaused ?? true;
         const now = Date.now();
 
         if (isPaused) {
-            update(stateRef, buildTimerResumePatch(now));
+            dualUpdateMatchState(
+                database,
+                selectedEvent,
+                currentMatchId,
+                buildTimerResumePatch(now)
+            );
         } else {
-            update(stateRef, buildTimerPausePatch(currentState, now));
+            dualUpdateMatchState(
+                database,
+                selectedEvent,
+                currentMatchId,
+                buildTimerPausePatch(currentState, now)
+            );
         }
     };
 

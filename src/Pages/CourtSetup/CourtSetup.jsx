@@ -24,6 +24,7 @@ import {
   removeFlatCourtsForEvent,
   dualUpdateCourtField,
 } from '../../services/courtFirebase';
+import { mirrorMatchLive, removeMatchLiveForEvent } from '../../services/matchFirebase';
 
 import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
@@ -224,6 +225,13 @@ function CourtSetup() {
         await set(ref(database, `events/${record.id}`), record.data);
         await writeEventIndexEntry(database, record.id, record.data);
         await mirrorCourtsMapToFlat(database, record.id, record.data.courts);
+        if (record.data.matches) {
+          await Promise.all(
+            Object.entries(record.data.matches).map(([mid, mdata]) =>
+              mirrorMatchLive(database, record.id, mid, mdata)
+            )
+          );
+        }
       }
 
       if (mode === 'multi') {
@@ -294,6 +302,11 @@ function CourtSetup() {
         await removeFlatCourtsForEvent(database, selectedEvent);
       } catch (courtsErr) {
         console.warn('flat courts remove before delete:', courtsErr);
+      }
+      try {
+        await removeMatchLiveForEvent(database, selectedEvent);
+      } catch (liveErr) {
+        console.warn('matchLive remove before delete:', liveErr);
       }
       const eventRef = ref(database, `events/${selectedEvent}`);
       await remove(eventRef);

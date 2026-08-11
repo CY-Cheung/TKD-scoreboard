@@ -25,6 +25,7 @@ import {
 import {
     subscribePreferFlatCourt,
 } from "../../services/courtFirebase";
+import { subscribeMatchView } from "../../services/matchFirebase";
 import ControllerScorePad from "./ControllerScorePad";
 import "./Controller.css";
 
@@ -225,19 +226,14 @@ function Controller() {
         );
     }, [eventId, courtId]);
 
-    // Listen to matchData
+    // Listen to matchData (config + matchLive)
     useEffect(() => {
         if (!eventId || !currentMatchId) {
             setMatchData(null);
             return;
         }
 
-        const matchRef = ref(database, `events/${eventId}/matches/${currentMatchId}`);
-        const unsubscribe = onValue(matchRef, (snapshot) => {
-            setMatchData(snapshot.val());
-        });
-
-        return () => unsubscribe();
+        return subscribeMatchView(database, eventId, currentMatchId, setMatchData);
     }, [currentMatchId, eventId]);
 
     const handleScore = (side, index, label) => {

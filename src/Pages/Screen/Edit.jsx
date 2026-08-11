@@ -9,6 +9,7 @@ import Button from "../../Components/Button/Button";
 import TechnicalCardConfirm from "../../Components/TechnicalCardFlow/TechnicalCardConfirm";
 import IVRConfirm from "../../Components/IVRFlow/IVRConfirm";
 import { updateScoreAndCheckRules, declareRoundWinner, promoteWinner, getEffectiveIvrRemaining, formatIvrQuotaForEdit, isIvrUnlimited, setIvrRemaining } from '../../Api';
+import { dualUpdateMatchState } from '../../services/matchFirebase';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import { getFinalWinnerSide, resolveMatchRules } from '../../domain/matchRules.js';
 import EditGridLocale from './EditGridLocale';
@@ -273,9 +274,9 @@ const Edit = ({
                 const currentPhase = stateData.phase || 'ROUND';
 
                 if (timeType === 'match' && currentPhase === 'ROUND') {
-                    update(stateRef, updates);
+                    dualUpdateMatchState(database, eventName, matchId, updates);
                 } else if (timeType === 'rest' && currentPhase === 'REST') {
-                    update(stateRef, updates);
+                    dualUpdateMatchState(database, eventName, matchId, updates);
                 }
             }
         });

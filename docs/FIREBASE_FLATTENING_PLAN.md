@@ -1,10 +1,9 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
-> **Status:** Stage 2 **in progress** on branch `cursor/firebase-courts-dual-write-8215`  
-> Stage 1（`eventIndex`）已合入 `main`。  
-> 現行 production schema 仍見 `docs/FIREBASE_MULTI_DEVICE_DESIGN.md` §3（legacy courts 仍喺 `events/…/courts`；Stage 2 雙寫頂層 `courts/`）。  
-> 完整新 path 規則骨架：`database.rules.flattened.skeleton.json`。  
-> **部署提醒：** 更新後嘅 `database.rules.json`（含頂層 `courts`）需喺 Firebase Console Publish。
+> **Status:** Stage 3 **in progress** on branch `cursor/firebase-matchlive-dual-write-8215`  
+> Stage 1–2 已合入 `main`（`eventIndex` + dual-write `courts`）。  
+> Stage 3：計分 TX 仍喺 legacy `events/…/matches`（需要 config），成功後 mirror 去 `matchLive/`；state／stats 雙寫；UI prefer `matchLive` + legacy `config`。  
+> **部署提醒：** Publish 含 `matchLive` 嘅 `database.rules.json`。
 
 ---
 
@@ -156,15 +155,18 @@ Prefer Admin SDK 或維護窗腳本。
 
 **Stage 1（已合入 main）：** `eventIndex` + 收窄 EventName／settings 讀取。
 
-**Stage 2（本分支）：dual-write `courts`**
+**Stage 2（已合入 main）：** dual-write `courts`。
 
-1. 頂層 `courts/{eventId}/{courtId}` 與 legacy `events/…/courts/…` **雙寫**  
-2. 讀取 prefer flat、fallback legacy（`subscribePreferFlatCourt`／`fetchCourtIds`）  
-3. 建立／刪 Event 同步 flat courts；Load Match／席位／refereeMode 雙寫  
-4. Seat grab：flat path 做 transaction，成功後 mirror legacy  
-5. **未搬** matches／matchLive  
+**Stage 3（本分支）：dual-write `matchLive`**
 
-Rules：`database.rules.json` 已加頂層 `courts`；match write 接受 flat **或** legacy 席位 deviceId。**記得 Publish rules。**
+1. Scoring／round／IVR／TC **transaction** 仍喺 `events/…/matches/{id}`（需要 config）  
+2. TX committed 後 **mirror** live 欄位 → `matchLive/{eventId}/{matchId}`  
+3. Timer／announcement／IVR remaining：**dual-write** state／stats  
+4. Screen／Controller：`subscribeMatchView`（config leaf + matchLive；無 live 時 fallback 成個 legacy match）  
+5. 建／刪 match／event 同步 mirror／remove `matchLive`  
+6. **未**刪 legacy matches；**未**搬 config 去頂層 `matches/`
+
+Rules：`database.rules.json` 已加 `matchLive`。**記得 Publish。**
 
 ---
 
