@@ -227,18 +227,13 @@ export function eventPayloadWithoutCourts(eventData) {
 }
 
 /**
- * Stage 5 write shape for events/{id}: no courts; matches keep config only
- * (live fields go to matchLive via mirrorMatchFlatArtifacts).
+ * Stage 5+ write shape for events/{id}: meta + settings only.
+ * Courts → top-level courts/; matches → matches/…/config + matchLive + matchIndex.
+ * `matchConfigOnly` kept for call-site compatibility (ignored).
  */
-export function eventPayloadForLegacyWrite(eventData, matchConfigOnly) {
+export function eventPayloadForLegacyWrite(eventData, _matchConfigOnly) {
   const base = eventPayloadWithoutCourts(eventData);
   if (!base || typeof base !== "object") return base;
-  if (!base.matches || typeof base.matches !== "object" || !matchConfigOnly) {
-    return base;
-  }
-  const matches = {};
-  for (const [matchId, matchData] of Object.entries(base.matches)) {
-    matches[matchId] = matchConfigOnly(matchData);
-  }
-  return { ...base, matches };
+  const { matches: _ignoredMatches, ...rest } = base;
+  return rest;
 }

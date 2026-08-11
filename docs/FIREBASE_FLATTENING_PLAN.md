@@ -1,9 +1,9 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
-> **Status:** Stage 5（delete nested courts + matchLive write-only）on `cursor/firebase-stage5-delete-nested-8215`  
-> Stage 1–2 已合入 `main`。Stage 3–5c／seat／haptic 見 PR #10–#17。  
-> **Stage 5：** 停 matchLive→legacy reverse-mirror；court 讀寫只認 flat；開 Court Setup 時 backfill + **刪** `events/…/courts`。  
-> Legacy `events/…/matches` **config** 仍可保留（Stage 4 dual）；live fields 以 `matchLive` 為準，唔再寫返 legacy。
+> **Status:** Stage 5+（flat config only；刪 nested `events/…/matches`）on `cursor/firebase-flat-config-only-8215`  
+> Stage 1–2 已合入 `main`。Stage 3–5／seat／haptic 見 PR #10–#18。  
+> **Stage 5+：** 新建／訂閱／寫 config 只認 flat `matches/…/config` + `matchLive`；`events/{id}` 只留 meta + settings。  
+> Court Setup「清 courts／鬼位／legacy matches」會 backfill flat 後 **刪** 成個 `events/…/matches` 樹。
 
 ---
 
@@ -17,16 +17,15 @@ Firebase Realtime Database：讀一個 node 會下載其下**所有** child。
 ## 2. Current tree（而家）
 
 ```
-events/{eventId}/
-├── EventName, createdBy, settings/…
-├── courts/     ← Stage 5：刪除（開 Setup 會 strip）
-└── matches/    ← config 可能仍在；live 唔再 reverse-mirror
-
+events/{eventId}/                     ← meta + settings only（唔再寫 matches／courts）
+eventIndex/{eventId}/
 courts/{eventId}/{courtId}/           ← primary
-matches/{eventId}/{matchId}/config/   ← Stage 4
+matches/{eventId}/{matchId}/config/   ← primary config
 matchIndex/{eventId}/{matchId}/
 matchLive/{eventId}/{matchId}/        ← scoring / timer primary
 ```
+
+過渡期：舊 DB 可能仍有 `events/…/matches`；開 Court Setup cleanup 可一次刪走。
 
 ---
 
@@ -53,25 +52,25 @@ matchLive/{eventId}/{matchId}/
 5a. Orphan cleanup  
 5b. Courts cutover（停寫 legacy courts）  
 5c. Scoring TX → matchLive  
-5. **Delete nested courts + stop live reverse-mirror（本分支）**  
-5+. （可選）刪 legacy `events/…/matches` 內 live fields／成個 matches 節點，只留／遷 config
+5. Delete nested courts + stop live reverse-mirror  
+5+. **Flat config only：停寫／訂閱 legacy matches；cleanup 刪成個 nested matches 樹（本分支）**
 
 ---
 
-## 5. Stage 5 progress（本分支）
+## 5. Stage 5+ progress（本分支）
 
-1. `runMatchLiveTransaction`／`dualUpdateMatchState`／stats → **唔再** `mirrorLiveFieldsToLegacy`  
-2. `ensureFlatCourtsAndStripLegacy` — backfill flat 後 `remove(events/…/courts)`  
-3. `fetchCourtIds`／Court Setup 選 event 會觸發 strip  
-4. `subscribePreferFlatCourt`／`subscribeCourtReferees`／`getPreferFlatCourt` → **flat-only**  
-5. Court Setup 掣「清 courts／鬼位／match live」：strip nested courts、ghost seats、**legacy match live fields**（先確保 matchLive 有副本）  
-6. 新建 event／match：legacy 只寫 `matches/{id}/config`  
+1. `eventPayloadForLegacyWrite` → 剝走 `courts` **同** `matches`  
+2. `subscribeMatchView` → 只聽 flat config + `matchLive`  
+3. `dualUpdateMatchConfigCompetitors`／`promoteWinner` → flat-only + `matchIndex`  
+4. DataImport Add Match → 只 `mirrorMatchFlatArtifacts`  
+5. Court Setup cleanup → `removeLegacyMatchesForEvent`（先 backfill flat，再 `remove(events/…/matches)`）  
+6. Screen／Edit timer／config 讀 `matchData`／flat，唔再讀 legacy path  
 
-**仍保留：** legacy `events/…/matches/{id}/config`（同 flat config dual）；可後續再刪。
+**可選後續：** 收緊 `database.rules.json`（刪 nested matches write rules）；合入 `main`。
 
 ---
 
 ## 6. Rules
 
-Production `database.rules.json` 仍保留 legacy nested write rules（過渡）。  
+Production `database.rules.json` 仍保留部分 legacy nested write rules（過渡／cleanup）。  
 終態草圖：`database.rules.flattened.skeleton.json`。

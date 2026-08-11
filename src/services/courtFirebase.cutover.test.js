@@ -36,11 +36,13 @@ describe("eventPayloadWithoutCourts (Stage 5b)", () => {
   });
 });
 
-describe("eventPayloadForLegacyWrite (Stage 5)", () => {
-  it("strips courts and reduces matches to config-only via helper", () => {
+describe("eventPayloadForLegacyWrite (Stage 5+)", () => {
+  it("strips courts and matches; keeps meta/settings only", () => {
     const out = eventPayloadForLegacyWrite(
       {
         EventName: "Day1",
+        createdBy: "uid1",
+        settings: { maxGamjeom: 5 },
         courts: { court1: {} },
         matches: {
           A1: {
@@ -54,7 +56,8 @@ describe("eventPayloadForLegacyWrite (Stage 5)", () => {
     );
     expect(out).toEqual({
       EventName: "Day1",
-      matches: { A1: { config: { matchId: "A1" } } },
+      createdBy: "uid1",
+      settings: { maxGamjeom: 5 },
     });
   });
 });

@@ -12,8 +12,8 @@ import {
     dualUpdateMatchConfigCompetitors,
     mirrorMatchLive,
     runMatchLiveTransaction,
+    fetchMatchConfigForRules,
 } from './services/matchFirebase.js';
-import { legacyMatchesRoot } from './services/matchPaths.js';
 
 let globalServerTimeOffset = 0;
 const offsetRef = ref(database, ".info/serverTimeOffset");
@@ -78,11 +78,12 @@ export const startNextRound = (eventName, matchId) => {
 };
 
 export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
-    const matchRoot = legacyMatchesRoot(eventName);
-
     try {
-        const snapshot = await get(ref(database, `${matchRoot}/${currentMatchId}/config`));
-        const config = snapshot.val();
+        const config = await fetchMatchConfigForRules(
+            database,
+            eventName,
+            currentMatchId
+        );
         if (!config) throw new Error("Match config not found");
 
         const winnerData = config.competitors[winnerSide];
@@ -103,7 +104,6 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
             }
         );
 
-        // ALSO update the current match's state to record the winner!
         await dualUpdateMatchState(database, eventName, currentMatchId, {
             winnerSide: winnerSide
         });

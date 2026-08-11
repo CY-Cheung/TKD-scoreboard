@@ -34,6 +34,7 @@ import {
     dualUpdateMatchState,
     subscribeMatchView,
     backfillMatchLiveFromLegacy,
+    ensureMatchLiveExists,
 } from "../../services/matchFirebase";
 import {
     filterLiveReferees,
@@ -221,13 +222,17 @@ function Screen() {
         };
     }, [selectedEvent, selectedCourt]);
 
-    // Stage 3: ensure matchLive node exists when Screen opens a match (auth required)
+    // Ensure matchLive exists when Screen opens a match (auth required)
     useEffect(() => {
         if (!selectedEvent || !currentMatchId) return;
         let cancelled = false;
-        backfillMatchLiveFromLegacy(database, selectedEvent, currentMatchId).then(
-            (ok) => {
-                if (cancelled || ok !== false) return;
+        ensureMatchLiveExists(database, selectedEvent, currentMatchId)
+            .then(() =>
+                backfillMatchLiveFromLegacy(database, selectedEvent, currentMatchId)
+            )
+            .catch((err) => {
+                if (cancelled) return;
+                console.error("matchLive ensure failed:", err);
                 setToastMessages((prev) => [
                     ...prev,
                     {
@@ -235,8 +240,7 @@ function Screen() {
                         text: "matchLive write failed — publish rules + stay Google-signed-in (see console)",
                     },
                 ]);
-            }
-        );
+            });
         return () => {
             cancelled = true;
         };

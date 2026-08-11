@@ -77,8 +77,8 @@ export function buildLegacyMatchLiveStripPatch() {
 }
 
 /**
- * Shape used when writing events/…/matches/{id} after Stage 5:
- * config only — live data belongs in matchLive.
+ * Legacy helper: config-only shape under events/…/matches/{id}.
+ * Stage 5+ no longer writes nested matches; kept for tests / one-off cleanup.
  */
 export function legacyMatchConfigOnlyPayload(matchData) {
   const config = extractMatchConfig(matchData);
