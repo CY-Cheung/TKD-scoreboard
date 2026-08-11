@@ -114,7 +114,6 @@ function Controller() {
         setSeatGrabPending(true);
         let grabbedSeat = null;
         let lastGrabError = null;
-        let legacySeatRef = null;
         let flatSeatRef = null;
         let heartbeatId = null;
         let connectedUnsub = null;
@@ -123,25 +122,19 @@ function Controller() {
 
         const clearSeatPaths = () => {
             if (!grabbedSeat) return;
-            const legacyPath = legacyRefereeSeatPath(eventId, courtId, grabbedSeat);
             const flatPath = refereeSeatPath(eventId, courtId, grabbedSeat);
-            set(ref(database, legacyPath), null).catch(() => {});
+            const legacyPath = legacyRefereeSeatPath(eventId, courtId, grabbedSeat);
             set(ref(database, flatPath), null).catch(() => {});
+            // Best-effort: wipe leftover dual-write seat so Screen flat-primary UI stays clean.
+            set(ref(database, legacyPath), null).catch(() => {});
         };
 
         const registerDisconnectHandlers = () => {
-            if (!legacySeatRef) return;
-            onDisconnect(legacySeatRef).remove().catch(() => {});
-            if (flatSeatRef) {
-                onDisconnect(flatSeatRef).remove().catch(() => {});
-            }
+            if (!flatSeatRef) return;
+            onDisconnect(flatSeatRef).remove().catch(() => {});
         };
 
-        const startPresence = (seatName, deviceData) => {
-            legacySeatRef = ref(
-                database,
-                legacyRefereeSeatPath(eventId, courtId, seatName)
-            );
+        const startPresence = (seatName) => {
             flatSeatRef = ref(
                 database,
                 refereeSeatPath(eventId, courtId, seatName)
@@ -159,9 +152,7 @@ function Controller() {
 
             heartbeatId = setInterval(() => {
                 if (!isMounted || !grabbedSeat) return;
-                const patch = { lastSeen: Date.now() };
-                update(legacySeatRef, patch).catch(() => {});
-                update(flatSeatRef, patch).catch(() => {});
+                update(flatSeatRef, { lastSeen: Date.now() }).catch(() => {});
             }, SEAT_HEARTBEAT_INTERVAL_MS);
 
             // pagehide/beforeunload often fire when the phone closes the tab;
@@ -172,15 +163,14 @@ function Controller() {
 
         const trySeat = async (seatName) => {
             if (!isMounted) return false;
-            // Claim on legacy path (proven for unauthenticated judges).
-            // Mirror to flat courts tree for Stage 2 dual-write readers.
-            const legacyRefForClaim = ref(
-                database,
-                legacyRefereeSeatPath(eventId, courtId, seatName)
-            );
+            // Stage 5b: claim on flat courts path only (no legacy dual-write).
             const flatRefForClaim = ref(
                 database,
                 refereeSeatPath(eventId, courtId, seatName)
+            );
+            const legacyRefForCleanup = ref(
+                database,
+                legacyRefereeSeatPath(eventId, courtId, seatName)
             );
             try {
                 const deviceData = buildSeatDevicePayload(
@@ -188,25 +178,21 @@ function Controller() {
                     getDeviceName()
                 );
 
-                const result = await runTransaction(legacyRefForClaim, (currentData) =>
+                const result = await runTransaction(flatRefForClaim, (currentData) =>
                     applySeatClaimTransaction(currentData, deviceData)
                 );
 
                 if (result.committed) {
                     if (!isMounted) {
-                        set(legacyRefForClaim, null);
                         set(flatRefForClaim, null).catch(() => {});
                         return false;
                     }
-                    try {
-                        await set(flatRefForClaim, deviceData);
-                    } catch (err) {
-                        console.warn("flat seat mirror failed:", err?.message || err);
-                    }
+                    // Drop any leftover legacy seat for this chair (pre-cutover dual-write).
+                    set(legacyRefForCleanup, null).catch(() => {});
                     setMySeat(seatName);
                     setSeatGrabError(null);
                     grabbedSeat = seatName;
-                    startPresence(seatName, deviceData);
+                    startPresence(seatName);
                     return true;
                 }
                 return false;
@@ -259,9 +245,10 @@ function Controller() {
         if (!eventId || !courtId || !mySeat || !deviceId) return;
         if (isAdminSeat(mySeat)) return;
 
+        // Stage 5b: kick listener watches flat seat (claim source of truth).
         const seatRef = ref(
             database,
-            legacyRefereeSeatPath(eventId, courtId, mySeat)
+            refereeSeatPath(eventId, courtId, mySeat)
         );
         const unsubscribe = onValue(seatRef, (snapshot) => {
             if (shouldKickFromSeat(snapshot.val(), deviceId)) {

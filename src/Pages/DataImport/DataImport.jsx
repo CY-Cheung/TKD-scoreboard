@@ -25,6 +25,7 @@ import {
 import {
     dualSetCourtField,
     mirrorCourtsMapToFlat,
+    eventPayloadWithoutCourts,
 } from '../../services/courtFirebase';
 import {
     mirrorMatchFlatArtifacts,
@@ -217,7 +218,11 @@ const DataImport = () => {
             });
 
             for (const record of records) {
-                await set(ref(database, `events/${record.id}`), record.data);
+                // Stage 5b: strip nested courts from events/{id}; courts live under courts/.
+                await set(
+                    ref(database, `events/${record.id}`),
+                    eventPayloadWithoutCourts(record.data)
+                );
                 await writeEventIndexEntry(database, record.id, record.data);
                 await mirrorCourtsMapToFlat(database, record.id, record.data.courts);
                 if (record.data.matches) {

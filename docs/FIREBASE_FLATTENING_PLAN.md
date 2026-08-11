@@ -1,10 +1,10 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
-> **Status:** Stage 4 **in progress** on branch `cursor/firebase-stage4-matches-8215`  
+> **Status:** Stage 5b（courts cutover）in progress on `cursor/firebase-courts-cutover-8215`  
 > Stage 1–2 已合入 `main`（`eventIndex` + dual-write `courts`）。  
-> Stage 3（`matchLive` dual-write）喺 `cursor/firebase-matchlive-dual-write-8215`／PR #10。  
-> Stage 4：dual-write 頂層 `matches/{e}/{m}/config` + `matchIndex/{e}/{m}`；列表 prefer flat；刪 Event／Match 清齊 orphan 頂層樹。  
-> **部署提醒：** Publish 含 `matchLive`／`matches`／`matchIndex` 嘅 `database.rules.json`。
+> Stage 3（`matchLive` dual-write）／Stage 4（`matches` + `matchIndex`）／Stage 5a（orphan cleanup）見相關 PR。  
+> **Stage 5b：** 停止 dual-write legacy `events/…/courts`；flat `courts/{e}/{c}` 係 write + seat claim 主路徑；讀仍可 fallback legacy。  
+> **部署提醒：** Publish 更新後嘅 `database.rules.json`（referees heartbeat：同一 `deviceId` 可 update）。
 
 ---
 
@@ -24,8 +24,10 @@ Court Setup／Import 用 `get('events')` 時容易 **Over-fetching（過度獲�
 events/{eventId}/
 ├── EventName, createdBy, createdByEmail, coAdmins?
 ├── settings/…
-├── courts/{courtId}/          ← 仍 dual-write；flat 喺 /courts
+├── courts/{courtId}/          ← Stage 5b：app 唔再寫；讀仍可 fallback
 └── matches/{matchId}/         ← 仍 dual-write；flat config／live／index 已鏡像
+
+courts/{eventId}/{courtId}/    ← Stage 5b：primary writes + seat claim
 ```
 
 ---
@@ -60,9 +62,12 @@ matchLive/{eventId}/{matchId}/        ← state / stats / votes / recentScores
 0. Backup  
 1. `eventIndex`（已合入 main）  
 2. Dual-write `courts`（已合入 main）  
-3. Dual-write `matchLive`（PR #10）  
-4. Dual-write `matches/config` + `matchIndex` + backfill（**本分支**）  
-5. Delete old nested paths（未做）
+3. Dual-write `matchLive`  
+4. Dual-write `matches/config` + `matchIndex` + backfill  
+5a. Orphan cleanup（Court Setup → Clean Orphan Data）  
+5b. **Courts cutover（本分支）** — 停寫 legacy courts；flat primary；建立 event 時 `eventPayloadWithoutCourts`  
+5c. （可選）scoring TX 搬離 legacy matches  
+5. Delete old nested paths（未做；5b **唔**刪 production nested courts）
 
 App 內 backfill：`backfillMatchFlatFromLegacyEvent`（Data Import 開 match 列表時 `fetchMatchesForEvent` 會 best-effort 觸發）。
 
@@ -72,15 +77,16 @@ App 內 backfill：`backfillMatchFlatFromLegacyEvent`（Data Import 開 match �
 
 ---
 
-## 6. Stage 4 progress（本分支）
+## 6. Stage 5b progress（本分支）
 
-1. 建立／匯入／改 Match → `mirrorMatchFlatArtifacts`（config + index + live）  
-2. Data Import 列表：`fetchMatchesForEvent` prefer flat，否則 legacy + backfill  
-3. `promoteWinner` dual-write flat config competitors + refresh index  
-4. 刪 Match／Event → `removeMatchFlatArtifacts(ForEvent)`  
-5. Rules：`matches` + `matchIndex`  
-6. Scoring TX 仍喺 legacy（需要成個 match）；**未**刪 `events/…/matches`
+1. `dualSetCourtField` / `dualUpdateCourtField` → **flat-only** writes（保留舊函數名）  
+2. Controller seat claim／heartbeat／onDisconnect／kick → **flat** `courts/…/referees`  
+3. 建立 Event（Court Setup／Data Import）→ `eventPayloadWithoutCourts` + `mirrorCourtsMapToFlat`  
+4. Screen stale janitor → `clearRefereeSeat`（flat + best-effort legacy）  
+5. Rules：unauth 可用同一 `deviceId` update seat（heartbeat）  
+6. **未**刪 `events/…/courts` 舊資料（觀察期後再做）
 
+**Cutover 注意：** Deploy 後請裁判重新掃 QR／搶座；舊 legacy-only seat 會逐步被清走。  
 **記得 Publish** `database.rules.json`。
 
 ---
@@ -88,7 +94,7 @@ App 內 backfill：`backfillMatchFlatFromLegacyEvent`（Data Import 開 match �
 ## 7. Rules skeleton
 
 見 **`database.rules.flattened.skeleton.json`**（理想終態草圖）。  
-Dual-write 期間以 production `database.rules.json` 為準（保留 legacy nested rules）。
+Cutover 期間以 production `database.rules.json` 為準（保留 legacy nested rules 作讀 fallback）。
 
 ---
 

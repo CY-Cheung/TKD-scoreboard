@@ -25,7 +25,7 @@ import {
 } from "./matchTimer";
 import {
     dualUpdateCourtField,
-    dualSetCourtField,
+    clearRefereeSeat,
     subscribePreferFlatCourt,
     subscribeCourtReferees,
     getPreferFlatCourt,
@@ -203,12 +203,11 @@ function Screen() {
         const janitorId = setInterval(() => {
             const staleSeats = listStaleRefereeSeats(rawReferees);
             staleSeats.forEach((seat) => {
-                dualSetCourtField(
+                clearRefereeSeat(
                     database,
                     selectedEvent,
                     selectedCourt,
-                    ["referees", seat],
-                    null
+                    seat
                 ).catch(() => {});
             });
             if (staleSeats.length > 0) {
