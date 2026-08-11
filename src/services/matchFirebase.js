@@ -133,6 +133,7 @@ export async function removeMatchFlatArtifactsForEvent(database, eventId) {
 
 /**
  * Run transaction on legacy full match (needs config), then mirror live tree.
+ * @deprecated Stage 5c — prefer runMatchLiveTransaction
  */
 export async function runLegacyMatchTransaction(
   database,
@@ -152,17 +153,145 @@ export async function runLegacyMatchTransaction(
   return result;
 }
 
-export async function dualUpdateMatchState(database, eventId, matchId, patch) {
-  await update(ref(database, legacyMatchPath(eventId, matchId, "state")), patch);
-  // Prefer full mirror so matchLive/{event}/{match} always appears as a node
-  // (child-only update is easy to miss in Console and fails when parent is absent).
-  try {
-    const snap = await get(ref(database, legacyMatchPath(eventId, matchId)));
-    if (snap.exists()) {
-      await mirrorMatchLive(database, eventId, matchId, snap.val());
+/** Prefer flat matches/…/config; fallback legacy events/…/matches/…/config. */
+export async function fetchMatchConfigForRules(database, eventId, matchId) {
+  const flatSnap = await get(ref(database, flatMatchConfigPath(eventId, matchId)));
+  if (flatSnap.exists()) return flatSnap.val();
+  const legacySnap = await get(
+    ref(database, legacyMatchConfigPath(eventId, matchId))
+  );
+  return legacySnap.exists() ? legacySnap.val() : null;
+}
+
+export async function bootstrapMatchLivePayloadFromLegacy(
+  database,
+  eventId,
+  matchId
+) {
+  const snap = await get(ref(database, legacyMatchPath(eventId, matchId)));
+  if (!snap.exists()) return null;
+  return extractMatchLivePayload(snap.val());
+}
+
+/** Reverse dual-write: copy live fields onto legacy match (keep config). */
+export async function mirrorLiveFieldsToLegacy(
+  database,
+  eventId,
+  matchId,
+  liveData
+) {
+  const payload = extractMatchLivePayload(liveData);
+  await update(ref(database, legacyMatchPath(eventId, matchId)), {
+    state: payload.state,
+    stats: payload.stats,
+    votes: payload.votes,
+    recentScores: payload.recentScores,
+    providedCourtId: payload.providedCourtId,
+    providedDeviceId: payload.providedDeviceId,
+  });
+}
+
+/**
+ * Pure helper for Stage 5c live TX view:
+ * inject config for rules, commit only MATCH_LIVE_KEYS.
+ * @returns {object|undefined} payload to write at matchLive path
+ */
+export function buildMatchLiveTransactionCommit(
+  current,
+  bootstrap,
+  config,
+  transactionUpdate,
+  now = Date.now()
+) {
+  const base = current != null ? current : bootstrap != null ? bootstrap : null;
+  if (base == null) return undefined;
+
+  const working = {
+    ...base,
+    config: config ?? base.config ?? null,
+  };
+  const updated = transactionUpdate(working);
+  if (updated === undefined) return undefined;
+  return extractMatchLivePayload(updated, now);
+}
+
+/**
+ * Stage 5c: transaction on matchLive (primary).
+ * Injects flat/legacy config for scoring rules; reverse-mirrors to legacy.
+ */
+export async function runMatchLiveTransaction(
+  database,
+  eventId,
+  matchId,
+  transactionUpdate
+) {
+  const config = await fetchMatchConfigForRules(database, eventId, matchId);
+  const liveRef = ref(database, matchLivePath(eventId, matchId));
+  const liveSnap = await get(liveRef);
+  let bootstrap = null;
+  if (!liveSnap.exists()) {
+    bootstrap = await bootstrapMatchLivePayloadFromLegacy(
+      database,
+      eventId,
+      matchId
+    );
+  }
+
+  const result = await runTransaction(liveRef, (current) =>
+    buildMatchLiveTransactionCommit(current, bootstrap, config, transactionUpdate)
+  );
+
+  if (result.committed && result.snapshot.exists()) {
+    try {
+      await mirrorLiveFieldsToLegacy(
+        database,
+        eventId,
+        matchId,
+        result.snapshot.val()
+      );
+    } catch (err) {
+      console.warn(
+        "[stage5c] legacy reverse-mirror after live tx failed:",
+        err?.code || err?.message || err
+      );
     }
+  }
+  return result;
+}
+
+/** Ensure matchLive node exists (bootstrap from legacy once). */
+export async function ensureMatchLiveExists(database, eventId, matchId) {
+  const liveRef = ref(database, matchLivePath(eventId, matchId));
+  const snap = await get(liveRef);
+  if (snap.exists()) return;
+  const boot = await bootstrapMatchLivePayloadFromLegacy(
+    database,
+    eventId,
+    matchId
+  );
+  if (boot) {
+    await set(liveRef, boot);
+  }
+}
+
+export async function dualUpdateMatchState(database, eventId, matchId, patch) {
+  // Stage 5c: matchLive state is primary; legacy state is reverse-mirrored.
+  try {
+    await ensureMatchLiveExists(database, eventId, matchId);
+    await update(ref(database, matchLivePath(eventId, matchId, "state")), patch);
+    await update(ref(database, matchLivePath(eventId, matchId)), {
+      updatedAt: Date.now(),
+    });
   } catch (err) {
-    logMatchLiveMirrorFailure("mirror after state update", err);
+    logMatchLiveMirrorFailure("primary state update", err);
+  }
+  try {
+    await update(ref(database, legacyMatchPath(eventId, matchId, "state")), patch);
+  } catch (err) {
+    console.warn(
+      "[stage5c] legacy state reverse-mirror failed:",
+      err?.code || err?.message || err
+    );
   }
 }
 
@@ -173,17 +302,28 @@ export async function dualUpdateMatchStatsSide(
   side,
   patch
 ) {
-  await update(
-    ref(database, legacyMatchPath(eventId, matchId, "stats", side)),
-    patch
-  );
   try {
-    const snap = await get(ref(database, legacyMatchPath(eventId, matchId)));
-    if (snap.exists()) {
-      await mirrorMatchLive(database, eventId, matchId, snap.val());
-    }
+    await ensureMatchLiveExists(database, eventId, matchId);
+    await update(
+      ref(database, matchLivePath(eventId, matchId, "stats", side)),
+      patch
+    );
+    await update(ref(database, matchLivePath(eventId, matchId)), {
+      updatedAt: Date.now(),
+    });
   } catch (err) {
-    logMatchLiveMirrorFailure("mirror after stats update", err);
+    logMatchLiveMirrorFailure("primary stats update", err);
+  }
+  try {
+    await update(
+      ref(database, legacyMatchPath(eventId, matchId, "stats", side)),
+      patch
+    );
+  } catch (err) {
+    console.warn(
+      "[stage5c] legacy stats reverse-mirror failed:",
+      err?.code || err?.message || err
+    );
   }
 }
 

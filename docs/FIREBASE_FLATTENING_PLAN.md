@@ -1,10 +1,9 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
-> **Status:** Stage 5b（courts cutover）in progress on `cursor/firebase-courts-cutover-8215`  
-> Stage 1–2 已合入 `main`（`eventIndex` + dual-write `courts`）。  
-> Stage 3（`matchLive` dual-write）／Stage 4（`matches` + `matchIndex`）／Stage 5a（orphan cleanup）見相關 PR。  
-> **Stage 5b：** 停止 dual-write legacy `events/…/courts`；flat `courts/{e}/{c}` 係 write + seat claim 主路徑；讀仍可 fallback legacy。  
-> **部署提醒：** Publish 更新後嘅 `database.rules.json`（referees heartbeat：同一 `deviceId` 可 update）。
+> **Status:** Stage 5c（matchLive scoring TX）in progress on `cursor/firebase-stage5c-matchlive-tx-8215`  
+> Stage 1–2 已合入 `main`。Stage 3–5b／seat／haptic 見相關 PR（#10–#16）。  
+> **Stage 5c：** 計分／round／finalize TX 改跑 `matchLive/{e}/{m}`（primary）；config rules 由 flat／legacy config 注入；live fields reverse-mirror 返 legacy。  
+> **部署提醒：** Publish `database.rules.json`（含 `matchLive` unauth seat write）。
 
 ---
 
@@ -25,9 +24,12 @@ events/{eventId}/
 ├── EventName, createdBy, createdByEmail, coAdmins?
 ├── settings/…
 ├── courts/{courtId}/          ← Stage 5b：app 唔再寫；讀仍可 fallback
-└── matches/{matchId}/         ← 仍 dual-write；flat config／live／index 已鏡像
+└── matches/{matchId}/         ← Stage 5c：live fields reverse-mirror；config 仍可存在
 
-courts/{eventId}/{courtId}/    ← Stage 5b：primary writes + seat claim
+courts/{eventId}/{courtId}/           ← Stage 5b primary
+matches/{eventId}/{matchId}/config/   ← Stage 4
+matchIndex/{eventId}/{matchId}/       ← Stage 4
+matchLive/{eventId}/{matchId}/        ← Stage 5c scoring TX primary
 ```
 
 ---
@@ -64,37 +66,34 @@ matchLive/{eventId}/{matchId}/        ← state / stats / votes / recentScores
 2. Dual-write `courts`（已合入 main）  
 3. Dual-write `matchLive`  
 4. Dual-write `matches/config` + `matchIndex` + backfill  
-5a. Orphan cleanup（Court Setup → Clean Orphan Data）  
-5b. **Courts cutover（本分支）** — 停寫 legacy courts；flat primary；建立 event 時 `eventPayloadWithoutCourts`  
-5c. （可選）scoring TX 搬離 legacy matches  
-5. Delete old nested paths（未做；5b **唔**刪 production nested courts）
+5a. Orphan cleanup  
+5b. Courts cutover（停寫 legacy courts）  
+5c. **Scoring TX → matchLive（本分支）**  
+5. Delete old nested paths（未做；仍未刪 production nested courts／legacy match live）
 
-App 內 backfill：`backfillMatchFlatFromLegacyEvent`（Data Import 開 match 列表時 `fetchMatchesForEvent` 會 best-effort 觸發）。
+App 內 backfill：`backfillMatchFlatFromLegacyEvent`／`ensureMatchLiveExists`。
 
 刪 Event → 清 `eventIndex`／`courts`／`matches`／`matchLive`／`matchIndex` + `events`（防 orphan）。
 
-**Stage 5a（orphan cleanup）：** Court Setup → **Clean Orphan Data** — 掃描頂層 `courts`／`matches`／`matchIndex`／`matchLive` 入面、唔喺 `eventIndex∪events` 嘅 eventId，確認後刪除。
-
 ---
 
-## 6. Stage 5b progress（本分支）
+## 6. Stage 5c progress（本分支）
 
-1. `dualSetCourtField` / `dualUpdateCourtField` → **flat-only** writes（保留舊函數名）  
-2. Controller seat claim／heartbeat／onDisconnect／kick → **flat** `courts/…/referees`  
-3. 建立 Event（Court Setup／Data Import）→ `eventPayloadWithoutCourts` + `mirrorCourtsMapToFlat`  
-4. Screen stale janitor → `clearRefereeSeat`（flat + best-effort legacy）  
-5. Rules：unauth 可用同一 `deviceId` update seat（heartbeat）  
-6. **未**刪 `events/…/courts` 舊資料（觀察期後再做）
+1. `runMatchLiveTransaction` — TX on `matchLive/{e}/{m}`  
+2. Prefetch `matches/…/config`（fallback legacy）注入 working view（唔寫入 live）  
+3. Api：`updateScoreAndCheckRules`／`declareRoundWinner`／`startNextRound`／`finalizeTechCard*`／`finalizeIvr*` → live TX  
+4. `dualUpdateMatchState`／`dualUpdateMatchStatsSide` → live primary + legacy reverse-mirror  
+5. Commit 後 `mirrorLiveFieldsToLegacy`（過渡期，subscribe 仍可聽 legacy base）  
+6. **未**刪 `events/…/matches` live fields（觀察期後再做）
 
-**Cutover 注意：** Deploy 後請裁判重新掃 QR／搶座；舊 legacy-only seat 會逐步被清走。  
-**記得 Publish** `database.rules.json`。
+**記得 Publish** `database.rules.json`（`matchLive`）。
 
 ---
 
 ## 7. Rules skeleton
 
 見 **`database.rules.flattened.skeleton.json`**（理想終態草圖）。  
-Cutover 期間以 production `database.rules.json` 為準（保留 legacy nested rules 作讀 fallback）。
+Cutover 期間以 production `database.rules.json` 為準。
 
 ---
 

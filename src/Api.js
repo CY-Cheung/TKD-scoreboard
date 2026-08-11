@@ -11,7 +11,7 @@ import {
     dualUpdateMatchStatsSide,
     dualUpdateMatchConfigCompetitors,
     mirrorMatchLive,
-    runLegacyMatchTransaction,
+    runMatchLiveTransaction,
 } from './services/matchFirebase.js';
 import { legacyMatchesRoot } from './services/matchPaths.js';
 
@@ -43,7 +43,7 @@ export {
 export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, courtId = null, deviceId = null, seatName = null, mode = 'single') => {
     const meta = { scored: false };
 
-    return runLegacyMatchTransaction(database, eventName, matchId, (matchData) => {
+    return runMatchLiveTransaction(database, eventName, matchId, (matchData) => {
         // voteNow uses server offset; pauseNow stays wall-clock (legacy quirk).
         return applyScoreAndCheckRules(
             matchData,
@@ -66,13 +66,13 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
 };
 
 export const declareRoundWinner = (eventName, matchId, winnerSide) => {
-    runLegacyMatchTransaction(database, eventName, matchId, (matchData) =>
+    runMatchLiveTransaction(database, eventName, matchId, (matchData) =>
         applyDeclareRoundWinner(matchData, winnerSide, Date.now())
     );
 };
 
 export const startNextRound = (eventName, matchId) => {
-    runLegacyMatchTransaction(database, eventName, matchId, (matchData) =>
+    runMatchLiveTransaction(database, eventName, matchId, (matchData) =>
         applyStartNextRound(matchData)
     );
 };
@@ -129,7 +129,7 @@ export const startTechCardAnnouncement = (eventName, matchId, { side, decision }
 export const finalizeTechCardAnnouncement = async (eventName, matchId) => {
     let payload = null;
 
-    const result = await runLegacyMatchTransaction(database, eventName, matchId, (matchData) => {
+    const result = await runMatchLiveTransaction(database, eventName, matchId, (matchData) => {
         if (!matchData?.state?.techCardAnnouncement) return undefined;
 
         const ann = matchData.state.techCardAnnouncement;
@@ -261,7 +261,7 @@ export const startIvrAnnouncement = (eventName, matchId, { side, decision }) => 
 };
 
 export const finalizeIvrAnnouncement = async (eventName, matchId, eventSettings = {}) => {
-    await runLegacyMatchTransaction(database, eventName, matchId, (matchData) => {
+    await runMatchLiveTransaction(database, eventName, matchId, (matchData) => {
         if (!matchData?.state?.ivrAnnouncement) return undefined;
 
         const ann = matchData.state.ivrAnnouncement;
