@@ -1,9 +1,9 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
 > **Status:** Flatten **complete** in production（export verified）  
-> App／product docs（PRD／System Design／API／MULTI_DEVICE／Test Plan）已對齊 flat schema。  
-> Stack tip：`cursor/firebase-docs-prd-system-8215`。  
-> Stage 1–2 已合入 `main`。其餘見 PR #10–#25+。  
+> App／product docs／Refactoring Plan 已對齊 flat schema + Vitest baseline。  
+> Stack tip：`cursor/firebase-docs-refactor-plan-8215`。  
+> Stage 1–2 已合入 `main`。其餘見 PR #10–#26+。  
 > **Rules：** 需 Firebase Console Publish（#20）。
 
 ---
