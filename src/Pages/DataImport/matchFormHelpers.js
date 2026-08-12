@@ -48,6 +48,26 @@ export function deriveMatchFormFields(matchData) {
 }
 
 /**
+ * Apply deriveMatchFormFields result onto DataImport setters.
+ */
+export function applyMatchFormFields(fields, setters) {
+  if (!fields || !setters) return;
+  setters.setNextMatchId?.(fields.nextMatchId);
+  setters.setNextMatchSlot?.(fields.nextMatchSlot);
+  setters.setMaxPointGap?.(fields.maxPointGap);
+  setters.setMaxGamjeom?.(fields.maxGamjeom);
+  setters.setRoundDuration?.(fields.roundDuration);
+  setters.setRestDuration?.(fields.restDuration);
+  setters.setIvrQuota?.(fields.ivrQuota);
+  setters.setBlueName?.(fields.blueName);
+  setters.setBlueAffiliatedClub?.(fields.blueAffiliatedClub);
+  setters.setBluePreviousMatch?.(fields.bluePreviousMatch);
+  setters.setRedName?.(fields.redName);
+  setters.setRedAffiliatedClub?.(fields.redAffiliatedClub);
+  setters.setRedPreviousMatch?.(fields.redPreviousMatch);
+}
+
+/**
  * Build a match document from DataImport form state.
  */
 export function buildMatchFromForm({
@@ -93,4 +113,17 @@ export function buildMatchFromForm({
     },
     roundDuration: parseInt(roundDuration, 10),
   });
+}
+
+/** Clear competitor / linkage fields after a successful Add Match. */
+export function clearMatchFormCompetitorFields(setters) {
+  setters.setMatchId?.("");
+  setters.setBlueName?.("");
+  setters.setBlueAffiliatedClub?.("");
+  setters.setRedName?.("");
+  setters.setRedAffiliatedClub?.("");
+  setters.setNextMatchId?.("");
+  setters.setNextMatchSlot?.("");
+  setters.setBluePreviousMatch?.("");
+  setters.setRedPreviousMatch?.("");
 }

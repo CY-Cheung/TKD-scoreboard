@@ -4,7 +4,6 @@ import { database } from '../../firebase';
 import { ref, get, remove } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
 import { useEventSession } from '../../Context/EventSessionContext';
-import { FolderPlus, Trash, BoxArrowRight, CheckCircle } from 'react-bootstrap-icons';
 import { usePopup } from '../../Context/PopupContext';
 import {
   fetchEventList,
@@ -20,10 +19,10 @@ import {
 } from '../../services/matchFirebase';
 
 import './CourtSetup.css';
-import Button from '../../Components/Button/Button';
-import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
+import { useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import CreateEventModal from './CreateEventModal';
-import CourtSetupHeroPanel from './CourtSetupHeroPanel';
+import CourtSetupSessionForm from './CourtSetupSessionForm';
+import BrandSplitLayout from '../../Components/BrandSplit/BrandSplitLayout';
 import { runPdfFileSelect } from '../../services/pdfImportFlow';
 import {
   persistCreatedEvents,
@@ -357,134 +356,31 @@ function CourtSetup() {
     };
   return (
     <div className="cs-container aurora-bg" onDoubleClick={toggleFullScreen}>
-      <div className="cs-content glass-card split-layout">
-      {user && (
-        <div style={{ position: 'absolute', bottom: '1.5cqi', right: '1.5cqi', zIndex: 50, backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.52cqi 0.78cqi', borderRadius: '0.78cqi', backdropFilter: 'blur(0.52cqi)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '0.62cqi', textAlign: 'left' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.52cqi' }}>
-            {user.photoURL ? (
-              <img src={user.photoURL} alt="User Avatar" style={{ width: '1.66cqi', height: '1.66cqi', borderRadius: '50%', objectFit: 'cover' }} />
-            ) : (
-              <div style={{ width: '1.66cqi', height: '1.66cqi', borderRadius: '50%', backgroundColor: '#6c5ce7', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.85cqi' }}>
-                {user.displayName?.[0] || 'U'}
-              </div>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.77cqi', lineHeight: '1.2' }}>{user.displayName || 'User'}</div>
-              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.64cqi', lineHeight: '1.2' }}>{user.email}</div>
-            </div>
-          </div>
-          <Button
-            onClick={handleGoogleLogout}
-            title="Sign Out of Google Account & Return to Landing"
-            fontSize="0.72cqi"
-            variant="orange"
-            icon={<BoxArrowRight size="0.73cqi" />}
-            text="Logout (登出)"
-            style={{ padding: '0.31cqi 0.62cqi', minWidth: 'auto', margin: 0 }}
-          />
-        </div>
-      )}
-        <CourtSetupHeroPanel locale={locale} visible={visible} />
-
-        <div className="cs-divider"></div>
-
-        <div className="cs-right-panel">
-            <form onSubmit={handleSubmit} className="cs-form">
-              <div className="form-group">
-                <StableLocaleText
-                  as="label"
-                  htmlFor="event-select"
-                  locale={locale}
-                  visible={visible}
-                  className="cs-form-label"
-                  en="Select Event"
-                  zh="選擇賽事"
-                />
-
-                <select
-                  id="event-select"
-                  className="datalist-input"
-                  value={selectedEvent}
-                  onChange={(e) => setSelectedEvent(e.target.value)}
-                  required
-                >
-                  <option value="" disabled>
-                    {locale === 'en' ? '-- Please select an event --' : '-- 請選擇賽事 --'}
-                  </option>
-                  {events.map(event => (
-                    <option key={event.id} value={event.id}>
-                      {event.displayName || event.id}
-                    </option>
-                  ))}
-                </select>
-
-                <div className="cs-event-actions">
-                  <Button type="button" onClick={() => setShowCreateModal(true)} fontSize="1.05cqi" angle={120} icon={<FolderPlus size="1.1cqi" />} style={{ flex: 1, whiteSpace: 'nowrap', padding: '0.65cqi 0.9cqi' }}>
-                    <StableLocaleText as="span" locale={locale} visible={visible} en="Create Event" zh="新增賽事" />
-                  </Button>
-                  <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} fontSize="1.05cqi" angle={350} icon={<Trash size="1.1cqi" />} style={{ flex: 1, whiteSpace: 'nowrap', padding: '0.65cqi 0.9cqi' }}>
-                    <StableLocaleText as="span" locale={locale} visible={visible} en="Delete Event" zh="刪除賽事" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <StableLocaleText
-                  as="label"
-                  htmlFor="setup-password"
-                  locale={locale}
-                  visible={visible}
-                  className="cs-form-label"
-                  en="Setup Password"
-                  zh="設定密碼"
-                />
-                <input
-                  id="setup-password"
-                  type="password"
-                  className="datalist-input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={locale === 'en' ? 'Enter setup password' : '請輸入設定密碼'}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <StableLocaleText
-                  as="label"
-                  htmlFor="court-select"
-                  locale={locale}
-                  visible={visible}
-                  className="cs-form-label"
-                  en="Select Court"
-                  zh="選擇場地"
-                />
-                <div className="cs-court-confirm-row">
-                  <select
-                    id="court-select"
-                    className="datalist-input cs-court-select"
-                    value={courtId}
-                    onChange={(e) => setCourtId(e.target.value)}
-                    disabled={!selectedEvent || courtOptions.length === 0}
-                    required
-                  >
-                    <option value="" disabled>
-                      {locale === 'en' ? '-- Please select a court --' : '-- 請選擇場地 --'}
-                    </option>
-                    {courtOptions.map(court => (
-                      <option key={court} value={court}>{court}</option>
-                    ))}
-                  </select>
-                  <Button type="submit" fontSize="1.1cqi" angle={30} disabled={!selectedEvent || !courtId} icon={<CheckCircle size="1.15cqi" />} style={{ whiteSpace: 'nowrap', padding: '0.7cqi 1.35cqi', margin: 0, flex: 1 }}>
-                    <StableLocaleText as="span" locale={locale} visible={visible} en="Confirm Settings" zh="確認設定" />
-                  </Button>
-                </div>
-              </div>
-
-              {error && <p className="cs-error-message">{error}</p>}
-            </form>
-        </div>
-      </div>
+      <BrandSplitLayout
+        locale={locale}
+        visible={visible}
+        user={user}
+        onLogout={handleGoogleLogout}
+        rightVariant="court"
+        className="cs-content"
+      >
+        <CourtSetupSessionForm
+          locale={locale}
+          visible={visible}
+          events={events}
+          selectedEvent={selectedEvent}
+          setSelectedEvent={setSelectedEvent}
+          password={password}
+          setPassword={setPassword}
+          courtId={courtId}
+          setCourtId={setCourtId}
+          courtOptions={courtOptions}
+          error={error}
+          onCreateEvent={() => setShowCreateModal(true)}
+          onDeleteEvent={promptDeleteEvent}
+          onSubmit={handleSubmit}
+        />
+      </BrandSplitLayout>
 
       {showCreateModal && (
         <CreateEventModal

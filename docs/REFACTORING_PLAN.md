@@ -195,15 +195,17 @@ Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
 
 | Extract | From |
 |---------|------|
-| `ScreenUnconfigured`／`PlayerNameCell`／`ScreenIvrStatus`／`SideRoundHistory`／`ScreenToasts`／`getTimeoutStyle` | `Screen.jsx`（~697→~637） |
+| `ScreenUnconfigured`／`PlayerNameCell`／`ScreenIvrStatus`／`SideRoundHistory`／`ScreenToasts`／`getTimeoutStyle` | `Screen.jsx` |
 | `parseName` + test | `DataImport.jsx` |
-| `CreateEventModal` | `CourtSetup.jsx`（~821→~696） |
-| `MatchConfigForm`／`MatchesList`／`BracketView`／`CreateEventModal`／`matchListUtils` + tests | `DataImport.jsx`（~843→~573） |
-| `pdfImportFlow`／`persistCreatedEvents`／`matchFormHelpers` + tests | DataImport + CourtSetup shared create／PDF |
-| `CourtSetupHeroPanel` | `CourtSetup.jsx`（~612→~525） |
-| `ScreenCenterTimer`／`ScreenRoundWins`／`ScreenBottomBar` | `Screen.jsx`（~637→~578） |
+| `CreateEventModal` | `CourtSetup.jsx` |
+| `MatchConfigForm`／`MatchesList`／`BracketView`／`CreateEventModal`／`matchListUtils` | `DataImport.jsx` |
+| `pdfImportFlow`／`persistCreatedEvents`／`matchFormHelpers`／`MatchActionButtons` | DataImport + CourtSetup shared create／PDF |
+| `BrandSplitLayout`／`BrandSplitHero`／`BrandSplitUserBadge` | Home + CourtSetup 共用左半；page 只 render 右半 |
+| `HomeRightPanel`／`parseEventHeading` | `Home.jsx` |
+| `CourtSetupSessionForm` | `CourtSetup.jsx`（取代 page-local hero） |
+| `ScreenCenterTimer`／`ScreenRoundWins`／`ScreenBottomBar`／`ScreenEventTopBar`／`ScreenTopNames`／`ScreenMiddleBoard`／`ScreenOverlayStack` | `Screen.jsx` |
 
-可選下一刀：`ScreenMiddleBoard`／overlay stack；CourtSetup login form；修 DataImport Create Event 死入口。
+可選下一刀：修 DataImport Create Event 死入口；再合 flatten／Wave 9 PR stack。
 
 Schema／多裝置真相來源：[`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 扁平化檔案軌跡：[`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。

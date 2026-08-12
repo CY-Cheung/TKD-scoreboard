@@ -10,126 +10,10 @@
     font-family: 'Inter', 'Segoe UI', 'Microsoft JhengHei UI', 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', sans-serif;
 }
 
-.cs-content {
-    position: relative;
-    border-radius: 1.04cqi;
-    width: 90%;
-    max-width: 75cqi; /* Further enlarge to 75cqi */
-    aspect-ratio: 16 / 9;
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    opacity: 0;
-    padding: 0;
-    
-}
-
-.cs-left-panel {
-    flex: 1 1 50%;
-    width: 50%;
-    max-width: 50%;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 2cqi;
-    padding: 6cqi;
-    text-align: left;
-}
-
-.cs-app-intro-list {
-    margin-top: 1.5cqi;
-    padding-left: 0;
-    list-style: none;
-}
-
-.cs-app-intro-item {
-    margin-bottom: 0.85cqi;
-    padding-left: 0;
-}
-
-.cs-app-intro-title {
-    display: grid;
-    font-size: 1.38cqi;
-    font-weight: 700;
-    line-height: 1.25;
-    color: rgba(255, 255, 255, 0.95);
-}
-
-.cs-app-intro-desc {
-    display: grid;
-    margin-top: 0.25cqi;
-    font-size: 1.05cqi;
-    line-height: 1.5;
-    color: rgba(255, 255, 255, 0.52);
-}
-
-.cs-divider {
-    width: 0.1cqi;
-    background: linear-gradient(
-        to bottom, 
-        rgba(255,255,255,0) 0%, 
-        rgba(255,255,255,0.15) 50%, 
-        rgba(255,255,255,0) 100%
-    );
-    margin: 3cqi 0;
-}
-
-.cs-right-panel {
-    flex: 1 1 50%;
-    width: 50%;
-    max-width: 50%;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    /* Tighter to card edge so controls can read larger */
-    padding: 2.6cqi 3cqi;
-}
-
-@keyframes fadeUp {
-    0% {
-        opacity: 0;
-        transform: translateY(2.08cqi);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.cs-title-container {
-    margin-bottom: 1.04cqi;
-    width: 100%;
-}
-
-.cs-title-container h1,
-.cs-title-container .cs-hero-title {
-    font-size: 2.67cqi; /* Make it slightly bigger for split layout */
-    margin: 0;
-    color: #ffffff;
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: 0.03cqi;
-}
-
-.cs-subtitle {
-    font-size: 1.5cqi;
-    color: #fbc531;
-    margin: 0.3cqi 0 0 0;
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: 0.3cqi;
-    text-transform: uppercase;
-}
-
 .cs-form {
     display: flex;
     flex-direction: column;
     gap: 1.35cqi;
-    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    opacity: 0;
     width: 100%;
 }
 
@@ -253,32 +137,6 @@
 
 .google-btn-wrapper button:hover {
     box-shadow: 0 0 1.04cqi rgba(0, 0, 0, 0.6) !important;
-}
-
-.cs-footer-links {
-    position: absolute;
-    bottom: 1.5cqi;
-    left: 1.5cqi;
-    width: auto;
-    display: flex;
-    justify-content: flex-start; /* Align left */
-    gap: 1.04cqi;
-    font-size: 1.1cqi;
-    color: rgba(255, 255, 255, 0.5);
-}
-
-.cs-footer-links a {
-    display: flex;
-    align-items: center;
-    gap: 0.31cqi;
-    cursor: pointer;
-    transition: color 0.2s;
-    text-decoration: none;
-    color: rgba(255, 255, 255, 0.5);
-}
-
-.cs-footer-links a:hover {
-    color: rgba(255, 255, 255, 0.9);
 }
 
 .cs-create-modal-overlay {

@@ -1,21 +1,20 @@
 import React from "react";
 import { Github } from "react-bootstrap-icons";
-import { StableLocaleText } from "../../Components/AlternatingLocale/AlternatingLocale";
+import { StableLocaleText } from "../AlternatingLocale/AlternatingLocale";
 import { LANDING_FEATURES, LANDING_HERO } from "../../constants/landingFeatures";
 
 /**
- * CourtSetup left hero: brand title, feature list, GitHub footer.
- * CSS classes stay in CourtSetup.css (`.cs-left-panel` etc.).
+ * Shared left brand panel (Home + CourtSetup).
  */
-export default function CourtSetupHeroPanel({ locale, visible }) {
+export default function BrandSplitHero({ locale, visible }) {
   return (
-    <div className="cs-left-panel">
-      <div className="cs-title-container">
+    <div className="brand-split-hero">
+      <div className="brand-split-title-block">
         <StableLocaleText
           as="h1"
           locale={locale}
           visible={visible}
-          className="cs-hero-title"
+          className="brand-split-hero-title"
           en={LANDING_HERO.titleEn}
           zh={LANDING_HERO.titleZh}
         />
@@ -23,18 +22,18 @@ export default function CourtSetupHeroPanel({ locale, visible }) {
           as="p"
           locale={locale}
           visible={visible}
-          className="cs-subtitle"
+          className="brand-split-subtitle"
           en={LANDING_HERO.subtitleEn}
           zh={LANDING_HERO.subtitleZh}
         />
-        <ul className="cs-app-intro-list">
+        <ul className="brand-split-intro-list">
           {LANDING_FEATURES.map(({ id, titleEn, titleZh, en, zh }) => (
-            <li key={id} className="cs-app-intro-item">
+            <li key={id} className="brand-split-intro-item">
               <StableLocaleText
                 as="div"
                 locale={locale}
                 visible={visible}
-                className="cs-app-intro-title"
+                className="brand-split-intro-title"
                 en={titleEn}
                 zh={titleZh}
               />
@@ -42,7 +41,7 @@ export default function CourtSetupHeroPanel({ locale, visible }) {
                 as="div"
                 locale={locale}
                 visible={visible}
-                className="cs-app-intro-desc"
+                className="brand-split-intro-desc"
                 en={en}
                 zh={zh}
               />
@@ -50,7 +49,7 @@ export default function CourtSetupHeroPanel({ locale, visible }) {
           ))}
         </ul>
       </div>
-      <div className="cs-footer-links">
+      <div className="brand-split-footer-links">
         <a
           href="https://github.com/CY-Cheung/TKD-scoreboard"
           target="_blank"

@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { database } from '../../firebase';
 import { usePopup } from '../../Context/PopupContext';
 import './DataImport.css';
-import Button from '../../Components/Button/Button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
 import { useEventSession } from '../../Context/EventSessionContext';
-import { PlusCircle, House, Display } from 'react-bootstrap-icons';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import { fetchEventList } from '../../services/eventIndexFirebase';
 import { setCourtField } from '../../services/courtFirebase';
@@ -25,7 +23,13 @@ import {
     listAvailableMatchDates,
     filterMatchIdsByDate,
 } from './matchListUtils';
-import { deriveMatchFormFields, buildMatchFromForm } from './matchFormHelpers';
+import {
+    deriveMatchFormFields,
+    buildMatchFromForm,
+    applyMatchFormFields,
+    clearMatchFormCompetitorFields,
+} from './matchFormHelpers';
+import MatchActionButtons from './MatchActionButtons';
 import MatchConfigForm from './MatchConfigForm';
 import MatchesList from './MatchesList';
 import BracketView from './BracketView';
@@ -250,20 +254,21 @@ const DataImport = () => {
     // Auto-populates the form when a match ID is entered manually
     useEffect(() => {
         if (matchId && currentMatches[matchId]) {
-            const fields = deriveMatchFormFields(currentMatches[matchId]);
-            setNextMatchId(fields.nextMatchId);
-            setNextMatchSlot(fields.nextMatchSlot);
-            setMaxPointGap(fields.maxPointGap);
-            setMaxGamjeom(fields.maxGamjeom);
-            setRoundDuration(fields.roundDuration);
-            setRestDuration(fields.restDuration);
-            setIvrQuota(fields.ivrQuota);
-            setBlueName(fields.blueName);
-            setBlueAffiliatedClub(fields.blueAffiliatedClub);
-            setBluePreviousMatch(fields.bluePreviousMatch);
-            setRedName(fields.redName);
-            setRedAffiliatedClub(fields.redAffiliatedClub);
-            setRedPreviousMatch(fields.redPreviousMatch);
+            applyMatchFormFields(deriveMatchFormFields(currentMatches[matchId]), {
+                setNextMatchId,
+                setNextMatchSlot,
+                setMaxPointGap,
+                setMaxGamjeom,
+                setRoundDuration,
+                setRestDuration,
+                setIvrQuota,
+                setBlueName,
+                setBlueAffiliatedClub,
+                setBluePreviousMatch,
+                setRedName,
+                setRedAffiliatedClub,
+                setRedPreviousMatch,
+            });
         }
     }, [matchId, currentMatches]);
 
@@ -303,15 +308,17 @@ const DataImport = () => {
             showToast(`Match ${matchId} added to event ${eventName} in Firebase!`);
             setCurrentMatches(prev => ({...prev, [matchId]: newMatch}));
 
-            setMatchId('');
-            setBlueName('');
-            setBlueAffiliatedClub('');
-            setRedName('');
-            setRedAffiliatedClub('');
-            setNextMatchId('');
-            setNextMatchSlot('');
-            setBluePreviousMatch('');
-            setRedPreviousMatch('');
+            clearMatchFormCompetitorFields({
+                setMatchId,
+                setBlueName,
+                setBlueAffiliatedClub,
+                setRedName,
+                setRedAffiliatedClub,
+                setNextMatchId,
+                setNextMatchSlot,
+                setBluePreviousMatch,
+                setRedPreviousMatch,
+            });
 
         } catch (error) {
             console.error("Error writing to Firebase:", error);
@@ -426,17 +433,14 @@ const DataImport = () => {
                                 setRedPreviousMatch={setRedPreviousMatch}
                             />
 
-                            <div className="di-action-buttons">
-                                <Button angle={260} onClick={handleAddMatch} icon={<PlusCircle size="1.15cqi" />} fontSize="1.05cqi" style={{ flex: 1, whiteSpace: "nowrap", padding: "0.55cqi 0.35cqi" }}>
-                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Add Match" zh="新增比賽" />
-                                </Button>
-                                <Button angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size="1.15cqi" />} fontSize="1.05cqi" style={{ flex: 1, whiteSpace: "nowrap", padding: "0.55cqi 0.35cqi" }}>
-                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Load" zh="載入" />
-                                </Button>
-                                <Button angle={150} onClick={() => navigate('/home')} icon={<House size="1.15cqi" />} fontSize="1.05cqi" style={{ flex: 1, whiteSpace: "nowrap", padding: "0.55cqi 0.35cqi" }}>
-                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Home" zh="主頁" />
-                                </Button>
-                            </div>
+                            <MatchActionButtons
+                                locale={locale}
+                                localeVisible={localeVisible}
+                                selectedMatchId={selectedMatchId}
+                                onAddMatch={handleAddMatch}
+                                onLoadMatch={handleLoadMatch}
+                                onHome={() => navigate('/home')}
+                            />
                         </div>
 
                         <MatchesList

@@ -3,11 +3,7 @@ import { ref, onValue, update, get } from "firebase/database";
 import { database } from "../../firebase";
 import "./Screen.css";
 import "../../App.css";
-import Edit from "./Edit";
-import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
 import { startNextRound, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement, getEffectiveIvrRemaining } from "../../Api";
-import TechnicalCardAnnouncement from "../../Components/TechnicalCardFlow/TechnicalCardAnnouncement";
-import IVRAnnouncement from "../../Components/IVRFlow/IVRAnnouncement";
 import { getScoreValue } from "../../domain/scoreMath.js";
 import {
     determineDominantSide,
@@ -37,13 +33,12 @@ import {
     listStaleRefereeSeats,
     SEAT_HEARTBEAT_INTERVAL_MS,
 } from "../Controller/seatGrab";
-import VoteLogRows from "./VoteLogRows";
-import PlayerNameCell from "./PlayerNameCell";
-import SideRoundHistory from "./SideRoundHistory";
-import ScreenToasts from "./ScreenToasts";
 import ScreenUnconfigured from "./ScreenUnconfigured";
-import ScreenCenterTimer from "./ScreenCenterTimer";
 import ScreenBottomBar from "./ScreenBottomBar";
+import ScreenEventTopBar from "./ScreenEventTopBar";
+import ScreenTopNames from "./ScreenTopNames";
+import ScreenMiddleBoard from "./ScreenMiddleBoard";
+import ScreenOverlayStack from "./ScreenOverlayStack";
 import { useEventSession } from "../../Context/EventSessionContext";
 
 const EMPTY_MATCH_RULES = Object.freeze({});
@@ -432,77 +427,38 @@ function Screen() {
     return (
         <>
             <div className="screen" onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}>
-                <div className="screen-floating-top-bar" style={{ position: 'absolute', bottom: '100%', left: 0, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'calc(var(--screen-height) * 0.03) calc(var(--screen-width) * 0.03)', zIndex: 100, boxSizing: 'border-box', color: 'rgba(255,255,255,0.5)', fontFamily: 'Outfit, sans-serif' }}>
-                    <div style={{ fontSize: 'calc(var(--screen-width) * 0.018)', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase' }}>
-                        {eventName || selectedEvent || "No Event Selected"}
-                    </div>
-                </div>
+                <ScreenEventTopBar eventLabel={eventName || selectedEvent || "No Event Selected"} />
 
-                {/* Top Section: Player Names */}
-                <div className={`top ${isResting ? 'rest-mode' : ''}`} style={{ flexDirection: direction }}>
-                    <div className="red-name red-bg name-font"><PlayerNameCell competitor={config.competitors?.red} /></div>
-                    <div className="blue-name blue-bg name-font"><PlayerNameCell competitor={config.competitors?.blue} /></div>
-                </div>
+                <ScreenTopNames
+                    direction={direction}
+                    isResting={isResting}
+                    redCompetitor={config.competitors?.red}
+                    blueCompetitor={config.competitors?.blue}
+                />
 
-                {/* Middle Section: Scores and Match Info */}
-                <div className="middle" style={{ flexDirection: direction }}>
-                    {/* Red Side: Log */}
-                    <div className="red-log red-bg">
-                        <div className="log-records-container" style={{ flexGrow: 1, overflowY: 'scroll', display: 'flex', flexDirection: 'column' }}>
-                            {matchData && (
-                                <VoteLogRows
-                                    side="red"
-                                    direction={direction}
-                                    votes={matchData.votes}
-                                    recentScores={matchData.recentScores}
-                                    now={now}
-                                />
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Red Side: Score */}
-                    <div className={'red-score-text red-score-bg score-font cursor-target'} style={{ color: redScoreColor }} onClick={() => setShowEdit(true)}>
-                        {isResting || isFinal ? (
-                            <SideRoundHistory color="red" roundScores={roundScores} roundWins={roundWins} />
-                        ) : redTotalScore}
-                    </div>
-
-                    <ScreenCenterTimer
-                        matchNumber={matchNumber}
-                        kyeShiRemaining={kyeShiRemaining}
-                        displayTime={displayTime}
-                        winReason={winReason}
-                        isPaused={isPaused}
-                        isResting={isResting}
-                        isMatchLoaded={isMatchLoaded}
-                        timerColor={timerColor}
-                        onToggleDirection={toggleDirection}
-                        onToggleTimer={toggleTimer}
-                    />
-
-                    {/* Blue Side: Score */}
-                    <div className={'blue-score-text blue-score-bg score-font cursor-target'} style={{ color: blueScoreColor }} onClick={() => setShowEdit(true)}>
-                        {isResting || isFinal ? (
-                            <SideRoundHistory color="blue" roundScores={roundScores} roundWins={roundWins} />
-                        ) : blueTotalScore}
-                    </div>
-
-                    {/* Blue Side: Log */}
-                    <div className="blue-log blue-bg">
-                        <div className="log-records-container" style={{ flexGrow: 1, overflowY: 'scroll', display: 'flex', flexDirection: 'column' }}>
-                            {matchData && (
-                                <VoteLogRows
-                                    side="blue"
-                                    direction={direction}
-                                    votes={matchData.votes}
-                                    recentScores={matchData.recentScores}
-                                    now={now}
-                                />
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <ScreenMiddleBoard
+                    direction={direction}
+                    matchData={matchData}
+                    now={now}
+                    isResting={isResting}
+                    isFinal={isFinal}
+                    redScoreColor={redScoreColor}
+                    blueScoreColor={blueScoreColor}
+                    redTotalScore={redTotalScore}
+                    blueTotalScore={blueTotalScore}
+                    roundScores={roundScores}
+                    roundWins={roundWins}
+                    onOpenEdit={() => setShowEdit(true)}
+                    matchNumber={matchNumber}
+                    kyeShiRemaining={kyeShiRemaining}
+                    displayTime={displayTime}
+                    winReason={winReason}
+                    isPaused={isPaused}
+                    isMatchLoaded={isMatchLoaded}
+                    timerColor={timerColor}
+                    onToggleDirection={toggleDirection}
+                    onToggleTimer={toggleTimer}
+                />
 
                 <ScreenBottomBar
                     direction={direction}
@@ -516,61 +472,35 @@ function Screen() {
                 />
             </div>
 
-            {/* Edit Drawer Modal */}
-            <Edit
-                visible={showEdit}
-                setVisible={setShowEdit}
-                eventName={selectedEvent}
-                matchId={currentMatchId}
+            <ScreenOverlayStack
+                showEdit={showEdit}
+                setShowEdit={setShowEdit}
+                selectedEvent={selectedEvent}
+                currentMatchId={currentMatchId}
                 matchData={matchData}
                 dominantSide={dominantSide}
                 setShowQRCode={setShowQRCode}
                 occupiedRefereesCount={occupiedRefereesCount}
                 toggleDirection={toggleDirection}
                 toggleKyeShi={toggleKyeShi}
-                kyeShiActive={isKyeShiActive}
-                onTechCardConfirm={handleTechCardConfirm}
-                isTechnicalCardFlowActive={isTechCardFlowActive}
-                onIvrConfirm={handleIvrConfirm}
+                isKyeShiActive={isKyeShiActive}
+                handleTechCardConfirm={handleTechCardConfirm}
+                isTechCardFlowActive={isTechCardFlowActive}
+                handleIvrConfirm={handleIvrConfirm}
                 isIvrFlowActive={isIvrFlowActive}
                 eventSettings={eventSettings}
-            />
-
-            <TechnicalCardAnnouncement
-                visible={techCardAnnouncement !== null}
-                side={techCardAnnouncement?.side}
-                decision={techCardAnnouncement?.decision}
-                startedAt={techCardAnnouncement?.startedAt}
-                onComplete={handleTechCardAnnouncementComplete}
-            />
-
-            <IVRAnnouncement
-                visible={ivrAnnouncement !== null}
-                side={ivrAnnouncement?.side}
-                decision={ivrAnnouncement?.decision}
-                startedAt={ivrAnnouncement?.startedAt}
-                ivrRemaining={getEffectiveIvrRemaining(
-                    matchData?.stats,
-                    ivrAnnouncement?.side,
-                    eventSettings,
-                    matchRules
-                )}
-                onComplete={handleIvrAnnouncementComplete}
-            />
-
-            {/* Controller Connection QR Code Modal */}
-            <QRCodeDisplay
-                eventId={selectedEvent}
+                techCardAnnouncement={techCardAnnouncement}
+                handleTechCardAnnouncementComplete={handleTechCardAnnouncementComplete}
+                ivrAnnouncement={ivrAnnouncement}
+                matchRules={matchRules}
+                handleIvrAnnouncementComplete={handleIvrAnnouncementComplete}
                 eventName={eventName}
-                courtId={selectedCourt}
-                matchId={currentMatchId}
-                visible={showQRCode}
-                onClose={() => setShowQRCode(false)}
+                selectedCourt={selectedCourt}
+                showQRCode={showQRCode}
                 refereesData={refereesData}
                 refereeMode={refereeMode}
+                toastMessages={toastMessages}
             />
-
-            <ScreenToasts messages={toastMessages} />
         </>
     );
 }

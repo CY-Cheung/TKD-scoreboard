@@ -1,0 +1,164 @@
+/**
+ * Shared 16:9 brand split card styles for Home + CourtSetup.
+ * Unifies former home-* / cs-* left panel + divider micro-diffs.
+ */
+.brand-split-content {
+  position: relative;
+  border-radius: 1.04cqi;
+  width: 90%;
+  max-width: 75cqi;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  animation: brand-split-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  padding: 0;
+}
+
+@keyframes brand-split-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(2.08cqi);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.brand-split-hero {
+  flex: 1 1 50%;
+  width: 50%;
+  max-width: 50%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2cqi;
+  padding: 6cqi;
+  text-align: left;
+}
+
+.brand-split-title-block {
+  margin-bottom: 1.04cqi;
+  width: 100%;
+}
+
+.brand-split-hero-title {
+  font-size: 2.67cqi;
+  margin: 0;
+  color: #ffffff;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0.03cqi;
+}
+
+.brand-split-subtitle {
+  font-size: 1.5cqi;
+  color: #fbc531;
+  margin: 0.3cqi 0 0 0;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.3cqi;
+  text-transform: uppercase;
+}
+
+.brand-split-intro-list {
+  margin-top: 1.5cqi;
+  padding-left: 0;
+  list-style: none;
+}
+
+.brand-split-intro-item {
+  margin-bottom: 0.85cqi;
+  padding-left: 0;
+}
+
+.brand-split-intro-title {
+  display: grid;
+  font-size: 1.38cqi;
+  font-weight: 700;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.brand-split-intro-desc {
+  display: grid;
+  margin-top: 0.25cqi;
+  font-size: 1.05cqi;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.brand-split-footer-links {
+  position: absolute;
+  bottom: 1.5cqi;
+  left: 1.5cqi;
+  width: auto;
+  display: flex;
+  justify-content: flex-start;
+  gap: 1.04cqi;
+  font-size: 1.1cqi;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.brand-split-footer-links a {
+  display: flex;
+  align-items: center;
+  gap: 0.31cqi;
+  cursor: pointer;
+  transition: color 0.2s;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.brand-split-footer-links a:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.brand-split-divider {
+  width: 0.1cqi;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  margin: 3cqi 0;
+}
+
+.brand-split-right {
+  flex: 1 1 50%;
+  width: 50%;
+  max-width: 50%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Home keeps roomier right padding; CourtSetup denser controls */
+.brand-split-right--home {
+  padding: 6cqi;
+}
+
+.brand-split-right--court {
+  padding: 2.6cqi 3cqi;
+}
+
+.brand-split-user-badge {
+  position: absolute;
+  bottom: 1.5cqi;
+  right: 1.5cqi;
+  z-index: 50;
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 0.52cqi 0.78cqi;
+  border-radius: 0.78cqi;
+  backdrop-filter: blur(0.52cqi);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.62cqi;
+  text-align: left;
+}

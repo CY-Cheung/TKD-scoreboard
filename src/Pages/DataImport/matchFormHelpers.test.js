@@ -1,5 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { deriveMatchFormFields, buildMatchFromForm } from "./matchFormHelpers.js";
+import { describe, it, expect, vi } from "vitest";
+import {
+  deriveMatchFormFields,
+  buildMatchFromForm,
+  applyMatchFormFields,
+  clearMatchFormCompetitorFields,
+} from "./matchFormHelpers.js";
 
 describe("deriveMatchFormFields", () => {
   it("maps structured competitors", () => {
@@ -62,5 +67,48 @@ describe("buildMatchFromForm", () => {
     expect(doc.config.competitors.blue.name).toBe("Ann");
     expect(doc.config.competitors.red.name).toBe("Bob");
     expect(doc.config.rules.roundDuration).toBe(90);
+  });
+});
+
+describe("applyMatchFormFields / clearMatchFormCompetitorFields", () => {
+  it("applies and clears via setters", () => {
+    const setters = {
+      setNextMatchId: vi.fn(),
+      setNextMatchSlot: vi.fn(),
+      setMaxPointGap: vi.fn(),
+      setMaxGamjeom: vi.fn(),
+      setRoundDuration: vi.fn(),
+      setRestDuration: vi.fn(),
+      setIvrQuota: vi.fn(),
+      setBlueName: vi.fn(),
+      setBlueAffiliatedClub: vi.fn(),
+      setBluePreviousMatch: vi.fn(),
+      setRedName: vi.fn(),
+      setRedAffiliatedClub: vi.fn(),
+      setRedPreviousMatch: vi.fn(),
+      setMatchId: vi.fn(),
+    };
+    applyMatchFormFields(
+      {
+        nextMatchId: "A2",
+        nextMatchSlot: "blue",
+        maxPointGap: 12,
+        maxGamjeom: 4,
+        roundDuration: 80,
+        restDuration: 50,
+        ivrQuota: "",
+        blueName: "Ann",
+        blueAffiliatedClub: "HK",
+        bluePreviousMatch: "",
+        redName: "Bob",
+        redAffiliatedClub: "",
+        redPreviousMatch: "",
+      },
+      setters
+    );
+    expect(setters.setBlueName).toHaveBeenCalledWith("Ann");
+    clearMatchFormCompetitorFields(setters);
+    expect(setters.setMatchId).toHaveBeenCalledWith("");
+    expect(setters.setBlueName).toHaveBeenCalledWith("");
   });
 });
