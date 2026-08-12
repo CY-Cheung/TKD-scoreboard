@@ -7,7 +7,7 @@ import { useAuth } from '../../Context/AuthContext';
 import { useEventSession } from '../../Context/EventSessionContext';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import { fetchEventList } from '../../services/eventIndexFirebase';
-import { setCourtField } from '../../services/courtFirebase';
+import { loadMatchToCourt } from '../../services/courtFirebase';
 import {
     mirrorMatchFlatArtifacts,
     removeMatchFlatArtifacts,
@@ -32,6 +32,7 @@ import {
     resolveEventDisplayName,
 } from './dataImportHelpers';
 import { toggleDoubleClickFullscreen } from '../../Utils/requestFullscreen';
+import { matchLoadConflictMessage } from '../../services/matchCourtBinding';
 
 const DataImport = () => {
     const navigate = useNavigate();
@@ -238,11 +239,10 @@ const DataImport = () => {
         }
     
         try {
-            await setCourtField(
+            await loadMatchToCourt(
                 database,
                 eventName,
                 session.courtId,
-                "currentMatchId",
                 selectedMatchId
             );
     
@@ -252,6 +252,16 @@ const DataImport = () => {
     
         } catch (error) {
             console.error("Error loading match to court:", error);
+            if (error?.code === "MATCH_BOUND_OTHER_COURT") {
+                showToast(
+                    matchLoadConflictMessage(
+                        selectedMatchId,
+                        error.conflictingCourtIds || [],
+                        session.courtId
+                    )
+                );
+                return;
+            }
             showToast(`Failed to load match to court. See console for details.`);
         }
     };

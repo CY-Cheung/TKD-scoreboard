@@ -25,7 +25,8 @@
 - **Atomic Transaction（原子事務）搶位**：`Controller.jsx` 對每個席位獨立 `runTransaction()`
 - **onDisconnect Cleanup（斷線清理）**：離線時 `remove()` 席位節點
 - **Valid Point Voting（有效得分投票）**：Multiple Mode 下 2+ 裁判 **1 秒內**（`VOTE_WINDOW_MS = 1000`）同意先加分
-- **Court-level Match Binding（場地綁定比賽）**：`courts/{eventId}/{courtId}/currentMatchId` 驅動 Screen／Controller
+- **Court-level Match Binding（場地綁定比賽）**：`courts/{eventId}/{courtId}/currentMatchId` 驅動 Screen／Controller  
+- **One match → one court（約束）**：`matchLive/{event}/{matchId}` 係 **每場一份**（唔按 Court）。同一 `matchId` 唔應同時出現喺兩個 Court 嘅 `currentMatchId`；否則兩場大螢幕／邊裁會共用分數同計時。Load Match（`loadMatchToCourt`）若偵測到其他 Court 已綁定會拒絕。同一 Court 重複 Load 同一場則允許。
 - **Technical Card Announcement Sync（技術卡公告同步）**：`state.techCardAnnouncement` 廣播 Step 2 glass card 到同一 Match 嘅所有 Screen；3 秒後 `finalizeTechCardAnnouncement` 原子清除（Reject 延遲 Gam-jeom +1）
 
 **〔計劃中，未實作〕**：
@@ -164,7 +165,7 @@ Step 2 glass card 同步用；由主裁 Screen 寫入，所有訂閱同一 Match
 ### Phase B — 載入比賽
 
 1. Admin 去 `/import`（DataImport）
-2. 新增或選擇 Match → **Load** 寫入 `courts/{eventId}/{courtId}/currentMatchId`
+2. 新增或選擇 Match → **Load** 寫入 `courts/{eventId}/{courtId}/currentMatchId`（若該 Match 已喺其他 Court → 失敗／toast）
 3. Screen 同 Controller 經 `onValue` 自動載入該 Match
 
 ### Phase C — 開波

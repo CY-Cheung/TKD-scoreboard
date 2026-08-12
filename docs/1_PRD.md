@@ -69,7 +69,7 @@
 | US-10 | Admin | 手動新增／編輯 Match（選手、規則、IVR quota） | 靈活管理對陣 |
 | US-11 | Admin | 匯入 HKTKDA 格式 PDF 對陣表 | 大量場次一次建立 |
 | US-12 | Admin | 多日 PDF 自動拆成子 Event | 每日比賽資料分開 |
-| US-13 | Admin | Load Match 到某個 Court 嘅 `currentMatchId` | Screen／Controller 跟住該場 |
+| US-13 | Admin | Load Match 到某個 Court 嘅 `currentMatchId` | Screen／Controller 跟住該場；若該 Match 已綁其他 Court → 拒絕（見 Multi-Court 約束） |
 | US-14 | Admin | 喺 Tournament Bracket 睇晉級樹並 Promote Winner | 勝者寫入下一場 |
 
 ### 3.3 Live scoring（現場計分）
@@ -111,7 +111,7 @@
 1. **Live Sync（即時同步）** — 分數與狀態跨裝置更新  
 2. **Scan & Score（掃碼即用）** — 手機當計分手掣  
 3. **One Account（一鍵開賽）** — Google 登入建立／營運賽事  
-4. **Multi-Court（多場地）** — 每 Court 獨立 `currentMatchId`
+4. **Multi-Court（多場地）** — 每 Court 獨立 `currentMatchId`；**同一時間唔好**將同一個 `matchId` Load 去兩個 Court（`matchLive` 按 match 共用，會交叉計分／計時）。DataImport Load 會拒絕已被其他 Court 綁定嘅場次。
 
 ### 4.2 Feature checklist（功能核對）
 
@@ -122,7 +122,7 @@
 | Event | Create／list／delete Event | CourtSetup, DataImport | 頁面內邏輯 + Firebase `set`／`update` |
 | Event | Setup password gate | CourtSetup | `settings.setupPassword` |
 | PDF | HKTKDA parse + multi-day split | CourtSetup, DataImport | `Utils/pdfParser.js` + 頁面流程 |
-| Match | CRUD、Rules、IVR quota、Load | DataImport (`/import`) | flat `matches/…/config` + `matchLive` + `courts/…/currentMatchId` |
+| Match | CRUD、Rules、IVR quota、Load | DataImport (`/import`) | flat `matches/…/config` + `matchLive` + `loadMatchToCourt`（拒跨 Court 重綁） |
 | Bracket | Tournament tree + Promote | DataImport, Edit | `promoteWinner` |
 | Screen | Scoreboard、timer、vote log、QR | `/screen` | listeners + `Api` |
 | Edit | Manual score、判勝、TC、IVR、Kye-shi | Screen overlay | `Edit.jsx`, DecisionFlow |

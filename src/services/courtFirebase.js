@@ -4,6 +4,7 @@ import {
   flatCourtsRoot,
   courtIdsFromCourtsMap,
 } from "./courtPaths.js";
+import { getMatchLoadConflict } from "./matchCourtBinding.js";
 
 /** Write a court field under `courts/{event}/{court}/…`. */
 export async function setCourtField(
@@ -125,6 +126,42 @@ export async function getCourt(
     ref(database, flatCourtPath(eventId, courtId, ...segments))
   );
   return flatSnap.exists() ? flatSnap.val() : null;
+}
+
+/** One-shot get of all courts under an event (`courts/{eventId}`). */
+export async function fetchCourtsMap(database, eventId) {
+  const flatSnap = await get(ref(database, flatCourtsRoot(eventId)));
+  return flatSnap.exists() ? flatSnap.val() : {};
+}
+
+/**
+ * Set `currentMatchId` only if no *other* court already holds this match.
+ * Same-court reload is allowed. matchLive is shared per matchId — dual bind
+ * would cross-wire score/timer across venues.
+ *
+ * @throws {{ code: 'MATCH_BOUND_OTHER_COURT', conflictingCourtIds: string[] }}
+ */
+export async function loadMatchToCourt(
+  database,
+  eventId,
+  courtId,
+  matchId
+) {
+  const courtsMap = await fetchCourtsMap(database, eventId);
+  const conflict = getMatchLoadConflict({
+    courtsMap,
+    matchId,
+    targetCourtId: courtId,
+  });
+  if (conflict) {
+    const err = new Error(
+      `Match ${matchId} already bound to ${conflict.conflictingCourtIds.join(", ")}`
+    );
+    err.code = "MATCH_BOUND_OTHER_COURT";
+    err.conflictingCourtIds = conflict.conflictingCourtIds;
+    throw err;
+  }
+  await setCourtField(database, eventId, courtId, "currentMatchId", matchId);
 }
 
 /** Strip nested courts from an event payload before writing events/{id}. */
