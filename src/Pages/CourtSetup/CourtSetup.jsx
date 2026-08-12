@@ -4,7 +4,7 @@ import { database } from '../../firebase';
 import { ref, get, set, remove, update } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
 import { useEventSession } from '../../Context/EventSessionContext';
-import { FolderPlus, Trash, ExclamationTriangle, BoxArrowRight, CheckCircle, House, Github } from 'react-bootstrap-icons';
+import { FolderPlus, Trash, BoxArrowRight, CheckCircle, House, Github } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 import { appendIvrQuotaToSettings } from '../../Api';
 import { usePopup } from '../../Context/PopupContext';
@@ -29,11 +29,6 @@ import {
   mirrorMatchFlatArtifacts,
   removeMatchFlatArtifactsForEvent,
 } from '../../services/matchFirebase';
-import {
-  scanOrphanFirebaseTrees,
-  removeAllOrphanTrees,
-  formatOrphanScanSummary,
-} from '../../services/orphanCleanup';
 
 import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
@@ -49,7 +44,6 @@ function CourtSetup() {
   const [courtId, setCourtId] = useState('');
   const [courtOptions, setCourtOptions] = useState([]);
   const { showToast, showConfirm } = usePopup();
-  const [isCleaningOrphans, setIsCleaningOrphans] = useState(false);
 
   // Create Event Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -336,62 +330,6 @@ function CourtSetup() {
     }
   };
 
-  /** Stage 5a: scan & remove top-level trees for eventIds not in eventIndex/events. */
-  const promptCleanOrphans = async () => {
-    if (!user) {
-      showToast('🔒 請先登入 Google 帳號。');
-      return;
-    }
-    setIsCleaningOrphans(true);
-    try {
-      const scan = await scanOrphanFirebaseTrees(database);
-      if (!scan.orphanEventIds.length) {
-        showToast('✅ 冇發現 orphan 頂層資料。');
-        return;
-      }
-      const summary = formatOrphanScanSummary(scan);
-      showConfirm({
-        title: '清理 Orphan 資料 (Clean Orphans)',
-        message:
-          `${summary}\n\n` +
-          '會刪除以上 eventId 喺 courts / matches / matchIndex / matchLive 嘅頂層樹。' +
-          '唔會改動而家 eventIndex／events 入面嘅有效賽事。',
-        onConfirm: () => confirmCleanOrphans(scan.orphanEventIds),
-        confirmText: 'Delete Orphans',
-        cancelText: 'Cancel',
-      });
-    } catch (err) {
-      console.error('Orphan scan failed:', err);
-      showToast(`掃描 orphan 失敗：${err.message}`);
-    } finally {
-      setIsCleaningOrphans(false);
-    }
-  };
-
-  const confirmCleanOrphans = async (orphanEventIds) => {
-    if (!user || !orphanEventIds?.length) return;
-    setIsCleaningOrphans(true);
-    try {
-      const { removed, failed } = await removeAllOrphanTrees(
-        database,
-        orphanEventIds
-      );
-      if (removed.length) {
-        showToast(`🧹 已清理 ${removed.length} 個 orphan id。`);
-      }
-      if (failed.length) {
-        showToast(
-          `部分失敗：${failed.map((f) => `${f.eventId} (${f.error})`).join('; ')}`
-        );
-      }
-    } catch (err) {
-      console.error('Orphan cleanup failed:', err);
-      showToast(`清理失敗：${err.message}`);
-    } finally {
-      setIsCleaningOrphans(false);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -575,26 +513,6 @@ function CourtSetup() {
                   </Button>
                   <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} fontSize="0.77cqi" angle={350} icon={<Trash size="0.83cqi" />} style={{ flex: 1, whiteSpace: 'nowrap' }}>
                     <StableLocaleText as="span" locale={locale} visible={visible} en="Delete Event" zh="刪除賽事" />
-                  </Button>
-                </div>
-                <div style={{ marginTop: '0.52cqi' }}>
-                  <Button
-                    type="button"
-                    onClick={promptCleanOrphans}
-                    disabled={isCleaningOrphans || !user}
-                    fontSize="0.77cqi"
-                    angle={200}
-                    icon={<ExclamationTriangle size="0.83cqi" />}
-                    style={{ width: '100%', whiteSpace: 'nowrap' }}
-                    variant="orange"
-                  >
-                    <StableLocaleText
-                      as="span"
-                      locale={locale}
-                      visible={visible}
-                      en={isCleaningOrphans ? 'Scanning…' : 'Clean Orphan Data'}
-                      zh={isCleaningOrphans ? '掃描中…' : '清理 Orphan 資料'}
-                    />
                   </Button>
                 </div>
               </div>
