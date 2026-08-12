@@ -1,8 +1,9 @@
 # TKD-scoreboard 多裝置實時互動設計文件
 (TKD-scoreboard Multi-device Real-time Interaction Design Document)
 
-> **文件狀態**：反映 **2026-08** 源碼現況（`src/`、`database.rules.json`）。  
+> **文件狀態**：反映 **2026-08-12** 源碼現況（flat RTDB：`courts`／`matches/…/config`／`matchLive`）。  
 > 標有 **〔計劃中〕** 嘅功能尚未實作。  
+> Schema 細節 §3；扁平化紀錄 → [`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。  
 > **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
 
 ---
