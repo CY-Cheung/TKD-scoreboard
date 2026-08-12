@@ -1,9 +1,9 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
 > **Status:** Flatten **complete** in production（export verified）  
-> App／docs 已對齊 flat schema；`legacy*` path helpers 只留本文件歷史記錄。  
-> Stack tip：`cursor/firebase-docs-flat-schema-8215`（on #24 wording → #23 … → #19）。  
-> Stage 1–2 已合入 `main`。其餘見 PR #10–#24。  
+> App／product docs（PRD／System Design／API／MULTI_DEVICE／Test Plan）已對齊 flat schema。  
+> Stack tip：`cursor/firebase-docs-prd-system-8215`。  
+> Stage 1–2 已合入 `main`。其餘見 PR #10–#25+。  
 > **Rules：** 需 Firebase Console Publish（#20）。
 
 ---

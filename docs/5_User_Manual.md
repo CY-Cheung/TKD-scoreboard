@@ -3,9 +3,9 @@
 **系統名稱：** 跆拳道雲端計分系統（Taekwondo Cloud Scoring System）  
 **適用比賽：** Kyorugi（搏擊）  
 **線上示範：** [https://cy-cheung.github.io/TKD-scoreboard/](https://cy-cheung.github.io/TKD-scoreboard/)  
-**文件日期：** 2026-08-10
+**文件日期：** 2026-08-12
 
-> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。  
+> **Codebase baseline:** flat RTDB 雲端同步；操作步驟以現行 Pages UI 為準。技術細節 → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 > **用語：** Technical Card 中文一律「技術卡」（同畫面 `Edit` 嘅「技術卡」一致）。
 
 > 本指南用香港粵語寫俾**現場操作人員**睇。  
@@ -215,7 +215,7 @@
 A：檢查連結係咪完整、場地有冇 Load 咗 Match、網路可唔可以連到 Firebase。試下重新顯示 QR。
 
 **Q：我按咗分但大螢幕冇反應？**  
-A：睇下係咪 Paused、係咪 REST、Multiple mode 係咪得你一個人按、席位係咪搶成功。
+A：睇下係咪 Paused、係咪 REST、Multiple mode 係咪得你一個人按、席位係咪搶成功。計分資料係即時同步，通常幾秒內大螢幕會更新。
 
 **Q：點解加咗罰分，對手分數反而高咗？**  
 A：Gam-jeom／Avoiding 記喺**被罰一方**，但計算總分時會加俾**對手** — 呢個係計分規則。
