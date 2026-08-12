@@ -10,7 +10,7 @@ import {
  *
  * @param {object|null} matchData
  * @param {'red'|'blue'|string} winnerSide
- * @param {number} now wall-clock ms for REST lastStartTime (legacy Date.now())
+ * @param {number} now wall-clock ms for REST lastStartTime (Date.now())
  */
 export function applyDeclareRoundWinner(matchData, winnerSide, now) {
   if (!matchData) return;

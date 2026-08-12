@@ -66,8 +66,8 @@ describe("applySeatClaimTransaction", () => {
     ).toEqual(payload);
   });
 
-  it("aborts when seat is legacy non-null string", () => {
-    expect(applySeatClaimTransaction("legacy-id", payload)).toBeUndefined();
+  it("aborts when seat is an occupied bare string deviceId", () => {
+    expect(applySeatClaimTransaction("occupied-id", payload)).toBeUndefined();
   });
 });
 
@@ -86,8 +86,8 @@ describe("presence / stale seats", () => {
     expect(isSeatOccupied(live, 1000 + SEAT_STALE_MS - 1)).toBe(true);
     expect(isSeatStale(live, 1000 + SEAT_STALE_MS + 1)).toBe(true);
     expect(isSeatOccupied(live, 1000 + SEAT_STALE_MS + 1)).toBe(false);
-    expect(isSeatStale("legacy-string", 999999)).toBe(false);
-    expect(isSeatOccupied("legacy-string", 999999)).toBe(true);
+    expect(isSeatStale("bare-string-id", 999999)).toBe(false);
+    expect(isSeatOccupied("bare-string-id", 999999)).toBe(true);
   });
 
   it("filterLiveReferees and listStaleRefereeSeats", () => {
@@ -123,7 +123,7 @@ describe("extractSeatDeviceId / shouldKickFromSeat", () => {
     expect(extractSeatDeviceId({ deviceId: "d1", deviceName: "Mac" })).toBe("d1");
   });
 
-  it("reads legacy string seat value", () => {
+  it("reads bare string seat value", () => {
     expect(extractSeatDeviceId("plain-id")).toBe("plain-id");
   });
 

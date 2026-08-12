@@ -39,7 +39,7 @@ export function isAdminSeat(seatName) {
 }
 
 /**
- * Seat node may be legacy string deviceId or `{ deviceId, deviceName, lastSeen }`.
+ * Seat node may be a bare string deviceId or `{ deviceId, deviceName, lastSeen }`.
  */
 export function extractSeatDeviceId(seatData) {
   if (typeof seatData === "object" && seatData !== null) {
@@ -56,7 +56,7 @@ export function extractSeatLastSeen(seatData) {
   return null;
 }
 
-/** True when seat has lastSeen and it is older than staleMs. Legacy string seats are never stale. */
+/** True when seat has lastSeen and it is older than staleMs. Bare string seats are never stale. */
 export function isSeatStale(seatData, now = Date.now(), staleMs = SEAT_STALE_MS) {
   if (seatData == null) return false;
   const lastSeen = extractSeatLastSeen(seatData);

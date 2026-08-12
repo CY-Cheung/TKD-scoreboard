@@ -5,7 +5,7 @@
 
 /**
  * Remaining seconds while the clock is running.
- * Preserves legacy: uses wall-clock `now` (not server offset).
+ * Uses wall-clock `now` (not server offset).
  */
 export function computeRemainingSeconds(timer, lastStartTime, now) {
   const elapsed = Math.floor((now - lastStartTime) / 1000);

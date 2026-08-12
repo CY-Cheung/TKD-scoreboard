@@ -141,7 +141,7 @@ function Screen() {
         }
     }, [matchData?.state?.kyeShi, now, selectedEvent, currentMatchId]);
 
-    // Listen to referees status (merge flat + legacy; hide stale ghosts)
+    // Listen to referees status on flat courts; hide stale ghosts
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
         let rawReferees = {};

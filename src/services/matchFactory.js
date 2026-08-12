@@ -2,7 +2,7 @@ import { DEFAULT_MATCH_RULES } from "../domain/defaultRules.js";
 
 /**
  * Rules shape stored on matches / create-event forms.
- * Intentionally omits roundsToWin (legacy create/PDF did not write it).
+ * Intentionally omits roundsToWin (create/PDF historically did not write it).
  */
 export function createStoredMatchRules(overrides = {}) {
   return {

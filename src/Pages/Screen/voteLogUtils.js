@@ -18,7 +18,7 @@ export function buildSideVoteLogs(votes, recentScores, side, now, voteWindowMs) 
       };
     }
     acc[v.index].seatNames.add(v.seatName);
-    // Keep the newest timestamp in the group window (legacy behaviour)
+    // Keep the newest timestamp in the group window (historical behaviour)
     acc[v.index].timestamp = Math.max(acc[v.index].timestamp, v.timestamp);
     return acc;
   }, {});

@@ -5,7 +5,7 @@ export { resolveMatchRules, DEFAULT_MATCH_RULES };
 
 /**
  * Clear round-scoped scoring; keep match-scoped fields such as IVR remaining.
- * Preserves legacy Api.resetSideStatsForNextRound behaviour.
+ * Preserves original Api.resetSideStatsForNextRound behaviour.
  */
 export function resetSideStatsForNextRound(sideStats = {}) {
   const next = { gamjeom: 0, pointsStat: [0, 0, 0, 0, 0] };

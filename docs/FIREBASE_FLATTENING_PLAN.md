@@ -2,8 +2,8 @@
 
 > **Status:** Flatten **complete** in production（export verified）  
 > App 已 flat-only；`legacy*` path helpers 已從 runtime 移除（只留本文件歷史記錄）。  
-> Stack：#19 → #20 rules → #21 dead-code → #22 flat-api-cleanup → 本分支 drop-legacy-paths。  
-> Stage 1–2 已合入 `main`。其餘見 PR #10–#22。  
+> Stack：#19 → #23 drop-legacy-paths → 本分支 wording cleanup。  
+> Stage 1–2 已合入 `main`。其餘見 PR #10–#23。  
 > **Rules：** 需 Firebase Console Publish（#20）。
 
 ---
@@ -74,5 +74,7 @@ Publish：Firebase Console → Rules，或 `firebase deploy --only database`。
 
 ## 7. Removed cleanup UI
 
-Court Setup「清 courts／鬼位／legacy matches」已刪（production 已乾淨）。  
+Court Setup nested-strip button 已刪（production 已乾淨）。  
 仍保留：**Clean Orphan Data**（orphan trees）。
+
+Runtime／註解已唔再將 nested RTDB path 叫 legacy；seat 亦改稱 bare string deviceId。

@@ -6,11 +6,11 @@ import {
 } from "./defaultRules.js";
 
 describe("defaultRules", () => {
-  it("exposes legacy POINT_WEIGHTS", () => {
+  it("exposes POINT_WEIGHTS", () => {
     expect(POINT_WEIGHTS).toEqual([1, 2, 3, 4, 6]);
   });
 
-  it("exposes legacy DEFAULT_MATCH_RULES", () => {
+  it("exposes DEFAULT_MATCH_RULES", () => {
     expect(DEFAULT_MATCH_RULES).toMatchObject({
       maxPointGap: 15,
       maxGamjeom: 5,

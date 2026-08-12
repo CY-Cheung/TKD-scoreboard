@@ -235,7 +235,7 @@ describe("applyScoreAndCheckRules", () => {
     ).toBeUndefined();
   });
 
-  it("no-ops during REST phase (returns undefined like legacy early return)", () => {
+  it("no-ops during REST phase (returns undefined like original early return)", () => {
     const match = baseMatch({
       state: { ...baseMatch().state, phase: "REST" },
     });
@@ -244,7 +244,7 @@ describe("applyScoreAndCheckRules", () => {
       { side: "red", type: "gamjeom", index: null, delta: 1 },
       clocks
     );
-    // Legacy: `if (phase === 'REST') return;` → undefined abort
+    // Original: `if (phase === 'REST') return;` → undefined abort
     expect(result).toBeUndefined();
     expect(match.stats.red.gamjeom).toBe(0);
   });

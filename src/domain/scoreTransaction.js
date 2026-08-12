@@ -6,7 +6,7 @@ export const VOTE_WINDOW_MS = 1000;
 
 /**
  * Ensure match.state / stats objects exist (mutates matchData).
- * Mirrors legacy Api.updateScoreAndCheckRules scaffolding.
+ * Mirrors original Api.updateScoreAndCheckRules scaffolding.
  */
 export function ensureMatchScaffold(matchData) {
   if (!matchData.state) {
@@ -56,7 +56,7 @@ export function applyGamjeomDelta(targetSide, delta, { avoiding = false } = {}) 
 }
 
 /**
- * Pause running timer using wall-clock pauseNow (legacy Api uses Date.now(),
+ * Pause running timer using wall-clock pauseNow (original Api uses Date.now(),
  * not the server-offset clock used for votes).
  */
 export function pauseMatchTimerForEvent(state, pauseNow) {
@@ -200,7 +200,7 @@ export function applyDirectPointsStat(matchData, {
  * @param {object|null} matchData Firebase match snapshot (mutated like runTransaction)
  * @param {object} action side, type, index, delta, courtId, deviceId, seatName, mode
  * @param {{ voteNow: number, pauseNow: number }} clocks
- *   voteNow = Date.now() + serverOffset; pauseNow = Date.now() (legacy)
+ *   voteNow = Date.now() + serverOffset; pauseNow = Date.now() (wall-clock)
  * @param {{ scored?: boolean }|null} [meta] optional out-param: meta.scored = points applied
  * @returns {object|undefined} matchData to commit, or undefined to abort
  */

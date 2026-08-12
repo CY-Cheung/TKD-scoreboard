@@ -43,7 +43,7 @@ export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, 
     const meta = { scored: false };
 
     return runMatchLiveTransaction(database, eventName, matchId, (matchData) => {
-        // voteNow uses server offset; pauseNow stays wall-clock (legacy quirk).
+        // voteNow uses server offset; pauseNow stays wall-clock (existing quirk).
         return applyScoreAndCheckRules(
             matchData,
             { side, type, index, delta, courtId, deviceId, seatName, mode },

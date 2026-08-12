@@ -2,7 +2,7 @@ import { DEFAULT_MATCH_RULES } from "../domain/defaultRules.js";
 import { createStoredMatchRules } from "./matchFactory.js";
 
 /**
- * Normalize create-event form rule fields (legacy || defaults).
+ * Normalize create-event form rule fields (form values || defaults).
  */
 export function normalizeRulesFromForm({
   maxPointGap,
@@ -50,7 +50,7 @@ export function formatPdfDate(dateStr = "") {
 }
 
 /**
- * Overlay form rules onto PDF matches (in-place — legacy behaviour).
+ * Overlay form rules onto PDF matches (in-place — historical behaviour).
  */
 export function applyRulesToPdfResult(pdfParseResult, finalRules) {
   if (!pdfParseResult) return pdfParseResult;
