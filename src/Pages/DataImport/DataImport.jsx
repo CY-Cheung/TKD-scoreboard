@@ -27,6 +27,11 @@ import MatchActionButtons from './MatchActionButtons';
 import MatchConfigForm from './MatchConfigForm';
 import MatchesList from './MatchesList';
 import BracketView from './BracketView';
+import {
+    pickDefaultEventId,
+    resolveEventDisplayName,
+} from './dataImportHelpers';
+import { toggleDoubleClickFullscreen } from '../../Utils/requestFullscreen';
 
 const DataImport = () => {
     const navigate = useNavigate();
@@ -67,19 +72,9 @@ const DataImport = () => {
     const fetchEventsList = () => {
         fetchEventList(database).then((list) => {
             setEventsList(list);
-
-            if (list.length === 0) {
-                setEventName('');
-                return;
-            }
-
-            if (!eventName) {
-                if (session?.eventId && list.some((e) => e.id === session.eventId)) {
-                    setEventName(session.eventId);
-                } else {
-                    setEventName(list[0].id);
-                }
-            }
+            setEventName((current) =>
+                pickDefaultEventId(list, session?.eventId, current)
+            );
         }).catch((err) => {
             console.error("Error fetching events list:", err);
         });
@@ -262,22 +257,10 @@ const DataImport = () => {
     };
 
 
-    const toggleFullScreen = (e) => {
-        if (e.target === e.currentTarget) {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => console.log(err));
-            } else {
-                document.exitFullscreen();
-            }
-        }
-    };
-    const eventDisplayName =
-        eventsList.find((e) => e.id === eventName)?.displayName ||
-        eventName ||
-        'Event';
+    const eventDisplayName = resolveEventDisplayName(eventsList, eventName);
 
     return (
-        <div className="di-container aurora-bg" onDoubleClick={toggleFullScreen}>
+        <div className="di-container aurora-bg" onDoubleClick={toggleDoubleClickFullscreen}>
             <div className="di-content-wrapper glass-card">
                 {showBracketModal ? (
                     <BracketView

@@ -31,6 +31,8 @@ import {
 import {
     filterLiveReferees,
     listStaleRefereeSeats,
+    countOccupiedRefereeSeats,
+    listDisconnectedRefereeSeats,
     SEAT_HEARTBEAT_INTERVAL_MS,
 } from "../Controller/seatGrab";
 import ScreenUnconfigured from "./ScreenUnconfigured";
@@ -40,6 +42,10 @@ import ScreenTopNames from "./ScreenTopNames";
 import ScreenMiddleBoard from "./ScreenMiddleBoard";
 import ScreenOverlayStack from "./ScreenOverlayStack";
 import { normalizeMatchView } from "./normalizeMatchView";
+import { computeKyeShiRemaining } from "./kyeShiTime";
+import { resolveScreenBoardColors } from "./screenBoardColors";
+import { useNowTicker } from "./useNowTicker";
+import { useToastAutoDismiss } from "./useToastAutoDismiss";
 import { useEventSession } from "../../Context/EventSessionContext";
 
 const EMPTY_MATCH_RULES = Object.freeze({});
@@ -71,25 +77,14 @@ function Screen() {
 
     const animationFrameRef = useRef();
     const isMatchLoaded = !!matchData;
-    const [now, setNow] = useState(Date.now());
+    const now = useNowTicker(100);
 
-    const kyeShiRemaining = useMemo(() => {
-        const kyeShi = matchData?.state?.kyeShi;
-        if (!kyeShi?.startedAt) return null;
-        const elapsed = Math.floor((now - kyeShi.startedAt) / 1000);
-        const remaining = (kyeShi.duration ?? 60) - elapsed;
-        return remaining > 0 ? remaining : null;
-    }, [matchData?.state?.kyeShi, now]);
+    const kyeShiRemaining = useMemo(
+        () => computeKyeShiRemaining(matchData?.state?.kyeShi, now),
+        [matchData?.state?.kyeShi, now]
+    );
 
-    const isKyeShiActive = Boolean(matchData?.state?.kyeShi?.startedAt);
-
-    // Update 'now' every 100ms for UI expiry checks
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            setNow(Date.now());
-        }, 100);
-        return () => clearInterval(intervalId);
-    }, []);
+    const isKyeShiActive = matchData?.state?.kyeShi?.startedAt != null;
 
     // Listen to refereeMode (prefer flat courts)
     useEffect(() => {
@@ -121,23 +116,12 @@ function Screen() {
         };
     }, [selectedEvent]);
 
-    // Clear toasts after 4 seconds
-    useEffect(() => {
-        if (toastMessages.length > 0) {
-            const timer = setTimeout(() => {
-                setToastMessages(prev => prev.slice(1));
-            }, 4000);
-            return () => clearTimeout(timer);
-        }
-    }, [toastMessages]);
+    useToastAutoDismiss(toastMessages, setToastMessages, 4000);
 
     useEffect(() => {
-        const kyeShi = matchData?.state?.kyeShi;
-        if (!kyeShi?.startedAt || !selectedEvent || !currentMatchId) return;
-        const remaining = (kyeShi.duration ?? 60) - Math.floor((now - kyeShi.startedAt) / 1000);
-        if (remaining <= 0) {
-            stopKyeShi(selectedEvent, currentMatchId);
-        }
+        if (!matchData?.state?.kyeShi?.startedAt || !selectedEvent || !currentMatchId) return;
+        if (computeKyeShiRemaining(matchData.state.kyeShi, now) != null) return;
+        stopKyeShi(selectedEvent, currentMatchId);
     }, [matchData?.state?.kyeShi, now, selectedEvent, currentMatchId]);
 
     // Listen to referees status on flat courts; hide stale ghosts
@@ -150,15 +134,8 @@ function Screen() {
             const currentData = filterLiveReferees(rawReferees);
             const prevData = prevRefereesRef.current;
 
-            // Check for disconnections
-            const disconnections = [];
-            let occupiedCount = 0;
-            ['J1', 'J2', 'J3'].forEach(seat => {
-                if (currentData[seat]) occupiedCount++;
-                if (prevData[seat] && !currentData[seat]) {
-                    disconnections.push(seat);
-                }
-            });
+            const disconnections = listDisconnectedRefereeSeats(prevData, currentData);
+            const occupiedCount = countOccupiedRefereeSeats(currentData);
 
             if (disconnections.length > 0) {
                 const msg = `⚠️ Referee ${disconnections.join(', ')} disconnected!`;
@@ -408,14 +385,10 @@ function Screen() {
         return determineDominantSide(redStats, blueStats, resolvedRules.maxGamjeom);
     }, [redStats, blueStats, isMatchLoaded, resolvedRules.maxGamjeom]);
 
-    // Compute occupied referee count (J1, J2, J3)
-    const occupiedRefereesCount = useMemo(() => {
-        let count = 0;
-        if (refereesData?.J1) count++;
-        if (refereesData?.J2) count++;
-        if (refereesData?.J3) count++;
-        return count;
-    }, [refereesData]);
+    const occupiedRefereesCount = useMemo(
+        () => countOccupiedRefereeSeats(refereesData),
+        [refereesData]
+    );
 
     if (!selectedCourt) {
         return <ScreenUnconfigured />;
@@ -436,9 +409,11 @@ function Screen() {
     const matchNumber = config.matchId ?? "000";
     const currentRound = matchCurrentRound ?? 1;
 
-    const timerColor = isPaused ? "#FFFF00" : "#FFFFFF";
-    const redScoreColor = !isResting && dominantSide === 'red' ? '#FFFF00' : '#FFFFFF';
-    const blueScoreColor = !isResting && dominantSide === 'blue' ? '#FFFF00' : '#FFFFFF';
+    const { timerColor, redScoreColor, blueScoreColor } = resolveScreenBoardColors({
+        isPaused,
+        isResting,
+        dominantSide,
+    });
 
     return (
         <>

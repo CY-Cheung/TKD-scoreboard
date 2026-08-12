@@ -9,10 +9,12 @@ import {
   createAdminDeviceId,
   createRefereeDeviceId,
   extractSeatDeviceId,
+  countOccupiedRefereeSeats,
   filterLiveReferees,
   isAdminSeat,
   isSeatOccupied,
   isSeatStale,
+  listDisconnectedRefereeSeats,
   listStaleRefereeSeats,
   refereeSeatPath,
   shouldKickFromSeat,
@@ -113,6 +115,16 @@ describe("presence / stale seats", () => {
           J3: null,
         },
         25_000
+      )
+    ).toEqual(["J2"]);
+  });
+
+  it("countOccupiedRefereeSeats and listDisconnectedRefereeSeats", () => {
+    expect(countOccupiedRefereeSeats({ J1: {}, J3: {} })).toBe(2);
+    expect(
+      listDisconnectedRefereeSeats(
+        { J1: { deviceId: "a" }, J2: { deviceId: "b" } },
+        { J1: { deviceId: "a" } }
       )
     ).toEqual(["J2"]);
   });

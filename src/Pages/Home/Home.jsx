@@ -11,6 +11,7 @@ import BrandSplitLayout from '../../Components/BrandSplit/BrandSplitLayout';
 import QRCodeDisplay from '../../Components/QRCodeDisplay/QRCodeDisplay';
 import { useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import HomeRightPanel from './HomeRightPanel';
+import { toggleDoubleClickFullscreen } from '../../Utils/requestFullscreen';
 
 function Home() {
     const navigate = useNavigate();
@@ -69,20 +70,10 @@ function Home() {
         }
     };
 
-    const toggleFullScreen = (e) => {
-        if (e.target === e.currentTarget) {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => console.log(err));
-            } else {
-                document.exitFullscreen();
-            }
-        }
-    };
-
     const fullEventName = session?.eventName || eventName || session?.eventId || 'N/A';
 
     return (
-        <div className="home aurora-bg" onDoubleClick={toggleFullScreen}>
+        <div className="home aurora-bg" onDoubleClick={toggleDoubleClickFullscreen}>
             <BrandSplitLayout
                 locale={locale}
                 visible={visible}

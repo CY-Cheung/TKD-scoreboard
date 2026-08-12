@@ -87,6 +87,30 @@ export function filterLiveReferees(
   return live;
 }
 
+/** Count occupied J1–J3 seats in a live referees map. */
+export function countOccupiedRefereeSeats(refereesMap) {
+  let count = 0;
+  for (const seat of REFEREE_SEAT_ORDER) {
+    if (refereesMap?.[seat]) count++;
+  }
+  return count;
+}
+
+/**
+ * Seat names present in `prev` but missing in `current` (disconnect toasts).
+ * @param {Record<string, unknown>} prev
+ * @param {Record<string, unknown>} current
+ */
+export function listDisconnectedRefereeSeats(prev, current) {
+  const disconnections = [];
+  for (const seat of REFEREE_SEAT_ORDER) {
+    if (prev?.[seat] && !current?.[seat]) {
+      disconnections.push(seat);
+    }
+  }
+  return disconnections;
+}
+
 /** Seat names that are stale ghosts OR lastSeen-only orphans (no deviceId). */
 export function listClearableRefereeSeats(
   refereesMap,

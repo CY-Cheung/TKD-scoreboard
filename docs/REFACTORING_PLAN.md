@@ -1,8 +1,8 @@
 # Refactoring Plan — TKD Scoreboard
 
-> **Status:** Phase 2 Waves 0–8 **complete**. Firebase RTDB flatten **complete**（另軌；見 [`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)）。  
+> **Status:** Phase 2 Waves 0–11 **complete**（9–11 可選波已落地）。Firebase RTDB flatten **complete**（另軌；見 [`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)）。  
 > **Clean-code branch（歷史）：** `cursor/clean-code-refactor-8215`  
-> **Flatten stack tip：** `cursor/firebase-docs-prd-system-8215` 等（PR #19–#26+）  
+> **Flatten stack：** 已 merge → `main`（`127f90d`）  
 > **Completed waves：**  
 > - Wave 0: Vitest + `npm test`  
 > - Wave 1: `defaultRules` / `scoreMath` / `matchRules` → `Api` / `Screen` / `Edit`  
@@ -13,6 +13,9 @@
 > - Wave 6: `scoreTransaction` / `roundTransaction` pure bodies；`Api` thin wrappers（**voteNow vs pauseNow** 兩套 clock 保留 — 唔係 RTDB dual-write）  
 > - Wave 7: Screen `matchTimer` pure helpers；rAF + Firebase I/O 留喺 `Screen.jsx`  
 > - Wave 8: Controller `seatGrab` helpers；Firebase orchestration 留喺 page  
+> - Wave 9: 再拆 Screen／DataImport／CourtSetup／BrandSplit（P0 TX／rAF／seat orchestration 仍留 page）  
+> - Wave 10: RTL component tests + GitHub Actions CI（unit + build）  
+> - Wave 11: `database.rules.json` structure + emulator unit tests（`npm run test:rules`）
 
 本文係 Clean Code 計劃 + 完成紀錄。可選後續見 §10。
 
@@ -22,9 +25,11 @@
 
 | Item | Status |
 |------|--------|
-| Source | ~88 JS/JSX under `src`（含 tests） |
-| Unit tests | **25** files · **157** tests · `npm test`（Vitest） |
-| `package.json` scripts | `dev` / `build` / `lint` / `preview` / `test` / deploy |
+| Source | ~100+ JS/JSX under `src`（含 tests） |
+| Unit tests | `npm test`（Vitest；含 RTL jsdom） |
+| Rules tests | `npm run test:rules`（RTDB emulator + `@firebase/rules-unit-testing`） |
+| `package.json` scripts | `dev` / `build` / `lint` / `preview` / `test` / `test:rules` / deploy |
+| CI | `.github/workflows/ci.yml`（unit + rules jobs） |
 | RTDB layout | Flat：`eventIndex`／slim `events`／`courts`／`matches/…/config`／`matchIndex`／`matchLive` |
 | Complexity metric（歷史） | Decision-point heuristic 用嚟排 Phase 1 hotspots |
 
@@ -177,17 +182,19 @@ Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
 | 2026-08-10 | Phase 1 plan；Wave 6 score/round extract |
 | 2026-08-11 | Wave 7 matchTimer；Wave 8 seatGrab |
 | 2026-08-12 | Mark Waves 0–8 complete；baseline → Vitest 157；RTDB flatten complete；clarify voteNow/pauseNow ≠ dual-write |
+| 2026-08-12 | Waves 9–11：page pure helpers／RTL／rules emulator + CI；flatten stack already on `main` |
 
 ---
 
-## 10. Optional next waves（未開）
+## 10. Optional next waves
 
 | Wave | Idea | Notes |
 |------|------|-------|
-| 9 | 再拆 `Screen.jsx`／`DataImport.jsx`／`CourtSetup.jsx` 體積 | **進行中**（第一批 UI extracts 已落地） |
-| 10 | Component tests（RTL）／Firebase emulator CI | 補整合缺口 |
-| 11 | Rules unit tests（`database.rules.json`） | 配合 #20 publish |
-| — | Merge flatten PR stack → `main` | 產品／docs 已對齊 |
+| 9 | 再拆 `Screen.jsx`／`DataImport.jsx`／`CourtSetup.jsx` 體積 | **完成**（見下方 progress） |
+| 10 | Component tests（RTL）／Firebase emulator CI | **完成**（`*.test.jsx` + `.github/workflows/ci.yml`） |
+| 11 | Rules unit tests（`database.rules.json`） | **完成**（`src/rules/*` + `npm run test:rules`） |
+| — | 更大 RTL page tests／E2E | 未開；可選 |
+| — | Publish live `database.rules.json` | 需 Firebase Console／Service Account |
 
 ### Wave 9 progress（2026-08-12）
 
@@ -204,10 +211,19 @@ Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
 | `HomeRightPanel`／`parseEventHeading` | `Home.jsx` |
 | `CourtSetupSessionForm` | `CourtSetup.jsx`（取代 page-local hero） |
 | `ScreenCenterTimer`／`ScreenRoundWins`／`ScreenBottomBar`／`ScreenEventTopBar`／`ScreenTopNames`／`ScreenMiddleBoard`／`ScreenOverlayStack` | `Screen.jsx` |
+| `kyeShiTime`／`screenBoardColors`／`useNowTicker`／`useToastAutoDismiss` | `Screen.jsx` |
+| `countOccupiedRefereeSeats`／`listDisconnectedRefereeSeats` | `seatGrab.js`（Screen 使用） |
+| `dataImportHelpers` | `DataImport.jsx` |
+| `courtSetupHelpers` | `CourtSetup.jsx` |
+| `toggleDoubleClickFullscreen` | `requestFullscreen.js`（Home／Landing／DataImport／CourtSetup） |
 
-可選下一刀：合 flatten／Wave 9 PR stack → `main`。
+（DataImport Create Event modal／死入口已刪；建立賽事只喺 CourtSetup。Flatten／Wave 9 stack 已合入 `main`。）
 
-（DataImport Create Event modal／死入口已刪；建立賽事只喺 CourtSetup。）
+### Wave 10／11 notes
+
+- RTL：`@testing-library/react`；jsdom 用檔頭 `/** @vitest-environment jsdom */`。
+- Emulator rules：`*.emulator.test.js` 排除於預設 `npm test`；CI `rules` job 跑 `test:rules`。
+- 記得喺 Firebase Console **Publish** repo 嘅 `database.rules.json`（live 未必已同步）。
 
 Schema／多裝置真相來源：[`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 扁平化檔案軌跡：[`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。

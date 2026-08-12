@@ -37,6 +37,7 @@ export default function MatchActionButtons({
         angle={40}
         onClick={selectedMatchId ? onLoadMatch : null}
         disabled={!selectedMatchId}
+        data-testid="di-load-match"
         icon={<Display size="1.15cqi" />}
         fontSize="1.05cqi"
         style={{

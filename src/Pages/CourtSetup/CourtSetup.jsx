@@ -29,6 +29,14 @@ import {
   toastMessageForCreateMode,
   defaultCreateEventFormValues,
 } from '../../services/persistCreatedEvents';
+import {
+  resolveSelectedEventId,
+  resolveCourtIdFromOptions,
+  canUserDeleteEvent,
+  validateCourtSetupLogin,
+  applyCreateEventFormReset,
+} from './courtSetupHelpers';
+import { toggleDoubleClickFullscreen } from '../../Utils/requestFullscreen';
 
 function CourtSetup() {
   const [password, setPassword] = useState('');
@@ -90,21 +98,10 @@ function CourtSetup() {
     fetchEventList(database)
       .then((eventList) => {
         setEvents(eventList);
-
-        if (eventList.length === 0) {
-          setSelectedEvent('');
-          return;
-        }
-
         const lastEvent = sessionStorage.getItem('selectedEvent');
-        const validIds = eventList.map((e) => e.id);
-        if (selectedEvent && validIds.includes(selectedEvent)) {
-          // Keep current selection
-        } else if (lastEvent && validIds.includes(lastEvent)) {
-          setSelectedEvent(lastEvent);
-        } else {
-          setSelectedEvent(eventList[0].id);
-        }
+        setSelectedEvent((current) =>
+          resolveSelectedEventId(eventList, current, lastEvent)
+        );
       })
       .catch((err) => {
         console.error("Error fetching events:", err);
@@ -121,11 +118,7 @@ function CourtSetup() {
       fetchCourtIds(database, selectedEvent).then((ids) => {
         setCourtOptions(ids);
         const lastCourt = sessionStorage.getItem('selectedCourt');
-        if (lastCourt && ids.includes(lastCourt)) {
-          setCourtId(lastCourt);
-        } else {
-          setCourtId('');
-        }
+        setCourtId(resolveCourtIdFromOptions(ids, lastCourt));
       });
     } else {
       setCourtOptions([]);
@@ -208,17 +201,18 @@ function CourtSetup() {
       );
       setSelectedEvent(primaryEventId);
 
-      const reset = defaultCreateEventFormValues();
-      setNewEventId(reset.newEventId);
-      setNewEventName(reset.newEventName);
-      setNewSetupPassword(reset.newSetupPassword);
-      setNewMaxPointGap(reset.newMaxPointGap);
-      setNewMaxGamjeom(reset.newMaxGamjeom);
-      setNewRoundDuration(reset.newRoundDuration);
-      setNewRestDuration(reset.newRestDuration);
-      setNewIvrQuota(reset.newIvrQuota);
+      applyCreateEventFormReset(defaultCreateEventFormValues(), {
+        setNewEventId,
+        setNewEventName,
+        setNewSetupPassword,
+        setNewMaxPointGap,
+        setNewMaxGamjeom,
+        setNewRoundDuration,
+        setNewRestDuration,
+        setNewIvrQuota,
+        setPdfParseResult,
+      });
       setCourtCount(4);
-      setPdfParseResult(reset.pdfParseResult);
       setShowCreateModal(false);
       fetchEvents();
 
@@ -239,7 +233,7 @@ function CourtSetup() {
     }
 
     const eventData = events.find(e => e.id === selectedEvent);
-    if (eventData && eventData.createdByEmail && eventData.createdByEmail !== user.email) {
+    if (!canUserDeleteEvent(eventData, user.email)) {
       showToast('❌ 只有賽事的建立者可以刪除此賽事！');
       return;
     }
@@ -291,18 +285,13 @@ function CourtSetup() {
     e.preventDefault();
     setError('');
 
-    if (!selectedEvent) {
-      setError('Please select an event.');
-      return;
-    }
-
-    if (!courtId) {
-      setError('Please select a court.');
-      return;
-    }
-
-    if (!password.trim()) {
-      setError('Please enter setup password.');
+    const validationError = validateCourtSetupLogin({
+      selectedEvent,
+      courtId,
+      password,
+    });
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -344,18 +333,8 @@ function CourtSetup() {
     }
   };
 
-
-    const toggleFullScreen = (e) => {
-        if (e.target === e.currentTarget) {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => console.log(err));
-            } else {
-                document.exitFullscreen();
-            }
-        }
-    };
   return (
-    <div className="cs-container aurora-bg" onDoubleClick={toggleFullScreen}>
+    <div className="cs-container aurora-bg" onDoubleClick={toggleDoubleClickFullscreen}>
       <BrandSplitLayout
         locale={locale}
         visible={visible}

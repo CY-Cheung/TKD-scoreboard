@@ -5,6 +5,7 @@ import { useAuth } from '../../Context/AuthContext';
 import Button from '../../Components/Button/Button';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import { LANDING_FEATURES, LANDING_HERO } from '../../constants/landingFeatures';
+import { toggleDoubleClickFullscreen } from '../../Utils/requestFullscreen';
 import './Landing.css';
 
 const REPO_URL = 'https://github.com/CY-Cheung/TKD-scoreboard';
@@ -53,18 +54,8 @@ function Landing() {
         }
     };
 
-    const toggleFullScreen = (e) => {
-        // Same as Home: only the page background, not child controls/content hits.
-        if (e.target !== e.currentTarget) return;
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch((err) => console.log(err));
-        } else {
-            document.exitFullscreen();
-        }
-    };
-
     return (
-        <div className="landing-page aurora-bg" onDoubleClick={toggleFullScreen}>
+        <div className="landing-page aurora-bg" onDoubleClick={toggleDoubleClickFullscreen}>
             <main className="landing-main">
                 <div className="landing-center">
                     <section className="landing-hero" id="landing-hero">

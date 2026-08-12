@@ -14,7 +14,13 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    setupFiles: ['./src/test/setup.js'],
     include: ['src/**/*.{test,spec}.{js,jsx}'],
+    // Emulator suite needs `npm run test:rules` (firebase emulators:exec).
+    exclude: [
+      'node_modules/**',
+      'dist/**',
+      'src/**/*.emulator.test.{js,jsx}',
+    ],
   },
 })
-

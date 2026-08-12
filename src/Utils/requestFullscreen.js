@@ -14,3 +14,16 @@ export function requestFullscreen() {
     el.msRequestFullscreen();
   }
 }
+
+/**
+ * Double-click on the container background toggles document fullscreen.
+ * Use as `onDoubleClick={toggleDoubleClickFullscreen}`.
+ */
+export function toggleDoubleClickFullscreen(e) {
+  if (e.target !== e.currentTarget) return;
+  if (!document.fullscreenElement) {
+    requestFullscreen();
+  } else if (document.exitFullscreen) {
+    document.exitFullscreen().catch(() => {});
+  }
+}
