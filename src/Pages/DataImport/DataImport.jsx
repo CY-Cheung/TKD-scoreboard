@@ -7,7 +7,7 @@ import { useAuth } from '../../Context/AuthContext';
 import { useEventSession } from '../../Context/EventSessionContext';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import { fetchEventList } from '../../services/eventIndexFirebase';
-import { loadMatchToCourt } from '../../services/courtFirebase';
+import { loadMatchToCourt, unloadMatchFromCourt } from '../../services/courtFirebase';
 import {
     mirrorMatchFlatArtifacts,
     removeMatchFlatArtifacts,
@@ -266,6 +266,34 @@ const DataImport = () => {
         }
     };
 
+    const handleUnloadMatch = async () => {
+        if (!eventName) {
+            showToast('Please select an event.');
+            return;
+        }
+        if (!session || !session.courtId) {
+            showToast('No court is configured for this device. Please go to Court Setup first.');
+            return;
+        }
+
+        try {
+            const previous = await unloadMatchFromCourt(
+                database,
+                eventName,
+                session.courtId
+            );
+            if (previous) {
+                showToast(
+                    `Unloaded match ${previous} from ${session.courtId}. Screen will show no match until you Load again.`
+                );
+            } else {
+                showToast(`${session.courtId} had no match loaded.`);
+            }
+        } catch (error) {
+            console.error("Error unloading match from court:", error);
+            showToast(`Failed to unload match. See console for details.`);
+        }
+    };
 
     const eventDisplayName = resolveEventDisplayName(eventsList, eventName);
 
@@ -335,8 +363,10 @@ const DataImport = () => {
                                 locale={locale}
                                 localeVisible={localeVisible}
                                 selectedMatchId={selectedMatchId}
+                                canUnload={Boolean(session?.courtId)}
                                 onAddMatch={handleAddMatch}
                                 onLoadMatch={handleLoadMatch}
+                                onUnloadMatch={handleUnloadMatch}
                                 onHome={() => navigate('/home')}
                             />
                         </div>

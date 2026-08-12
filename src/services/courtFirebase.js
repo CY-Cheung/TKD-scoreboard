@@ -164,6 +164,17 @@ export async function loadMatchToCourt(
   await setCourtField(database, eventId, courtId, "currentMatchId", matchId);
 }
 
+/**
+ * Clear this court's `currentMatchId` so Screen/Controller show no match.
+ * Does not delete matchLive / config — only unbinds the venue pointer.
+ * @returns {string | null} previous match id if any
+ */
+export async function unloadMatchFromCourt(database, eventId, courtId) {
+  const previous = await getCourt(database, eventId, courtId, "currentMatchId");
+  await setCourtField(database, eventId, courtId, "currentMatchId", "");
+  return previous || null;
+}
+
 /** Strip nested courts from an event payload before writing events/{id}. */
 export function eventPayloadWithoutCourts(eventData) {
   if (!eventData || typeof eventData !== "object") return eventData;

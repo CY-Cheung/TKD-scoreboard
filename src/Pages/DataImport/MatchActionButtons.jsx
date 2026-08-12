@@ -1,15 +1,17 @@
 import React from "react";
-import { PlusCircle, Display, House } from "react-bootstrap-icons";
+import { PlusCircle, Display, House, Eject } from "react-bootstrap-icons";
 import Button from "../../Components/Button/Button";
 import { StableLocaleText } from "../../Components/AlternatingLocale/AlternatingLocale";
 
-/** DataImport form action row: Add / Load / Home. */
+/** DataImport form action row: Add / Load / Unload / Home. */
 export default function MatchActionButtons({
   locale,
   localeVisible,
   selectedMatchId,
+  canUnload,
   onAddMatch,
   onLoadMatch,
+  onUnloadMatch,
   onHome,
 }) {
   return (
@@ -52,6 +54,27 @@ export default function MatchActionButtons({
           visible={localeVisible}
           en="Load"
           zh="載入"
+        />
+      </Button>
+      <Button
+        angle={200}
+        onClick={canUnload ? onUnloadMatch : null}
+        disabled={!canUnload}
+        data-testid="di-unload-match"
+        icon={<Eject size="1.15cqi" />}
+        fontSize="1.05cqi"
+        style={{
+          flex: 1,
+          whiteSpace: "nowrap",
+          padding: "0.55cqi 0.35cqi",
+        }}
+      >
+        <StableLocaleText
+          as="span"
+          locale={locale}
+          visible={localeVisible}
+          en="Unload"
+          zh="卸載"
         />
       </Button>
       <Button

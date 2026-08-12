@@ -168,6 +168,7 @@ Step 2 glass card 同步用；由主裁 Screen 寫入，所有訂閱同一 Match
 2. 新增或選擇 Match → **Load** 寫入 `courts/{eventId}/{courtId}/currentMatchId`  
    - 若該 Match 已係**其他** Court 嘅 `currentMatchId` → **拒絕**（`MATCH_BOUND_OTHER_COURT` toast）  
    - 同一 Court 重複 Load 同一場 → 允許  
+   - **Unload**：`unloadMatchFromCourt` 將呢個 Court 嘅 `currentMatchId` 清成空字串（保留 `matchLive`／config）  
    - 原因：`matchLive/{event}/{matchId}` 共用，兩 Court 會交叉計分／計時
 3. Screen 同 Controller 經 `onValue` 自動載入該 Match
 
