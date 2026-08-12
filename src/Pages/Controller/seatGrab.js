@@ -6,7 +6,6 @@
 
 import {
   flatRefereeSeatPath,
-  legacyRefereeSeatPath,
   refereeSeatPath,
 } from "../../services/courtPaths.js";
 
@@ -32,7 +31,6 @@ export const ADMIN_SEAT = "Admin";
 
 export {
   flatRefereeSeatPath,
-  legacyRefereeSeatPath,
   refereeSeatPath,
 };
 

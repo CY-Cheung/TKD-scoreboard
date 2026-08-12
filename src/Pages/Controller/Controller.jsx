@@ -20,7 +20,6 @@ import {
     createRefereeDeviceId,
     extractSeatDeviceId,
     isAdminSeat,
-    legacyRefereeSeatPath,
     refereeSeatPath,
     shouldKickFromSeat,
 } from "./seatGrab";
@@ -136,10 +135,7 @@ function Controller() {
             const seatToClear = grabbedSeat;
             grabbedSeat = null;
             const flatPath = refereeSeatPath(eventId, courtId, seatToClear);
-            const legacyPath = legacyRefereeSeatPath(eventId, courtId, seatToClear);
             set(ref(database, flatPath), null).catch(() => {});
-            // Best-effort: wipe leftover dual-write seat so Screen flat-primary UI stays clean.
-            set(ref(database, legacyPath), null).catch(() => {});
         };
 
         const registerDisconnectHandlers = () => {
@@ -189,14 +185,10 @@ function Controller() {
 
         const trySeat = async (seatName) => {
             if (!isMounted) return false;
-            // Stage 5b: claim on flat courts path only (no legacy dual-write).
+            // Claim on flat courts path only.
             const flatRefForClaim = ref(
                 database,
                 refereeSeatPath(eventId, courtId, seatName)
-            );
-            const legacyRefForCleanup = ref(
-                database,
-                legacyRefereeSeatPath(eventId, courtId, seatName)
             );
             try {
                 const deviceData = buildSeatDevicePayload(
@@ -213,8 +205,6 @@ function Controller() {
                         set(flatRefForClaim, null).catch(() => {});
                         return false;
                     }
-                    // Drop any leftover legacy seat for this chair (pre-cutover dual-write).
-                    set(legacyRefForCleanup, null).catch(() => {});
                     setMySeat(seatName);
                     setSeatGrabError(null);
                     grabbedSeat = seatName;

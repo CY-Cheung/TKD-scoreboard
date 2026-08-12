@@ -3,16 +3,6 @@
  * @see docs/FIREBASE_FLATTENING_PLAN.md
  */
 
-/** Leftover nested match path (cleanup only): events/{eventId}/matches/{matchId} */
-export function legacyMatchPath(eventId, matchId, ...segments) {
-  const base = `events/${eventId}/matches/${matchId}`;
-  return segments.length ? `${base}/${segments.join("/")}` : base;
-}
-
-export function legacyMatchesRoot(eventId) {
-  return `events/${eventId}/matches`;
-}
-
 /** Live-only tree: matchLive/{eventId}/{matchId} */
 export function matchLivePath(eventId, matchId, ...segments) {
   const base = `matchLive/${eventId}/${matchId}`;

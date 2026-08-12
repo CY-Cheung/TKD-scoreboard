@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vitest";
 import {
-  legacyMatchPath,
-  legacyMatchesRoot,
   matchLivePath,
   flatMatchConfigPath,
   matchIndexPath,
@@ -12,11 +10,7 @@ import {
 } from "./matchPaths.js";
 
 describe("matchPaths", () => {
-  it("builds legacy cleanup, live, flat config, and index paths", () => {
-    expect(legacyMatchPath("e1", "m1", "state")).toBe(
-      "events/e1/matches/m1/state"
-    );
-    expect(legacyMatchesRoot("e1")).toBe("events/e1/matches");
+  it("builds live, flat config, and index paths", () => {
     expect(matchLivePath("e1", "m1", "stats", "red")).toBe(
       "matchLive/e1/m1/stats/red"
     );
