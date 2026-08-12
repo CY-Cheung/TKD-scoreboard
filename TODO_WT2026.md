@@ -300,20 +300,20 @@ Step 1：確認 popup（Edit 底欄內，同 avoiding / Technical Card）
 
 ---
 
-### Firebase Schema（規劃）
+### Firebase Schema（IVR；flat paths）
 
 ```
-matches/{matchId}/state/
+matchLive/{eventId}/{matchId}/state/
   ivrAnnouncement: { side, decision: "accept"|"reject", startedAt }
 
-matches/{matchId}/stats/
+matchLive/{eventId}/{matchId}/stats/
   red.ivrRemaining: number
   blue.ivrRemaining: number
 
 events/{eventId}/settings/
   ivrQuota: number | null     ← 留空 = WT 模式
 
-matches/{matchId}/config/rules/
+matches/{eventId}/{matchId}/config/rules/
   ivrQuota: number | null     ← 留空 = 繼承 Event
 ```
 

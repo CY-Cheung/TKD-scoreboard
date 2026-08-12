@@ -1,9 +1,9 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
 > **Status:** Flatten **complete** in production（export verified）  
-> App 已 flat-only；`legacy*` path helpers 已從 runtime 移除（只留本文件歷史記錄）。  
-> Stack：#19 → #23 drop-legacy-paths → 本分支 wording cleanup。  
-> Stage 1–2 已合入 `main`。其餘見 PR #10–#23。  
+> App／docs 已對齊 flat schema；`legacy*` path helpers 只留本文件歷史記錄。  
+> Stack tip：`cursor/firebase-docs-flat-schema-8215`（on #24 wording → #23 … → #19）。  
+> Stage 1–2 已合入 `main`。其餘見 PR #10–#24。  
 > **Rules：** 需 Firebase Console Publish（#20）。
 
 ---

@@ -72,7 +72,7 @@ https://cy-cheung.github.io/TKD-scoreboard/controller?event=<eventId>&court=cour
 
 | Field | Value |
 |-------|--------|
-| **Kind** | Firebase `runTransaction` on `events/{eventName}/matches/{matchId}` |
+| **Kind** | Firebase `runTransaction` on `matchLive/{eventName}/{matchId}` |
 | **Parameters** | `eventName`, `matchId`, `side` (`red`\|`blue`), `type` (`pointsStat`\|`gamjeom`\|`gamjeomAvoiding`), `index` (pointsStat 0–4 或 gamjeom 時可 `null`), `delta` (number), `courtId?`, `deviceId?`, `seatName?`, `mode` (`single`\|`multiple`, default `single`) |
 | **Side effects** | 更新 `stats`、可能更新 `votes`／`recentScores`、`state.winReason`／`dominantSide`／timer pause（PUN／PTG）；REST phase 時 abort |
 | **Return** | `undefined`（promise 未暴露畀 caller；內部 `.catch` log） |
@@ -213,13 +213,16 @@ Firebase-backed：
 
 | Path | Typical ops | Payload shape（節錄） |
 |------|-------------|----------------------|
-| `events/{eventId}` | `set`／`update`／`remove` | `EventName`, `createdBy`, `settings`, … |
-| `events/{eventId}/courts/{courtId}/currentMatchId` | `update`／`set` | string match id |
-| `events/{eventId}/courts/{courtId}/config/refereeMode` | `update` | `"single"` \| `"multiple"` |
-| `events/{eventId}/courts/{courtId}/referees/{J1\|J2\|J3}` | transaction／`onDisconnect` | `{ deviceId, deviceName }` 或 `null` |
-| `events/{eventId}/matches/{matchId}` | transaction | full match graph |
-| `events/{eventId}/matches/{matchId}/state` | `update` | timer／announcements／kyeShi |
-| `events/{eventId}/matches/{matchId}/stats/{side}` | `update` | `ivrRemaining` 等 |
+| `eventIndex/{eventId}` | `set`／`update`／`remove` | `EventName`, `createdBy`, … |
+| `events/{eventId}` | `set`／`update`／`remove` | meta + `settings` only（無 nested courts／matches） |
+| `courts/{eventId}/{courtId}/currentMatchId` | `update`／`set` | string match id |
+| `courts/{eventId}/{courtId}/config/refereeMode` | `update` | `"single"` \| `"multiple"` |
+| `courts/{eventId}/{courtId}/referees/{J1\|J2\|J3}` | transaction／`onDisconnect` | `{ deviceId, deviceName, lastSeen }` 或 `null` |
+| `matches/{eventId}/{matchId}/config` | `set`／`update`／`get` | static match config |
+| `matchIndex/{eventId}/{matchId}` | `set`／`remove` | bracket／list summary |
+| `matchLive/{eventId}/{matchId}` | transaction／`update` | live state／stats／votes／recentScores |
+| `matchLive/{eventId}/{matchId}/state` | `update` | timer／announcements／kyeShi |
+| `matchLive/{eventId}/{matchId}/stats/{side}` | `update` | `ivrRemaining` 等 |
 | `.info/serverTimeOffset` | `onValue` | number ms |
 
 ### 3.2 Match transaction write shape（計分）
