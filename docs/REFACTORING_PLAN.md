@@ -204,8 +204,8 @@ Waves 0–11 已執行完畢。工程整潔後續見 §10「Engineering hygiene�
 |-------|--------|-------|
 | 0 Merge Wave 9–11 | **完成** | `#37` → `main`（`a6f0858`） |
 | 1 Docs + rules skeleton | **完成** | `4_Test_Plan.md`；skeleton ≡ `database.rules.json` |
-| 2 Screen thin extracts | **進行中／本 PR** | hotkeys／referee presence／scoreboard model；rAF／TX／seat I/O 仍留 page |
-| 2b Controller extracts | 未開 | |
+| 2 Screen thin extracts | **完成** | hotkeys／referee presence／scoreboard model；rAF／TX／seat I/O 仍留 page |
+| 2b Controller extracts | **完成** | match view helpers／status screens／TopBar／CenterPanel；seat grab Firebase 仍留 page |
 | 3 Optional RTL | 未開 | |
 
 ### Wave 9 progress（2026-08-12）

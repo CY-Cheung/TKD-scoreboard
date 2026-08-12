@@ -5,8 +5,6 @@ import { database } from "../../firebase";
 import { updateScoreAndCheckRules } from "../../Api";
 import { useAuth } from "../../Context/AuthContext";
 import { useEventSession } from "../../Context/EventSessionContext";
-import Button from "../../Components/Button/Button";
-import { Wifi, WifiOff, ArrowLeft } from "react-bootstrap-icons";
 import { requestFullscreen } from "../../Utils/requestFullscreen";
 import { getDeviceName, resolveControllerParam } from "./controllerParams";
 import {
@@ -25,10 +23,23 @@ import {
 } from "./seatGrab";
 import { armScoreHaptic, shouldVibrateForRecentScores, triggerScoreHaptic } from "./scoreHaptic";
 import {
+    canAcceptScoreInput,
+    buildControllerMatchSummary,
+    resolveControllerBackPath,
+    buildScoreActionFeedback,
+} from "./controllerMatchView";
+import {
     subscribeCourt,
 } from "../../services/courtFirebase";
 import { subscribeMatchView } from "../../services/matchFirebase";
 import ControllerScorePad from "./ControllerScorePad";
+import ControllerTopBar from "./ControllerTopBar";
+import ControllerCenterPanel from "./ControllerCenterPanel";
+import {
+    ControllerConnectingScreen,
+    ControllerSeatGrabErrorScreen,
+    ControllerCourtFullScreen,
+} from "./ControllerStatusScreens";
 import "./Controller.css";
 
 function Controller() {
@@ -98,6 +109,7 @@ function Controller() {
     }, [eventId]);
 
     // Grab Referee Seat (J1, J2, J3) if not logged in
+    // Firebase runTransaction / onDisconnect / heartbeat stay here (P0).
     useEffect(() => {
         if (!eventId || !courtId) return;
         
@@ -325,11 +337,7 @@ function Controller() {
 
     const handleScore = (side, index, label) => {
         if (!eventId || !currentMatchId) return;
-
-        // Block remote input when timer is not running
-        const isCurrentlyPaused = matchData?.state?.isPaused ?? true;
-        if (isCurrentlyPaused) return;
-        if (matchData?.state?.phase === "REST") return;
+        if (!canAcceptScoreInput(matchData)) return;
 
         // Arm Vibration API inside the click gesture so Samsung WebViews still
         // accept a pulse when recentScores arrives shortly after (shared haptic).
@@ -351,7 +359,7 @@ function Controller() {
             refereeMode
         ).then(({ scored }) => {
             if (!scored) return;
-            const actionObj = { side, text: `${side.toUpperCase()} ${label}` };
+            const actionObj = buildScoreActionFeedback(side, label);
             setLastAction(actionObj);
             setTimeout(() => {
                 setLastAction((prev) => (prev?.text === actionObj.text ? null : prev));
@@ -359,77 +367,40 @@ function Controller() {
         });
     };
 
-    const redName = matchData?.config?.competitors?.red?.name || "Hong (Red)";
-    const blueName = matchData?.config?.competitors?.blue?.name || "Chung (Blue)";
-    const matchNo = matchData?.config?.matchId || currentMatchId || "N/A";
-    const currentRound = matchData?.state?.currentRound || 1;
-    const isPaused = matchData?.state?.isPaused ?? true;
+    const summary = buildControllerMatchSummary(matchData, currentMatchId);
 
     if (seatGrabPending && !mySeat && !user) {
-        return (
-            <div className="controller" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white', padding: '20px', textAlign: 'center' }}>
-                <h1>Connecting…</h1>
-                <p>正在搶裁判席位（J1–J3）…</p>
-            </div>
-        );
+        return <ControllerConnectingScreen />;
     }
 
     if (seatGrabError) {
         return (
-            <div className="controller" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white', padding: '20px', textAlign: 'center' }}>
-                <h1 style={{ color: '#ff3b30' }}>Seat Grab Failed</h1>
-                <p>搶位失敗。請確認 Firebase rules 已 publish，並重新掃 QR。</p>
-                <p style={{ opacity: 0.7, fontSize: '0.9rem', wordBreak: 'break-all' }}>{seatGrabError}</p>
-                <Button text="Retry (重試)" onClick={() => window.location.reload()} variant="yellow" />
-            </div>
+            <ControllerSeatGrabErrorScreen
+                error={seatGrabError}
+                onRetry={() => window.location.reload()}
+            />
         );
     }
 
     if (isFull) {
         return (
-            <div className="controller" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white', padding: '20px', textAlign: 'center' }}>
-                <h1 style={{ color: '#ff3b30' }}>Court is Full</h1>
-                <p>There are already 3 referees connected to this court.</p>
-                <Button text="Back (返回)" onClick={() => navigate("/court-setup")} variant="orange" />
-            </div>
+            <ControllerCourtFullScreen
+                onBack={() => navigate("/court-setup")}
+            />
         );
     }
 
     return (
         <div className="controller aurora-bg" onClick={requestFullscreen}>
-            {/* Top Bar Banner for Match & Connection Status */}
-            <div className="ctrl-top-bar">
-                <Button 
-                    className="ctrl-back-btn" 
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (user) {
-                            navigate("/home");
-                        } else {
-                            navigate("/court-setup");
-                        }
-                    }} 
-                    aria-label="Back"
-                    icon={<ArrowLeft size={'1.5cqi'} />}
-                    fontSize="1cqi"
-                    angle={180}
-                />
-                <div className="ctrl-info-badges">
-                    <span className="ctrl-badge">{eventName || eventId || "No Event"}</span>
-                    <span className="ctrl-badge court">{courtId || "No Court"}</span>
-                    <span className="ctrl-badge match">Match #{matchNo}</span>
-                    {mySeat && <span className="ctrl-badge" style={{ backgroundColor: '#ffcc00', color: 'black' }}>{mySeat}</span>}
-                </div>
-                <div className="ctrl-conn-status">
-                    {isConnected ? (
-                        <span className="conn-connected"><Wifi size={16} /> Live</span>
-                    ) : (
-                        <span className="conn-disconnected"><WifiOff size={16} /> Offline</span>
-                    )}
-                </div>
-            </div>
+            <ControllerTopBar
+                eventLabel={eventName || eventId || "No Event"}
+                courtId={courtId}
+                matchNo={summary.matchNo}
+                mySeat={mySeat}
+                isConnected={isConnected}
+                onBack={() => navigate(resolveControllerBackPath(user))}
+            />
 
-            {/* Action Feedback Banner Toast with Side Color */}
             {lastAction && (
                 <div className={`ctrl-action-banner ${lastAction.side === "red" ? "red-banner" : "blue-banner"}`}>
                     {lastAction.text}
@@ -437,19 +408,14 @@ function Controller() {
             )}
 
             <ControllerScorePad onScore={handleScore}>
-                <div className="col center-col">
-                    <div className="center-match-details-horizontal">
-                        <div className="competitor-side red-side-text">{redName}</div>
-                        <div className="center-vs-box">
-                            <span className="vs-badge">VS</span>
-                            <span className="round-pill">R{currentRound} • {isPaused ? "PAUSED" : "LIVE"}</span>
-                            <span className="round-pill" style={{ fontSize: '1cqi', opacity: 0.8, background: refereeMode === 'multiple' ? 'rgba(255,100,0,0.4)' : 'rgba(0,200,100,0.3)' }}>
-                                {refereeMode === 'multiple' ? '👥 Multi' : '👤 Single'} • {mySeat || '...'}
-                            </span>
-                        </div>
-                        <div className="competitor-side blue-side-text">{blueName}</div>
-                    </div>
-                </div>
+                <ControllerCenterPanel
+                    redName={summary.redName}
+                    blueName={summary.blueName}
+                    currentRound={summary.currentRound}
+                    isPaused={summary.isPaused}
+                    refereeMode={refereeMode}
+                    mySeat={mySeat}
+                />
             </ControllerScorePad>
         </div>
     );
