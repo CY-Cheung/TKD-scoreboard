@@ -1,15 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { ref, onValue, update, get } from "firebase/database";
+import { ref, onValue } from "firebase/database";
 import { database } from "../../firebase";
 import "./Screen.css";
 import "../../App.css";
-import { startNextRound, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement, getEffectiveIvrRemaining } from "../../Api";
-import { getScoreValue } from "../../domain/scoreMath.js";
-import {
-    determineDominantSide,
-    isMatchFinal,
-    resolveMatchRules,
-} from "../../domain/matchRules.js";
+import { startNextRound, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement } from "../../Api";
 import {
     resolveMatchTimerFrame,
     buildTimerResumePatch,
@@ -43,9 +37,16 @@ import ScreenMiddleBoard from "./ScreenMiddleBoard";
 import ScreenOverlayStack from "./ScreenOverlayStack";
 import { normalizeMatchView } from "./normalizeMatchView";
 import { computeKyeShiRemaining } from "./kyeShiTime";
-import { resolveScreenBoardColors } from "./screenBoardColors";
 import { useNowTicker } from "./useNowTicker";
 import { useToastAutoDismiss } from "./useToastAutoDismiss";
+import { useScreenHotkeys } from "./useScreenHotkeys";
+import {
+    AUTO_DOWNGRADE_TOAST,
+    buildDisconnectToastMessage,
+    shouldProbeAutoDowngrade,
+    shouldAutoDowngradeToSingle,
+} from "./refereePresence";
+import { buildScreenScoreboardModel } from "./buildScreenScoreboardModel";
 import { useEventSession } from "../../Context/EventSessionContext";
 
 const EMPTY_MATCH_RULES = Object.freeze({});
@@ -137,20 +138,19 @@ function Screen() {
             const disconnections = listDisconnectedRefereeSeats(prevData, currentData);
             const occupiedCount = countOccupiedRefereeSeats(currentData);
 
-            if (disconnections.length > 0) {
-                const msg = `⚠️ Referee ${disconnections.join(', ')} disconnected!`;
-                setToastMessages(prev => [...prev, { id: Date.now(), text: msg }]);
+            const disconnectMsg = buildDisconnectToastMessage(disconnections);
+            if (disconnectMsg) {
+                setToastMessages(prev => [...prev, { id: Date.now(), text: disconnectMsg }]);
             }
 
-            // Auto-downgrade check
-            if (occupiedCount < 2) {
+            if (shouldProbeAutoDowngrade(occupiedCount)) {
                 getCourt(
                     database,
                     selectedEvent,
                     selectedCourt,
                     ["config", "refereeMode"]
                 ).then((mode) => {
-                    if (mode === 'multiple') {
+                    if (shouldAutoDowngradeToSingle(mode)) {
                         updateCourtField(
                             database,
                             selectedEvent,
@@ -158,7 +158,7 @@ function Screen() {
                             "config",
                             { refereeMode: 'single' }
                         );
-                        setToastMessages(prev => [...prev, { id: Date.now() + 1, text: "Only 1 referee remaining. Auto-downgraded to Single Referee Mode." }]);
+                        setToastMessages(prev => [...prev, { id: Date.now() + 1, text: AUTO_DOWNGRADE_TOAST }]);
                     }
                 });
             }
@@ -343,47 +343,20 @@ function Screen() {
         }
     }, [selectedEvent, currentMatchId, matchData]);
 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.code === "Space") { e.preventDefault(); toggleTimer(); }
-            if (e.key === "\\") { toggleDirection(); }
-            if (e.key === "e" || e.key === "E") { setShowEdit(prev => !prev); }
-            if (e.key === "q" || e.key === "Q") { setShowQRCode(prev => !prev); }
-            if (e.key === "k" || e.key === "K") {
-                toggleKyeShi();
-            }
-        };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [isMatchLoaded, selectedEvent, currentMatchId, matchData]);
+    useScreenHotkeys(
+        {
+            onToggleTimer: toggleTimer,
+            onToggleDirection: toggleDirection,
+            onToggleEdit: () => setShowEdit((prev) => !prev),
+            onToggleQr: () => setShowQRCode((prev) => !prev),
+            onToggleKyeShi: toggleKyeShi,
+        },
+        [isMatchLoaded, selectedEvent, currentMatchId, matchData, toggleKyeShi]
+    );
 
     // Nullish config/state/stats break default destructuring (`{ config = {} } = { config: null }`
     // keeps null). Live can arrive before flat config and used to crash Screen.
     const { state, config, stats } = normalizeMatchView(matchData);
-    const {
-        phase = "ROUND",
-        currentRound: matchCurrentRound,
-        winReason,
-        isFinished,
-        isPaused = true,
-    } = state;
-    const roundScores =
-        stats.roundScores && typeof stats.roundScores === "object"
-            ? stats.roundScores
-            : {};
-    const matchRoundWins =
-        stats.roundWins && typeof stats.roundWins === "object"
-            ? stats.roundWins
-            : {};
-    const resolvedRules = resolveMatchRules(config?.rules);
-
-    const redStats = stats.red;
-    const blueStats = stats.blue;
-
-    const dominantSide = useMemo(() => {
-        if (!isMatchLoaded) return 'none';
-        return determineDominantSide(redStats, blueStats, resolvedRules.maxGamjeom);
-    }, [redStats, blueStats, isMatchLoaded, resolvedRules.maxGamjeom]);
 
     const occupiedRefereesCount = useMemo(
         () => countOccupiedRefereeSeats(refereesData),
@@ -394,25 +367,13 @@ function Screen() {
         return <ScreenUnconfigured />;
     }
 
-    const isResting = phase === 'REST';
-    const roundWins = { red: matchRoundWins.red || 0, blue: matchRoundWins.blue || 0 };
-    const isFinal = isMatchFinal(roundWins, resolvedRules.roundsToWin);
-
-    const redGamJeom = stats.red?.gamjeom ?? 0;
-    const blueGamJeom = stats.blue?.gamjeom ?? 0;
-    const redIvrRemaining = getEffectiveIvrRemaining(stats, "red", eventSettings, matchRules);
-    const blueIvrRemaining = getEffectiveIvrRemaining(stats, "blue", eventSettings, matchRules);
-
-    const redTotalScore = isMatchLoaded ? getScoreValue(stats.red, stats.blue) : 0;
-    const blueTotalScore = isMatchLoaded ? getScoreValue(stats.blue, stats.red) : 0;
-
-    const matchNumber = config.matchId ?? "000";
-    const currentRound = matchCurrentRound ?? 1;
-
-    const { timerColor, redScoreColor, blueScoreColor } = resolveScreenBoardColors({
-        isPaused,
-        isResting,
-        dominantSide,
+    const board = buildScreenScoreboardModel({
+        state,
+        config,
+        stats,
+        isMatchLoaded,
+        eventSettings,
+        matchRules,
     });
 
     return (
@@ -422,43 +383,43 @@ function Screen() {
 
                 <ScreenTopNames
                     direction={direction}
-                    isResting={isResting}
-                    redCompetitor={config.competitors?.red}
-                    blueCompetitor={config.competitors?.blue}
+                    isResting={board.isResting}
+                    redCompetitor={board.redCompetitor}
+                    blueCompetitor={board.blueCompetitor}
                 />
 
                 <ScreenMiddleBoard
                     direction={direction}
                     matchData={matchData}
                     now={now}
-                    isResting={isResting}
-                    isFinal={isFinal}
-                    redScoreColor={redScoreColor}
-                    blueScoreColor={blueScoreColor}
-                    redTotalScore={redTotalScore}
-                    blueTotalScore={blueTotalScore}
-                    roundScores={roundScores}
-                    roundWins={roundWins}
+                    isResting={board.isResting}
+                    isFinal={board.isFinal}
+                    redScoreColor={board.redScoreColor}
+                    blueScoreColor={board.blueScoreColor}
+                    redTotalScore={board.redTotalScore}
+                    blueTotalScore={board.blueTotalScore}
+                    roundScores={board.roundScores}
+                    roundWins={board.roundWins}
                     onOpenEdit={() => setShowEdit(true)}
-                    matchNumber={matchNumber}
+                    matchNumber={board.matchNumber}
                     kyeShiRemaining={kyeShiRemaining}
                     displayTime={displayTime}
-                    winReason={winReason}
-                    isPaused={isPaused}
+                    winReason={board.winReason}
+                    isPaused={board.isPaused}
                     isMatchLoaded={isMatchLoaded}
-                    timerColor={timerColor}
+                    timerColor={board.timerColor}
                     onToggleDirection={toggleDirection}
                     onToggleTimer={toggleTimer}
                 />
 
                 <ScreenBottomBar
                     direction={direction}
-                    redGamJeom={redGamJeom}
-                    blueGamJeom={blueGamJeom}
-                    redIvrRemaining={redIvrRemaining}
-                    blueIvrRemaining={blueIvrRemaining}
-                    roundWins={roundWins}
-                    currentRound={currentRound}
+                    redGamJeom={board.redGamJeom}
+                    blueGamJeom={board.blueGamJeom}
+                    redIvrRemaining={board.redIvrRemaining}
+                    blueIvrRemaining={board.blueIvrRemaining}
+                    roundWins={board.roundWins}
+                    currentRound={board.currentRound}
                     onOpenEdit={() => setShowEdit(true)}
                 />
             </div>
@@ -469,7 +430,7 @@ function Screen() {
                 selectedEvent={selectedEvent}
                 currentMatchId={currentMatchId}
                 matchData={matchData}
-                dominantSide={dominantSide}
+                dominantSide={board.dominantSide}
                 setShowQRCode={setShowQRCode}
                 occupiedRefereesCount={occupiedRefereesCount}
                 toggleDirection={toggleDirection}

@@ -1,10 +1,9 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
 > **Status:** Flatten **complete** in production（export verified）  
-> App／product docs／Refactoring Plan 已對齊 flat schema + Vitest baseline。  
-> Stack tip：`cursor/firebase-docs-refactor-plan-8215`。  
-> Stage 1–2 已合入 `main`。其餘見 PR #10–#26+。  
-> **Rules：** 需 Firebase Console Publish（#20）。
+> App／product docs／Refactoring Plan 已對齊 flat schema + Vitest／rules CI baseline。  
+> Flatten + Wave 9–11 已合入 `main`。  
+> **Rules：** repo 真相係 `database.rules.json`；`database.rules.flattened.skeleton.json` 必須同其保持一致（文件／對照用）。Live Console 需 Publish 核對。
 
 ---
 

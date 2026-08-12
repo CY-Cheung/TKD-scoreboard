@@ -165,11 +165,11 @@ flowchart TB
 
 ## 8. Approval gate（歷史）
 
-Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
+Waves 0–11 已執行完畢。工程整潔後續見 §10「Engineering hygiene」。
 
 | Option | Meaning |
 |--------|---------|
-| Approve optional Wave 9+ | 見 §10 |
+| Engineering hygiene Phase 1–2 | Docs／rules skeleton／Screen extracts |
 | Narrow slice | 用戶指定檔案／行為 |
 | Hold | 唔再動 `src/` |
 
@@ -183,10 +183,11 @@ Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
 | 2026-08-11 | Wave 7 matchTimer；Wave 8 seatGrab |
 | 2026-08-12 | Mark Waves 0–8 complete；baseline → Vitest 157；RTDB flatten complete；clarify voteNow/pauseNow ≠ dual-write |
 | 2026-08-12 | Waves 9–11：page pure helpers／RTL／rules emulator + CI；flatten stack already on `main` |
+| 2026-08-12 | Engineering hygiene：Test Plan／flatten docs／skeleton rules sync；Screen hotkeys／presence／scoreboard model |
 
 ---
 
-## 10. Optional next waves
+## 10. Optional next waves + engineering hygiene
 
 | Wave | Idea | Notes |
 |------|------|-------|
@@ -195,6 +196,17 @@ Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
 | 11 | Rules unit tests（`database.rules.json`） | **完成**（`src/rules/*` + `npm run test:rules`） |
 | — | 更大 RTL page tests／E2E | 未開；可選 |
 | — | Publish live `database.rules.json` | 需 Firebase Console／Service Account |
+| — | Controller extracts（Phase 2 後半） | 可選下一刀 |
+
+### Engineering hygiene（2026-08-12）
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| 0 Merge Wave 9–11 | **完成** | `#37` → `main`（`a6f0858`） |
+| 1 Docs + rules skeleton | **完成** | `4_Test_Plan.md`；skeleton ≡ `database.rules.json` |
+| 2 Screen thin extracts | **進行中／本 PR** | hotkeys／referee presence／scoreboard model；rAF／TX／seat I/O 仍留 page |
+| 2b Controller extracts | 未開 | |
+| 3 Optional RTL | 未開 | |
 
 ### Wave 9 progress（2026-08-12）
 
@@ -212,6 +224,7 @@ Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
 | `CourtSetupSessionForm` | `CourtSetup.jsx`（取代 page-local hero） |
 | `ScreenCenterTimer`／`ScreenRoundWins`／`ScreenBottomBar`／`ScreenEventTopBar`／`ScreenTopNames`／`ScreenMiddleBoard`／`ScreenOverlayStack` | `Screen.jsx` |
 | `kyeShiTime`／`screenBoardColors`／`useNowTicker`／`useToastAutoDismiss` | `Screen.jsx` |
+| `useScreenHotkeys`／`refereePresence`／`buildScreenScoreboardModel` | `Screen.jsx`（工程整潔 Phase 2） |
 | `countOccupiedRefereeSeats`／`listDisconnectedRefereeSeats` | `seatGrab.js`（Screen 使用） |
 | `dataImportHelpers` | `DataImport.jsx` |
 | `courtSetupHelpers` | `CourtSetup.jsx` |

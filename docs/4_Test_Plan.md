@@ -1,12 +1,12 @@
 # Test Plan（測試計劃）
 
 **Product:** Taekwondo Cloud Scoring System  
-**Runner (current):** Vitest — `npm test`  
-**Baseline at doc time:** 150+ unit tests across `src/domain`／`src/services`／Pages helpers  
-**Document status:** Reverse-engineered gaps + forward-looking plan  
+**Runner (current):** Vitest — `npm test`；Rules — `npm run test:rules`  
+**Baseline at doc time:** **213** unit／component tests（`npm test`）；**11** rules tests（emulator）  
+**Document status:** Aligned with Waves 9–11 on `main`  
 **Last reviewed against code:** 2026-08-12
 
-> **Codebase baseline:** flat RTDB schema；計分／席位單元測試已存在。整合（emulator／真機）仍多數人手。Schema → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
+> **Codebase baseline:** flat RTDB schema；unit + RTL component tests + RTDB rules emulator CI。真機／多 tab 整合仍多數人手。Schema → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 > **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
 
 > **`[待確認]`** = 計劃建議但尚未實作／未自動化嘅項目。
@@ -24,12 +24,12 @@
 
 ## 2. Test pyramid（測試金字塔）
 
-| Layer | Tooling（現況／建議） | Scope |
-|-------|----------------------|-------|
-| **Unit** | Vitest（`npm test`） | score／vote／round／IVR／paths／seat helpers |
-| **Component** | Testing Library | `[待確認]` 未見正式 RTL setup |
-| **Integration** | Firebase emulator **或** 契約測試 | `[待確認]` 未見 emulator CI |
-| **E2E / Manual smoke** | 人手 checklist（本文件 §6） | 真實 Google／flat RTDB／多機 |
+| Layer | Tooling（現況） | Scope |
+|-------|----------------|------|
+| **Unit** | Vitest（`npm test`） | score／vote／round／IVR／paths／seat／page helpers |
+| **Component** | Testing Library + jsdom | `*.test.jsx`（例：`ScreenUnconfigured`、`MatchActionButtons`、`BrandSplitUserBadge`） |
+| **Rules** | `@firebase/rules-unit-testing` + RTDB emulator | `npm run test:rules`；CI `rules` job |
+| **E2E / Manual smoke** | 人手 checklist（本文件 §6） | 真實 Google／flat RTDB／多機；Playwright **未開** |
 
 ---
 
@@ -37,8 +37,10 @@
 
 | Area | Status |
 |------|--------|
-| Unit（domain／services／helpers） | **有** — `npm test`（Vitest；score／round／seat／paths 等） |
-| Component／E2E | 未見正式 RTL／Playwright CI |
+| Unit（domain／services／helpers） | **有** — `npm test` |
+| Component（RTL） | **有** — 少量 smoke；更大 page tests 可選 |
+| Rules emulator | **有** — `npm run test:rules` + GitHub Actions |
+| E2E（Playwright） | **未開** |
 | Manual | 現場同 PR checklist（§6） |
 
 **已覆蓋／持續擴充嘅純邏輯：**
@@ -49,8 +51,10 @@
 | Score／round transactions | vote window、PUN／PTG、REST／PTF |
 | IVR helpers | unlimited／cap／`projectIvrRemaining` |
 | Court／match paths | flat `courts`／`matches/config`／`matchLive`／`matchIndex` |
-| Seat grab helpers | claim／stale／bare string deviceId |
+| Seat grab helpers | claim／stale／bare string deviceId／disconnect list |
 | PDF／event create | multi-day split naming |
+| Screen helpers | matchTimer、kyeShi、board colors、normalizeMatchView |
+| Rules structure + emulator | nested courts deny、flat courts、seat deviceId、matchLive |
 
 **高風險仍多數人手：**
 
@@ -58,7 +62,7 @@
 - Screen timer rAF + REST → `startNextRound`
 - TC／IVR multi-tab finalize races
 - `promoteWinner`（flat config）
-- `database.rules.json`（需 Console／emulator 驗證）
+- **Live** Console rules vs repo（需 Publish 核對）
 
 ---
 
@@ -94,7 +98,7 @@
 | UT-E09 | `gamjeomAvoiding` | 同時加 gamjeom + avoiding；計入對方總分 |
 | UT-E10 | IVR `projectIvrRemaining`：unlimited + reject | → 0；unlimited + accept → 仍 unlimited |
 
-**Status on `main`:** **未自動化**；建議抽純函式後先覆蓋 UT-E01–E10。
+**Status on `main`:** 多數已有 domain／helper 測試；未覆蓋項繼續用回歸清單追。
 
 ### 4.3 Event creation — Happy / Edge
 
@@ -109,7 +113,8 @@
 
 ## 5. Integration test plan（整合測試 — 建議）
 
-> 現況：**未見** Firebase Emulator CI。以下為建議規格；實作前需選 emulator 或 staging project → `[待確認]`。
+> **Rules 層：** 已有 emulator CI（`npm run test:rules`）。  
+> **App 整合（多機／onDisconnect／多 Screen）：** 仍建議人手或未來加深 emulator／E2E → 以下為建議規格。
 
 ### 5.1 Most complex feature A — Multiple-mode valid point
 
@@ -170,15 +175,17 @@
 | 空 = WT unlimited (`-1`) | Accept 保持 unlimited；Reject → 0 |
 | 換回合／REST | `ivrRemaining` **保留**（match-scoped） |
 
-### 5.5 Rules security（建議）
+### 5.5 Rules security（已部分自動化）
 
-用 Emulator Rules unit tests：
-
-| Case | Expect |
-|------|--------|
-| 未 auth、無 seat device 寫 match | deny |
-| 有效 `providedDeviceId` 對應 J1 | allow score tx |
-| 非 creator 刪 event | deny（除非 `coAdmins` — UI `[待確認]`） |
+| Case | Expect | Automation |
+|------|--------|------------|
+| Public read events | allow | emulator |
+| Nested `events/.../courts` write | deny | emulator |
+| Unauth flat courts write（event exists） | deny | emulator |
+| Seat write with `deviceId` | allow when empty | emulator |
+| Owner `matchLive` write | allow | emulator |
+| 有效 `providedDeviceId` 對應 J1 score path | allow | **加深中** |
+| 非 creator 刪 event | deny（除非 `coAdmins`） | **加深中** |
 
 ---
 
@@ -216,17 +223,17 @@
 
 ---
 
-## 8. CI recommendations（建議）
+## 8. CI（現況）
 
 | Step | Command／action |
 |------|-----------------|
 | Install | `npm ci` |
-| Unit | `npm test` |
+| Unit + RTL | `npm test` |
 | Build | `npm run build` |
-| Lint | `npm run lint` |
-| Emulator suite | `[待確認]` 未接入 |
+| Rules emulator | `npm run test:rules`（需 Java） |
+| Lint | `npm run lint`（建議；workflow 可選加） |
 
-建議 CI 最少跑 lint + build；有測試後再加 `npm test`。
+Workflow：`.github/workflows/ci.yml`（`unit` + `rules` jobs）。
 
 ---
 
@@ -234,11 +241,11 @@
 
 | Priority | Item |
 |----------|------|
-| P0 | Rules emulator tests for match write + seat grab |
-| P0 | TC／IVR finalize idempotency（transaction） |
-| P1 | Screen timer pure extract + tests（而家仍 deferred） |
-| P1 | Seat grab helper extract + tests（而家仍 deferred） |
-| P2 | RTL smoke：ProtectedRoute redirect、Landing CTA |
+| P0 | 加深 rules：matchLive seat device path、delete event ACL |
+| P0 | TC／IVR finalize idempotency（transaction）真機／emulator |
+| P1 | 更大 RTL page tests（可選） |
+| P1 | Controller extracts + 對應 unit tests（工程整潔 Phase 2 後半） |
+| P2 | Playwright E2E smoke |
 | P2 | pdfParser fixture golden tests |
 
 ---
@@ -248,3 +255,4 @@
 | Date | Change |
 |------|--------|
 | 2026-08-10 | Initial test plan：`main` 零自動化；列出目標案例同風險缺口 |
+| 2026-08-12 | Align Waves 9–11：RTL、rules emulator CI、213 unit tests baseline |
