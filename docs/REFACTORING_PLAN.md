@@ -198,7 +198,7 @@ Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
 | `ScreenUnconfigured`／`PlayerNameCell`／`ScreenIvrStatus`／`SideRoundHistory`／`ScreenToasts`／`getTimeoutStyle` | `Screen.jsx` |
 | `parseName` + test | `DataImport.jsx` |
 | `CreateEventModal` | `CourtSetup.jsx` |
-| `MatchConfigForm`／`MatchesList`／`BracketView`／`CreateEventModal`／`matchListUtils` | `DataImport.jsx` |
+| `MatchConfigForm`／`MatchesList`／`BracketView`／`matchListUtils`／`MatchActionButtons` | `DataImport.jsx`（Create Event modal 已刪） |
 | `pdfImportFlow`／`persistCreatedEvents`／`matchFormHelpers`／`MatchActionButtons` | DataImport + CourtSetup shared create／PDF |
 | `BrandSplitLayout`／`BrandSplitHero`／`BrandSplitUserBadge` | Home + CourtSetup 共用左半；page 只 render 右半 |
 | `HomeRightPanel`／`parseEventHeading` | `Home.jsx` |
