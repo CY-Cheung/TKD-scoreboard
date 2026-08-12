@@ -199,8 +199,11 @@ Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
 | `parseName` + test | `DataImport.jsx` |
 | `CreateEventModal` | `CourtSetup.jsx`（~821→~696） |
 | `MatchConfigForm`／`MatchesList`／`BracketView`／`CreateEventModal`／`matchListUtils` + tests | `DataImport.jsx`（~843→~573） |
+| `pdfImportFlow`／`persistCreatedEvents`／`matchFormHelpers` + tests | DataImport + CourtSetup shared create／PDF |
+| `CourtSetupHeroPanel` | `CourtSetup.jsx`（~612→~525） |
+| `ScreenCenterTimer`／`ScreenRoundWins`／`ScreenBottomBar` | `Screen.jsx`（~637→~578） |
 
-可選下一刀：CourtSetup hero panel；再拆 DataImport handlers／PDF create flow。
+可選下一刀：`ScreenMiddleBoard`／overlay stack；CourtSetup login form；修 DataImport Create Event 死入口。
 
 Schema／多裝置真相來源：[`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 扁平化檔案軌跡：[`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。

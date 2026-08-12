@@ -1,40 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
-import { ref, get, set, remove, update } from "firebase/database";
+import { ref, get, remove } from "firebase/database";
 import { useAuth } from '../../Context/AuthContext';
 import { useEventSession } from '../../Context/EventSessionContext';
-import { FolderPlus, Trash, BoxArrowRight, CheckCircle, House, Github } from 'react-bootstrap-icons';
-import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
-import { appendIvrQuotaToSettings } from '../../Api';
+import { FolderPlus, Trash, BoxArrowRight, CheckCircle } from 'react-bootstrap-icons';
 import { usePopup } from '../../Context/PopupContext';
-import {
-  buildCourtsMap,
-  buildEventRecords,
-  normalizeRulesFromForm,
-} from '../../services/eventCreation';
 import {
   fetchEventList,
   removeEventIndexEntry,
-  writeEventIndexEntry,
 } from '../../services/eventIndexFirebase';
 import {
   fetchCourtIds,
-  mirrorCourtsMapToFlat,
   removeFlatCourtsForEvent,
   updateCourtField,
-  eventMetaPayloadForWrite,
 } from '../../services/courtFirebase';
 import {
-  mirrorMatchFlatArtifacts,
   removeMatchFlatArtifactsForEvent,
 } from '../../services/matchFirebase';
 
 import './CourtSetup.css';
 import Button from '../../Components/Button/Button';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
-import { LANDING_FEATURES, LANDING_HERO } from '../../constants/landingFeatures';
 import CreateEventModal from './CreateEventModal';
+import CourtSetupHeroPanel from './CourtSetupHeroPanel';
+import { runPdfFileSelect } from '../../services/pdfImportFlow';
+import {
+  persistCreatedEvents,
+  toastMessageForCreateMode,
+  defaultCreateEventFormValues,
+} from '../../services/persistCreatedEvents';
 
 function CourtSetup() {
   const [password, setPassword] = useState('');
@@ -156,35 +151,15 @@ function CourtSetup() {
 
   // PDF File Upload Handler
   const handleFileSelect = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
-      showToast('請選擇有效的 PDF 賽程文件！');
-      return;
-    }
-
-    setIsParsingPdf(true);
-    try {
-      const result = await parseHktkdaPdfFile(file);
-      if (!result || result.matchCount === 0) {
-        showToast('未能在 PDF 中解析出有效賽程，請確認格式是否為香港跆拳道協會對陣表。');
-      } else {
-        setPdfParseResult(result);
-        setNewEventName(result.eventName);
-        if (!newEventId) {
-          setNewEventId('TKD' + Date.now().toString().slice(-6));
-        }
-      }
-    } catch (error) {
-      console.error("PDF Parsing Failed:", error);
-      showToast(`解析 PDF 失敗: ${error.message}`);
-    } finally {
-      setIsParsingPdf(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
+    await runPdfFileSelect(e.target.files?.[0], {
+      showToast,
+      setIsParsingPdf,
+      setPdfParseResult,
+      setNewEventName,
+      newEventId,
+      setNewEventId,
+      fileInputRef,
+    });
   };
 
   // Create Event Handler
@@ -204,64 +179,47 @@ function CourtSetup() {
     }
 
     try {
-      const formRules = normalizeRulesFromForm({
-        maxPointGap: newMaxPointGap,
-        maxGamjeom: newMaxGamjeom,
-        roundDuration: newRoundDuration,
-        restDuration: newRestDuration,
-      });
-      const { courts, count } = buildCourtsMap(courtCount);
-      const settings = appendIvrQuotaToSettings(
-        { setupPassword: newSetupPassword, ...formRules },
-        newIvrQuota
+      const { records, primaryEventId, mode, datesCount, courtCountUsed } =
+        await persistCreatedEvents({
+          database,
+          user,
+          eventId: trimmedId,
+          eventName: trimmedName,
+          setupPassword: newSetupPassword,
+          formRulesFields: {
+            maxPointGap: newMaxPointGap,
+            maxGamjeom: newMaxGamjeom,
+            roundDuration: newRoundDuration,
+            restDuration: newRestDuration,
+          },
+          ivrQuota: newIvrQuota,
+          courtCount,
+          pdfParseResult,
+        });
+
+      showToast(
+        toastMessageForCreateMode(mode, {
+          trimmedName,
+          trimmedId,
+          datesCount,
+          recordsLength: records.length,
+          courtCount: courtCountUsed,
+          includeCourtCountOnBare: true,
+        })
       );
-
-      const { records, primaryEventId, mode, datesCount } = buildEventRecords({
-        eventId: trimmedId,
-        eventName: trimmedName,
-        user,
-        settings,
-        courts,
-        courtCount: count,
-        pdfParseResult,
-      });
-
-      for (const record of records) {
-        // Stage 5+: events/{id} = meta + settings only; matches → flat.
-        await set(
-          ref(database, `events/${record.id}`),
-          eventMetaPayloadForWrite(record.data)
-        );
-        await writeEventIndexEntry(database, record.id, record.data);
-        await mirrorCourtsMapToFlat(database, record.id, record.data.courts);
-        if (record.data.matches) {
-          await Promise.all(
-            Object.entries(record.data.matches).map(([mid, mdata]) =>
-              mirrorMatchFlatArtifacts(database, record.id, mid, mdata)
-            )
-          );
-        }
-      }
-
-      if (mode === 'multi') {
-        showToast(`✅ 成功按 ${datesCount} 個比賽日期拆分並建立 ${records.length} 個子賽事！`);
-      } else if (mode === 'single-pdf') {
-        showToast(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
-      } else {
-        showToast(`✅ 成功建立賽事：${trimmedName} (${trimmedId})，包含 ${count} 個場地！`);
-      }
       setSelectedEvent(primaryEventId);
 
-      setNewEventId('');
-      setNewEventName('');
-      setNewSetupPassword('');
-      setNewMaxPointGap(15);
-      setNewMaxGamjeom(5);
-      setNewRoundDuration(90);
-      setNewRestDuration(60);
-      setNewIvrQuota('');
+      const reset = defaultCreateEventFormValues();
+      setNewEventId(reset.newEventId);
+      setNewEventName(reset.newEventName);
+      setNewSetupPassword(reset.newSetupPassword);
+      setNewMaxPointGap(reset.newMaxPointGap);
+      setNewMaxGamjeom(reset.newMaxGamjeom);
+      setNewRoundDuration(reset.newRoundDuration);
+      setNewRestDuration(reset.newRestDuration);
+      setNewIvrQuota(reset.newIvrQuota);
       setCourtCount(4);
-      setPdfParseResult(null);
+      setPdfParseResult(reset.pdfParseResult);
       setShowCreateModal(false);
       fetchEvents();
 
@@ -426,53 +384,7 @@ function CourtSetup() {
           />
         </div>
       )}
-        <div className="cs-left-panel">
-          <div className="cs-title-container">
-            <StableLocaleText
-              as="h1"
-              locale={locale}
-              visible={visible}
-              className="cs-hero-title"
-              en={LANDING_HERO.titleEn}
-              zh={LANDING_HERO.titleZh}
-            />
-            <StableLocaleText
-              as="p"
-              locale={locale}
-              visible={visible}
-              className="cs-subtitle"
-              en={LANDING_HERO.subtitleEn}
-              zh={LANDING_HERO.subtitleZh}
-            />
-            <ul className="cs-app-intro-list">
-              {LANDING_FEATURES.map(({ id, titleEn, titleZh, en, zh }) => (
-                <li key={id} className="cs-app-intro-item">
-                  <StableLocaleText
-                    as="div"
-                    locale={locale}
-                    visible={visible}
-                    className="cs-app-intro-title"
-                    en={titleEn}
-                    zh={titleZh}
-                  />
-                  <StableLocaleText
-                    as="div"
-                    locale={locale}
-                    visible={visible}
-                    className="cs-app-intro-desc"
-                    en={en}
-                    zh={zh}
-                  />
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="cs-footer-links">
-            <a href="https://github.com/CY-Cheung/TKD-scoreboard" target="_blank" rel="noopener noreferrer">
-              <Github size="1.04cqi" /> GitHub Repository
-            </a>
-          </div>
-        </div>
+        <CourtSetupHeroPanel locale={locale} visible={visible} />
 
         <div className="cs-divider"></div>
 

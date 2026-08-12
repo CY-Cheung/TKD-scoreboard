@@ -5,7 +5,6 @@ import "./Screen.css";
 import "../../App.css";
 import Edit from "./Edit";
 import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
-import { RecordCircle } from "react-bootstrap-icons";
 import { startNextRound, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement, getEffectiveIvrRemaining } from "../../Api";
 import TechnicalCardAnnouncement from "../../Components/TechnicalCardFlow/TechnicalCardAnnouncement";
 import IVRAnnouncement from "../../Components/IVRFlow/IVRAnnouncement";
@@ -15,7 +14,6 @@ import {
     isMatchFinal,
     resolveMatchRules,
 } from "../../domain/matchRules.js";
-import { formatTime } from "./formatTime";
 import {
     resolveMatchTimerFrame,
     buildTimerResumePatch,
@@ -41,11 +39,11 @@ import {
 } from "../Controller/seatGrab";
 import VoteLogRows from "./VoteLogRows";
 import PlayerNameCell from "./PlayerNameCell";
-import ScreenIvrStatus from "./ScreenIvrStatus";
 import SideRoundHistory from "./SideRoundHistory";
 import ScreenToasts from "./ScreenToasts";
 import ScreenUnconfigured from "./ScreenUnconfigured";
-import { getTimeoutStyle } from "./getTimeoutStyle";
+import ScreenCenterTimer from "./ScreenCenterTimer";
+import ScreenBottomBar from "./ScreenBottomBar";
 import { useEventSession } from "../../Context/EventSessionContext";
 
 const EMPTY_MATCH_RULES = Object.freeze({});
@@ -431,14 +429,6 @@ function Screen() {
     const redScoreColor = !isResting && dominantSide === 'red' ? '#FFFF00' : '#FFFFFF';
     const blueScoreColor = !isResting && dominantSide === 'blue' ? '#FFFF00' : '#FFFFFF';
 
-    const renderTimerContent = () => {
-        if (winReason) return winReason;
-        if (!isMatchLoaded) return "0:00";
-        return formatTime(displayTime);
-    };
-
-    const timeoutStyle = getTimeoutStyle({ isMatchLoaded, isPaused, isResting });
-
     return (
         <>
             <div className="screen" onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}>
@@ -478,34 +468,18 @@ function Screen() {
                         ) : redTotalScore}
                     </div>
 
-                    {/* Center: Match Timer */}
-                    <div className="match-info-middle">
-                        <div className="match cursor-target" onClick={toggleDirection}>
-                            <div className="match-font">MATCH</div>
-                            <div className="match-number">{matchNumber}</div>
-                        </div>
-                        <div className="timer cursor-target">
-                            {kyeShiRemaining !== null ? (
-                                <>
-                                    <div className="time-out match-font timeout-active" onClick={toggleTimer} style={{ backgroundColor: '#FFFF00', color: '#000000' }}>
-                                        Kye-shi
-                                    </div>
-                                    <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: '#FFFF00' }}>
-                                        {`${Math.floor(kyeShiRemaining / 60)}:${(kyeShiRemaining % 60).toString().padStart(2, '0')}`}
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: timerColor }}>
-                                        {renderTimerContent()}
-                                    </div>
-                                    <div className={`time-out match-font ${isMatchLoaded && !isPaused ? "timeout-active" : ""} ${isResting ? 'rest-mode' : ''}`} onClick={toggleTimer} style={timeoutStyle}>
-                                        {isResting ? 'REST TIME' : 'Time out'}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    </div>
+                    <ScreenCenterTimer
+                        matchNumber={matchNumber}
+                        kyeShiRemaining={kyeShiRemaining}
+                        displayTime={displayTime}
+                        winReason={winReason}
+                        isPaused={isPaused}
+                        isResting={isResting}
+                        isMatchLoaded={isMatchLoaded}
+                        timerColor={timerColor}
+                        onToggleDirection={toggleDirection}
+                        onToggleTimer={toggleTimer}
+                    />
 
                     {/* Blue Side: Score */}
                     <div className={'blue-score-text blue-score-bg score-font cursor-target'} style={{ color: blueScoreColor }} onClick={() => setShowEdit(true)}>
@@ -530,50 +504,16 @@ function Screen() {
                     </div>
                 </div>
 
-                {/* Bottom Section: Gamjeom, IVR Logo, and Round */}
-                <div className="bottom" style={{ flexDirection: direction }}>
-                    {/* Red Side: Gam-jeom */}
-                    <div className="red-gamjeom red-bg cursor-target" onClick={() => setShowEdit(true)}>
-                        <div className="gamjeom-number">{redGamJeom}</div>
-                        <div className="gamjeom-font">GAM-JEOM</div>
-                    </div>
-
-                    {/* Red Side: IVR Logo */}
-                    <div className="red-score-info red-bg cursor-target" onClick={() => setShowEdit(true)}>
-                        <ScreenIvrStatus remaining={redIvrRemaining} />
-                    </div>
-
-                    {/* Center: Round Info */}
-                    <div className="match-info-bottom">
-                        <div className="round-info">
-                            <div className="match-font">ROUND</div>
-                            <div className="round-number-row">
-                                <div className="round-win-marks round-win-marks--left" aria-label={`${direction === 'row' ? 'Red' : 'Blue'} round wins`}>
-                                    {Array.from({ length: Math.max(0, Math.min(2, direction === 'row' ? roundWins.red : roundWins.blue)) }).map((_, i) => (
-                                        <RecordCircle key={`left-win-${i}`} className="round-win-icon" aria-hidden />
-                                    ))}
-                                </div>
-                                <div className="round-number">{currentRound}</div>
-                                <div className="round-win-marks round-win-marks--right" aria-label={`${direction === 'row' ? 'Blue' : 'Red'} round wins`}>
-                                    {Array.from({ length: Math.max(0, Math.min(2, direction === 'row' ? roundWins.blue : roundWins.red)) }).map((_, i) => (
-                                        <RecordCircle key={`right-win-${i}`} className="round-win-icon" aria-hidden />
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Blue Side: IVR Logo */}
-                    <div className="blue-score-info blue-bg cursor-target" onClick={() => setShowEdit(true)}>
-                        <ScreenIvrStatus remaining={blueIvrRemaining} />
-                    </div>
-
-                    {/* Blue Side: Gam-jeom */}
-                    <div className="blue-gamjeom blue-bg cursor-target" onClick={() => setShowEdit(true)}>
-                        <div className="gamjeom-number">{blueGamJeom}</div>
-                        <div className="gamjeom-font">GAM-JEOM</div>
-                    </div>
-                </div>
+                <ScreenBottomBar
+                    direction={direction}
+                    redGamJeom={redGamJeom}
+                    blueGamJeom={blueGamJeom}
+                    redIvrRemaining={redIvrRemaining}
+                    blueIvrRemaining={blueIvrRemaining}
+                    roundWins={roundWins}
+                    currentRound={currentRound}
+                    onOpenEdit={() => setShowEdit(true)}
+                />
             </div>
 
             {/* Edit Drawer Modal */}

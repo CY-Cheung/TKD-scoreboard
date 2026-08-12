@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ref, set } from "firebase/database";
 import { database } from '../../firebase';
 import { usePopup } from '../../Context/PopupContext';
 import './DataImport.css';
@@ -8,34 +7,25 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
 import { useEventSession } from '../../Context/EventSessionContext';
 import { PlusCircle, House, Display } from 'react-bootstrap-icons';
-import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
-import { appendIvrQuotaToSettings, appendIvrQuotaToRules, formatIvrQuotaForInput } from '../../Api';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
-import {
-    buildCourtsMap,
-    buildEventRecords,
-    normalizeRulesFromForm,
-} from '../../services/eventCreation';
-import { createMatchDocument } from '../../services/matchFactory';
-import {
-    fetchEventList,
-    writeEventIndexEntry,
-} from '../../services/eventIndexFirebase';
-import {
-    setCourtField,
-    mirrorCourtsMapToFlat,
-    eventMetaPayloadForWrite,
-} from '../../services/courtFirebase';
+import { fetchEventList } from '../../services/eventIndexFirebase';
+import { setCourtField } from '../../services/courtFirebase';
 import {
     mirrorMatchFlatArtifacts,
     removeMatchFlatArtifacts,
     fetchMatchesForEvent,
 } from '../../services/matchFirebase';
-import { parseName } from './parseName';
+import { runPdfFileSelect } from '../../services/pdfImportFlow';
+import {
+    persistCreatedEvents,
+    toastMessageForCreateMode,
+    defaultCreateEventFormValues,
+} from '../../services/persistCreatedEvents';
 import {
     listAvailableMatchDates,
     filterMatchIdsByDate,
 } from './matchListUtils';
+import { deriveMatchFormFields, buildMatchFromForm } from './matchFormHelpers';
 import MatchConfigForm from './MatchConfigForm';
 import MatchesList from './MatchesList';
 import BracketView from './BracketView';
@@ -141,35 +131,15 @@ const DataImport = () => {
 
     // PDF File Upload Handler
     const handleFileSelect = async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
-            showToast('請選擇有效的 PDF 賽程文件！');
-            return;
-        }
-
-        setIsParsingPdf(true);
-        try {
-            const result = await parseHktkdaPdfFile(file);
-            if (!result || result.matchCount === 0) {
-                showToast('未能在 PDF 中解析出有效賽程，請確認格式是否為香港跆拳道協會對陣表。');
-            } else {
-                setPdfParseResult(result);
-                setNewEventName(result.eventName);
-                if (!newEventId) {
-                    setNewEventId('TKD' + Date.now().toString().slice(-6));
-                }
-            }
-        } catch (error) {
-            console.error("PDF Parsing Failed:", error);
-            showToast(`解析 PDF 失敗: ${error.message}`);
-        } finally {
-            setIsParsingPdf(false);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-        }
+        await runPdfFileSelect(e.target.files?.[0], {
+            showToast,
+            setIsParsingPdf,
+            setPdfParseResult,
+            setNewEventName,
+            newEventId,
+            setNewEventId,
+            fileInputRef,
+        });
     };
 
     // Create New Event Handler (Handles PDF auto-import and date splitting)
@@ -189,63 +159,40 @@ const DataImport = () => {
         }
 
         try {
-            const formRules = normalizeRulesFromForm({
-                maxPointGap: newMaxPointGap,
-                maxGamjeom: newMaxGamjeom,
-                roundDuration: newRoundDuration,
-                restDuration: newRestDuration,
-            });
-            const { courts } = buildCourtsMap(1);
-            const settings = appendIvrQuotaToSettings(
-                { setupPassword: newSetupPassword, ...formRules },
-                newIvrQuota
-            );
-
-            const { records, primaryEventId, mode, datesCount } = buildEventRecords({
+            const { records, primaryEventId, mode, datesCount } = await persistCreatedEvents({
+                database,
+                user,
                 eventId: trimmedId,
                 eventName: trimmedName,
-                user,
-                settings,
-                courts,
+                setupPassword: newSetupPassword,
+                formRulesFields: {
+                    maxPointGap: newMaxPointGap,
+                    maxGamjeom: newMaxGamjeom,
+                    roundDuration: newRoundDuration,
+                    restDuration: newRestDuration,
+                },
+                ivrQuota: newIvrQuota,
                 courtCount: 1,
                 pdfParseResult,
             });
 
-            for (const record of records) {
-                // Stage 5+: events/{id} meta + settings only; matches → flat.
-                await set(
-                    ref(database, `events/${record.id}`),
-                    eventMetaPayloadForWrite(record.data)
-                );
-                await writeEventIndexEntry(database, record.id, record.data);
-                await mirrorCourtsMapToFlat(database, record.id, record.data.courts);
-                if (record.data.matches) {
-                    await Promise.all(
-                        Object.entries(record.data.matches).map(([mid, mdata]) =>
-                            mirrorMatchFlatArtifacts(database, record.id, mid, mdata)
-                        )
-                    );
-                }
-            }
-
-            if (mode === 'multi') {
-                showToast(`✅ 成功按 ${datesCount} 個比賽日期拆分並建立 ${records.length} 個子賽事！`);
-            } else if (mode === 'single-pdf') {
-                showToast(`✅ 成功建立賽事並匯入賽程：${trimmedName}`);
-            } else {
-                showToast(`✅ 成功建立賽事：${trimmedName}`);
-            }
+            showToast(toastMessageForCreateMode(mode, {
+                trimmedName,
+                datesCount,
+                recordsLength: records.length,
+            }));
             setEventName(primaryEventId);
 
-            setNewEventId('');
-            setNewEventName('');
-            setNewSetupPassword('');
-            setNewMaxPointGap(15);
-            setNewMaxGamjeom(5);
-            setNewRoundDuration(90);
-            setNewRestDuration(60);
-            setNewIvrQuota('');
-            setPdfParseResult(null);
+            const reset = defaultCreateEventFormValues();
+            setNewEventId(reset.newEventId);
+            setNewEventName(reset.newEventName);
+            setNewSetupPassword(reset.newSetupPassword);
+            setNewMaxPointGap(reset.newMaxPointGap);
+            setNewMaxGamjeom(reset.newMaxGamjeom);
+            setNewRoundDuration(reset.newRoundDuration);
+            setNewRestDuration(reset.newRestDuration);
+            setNewIvrQuota(reset.newIvrQuota);
+            setPdfParseResult(reset.pdfParseResult);
             setShowCreateEventModal(false);
             fetchEventsList();
 
@@ -303,42 +250,20 @@ const DataImport = () => {
     // Auto-populates the form when a match ID is entered manually
     useEffect(() => {
         if (matchId && currentMatches[matchId]) {
-            const matchData = currentMatches[matchId];
-            const config = matchData.config;
-            const rules = config.rules;
-            const competitors = config.competitors;
-    
-            setNextMatchId(config.nextMatchId || '');
-            setNextMatchSlot(config.nextMatchSlot || '');
-            
-            setMaxPointGap(rules.maxPointGap || 15);
-            setMaxGamjeom(rules.maxGamjeom || 5);
-            setRoundDuration(rules.roundDuration || 90);
-            setRestDuration(rules.restDuration || 60);
-            setIvrQuota(formatIvrQuotaForInput(rules.ivrQuota));
-    
-            const blueCompetitor = competitors.blue;
-            if (blueCompetitor.affiliatedClub !== undefined) {
-                setBlueName(blueCompetitor.name || '');
-                setBlueAffiliatedClub(blueCompetitor.affiliatedClub || '');
-            } else {
-                const bluePlayer = parseName(blueCompetitor.name);
-                setBlueName(bluePlayer.name);
-                setBlueAffiliatedClub(bluePlayer.club);
-            }
-            setBluePreviousMatch(blueCompetitor.previousMatch || '');
-    
-            const redCompetitor = competitors.red;
-            if (redCompetitor.affiliatedClub !== undefined) {
-                setRedName(redCompetitor.name || '');
-                setRedAffiliatedClub(redCompetitor.affiliatedClub || '');
-            } else {
-                const redPlayer = parseName(redCompetitor.name);
-                setRedName(redPlayer.name);
-                setRedAffiliatedClub(redPlayer.club);
-            }
-            setRedPreviousMatch(redCompetitor.previousMatch || '');
-    
+            const fields = deriveMatchFormFields(currentMatches[matchId]);
+            setNextMatchId(fields.nextMatchId);
+            setNextMatchSlot(fields.nextMatchSlot);
+            setMaxPointGap(fields.maxPointGap);
+            setMaxGamjeom(fields.maxGamjeom);
+            setRoundDuration(fields.roundDuration);
+            setRestDuration(fields.restDuration);
+            setIvrQuota(fields.ivrQuota);
+            setBlueName(fields.blueName);
+            setBlueAffiliatedClub(fields.blueAffiliatedClub);
+            setBluePreviousMatch(fields.bluePreviousMatch);
+            setRedName(fields.redName);
+            setRedAffiliatedClub(fields.redAffiliatedClub);
+            setRedPreviousMatch(fields.redPreviousMatch);
         }
     }, [matchId, currentMatches]);
 
@@ -355,34 +280,26 @@ const DataImport = () => {
         }
 
         try {
-            const newMatch = createMatchDocument({
+            const newMatch = buildMatchFromForm({
                 matchId,
-                nextMatchId: nextMatchId || null,
-                nextMatchSlot: nextMatchSlot || null,
-                rules: appendIvrQuotaToRules({
-                    maxPointGap: parseInt(maxPointGap, 10),
-                    maxGamjeom: parseInt(maxGamjeom, 10),
-                    roundDuration: parseInt(roundDuration, 10),
-                    restDuration: parseInt(restDuration, 10),
-                }, ivrQuota),
-                competitors: {
-                    blue: {
-                        name: blueName,
-                        affiliatedClub: blueAffiliatedClub || '',
-                        previousMatch: bluePreviousMatch || null
-                    },
-                    red: {
-                        name: redName,
-                        affiliatedClub: redAffiliatedClub || '',
-                        previousMatch: redPreviousMatch || null
-                    },
-                },
-                roundDuration: parseInt(roundDuration, 10),
+                nextMatchId,
+                nextMatchSlot,
+                maxPointGap,
+                maxGamjeom,
+                roundDuration,
+                restDuration,
+                ivrQuota,
+                blueName,
+                blueAffiliatedClub,
+                bluePreviousMatch,
+                redName,
+                redAffiliatedClub,
+                redPreviousMatch,
             });
 
             // Stage 5+: flat matches/config + matchLive + matchIndex only.
             await mirrorMatchFlatArtifacts(database, eventName, matchId, newMatch);
-            
+
             showToast(`Match ${matchId} added to event ${eventName} in Firebase!`);
             setCurrentMatches(prev => ({...prev, [matchId]: newMatch}));
 
