@@ -39,6 +39,7 @@ import ScreenEventTopBar from "./ScreenEventTopBar";
 import ScreenTopNames from "./ScreenTopNames";
 import ScreenMiddleBoard from "./ScreenMiddleBoard";
 import ScreenOverlayStack from "./ScreenOverlayStack";
+import { normalizeMatchView } from "./normalizeMatchView";
 import { useEventSession } from "../../Context/EventSessionContext";
 
 const EMPTY_MATCH_RULES = Object.freeze({});
@@ -379,9 +380,24 @@ function Screen() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [isMatchLoaded, selectedEvent, currentMatchId, matchData]);
 
-    const { state = {}, config = {}, stats = {} } = matchData || {};
-    const { phase = 'ROUND', currentRound: matchCurrentRound, winReason, isFinished, isPaused = true } = state;
-    const { roundScores = {}, roundWins: matchRoundWins = {} } = stats;
+    // Nullish config/state/stats break default destructuring (`{ config = {} } = { config: null }`
+    // keeps null). Live can arrive before flat config and used to crash Screen.
+    const { state, config, stats } = normalizeMatchView(matchData);
+    const {
+        phase = "ROUND",
+        currentRound: matchCurrentRound,
+        winReason,
+        isFinished,
+        isPaused = true,
+    } = state;
+    const roundScores =
+        stats.roundScores && typeof stats.roundScores === "object"
+            ? stats.roundScores
+            : {};
+    const matchRoundWins =
+        stats.roundWins && typeof stats.roundWins === "object"
+            ? stats.roundWins
+            : {};
     const resolvedRules = resolveMatchRules(config?.rules);
 
     const redStats = stats.red;

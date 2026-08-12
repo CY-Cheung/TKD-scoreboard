@@ -263,7 +263,9 @@ export function subscribeMatchView(database, eventId, matchId, onData) {
     }
 
     const merged = {
-      config: flatConfig ?? null,
+      // Never emit null config — live often arrives before flat config;
+      // null breaks Screen (`config.competitors` throw → blank board).
+      config: flatConfig && typeof flatConfig === "object" ? flatConfig : {},
     };
 
     if (live) {

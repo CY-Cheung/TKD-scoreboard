@@ -5,8 +5,12 @@ import { RecordCircle } from "react-bootstrap-icons";
  * Bottom-center ROUND number with left/right win marks (respects board direction).
  */
 export default function ScreenRoundWins({ direction, roundWins, currentRound }) {
-  const leftWins = direction === "row" ? roundWins.red : roundWins.blue;
-  const rightWins = direction === "row" ? roundWins.blue : roundWins.red;
+  const wins =
+    roundWins && typeof roundWins === "object"
+      ? roundWins
+      : { red: 0, blue: 0 };
+  const leftWins = direction === "row" ? wins.red || 0 : wins.blue || 0;
+  const rightWins = direction === "row" ? wins.blue || 0 : wins.red || 0;
 
   return (
     <div className="match-info-bottom">
