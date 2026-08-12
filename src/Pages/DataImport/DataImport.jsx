@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { database } from '../../firebase';
 import { usePopup } from '../../Context/PopupContext';
 import './DataImport.css';
@@ -13,12 +13,6 @@ import {
     removeMatchFlatArtifacts,
     fetchMatchesForEvent,
 } from '../../services/matchFirebase';
-import { runPdfFileSelect } from '../../services/pdfImportFlow';
-import {
-    persistCreatedEvents,
-    toastMessageForCreateMode,
-    defaultCreateEventFormValues,
-} from '../../services/persistCreatedEvents';
 import {
     listAvailableMatchDates,
     filterMatchIdsByDate,
@@ -33,7 +27,6 @@ import MatchActionButtons from './MatchActionButtons';
 import MatchConfigForm from './MatchConfigForm';
 import MatchesList from './MatchesList';
 import BracketView from './BracketView';
-import CreateEventModal from './CreateEventModal';
 
 const DataImport = () => {
     const navigate = useNavigate();
@@ -41,11 +34,6 @@ const DataImport = () => {
     const { session } = useEventSession(); 
     const [eventsList, setEventsList] = useState([]);
     const [eventName, setEventName] = useState('');
-    const [newMaxPointGap, setNewMaxPointGap] = useState(15);
-    const [newMaxGamjeom, setNewMaxGamjeom] = useState(5);
-    const [newRoundDuration, setNewRoundDuration] = useState(90);
-    const [newRestDuration, setNewRestDuration] = useState(60);
-    const [newIvrQuota, setNewIvrQuota] = useState('');
     const [currentMatches, setCurrentMatches] = useState({});
     const [selectedMatchId, setSelectedMatchId] = useState(null);
     const { showToast, showConfirm } = usePopup();
@@ -54,21 +42,11 @@ const DataImport = () => {
     // Date Filter State for Matches List
     const [selectedDateFilter, setSelectedDateFilter] = useState('all');
 
-    // Create Event Modal State
-    const [showCreateEventModal, setShowCreateEventModal] = useState(false);
     const [showBracketModal, setShowBracketModal] = useState(false);
     const [bracketZoom, setBracketZoom] = useState(1);
-    const [newEventId, setNewEventId] = useState('');
-    const [newEventName, setNewEventName] = useState('');
-    const [newSetupPassword, setNewSetupPassword] = useState('');
 
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // PDF Parse & Batch Import State
-    const fileInputRef = useRef(null);
-    const [isParsingPdf, setIsParsingPdf] = useState(false);
-    const [pdfParseResult, setPdfParseResult] = useState(null);
-    
     // Form state - Default Point Gap set to 15 as per new rules
     const [matchId, setMatchId] = useState('');
     const [nextMatchId, setNextMatchId] = useState('');
@@ -132,79 +110,6 @@ const DataImport = () => {
         currentMatches,
         selectedDateFilter
     );
-
-    // PDF File Upload Handler
-    const handleFileSelect = async (e) => {
-        await runPdfFileSelect(e.target.files?.[0], {
-            showToast,
-            setIsParsingPdf,
-            setPdfParseResult,
-            setNewEventName,
-            newEventId,
-            setNewEventId,
-            fileInputRef,
-        });
-    };
-
-    // Create New Event Handler (Handles PDF auto-import and date splitting)
-    const handleCreateEvent = async (e) => {
-        e.preventDefault();
-        if (!user) {
-            showToast('🔒 請先登入 Google 帳號，方可建立新賽事！');
-            return;
-        }
-
-        const trimmedId = newEventId.trim();
-        const trimmedName = newEventName.trim();
-
-        if (!trimmedId || !trimmedName) {
-            showToast('請提供有效的 Event ID 與 Event Name！');
-            return;
-        }
-
-        try {
-            const { records, primaryEventId, mode, datesCount } = await persistCreatedEvents({
-                database,
-                user,
-                eventId: trimmedId,
-                eventName: trimmedName,
-                setupPassword: newSetupPassword,
-                formRulesFields: {
-                    maxPointGap: newMaxPointGap,
-                    maxGamjeom: newMaxGamjeom,
-                    roundDuration: newRoundDuration,
-                    restDuration: newRestDuration,
-                },
-                ivrQuota: newIvrQuota,
-                courtCount: 1,
-                pdfParseResult,
-            });
-
-            showToast(toastMessageForCreateMode(mode, {
-                trimmedName,
-                datesCount,
-                recordsLength: records.length,
-            }));
-            setEventName(primaryEventId);
-
-            const reset = defaultCreateEventFormValues();
-            setNewEventId(reset.newEventId);
-            setNewEventName(reset.newEventName);
-            setNewSetupPassword(reset.newSetupPassword);
-            setNewMaxPointGap(reset.newMaxPointGap);
-            setNewMaxGamjeom(reset.newMaxGamjeom);
-            setNewRoundDuration(reset.newRoundDuration);
-            setNewRestDuration(reset.newRestDuration);
-            setNewIvrQuota(reset.newIvrQuota);
-            setPdfParseResult(reset.pdfParseResult);
-            setShowCreateEventModal(false);
-            fetchEventsList();
-
-        } catch (error) {
-            console.error("Create Event Failed:", error);
-            showToast(`建立賽事失敗: ${error.message}`);
-        }
-    };
 
     // Prompt Delete Match Confirmation
     const promptDeleteMatch = () => {
@@ -461,32 +366,6 @@ const DataImport = () => {
                 )}
             </div>
 
-            {showCreateEventModal && (
-                <CreateEventModal
-                    fileInputRef={fileInputRef}
-                    isParsingPdf={isParsingPdf}
-                    pdfParseResult={pdfParseResult}
-                    newEventId={newEventId}
-                    setNewEventId={setNewEventId}
-                    newEventName={newEventName}
-                    setNewEventName={setNewEventName}
-                    newSetupPassword={newSetupPassword}
-                    setNewSetupPassword={setNewSetupPassword}
-                    newMaxPointGap={newMaxPointGap}
-                    setNewMaxPointGap={setNewMaxPointGap}
-                    newMaxGamjeom={newMaxGamjeom}
-                    setNewMaxGamjeom={setNewMaxGamjeom}
-                    newRoundDuration={newRoundDuration}
-                    setNewRoundDuration={setNewRoundDuration}
-                    newRestDuration={newRestDuration}
-                    setNewRestDuration={setNewRestDuration}
-                    newIvrQuota={newIvrQuota}
-                    setNewIvrQuota={setNewIvrQuota}
-                    onFileSelect={handleFileSelect}
-                    onSubmit={handleCreateEvent}
-                    onCancel={() => setShowCreateEventModal(false)}
-                />
-            )}
         </div>
     );
 }

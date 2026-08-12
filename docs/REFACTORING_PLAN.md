@@ -205,7 +205,9 @@ Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
 | `CourtSetupSessionForm` | `CourtSetup.jsx`（取代 page-local hero） |
 | `ScreenCenterTimer`／`ScreenRoundWins`／`ScreenBottomBar`／`ScreenEventTopBar`／`ScreenTopNames`／`ScreenMiddleBoard`／`ScreenOverlayStack` | `Screen.jsx` |
 
-可選下一刀：修 DataImport Create Event 死入口；再合 flatten／Wave 9 PR stack。
+可選下一刀：合 flatten／Wave 9 PR stack → `main`。
+
+（DataImport Create Event modal／死入口已刪；建立賽事只喺 CourtSetup。）
 
 Schema／多裝置真相來源：[`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 扁平化檔案軌跡：[`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。
