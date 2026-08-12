@@ -5,9 +5,8 @@ import "./Screen.css";
 import "../../App.css";
 import Edit from "./Edit";
 import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
-import Button from "../../Components/Button/Button";
-import { ArrowLeft, Files, File, FileExcel, RecordCircle } from "react-bootstrap-icons";
-import { startNextRound, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement, getEffectiveIvrRemaining, isIvrUnlimited } from "../../Api";
+import { RecordCircle } from "react-bootstrap-icons";
+import { startNextRound, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement, getEffectiveIvrRemaining } from "../../Api";
 import TechnicalCardAnnouncement from "../../Components/TechnicalCardFlow/TechnicalCardAnnouncement";
 import IVRAnnouncement from "../../Components/IVRFlow/IVRAnnouncement";
 import { getScoreValue } from "../../domain/scoreMath.js";
@@ -41,6 +40,12 @@ import {
     SEAT_HEARTBEAT_INTERVAL_MS,
 } from "../Controller/seatGrab";
 import VoteLogRows from "./VoteLogRows";
+import PlayerNameCell from "./PlayerNameCell";
+import ScreenIvrStatus from "./ScreenIvrStatus";
+import SideRoundHistory from "./SideRoundHistory";
+import ScreenToasts from "./ScreenToasts";
+import ScreenUnconfigured from "./ScreenUnconfigured";
+import { getTimeoutStyle } from "./getTimeoutStyle";
 import { useEventSession } from "../../Context/EventSessionContext";
 
 const EMPTY_MATCH_RULES = Object.freeze({});
@@ -404,27 +409,12 @@ function Screen() {
     }, [refereesData]);
 
     if (!selectedCourt) {
-        return (
-            <div className="screen-unconfigured">
-                <h1>Screen Unconfigured</h1>
-                <p>Please go to <strong>Court Setup</strong> to assign this screen to a court.</p>
-            </div>
-        );
+        return <ScreenUnconfigured />;
     }
 
     const isResting = phase === 'REST';
     const roundWins = { red: matchRoundWins.red || 0, blue: matchRoundWins.blue || 0 };
     const isFinal = isMatchFinal(roundWins, resolvedRules.roundsToWin);
-
-    const renderPlayerName = (c) => {
-        if (!c || !c.name) return <div className="name-only"> </div>;
-        return (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', lineHeight: '1.2' }}>
-                <div style={{ fontSize: '1em' }}>{c.name}</div>
-                {c.affiliatedClub && <div style={{ fontSize: '0.45em', opacity: 0.85, marginTop: '2px' }}>({c.affiliatedClub})</div>}
-            </div>
-        );
-    };
 
     const redGamJeom = stats.red?.gamjeom ?? 0;
     const blueGamJeom = stats.blue?.gamjeom ?? 0;
@@ -441,60 +431,13 @@ function Screen() {
     const redScoreColor = !isResting && dominantSide === 'red' ? '#FFFF00' : '#FFFFFF';
     const blueScoreColor = !isResting && dominantSide === 'blue' ? '#FFFF00' : '#FFFFFF';
 
-    const renderIvrBottomStatus = (remaining) => {
-        if (isIvrUnlimited(remaining)) {
-            return (
-                <div className="screen-ivr-status" aria-label="IVR quota unlimited">
-                    <Files className="screen-ivr-icon" aria-hidden />
-                </div>
-            );
-        }
-
-        const n = Math.max(0, remaining ?? 0);
-        const Icon = n > 1 ? Files : n === 1 ? File : FileExcel;
-
-        return (
-            <div className="screen-ivr-status" aria-label={`IVR quota ${n}`}>
-                <Icon className="screen-ivr-icon" aria-hidden />
-            </div>
-        );
-    };
-
     const renderTimerContent = () => {
         if (winReason) return winReason;
         if (!isMatchLoaded) return "0:00";
         return formatTime(displayTime);
     };
 
-    const renderSideHistory = (color) => {
-        const scores = roundScores || {};
-        return (
-            <div className="round-history-container">
-                {Object.entries(scores)
-                    .sort(([a], [b]) => parseInt(a.substring(1)) - parseInt(b.substring(1)))
-                    .map(([round, scoreData]) => (
-                        <div className="history-row" key={round}>
-                            <span className="history-label">{round}</span>
-                            <span className="history-value">{scoreData[color] ?? 0}</span>
-                        </div>
-                    ))}
-                <div className="total-round-wins">{roundWins[color]}</div>
-            </div>
-        );
-    };
-
-    const getTimeoutStyle = () => {
-        const style = { backgroundColor: "#FFFF00", color: "#000000" };
-        if (isMatchLoaded) {
-            Object.assign(style, { backgroundColor: !isPaused ? "#000000" : "#FFFF00" });
-            if (isPaused) {
-                style.color = "#000000";
-            } else if (!isResting) {
-                style.color = "#000000";
-            }
-        }
-        return style;
-    };
+    const timeoutStyle = getTimeoutStyle({ isMatchLoaded, isPaused, isResting });
 
     return (
         <>
@@ -507,8 +450,8 @@ function Screen() {
 
                 {/* Top Section: Player Names */}
                 <div className={`top ${isResting ? 'rest-mode' : ''}`} style={{ flexDirection: direction }}>
-                    <div className="red-name red-bg name-font">{renderPlayerName(config.competitors?.red)}</div>
-                    <div className="blue-name blue-bg name-font">{renderPlayerName(config.competitors?.blue)}</div>
+                    <div className="red-name red-bg name-font"><PlayerNameCell competitor={config.competitors?.red} /></div>
+                    <div className="blue-name blue-bg name-font"><PlayerNameCell competitor={config.competitors?.blue} /></div>
                 </div>
 
                 {/* Middle Section: Scores and Match Info */}
@@ -530,7 +473,9 @@ function Screen() {
 
                     {/* Red Side: Score */}
                     <div className={'red-score-text red-score-bg score-font cursor-target'} style={{ color: redScoreColor }} onClick={() => setShowEdit(true)}>
-                        {isResting || isFinal ? renderSideHistory('red') : redTotalScore}
+                        {isResting || isFinal ? (
+                            <SideRoundHistory color="red" roundScores={roundScores} roundWins={roundWins} />
+                        ) : redTotalScore}
                     </div>
 
                     {/* Center: Match Timer */}
@@ -554,7 +499,7 @@ function Screen() {
                                     <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: timerColor }}>
                                         {renderTimerContent()}
                                     </div>
-                                    <div className={`time-out match-font ${isMatchLoaded && !isPaused ? "timeout-active" : ""} ${isResting ? 'rest-mode' : ''}`} onClick={toggleTimer} style={getTimeoutStyle()}>
+                                    <div className={`time-out match-font ${isMatchLoaded && !isPaused ? "timeout-active" : ""} ${isResting ? 'rest-mode' : ''}`} onClick={toggleTimer} style={timeoutStyle}>
                                         {isResting ? 'REST TIME' : 'Time out'}
                                     </div>
                                 </>
@@ -564,7 +509,9 @@ function Screen() {
 
                     {/* Blue Side: Score */}
                     <div className={'blue-score-text blue-score-bg score-font cursor-target'} style={{ color: blueScoreColor }} onClick={() => setShowEdit(true)}>
-                        {isResting || isFinal ? renderSideHistory('blue') : blueTotalScore}
+                        {isResting || isFinal ? (
+                            <SideRoundHistory color="blue" roundScores={roundScores} roundWins={roundWins} />
+                        ) : blueTotalScore}
                     </div>
 
                     {/* Blue Side: Log */}
@@ -593,7 +540,7 @@ function Screen() {
 
                     {/* Red Side: IVR Logo */}
                     <div className="red-score-info red-bg cursor-target" onClick={() => setShowEdit(true)}>
-                        {renderIvrBottomStatus(redIvrRemaining)}
+                        <ScreenIvrStatus remaining={redIvrRemaining} />
                     </div>
 
                     {/* Center: Round Info */}
@@ -618,7 +565,7 @@ function Screen() {
 
                     {/* Blue Side: IVR Logo */}
                     <div className="blue-score-info blue-bg cursor-target" onClick={() => setShowEdit(true)}>
-                        {renderIvrBottomStatus(blueIvrRemaining)}
+                        <ScreenIvrStatus remaining={blueIvrRemaining} />
                     </div>
 
                     {/* Blue Side: Gam-jeom */}
@@ -683,14 +630,7 @@ function Screen() {
                 refereeMode={refereeMode}
             />
 
-            {/* Toast Notifications */}
-            <div className="toast-container" style={{ position: 'fixed', top: '1.04cqi', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '0.52cqi', pointerEvents: 'none' }}>
-                {toastMessages.map(toast => (
-                    <div key={toast.id} style={{ backgroundColor: 'rgba(255, 60, 48, 0.95)', color: 'white', padding: '0.78cqi 1.56cqi', borderRadius: '0.62cqi', fontSize: '1.4cqi', fontWeight: 'bold', boxShadow: '0 0.42cqi 1.25cqi rgba(0,0,0,0.5)', textAlign: 'center', border: '2px solid rgba(255,255,255,0.2)' }}>
-                        {toast.text}
-                    </div>
-                ))}
-            </div>
+            <ScreenToasts messages={toastMessages} />
         </>
     );
 }

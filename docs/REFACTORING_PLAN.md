@@ -184,10 +184,22 @@ Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
 
 | Wave | Idea | Notes |
 |------|------|-------|
-| 9 | 再拆 `Screen.jsx`／`DataImport.jsx`／`CourtSetup.jsx` 體積 | UI-only；避免動 P0 TX |
+| 9 | 再拆 `Screen.jsx`／`DataImport.jsx`／`CourtSetup.jsx` 體積 | **進行中**（第一批 UI extracts 已落地） |
 | 10 | Component tests（RTL）／Firebase emulator CI | 補整合缺口 |
 | 11 | Rules unit tests（`database.rules.json`） | 配合 #20 publish |
 | — | Merge flatten PR stack → `main` | 產品／docs 已對齊 |
+
+### Wave 9 progress（2026-08-12）
+
+已抽（行為不變；P0 TX／rAF／seat 未動）：
+
+| Extract | From |
+|---------|------|
+| `ScreenUnconfigured`／`PlayerNameCell`／`ScreenIvrStatus`／`SideRoundHistory`／`ScreenToasts`／`getTimeoutStyle` | `Screen.jsx`（~697→~637） |
+| `parseName` + test | `DataImport.jsx` |
+| `CreateEventModal` | `CourtSetup.jsx`（~821→~696） |
+
+可選下一刀：`DataImport` `MatchesList`／`MatchConfigForm`；CourtSetup hero panel。
 
 Schema／多裝置真相來源：[`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 扁平化檔案軌跡：[`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。

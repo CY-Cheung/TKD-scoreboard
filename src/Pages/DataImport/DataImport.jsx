@@ -32,16 +32,7 @@ import {
     removeMatchFlatArtifacts,
     fetchMatchesForEvent,
 } from '../../services/matchFirebase';
-
-// A helper function to parse name and club from old format
-const parseName = (fullName) => {
-    if (!fullName) return { name: '', club: '' };
-    const match = fullName.match(/(.+?)\s*\((.+)\)/);
-    if (match) {
-        return { name: match[1].trim(), club: match[2].trim() };
-    }
-    return { name: fullName, club: '' };
-};
+import { parseName } from './parseName';
 
 const DataImport = () => {
     const navigate = useNavigate();
