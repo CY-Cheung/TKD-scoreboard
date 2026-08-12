@@ -4,9 +4,9 @@
 **Scope:** Kyorugi（搏擊）現場雲端計分  
 **Repo:** `CY-Cheung/TKD-scoreboard`  
 **Document status:** Reverse-engineered from source（`README.md`、`src/`、`database.rules.json`）  
-**Last reviewed against code:** 2026-08-10
+**Last reviewed against code:** 2026-08-12
 
-> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。  
+> **Codebase baseline:** flat RTDB（`courts`／`matches/…/config`／`matchLive`／`matchIndex`／`eventIndex`）；計分有 `src/domain/` + `src/services/`；`npm test`（Vitest）已接入。Schema 細節 → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)；扁平化 → [`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。  
 > **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
 
 > 凡標 **`[待確認]`** 者：程式碼或文件未能完全證實，請勿當已上線功能。
@@ -122,7 +122,7 @@
 | Event | Create／list／delete Event | CourtSetup, DataImport | 頁面內邏輯 + Firebase `set`／`update` |
 | Event | Setup password gate | CourtSetup | `settings.setupPassword` |
 | PDF | HKTKDA parse + multi-day split | CourtSetup, DataImport | `Utils/pdfParser.js` + 頁面流程 |
-| Match | CRUD、Rules、IVR quota、Load | DataImport (`/import`) | Firebase `matches`／`courts` |
+| Match | CRUD、Rules、IVR quota、Load | DataImport (`/import`) | flat `matches/…/config` + `matchLive` + `courts/…/currentMatchId` |
 | Bracket | Tournament tree + Promote | DataImport, Edit | `promoteWinner` |
 | Screen | Scoreboard、timer、vote log、QR | `/screen` | listeners + `Api` |
 | Edit | Manual score、判勝、TC、IVR、Kye-shi | Screen overlay | `Edit.jsx`, DecisionFlow |

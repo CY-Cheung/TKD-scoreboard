@@ -1,16 +1,12 @@
 import { get, set, update, remove, ref, onValue } from "firebase/database";
 import {
   flatCourtPath,
-  legacyCourtPath,
   flatCourtsRoot,
-  legacyCourtsRoot,
   courtIdsFromCourtsMap,
 } from "./courtPaths.js";
 
-/**
- * Write the same value to flat + legacy court paths (Stage 2 dual-write).
- */
-export async function dualSetCourtField(
+/** Write a court field under `courts/{event}/{court}/…`. */
+export async function setCourtField(
   database,
   eventId,
   courtId,
@@ -20,13 +16,11 @@ export async function dualSetCourtField(
   const segments = Array.isArray(relativeSegments)
     ? relativeSegments
     : [relativeSegments];
-  await Promise.all([
-    set(ref(database, flatCourtPath(eventId, courtId, ...segments)), value),
-    set(ref(database, legacyCourtPath(eventId, courtId, ...segments)), value),
-  ]);
+  await set(ref(database, flatCourtPath(eventId, courtId, ...segments)), value);
 }
 
-export async function dualUpdateCourtField(
+/** Update court fields under `courts/{event}/{court}/…`. */
+export async function updateCourtField(
   database,
   eventId,
   courtId,
@@ -36,16 +30,13 @@ export async function dualUpdateCourtField(
   const segments = Array.isArray(relativeSegments)
     ? relativeSegments
     : [relativeSegments];
-  await Promise.all([
-    update(ref(database, flatCourtPath(eventId, courtId, ...segments)), patch),
-    update(
-      ref(database, legacyCourtPath(eventId, courtId, ...segments)),
-      patch
-    ),
-  ]);
+  await update(
+    ref(database, flatCourtPath(eventId, courtId, ...segments)),
+    patch
+  );
 }
 
-/** Mirror a full court object map under courts/{eventId}/… */
+/** Write a full court object map under courts/{eventId}/… */
 export async function mirrorCourtsMapToFlat(database, eventId, courtsMap) {
   if (!courtsMap || typeof courtsMap !== "object") return;
   const writes = Object.entries(courtsMap).map(([courtId, data]) =>
@@ -58,32 +49,25 @@ export async function removeFlatCourtsForEvent(database, eventId) {
   await remove(ref(database, flatCourtsRoot(eventId)));
 }
 
-/**
- * Prefer flat courts list; fallback legacy; best-effort backfill to flat.
- */
+/** Clear one referee seat on flat courts. */
+export async function clearRefereeSeat(database, eventId, courtId, seatName) {
+  await set(
+    ref(database, flatCourtPath(eventId, courtId, "referees", seatName)),
+    null
+  );
+}
+
+/** List court ids from flat `courts/{eventId}`. */
 export async function fetchCourtIds(database, eventId) {
   const flatSnap = await get(ref(database, flatCourtsRoot(eventId)));
-  if (flatSnap.exists()) {
-    return courtIdsFromCourtsMap(flatSnap.val());
-  }
-
-  const legacySnap = await get(ref(database, legacyCourtsRoot(eventId)));
-  if (!legacySnap.exists()) return [];
-
-  const legacyVal = legacySnap.val();
-  try {
-    await mirrorCourtsMapToFlat(database, eventId, legacyVal);
-  } catch (err) {
-    console.warn("courts flat backfill skipped:", err?.message || err);
-  }
-  return courtIdsFromCourtsMap(legacyVal);
+  return courtIdsFromCourtsMap(flatSnap.exists() ? flatSnap.val() : null);
 }
 
 /**
- * Subscribe preferring flat path; fall back to legacy while flat is absent.
+ * Subscribe to a flat court path.
  * @returns unsubscribe
  */
-export function subscribePreferFlatCourt(
+export function subscribeCourt(
   database,
   eventId,
   courtId,
@@ -97,37 +81,38 @@ export function subscribePreferFlatCourt(
     database,
     flatCourtPath(eventId, courtId, ...segments)
   );
-  const legacyRef = ref(
-    database,
-    legacyCourtPath(eventId, courtId, ...segments)
-  );
 
-  let flatExists = false;
-  let flatVal = null;
-  let legacyVal = null;
-
-  const emit = () => {
-    onData(flatExists ? flatVal : legacyVal);
-  };
-
-  const unsubFlat = onValue(flatRef, (snap) => {
-    flatExists = snap.exists();
-    flatVal = snap.val();
-    emit();
+  return onValue(flatRef, (snap) => {
+    onData(snap.exists() ? snap.val() : null);
   });
-  const unsubLegacy = onValue(legacyRef, (snap) => {
-    legacyVal = snap.val();
-    emit();
-  });
-
-  return () => {
-    unsubFlat();
-    unsubLegacy();
-  };
 }
 
-/** One-shot get: prefer flat, else legacy. */
-export async function getPreferFlatCourt(
+const REFEREE_SEATS = Object.freeze(["J1", "J2", "J3"]);
+
+/** Normalize a referees map to J1–J3 keys only. */
+export function normalizeRefereeMap(refereesVal) {
+  const out = {};
+  for (const seat of REFEREE_SEATS) {
+    const value = refereesVal?.[seat] ?? null;
+    if (value != null) out[seat] = value;
+  }
+  return out;
+}
+
+/** Subscribe to J1–J3 on flat courts. */
+export function subscribeCourtReferees(database, eventId, courtId, onData) {
+  const flatRef = ref(
+    database,
+    flatCourtPath(eventId, courtId, "referees")
+  );
+
+  return onValue(flatRef, (snap) => {
+    onData(normalizeRefereeMap(snap.exists() ? snap.val() : null));
+  });
+}
+
+/** One-shot get from flat courts. */
+export async function getCourt(
   database,
   eventId,
   courtId,
@@ -139,9 +124,23 @@ export async function getPreferFlatCourt(
   const flatSnap = await get(
     ref(database, flatCourtPath(eventId, courtId, ...segments))
   );
-  if (flatSnap.exists()) return flatSnap.val();
-  const legacySnap = await get(
-    ref(database, legacyCourtPath(eventId, courtId, ...segments))
-  );
-  return legacySnap.exists() ? legacySnap.val() : null;
+  return flatSnap.exists() ? flatSnap.val() : null;
+}
+
+/** Strip nested courts from an event payload before writing events/{id}. */
+export function eventPayloadWithoutCourts(eventData) {
+  if (!eventData || typeof eventData !== "object") return eventData;
+  const { courts: _ignored, ...rest } = eventData;
+  return rest;
+}
+
+/**
+ * Write shape for events/{id}: meta + settings only.
+ * Courts → top-level courts/; matches → matches/…/config + matchLive + matchIndex.
+ */
+export function eventMetaPayloadForWrite(eventData) {
+  const base = eventPayloadWithoutCourts(eventData);
+  if (!base || typeof base !== "object") return base;
+  const { matches: _ignoredMatches, ...rest } = base;
+  return rest;
 }

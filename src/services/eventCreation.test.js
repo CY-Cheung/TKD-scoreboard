@@ -8,7 +8,7 @@ import {
 } from "./eventCreation.js";
 
 describe("normalizeRulesFromForm", () => {
-  it("falls back to legacy defaults", () => {
+  it("falls back to default rules", () => {
     expect(normalizeRulesFromForm({})).toEqual({
       maxPointGap: 15,
       maxGamjeom: 5,

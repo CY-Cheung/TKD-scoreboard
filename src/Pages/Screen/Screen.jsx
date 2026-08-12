@@ -3,20 +3,13 @@ import { ref, onValue, update, get } from "firebase/database";
 import { database } from "../../firebase";
 import "./Screen.css";
 import "../../App.css";
-import Edit from "./Edit";
-import QRCodeDisplay from "../../Components/QRCodeDisplay/QRCodeDisplay";
-import Button from "../../Components/Button/Button";
-import { ArrowLeft, Files, File, FileExcel, RecordCircle } from "react-bootstrap-icons";
-import { startNextRound, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement, getEffectiveIvrRemaining, isIvrUnlimited } from "../../Api";
-import TechnicalCardAnnouncement from "../../Components/TechnicalCardFlow/TechnicalCardAnnouncement";
-import IVRAnnouncement from "../../Components/IVRFlow/IVRAnnouncement";
+import { startNextRound, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement, getEffectiveIvrRemaining } from "../../Api";
 import { getScoreValue } from "../../domain/scoreMath.js";
 import {
     determineDominantSide,
     isMatchFinal,
     resolveMatchRules,
 } from "../../domain/matchRules.js";
-import { formatTime } from "./formatTime";
 import {
     resolveMatchTimerFrame,
     buildTimerResumePatch,
@@ -24,12 +17,32 @@ import {
     buildRoundExpiredStatePatch,
 } from "./matchTimer";
 import {
-    dualUpdateCourtField,
-    subscribePreferFlatCourt,
-    getPreferFlatCourt,
+    updateCourtField,
+    clearRefereeSeat,
+    subscribeCourt,
+    subscribeCourtReferees,
+    getCourt,
 } from "../../services/courtFirebase";
-import VoteLogRows from "./VoteLogRows";
+import {
+    updateMatchLiveState,
+    subscribeMatchView,
+    ensureMatchLiveExists,
+} from "../../services/matchFirebase";
+import {
+    filterLiveReferees,
+    listStaleRefereeSeats,
+    SEAT_HEARTBEAT_INTERVAL_MS,
+} from "../Controller/seatGrab";
+import ScreenUnconfigured from "./ScreenUnconfigured";
+import ScreenBottomBar from "./ScreenBottomBar";
+import ScreenEventTopBar from "./ScreenEventTopBar";
+import ScreenTopNames from "./ScreenTopNames";
+import ScreenMiddleBoard from "./ScreenMiddleBoard";
+import ScreenOverlayStack from "./ScreenOverlayStack";
+import { normalizeMatchView } from "./normalizeMatchView";
 import { useEventSession } from "../../Context/EventSessionContext";
+
+const EMPTY_MATCH_RULES = Object.freeze({});
 
 function Screen() {
     const { session } = useEventSession();
@@ -54,7 +67,7 @@ function Screen() {
     const isTechCardFlowActive = techCardAnnouncement !== null;
     const ivrAnnouncement = matchData?.state?.ivrAnnouncement ?? null;
     const isIvrFlowActive = ivrAnnouncement !== null;
-    const matchRules = matchData?.config?.rules || {};
+    const matchRules = matchData?.config?.rules || EMPTY_MATCH_RULES;
 
     const animationFrameRef = useRef();
     const isMatchLoaded = !!matchData;
@@ -81,7 +94,7 @@ function Screen() {
     // Listen to refereeMode (prefer flat courts)
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
-        return subscribePreferFlatCourt(
+        return subscribeCourt(
             database,
             selectedEvent,
             selectedCourt,
@@ -127,16 +140,14 @@ function Screen() {
         }
     }, [matchData?.state?.kyeShi, now, selectedEvent, currentMatchId]);
 
-    // Listen to referees status on current court (prefer flat)
+    // Listen to referees status on flat courts; hide stale ghosts
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
-        return subscribePreferFlatCourt(
-            database,
-            selectedEvent,
-            selectedCourt,
-            "referees",
-            (val) => {
-            const currentData = val || {};
+        let rawReferees = {};
+
+        const applyReferees = (val) => {
+            rawReferees = val || {};
+            const currentData = filterLiveReferees(rawReferees);
             const prevData = prevRefereesRef.current;
 
             // Check for disconnections
@@ -156,14 +167,14 @@ function Screen() {
 
             // Auto-downgrade check
             if (occupiedCount < 2) {
-                getPreferFlatCourt(
+                getCourt(
                     database,
                     selectedEvent,
                     selectedCourt,
                     ["config", "refereeMode"]
                 ).then((mode) => {
                     if (mode === 'multiple') {
-                        dualUpdateCourtField(
+                        updateCourtField(
                             database,
                             selectedEvent,
                             selectedCourt,
@@ -177,13 +188,62 @@ function Screen() {
 
             setRefereesData(currentData);
             prevRefereesRef.current = currentData;
-            }
+        };
+
+        const unsub = subscribeCourtReferees(
+            database,
+            selectedEvent,
+            selectedCourt,
+            applyReferees
         );
+
+        // Force-kill / backgrounded phones may not run onDisconnect for minutes.
+        // Clear seats whose lastSeen heartbeat went stale so QR/Screen free the slot.
+        const janitorId = setInterval(() => {
+            const staleSeats = listStaleRefereeSeats(rawReferees);
+            staleSeats.forEach((seat) => {
+                clearRefereeSeat(
+                    database,
+                    selectedEvent,
+                    selectedCourt,
+                    seat
+                ).catch(() => {});
+            });
+            if (staleSeats.length > 0) {
+                applyReferees(rawReferees);
+            }
+        }, SEAT_HEARTBEAT_INTERVAL_MS);
+
+        return () => {
+            unsub();
+            clearInterval(janitorId);
+        };
     }, [selectedEvent, selectedCourt]);
+
+    // Ensure matchLive exists when Screen opens a match (auth required)
+    useEffect(() => {
+        if (!selectedEvent || !currentMatchId) return;
+        let cancelled = false;
+        ensureMatchLiveExists(database, selectedEvent, currentMatchId)
+            .catch((err) => {
+                if (cancelled) return;
+                console.error("matchLive ensure failed:", err);
+                setToastMessages((prev) => [
+                    ...prev,
+                    {
+                        id: Date.now(),
+                        text: "matchLive write failed — publish database.rules.json + stay Google-signed-in (see console)",
+                    },
+                ]);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedEvent, currentMatchId]);
 
     useEffect(() => {
         if (!selectedEvent || !selectedCourt) return;
-        return subscribePreferFlatCourt(
+        return subscribeCourt(
             database,
             selectedEvent,
             selectedCourt,
@@ -204,11 +264,12 @@ function Screen() {
             setMatchData(null);
             return;
         }
-        const matchRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}`);
-        const unsubscribe = onValue(matchRef, (snapshot) => {
-            setMatchData(snapshot.val());
-        });
-        return () => unsubscribe();
+        return subscribeMatchView(
+            database,
+            selectedEvent,
+            currentMatchId,
+            setMatchData
+        );
     }, [currentMatchId, selectedEvent]);
 
     useEffect(() => {
@@ -226,11 +287,12 @@ function Screen() {
             if (!frame.continueRaf) {
                 cancelAnimationFrame(animationFrameRef.current);
                 if (frame.onExpire === "finalize_round") {
-                    const matchStateRef = ref(
+                    updateMatchLiveState(
                         database,
-                        `events/${selectedEvent}/matches/${currentMatchId}/state`
+                        selectedEvent,
+                        currentMatchId,
+                        buildRoundExpiredStatePatch()
                     );
-                    update(matchStateRef, buildRoundExpiredStatePatch());
                 } else if (frame.onExpire === "start_next_round") {
                     // Auto-start the next round when rest time ends
                     startNextRound(selectedEvent, currentMatchId);
@@ -271,15 +333,24 @@ function Screen() {
     const toggleTimer = async (force = false) => {
         if (!isMatchLoaded) return;
         if (isKyeShiActive && !force) return;
-        const stateRef = ref(database, `events/${selectedEvent}/matches/${currentMatchId}/state`);
         const currentState = matchData?.state || {};
         const isPaused = currentState.isPaused ?? true;
         const now = Date.now();
 
         if (isPaused) {
-            update(stateRef, buildTimerResumePatch(now));
+            updateMatchLiveState(
+                database,
+                selectedEvent,
+                currentMatchId,
+                buildTimerResumePatch(now)
+            );
         } else {
-            update(stateRef, buildTimerPausePatch(currentState, now));
+            updateMatchLiveState(
+                database,
+                selectedEvent,
+                currentMatchId,
+                buildTimerPausePatch(currentState, now)
+            );
         }
     };
 
@@ -309,9 +380,24 @@ function Screen() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [isMatchLoaded, selectedEvent, currentMatchId, matchData]);
 
-    const { state = {}, config = {}, stats = {} } = matchData || {};
-    const { phase = 'ROUND', currentRound: matchCurrentRound, winReason, isFinished, isPaused = true } = state;
-    const { roundScores = {}, roundWins: matchRoundWins = {} } = stats;
+    // Nullish config/state/stats break default destructuring (`{ config = {} } = { config: null }`
+    // keeps null). Live can arrive before flat config and used to crash Screen.
+    const { state, config, stats } = normalizeMatchView(matchData);
+    const {
+        phase = "ROUND",
+        currentRound: matchCurrentRound,
+        winReason,
+        isFinished,
+        isPaused = true,
+    } = state;
+    const roundScores =
+        stats.roundScores && typeof stats.roundScores === "object"
+            ? stats.roundScores
+            : {};
+    const matchRoundWins =
+        stats.roundWins && typeof stats.roundWins === "object"
+            ? stats.roundWins
+            : {};
     const resolvedRules = resolveMatchRules(config?.rules);
 
     const redStats = stats.red;
@@ -332,27 +418,12 @@ function Screen() {
     }, [refereesData]);
 
     if (!selectedCourt) {
-        return (
-            <div className="screen-unconfigured">
-                <h1>Screen Unconfigured</h1>
-                <p>Please go to <strong>Court Setup</strong> to assign this screen to a court.</p>
-            </div>
-        );
+        return <ScreenUnconfigured />;
     }
 
     const isResting = phase === 'REST';
     const roundWins = { red: matchRoundWins.red || 0, blue: matchRoundWins.blue || 0 };
     const isFinal = isMatchFinal(roundWins, resolvedRules.roundsToWin);
-
-    const renderPlayerName = (c) => {
-        if (!c || !c.name) return <div className="name-only"> </div>;
-        return (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', lineHeight: '1.2' }}>
-                <div style={{ fontSize: '1em' }}>{c.name}</div>
-                {c.affiliatedClub && <div style={{ fontSize: '0.45em', opacity: 0.85, marginTop: '2px' }}>({c.affiliatedClub})</div>}
-            </div>
-        );
-    };
 
     const redGamJeom = stats.red?.gamjeom ?? 0;
     const blueGamJeom = stats.blue?.gamjeom ?? 0;
@@ -369,256 +440,83 @@ function Screen() {
     const redScoreColor = !isResting && dominantSide === 'red' ? '#FFFF00' : '#FFFFFF';
     const blueScoreColor = !isResting && dominantSide === 'blue' ? '#FFFF00' : '#FFFFFF';
 
-    const renderIvrBottomStatus = (remaining) => {
-        if (isIvrUnlimited(remaining)) {
-            return (
-                <div className="screen-ivr-status" aria-label="IVR quota unlimited">
-                    <Files className="screen-ivr-icon" aria-hidden />
-                </div>
-            );
-        }
-
-        const n = Math.max(0, remaining ?? 0);
-        const Icon = n > 1 ? Files : n === 1 ? File : FileExcel;
-
-        return (
-            <div className="screen-ivr-status" aria-label={`IVR quota ${n}`}>
-                <Icon className="screen-ivr-icon" aria-hidden />
-            </div>
-        );
-    };
-
-    const renderTimerContent = () => {
-        if (winReason) return winReason;
-        if (!isMatchLoaded) return "0:00";
-        return formatTime(displayTime);
-    };
-
-    const renderSideHistory = (color) => {
-        const scores = roundScores || {};
-        return (
-            <div className="round-history-container">
-                {Object.entries(scores)
-                    .sort(([a], [b]) => parseInt(a.substring(1)) - parseInt(b.substring(1)))
-                    .map(([round, scoreData]) => (
-                        <div className="history-row" key={round}>
-                            <span className="history-label">{round}</span>
-                            <span className="history-value">{scoreData[color] ?? 0}</span>
-                        </div>
-                    ))}
-                <div className="total-round-wins">{roundWins[color]}</div>
-            </div>
-        );
-    };
-
-    const getTimeoutStyle = () => {
-        const style = { backgroundColor: "#FFFF00", color: "#000000" };
-        if (isMatchLoaded) {
-            Object.assign(style, { backgroundColor: !isPaused ? "#000000" : "#FFFF00" });
-            if (isPaused) {
-                style.color = "#000000";
-            } else if (!isResting) {
-                style.color = "#000000";
-            }
-        }
-        return style;
-    };
-
     return (
         <>
             <div className="screen" onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}>
-                <div className="screen-floating-top-bar" style={{ position: 'absolute', bottom: '100%', left: 0, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'calc(var(--screen-height) * 0.03) calc(var(--screen-width) * 0.03)', zIndex: 100, boxSizing: 'border-box', color: 'rgba(255,255,255,0.5)', fontFamily: 'Outfit, sans-serif' }}>
-                    <div style={{ fontSize: 'calc(var(--screen-width) * 0.018)', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase' }}>
-                        {eventName || selectedEvent || "No Event Selected"}
-                    </div>
-                </div>
+                <ScreenEventTopBar eventLabel={eventName || selectedEvent || "No Event Selected"} />
 
-                {/* Top Section: Player Names */}
-                <div className={`top ${isResting ? 'rest-mode' : ''}`} style={{ flexDirection: direction }}>
-                    <div className="red-name red-bg name-font">{renderPlayerName(config.competitors?.red)}</div>
-                    <div className="blue-name blue-bg name-font">{renderPlayerName(config.competitors?.blue)}</div>
-                </div>
+                <ScreenTopNames
+                    direction={direction}
+                    isResting={isResting}
+                    redCompetitor={config.competitors?.red}
+                    blueCompetitor={config.competitors?.blue}
+                />
 
-                {/* Middle Section: Scores and Match Info */}
-                <div className="middle" style={{ flexDirection: direction }}>
-                    {/* Red Side: Log */}
-                    <div className="red-log red-bg">
-                        <div className="log-records-container" style={{ flexGrow: 1, overflowY: 'scroll', display: 'flex', flexDirection: 'column' }}>
-                            {matchData && (
-                                <VoteLogRows
-                                    side="red"
-                                    direction={direction}
-                                    votes={matchData.votes}
-                                    recentScores={matchData.recentScores}
-                                    now={now}
-                                />
-                            )}
-                        </div>
-                    </div>
+                <ScreenMiddleBoard
+                    direction={direction}
+                    matchData={matchData}
+                    now={now}
+                    isResting={isResting}
+                    isFinal={isFinal}
+                    redScoreColor={redScoreColor}
+                    blueScoreColor={blueScoreColor}
+                    redTotalScore={redTotalScore}
+                    blueTotalScore={blueTotalScore}
+                    roundScores={roundScores}
+                    roundWins={roundWins}
+                    onOpenEdit={() => setShowEdit(true)}
+                    matchNumber={matchNumber}
+                    kyeShiRemaining={kyeShiRemaining}
+                    displayTime={displayTime}
+                    winReason={winReason}
+                    isPaused={isPaused}
+                    isMatchLoaded={isMatchLoaded}
+                    timerColor={timerColor}
+                    onToggleDirection={toggleDirection}
+                    onToggleTimer={toggleTimer}
+                />
 
-                    {/* Red Side: Score */}
-                    <div className={'red-score-text red-score-bg score-font cursor-target'} style={{ color: redScoreColor }} onClick={() => setShowEdit(true)}>
-                        {isResting || isFinal ? renderSideHistory('red') : redTotalScore}
-                    </div>
-
-                    {/* Center: Match Timer */}
-                    <div className="match-info-middle">
-                        <div className="match cursor-target" onClick={toggleDirection}>
-                            <div className="match-font">MATCH</div>
-                            <div className="match-number">{matchNumber}</div>
-                        </div>
-                        <div className="timer cursor-target">
-                            {kyeShiRemaining !== null ? (
-                                <>
-                                    <div className="time-out match-font timeout-active" onClick={toggleTimer} style={{ backgroundColor: '#FFFF00', color: '#000000' }}>
-                                        Kye-shi
-                                    </div>
-                                    <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: '#FFFF00' }}>
-                                        {`${Math.floor(kyeShiRemaining / 60)}:${(kyeShiRemaining % 60).toString().padStart(2, '0')}`}
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="game-timer timer-font" onClick={toggleTimer} style={{ color: timerColor }}>
-                                        {renderTimerContent()}
-                                    </div>
-                                    <div className={`time-out match-font ${isMatchLoaded && !isPaused ? "timeout-active" : ""} ${isResting ? 'rest-mode' : ''}`} onClick={toggleTimer} style={getTimeoutStyle()}>
-                                        {isResting ? 'REST TIME' : 'Time out'}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Blue Side: Score */}
-                    <div className={'blue-score-text blue-score-bg score-font cursor-target'} style={{ color: blueScoreColor }} onClick={() => setShowEdit(true)}>
-                        {isResting || isFinal ? renderSideHistory('blue') : blueTotalScore}
-                    </div>
-
-                    {/* Blue Side: Log */}
-                    <div className="blue-log blue-bg">
-                        <div className="log-records-container" style={{ flexGrow: 1, overflowY: 'scroll', display: 'flex', flexDirection: 'column' }}>
-                            {matchData && (
-                                <VoteLogRows
-                                    side="blue"
-                                    direction={direction}
-                                    votes={matchData.votes}
-                                    recentScores={matchData.recentScores}
-                                    now={now}
-                                />
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Bottom Section: Gamjeom, IVR Logo, and Round */}
-                <div className="bottom" style={{ flexDirection: direction }}>
-                    {/* Red Side: Gam-jeom */}
-                    <div className="red-gamjeom red-bg cursor-target" onClick={() => setShowEdit(true)}>
-                        <div className="gamjeom-number">{redGamJeom}</div>
-                        <div className="gamjeom-font">GAM-JEOM</div>
-                    </div>
-
-                    {/* Red Side: IVR Logo */}
-                    <div className="red-score-info red-bg cursor-target" onClick={() => setShowEdit(true)}>
-                        {renderIvrBottomStatus(redIvrRemaining)}
-                    </div>
-
-                    {/* Center: Round Info */}
-                    <div className="match-info-bottom">
-                        <div className="round-info">
-                            <div className="match-font">ROUND</div>
-                            <div className="round-number-row">
-                                <div className="round-win-marks round-win-marks--left" aria-label={`${direction === 'row' ? 'Red' : 'Blue'} round wins`}>
-                                    {Array.from({ length: Math.max(0, Math.min(2, direction === 'row' ? roundWins.red : roundWins.blue)) }).map((_, i) => (
-                                        <RecordCircle key={`left-win-${i}`} className="round-win-icon" aria-hidden />
-                                    ))}
-                                </div>
-                                <div className="round-number">{currentRound}</div>
-                                <div className="round-win-marks round-win-marks--right" aria-label={`${direction === 'row' ? 'Blue' : 'Red'} round wins`}>
-                                    {Array.from({ length: Math.max(0, Math.min(2, direction === 'row' ? roundWins.blue : roundWins.red)) }).map((_, i) => (
-                                        <RecordCircle key={`right-win-${i}`} className="round-win-icon" aria-hidden />
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Blue Side: IVR Logo */}
-                    <div className="blue-score-info blue-bg cursor-target" onClick={() => setShowEdit(true)}>
-                        {renderIvrBottomStatus(blueIvrRemaining)}
-                    </div>
-
-                    {/* Blue Side: Gam-jeom */}
-                    <div className="blue-gamjeom blue-bg cursor-target" onClick={() => setShowEdit(true)}>
-                        <div className="gamjeom-number">{blueGamJeom}</div>
-                        <div className="gamjeom-font">GAM-JEOM</div>
-                    </div>
-                </div>
+                <ScreenBottomBar
+                    direction={direction}
+                    redGamJeom={redGamJeom}
+                    blueGamJeom={blueGamJeom}
+                    redIvrRemaining={redIvrRemaining}
+                    blueIvrRemaining={blueIvrRemaining}
+                    roundWins={roundWins}
+                    currentRound={currentRound}
+                    onOpenEdit={() => setShowEdit(true)}
+                />
             </div>
 
-            {/* Edit Drawer Modal */}
-            <Edit
-                visible={showEdit}
-                setVisible={setShowEdit}
-                eventName={selectedEvent}
-                matchId={currentMatchId}
+            <ScreenOverlayStack
+                showEdit={showEdit}
+                setShowEdit={setShowEdit}
+                selectedEvent={selectedEvent}
+                currentMatchId={currentMatchId}
                 matchData={matchData}
                 dominantSide={dominantSide}
                 setShowQRCode={setShowQRCode}
                 occupiedRefereesCount={occupiedRefereesCount}
                 toggleDirection={toggleDirection}
                 toggleKyeShi={toggleKyeShi}
-                kyeShiActive={isKyeShiActive}
-                onTechCardConfirm={handleTechCardConfirm}
-                isTechnicalCardFlowActive={isTechCardFlowActive}
-                onIvrConfirm={handleIvrConfirm}
+                isKyeShiActive={isKyeShiActive}
+                handleTechCardConfirm={handleTechCardConfirm}
+                isTechCardFlowActive={isTechCardFlowActive}
+                handleIvrConfirm={handleIvrConfirm}
                 isIvrFlowActive={isIvrFlowActive}
                 eventSettings={eventSettings}
-            />
-
-            <TechnicalCardAnnouncement
-                visible={techCardAnnouncement !== null}
-                side={techCardAnnouncement?.side}
-                decision={techCardAnnouncement?.decision}
-                startedAt={techCardAnnouncement?.startedAt}
-                onComplete={handleTechCardAnnouncementComplete}
-            />
-
-            <IVRAnnouncement
-                visible={ivrAnnouncement !== null}
-                side={ivrAnnouncement?.side}
-                decision={ivrAnnouncement?.decision}
-                startedAt={ivrAnnouncement?.startedAt}
-                ivrRemaining={getEffectiveIvrRemaining(
-                    matchData?.stats,
-                    ivrAnnouncement?.side,
-                    eventSettings,
-                    matchRules
-                )}
-                onComplete={handleIvrAnnouncementComplete}
-            />
-
-            {/* Controller Connection QR Code Modal */}
-            <QRCodeDisplay
-                eventId={selectedEvent}
+                techCardAnnouncement={techCardAnnouncement}
+                handleTechCardAnnouncementComplete={handleTechCardAnnouncementComplete}
+                ivrAnnouncement={ivrAnnouncement}
+                matchRules={matchRules}
+                handleIvrAnnouncementComplete={handleIvrAnnouncementComplete}
                 eventName={eventName}
-                courtId={selectedCourt}
-                matchId={currentMatchId}
-                visible={showQRCode}
-                onClose={() => setShowQRCode(false)}
+                selectedCourt={selectedCourt}
+                showQRCode={showQRCode}
                 refereesData={refereesData}
                 refereeMode={refereeMode}
+                toastMessages={toastMessages}
             />
-
-            {/* Toast Notifications */}
-            <div className="toast-container" style={{ position: 'fixed', top: '1.04cqi', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '0.52cqi', pointerEvents: 'none' }}>
-                {toastMessages.map(toast => (
-                    <div key={toast.id} style={{ backgroundColor: 'rgba(255, 60, 48, 0.95)', color: 'white', padding: '0.78cqi 1.56cqi', borderRadius: '0.62cqi', fontSize: '1.4cqi', fontWeight: 'bold', boxShadow: '0 0.42cqi 1.25cqi rgba(0,0,0,0.5)', textAlign: 'center', border: '2px solid rgba(255,255,255,0.2)' }}>
-                        {toast.text}
-                    </div>
-                ))}
-            </div>
         </>
     );
 }

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../../firebase';
-import { ref, get, update } from "firebase/database";
 import { QrCode, Trophy, PersonFill, CheckCircle, ArrowLeft, FilePlayFill, FileFontFill, Stopwatch } from "react-bootstrap-icons";
 import { usePopup } from "../../Context/PopupContext";
 import "./Edit.css";
@@ -9,12 +8,15 @@ import Button from "../../Components/Button/Button";
 import TechnicalCardConfirm from "../../Components/TechnicalCardFlow/TechnicalCardConfirm";
 import IVRConfirm from "../../Components/IVRFlow/IVRConfirm";
 import { updateScoreAndCheckRules, declareRoundWinner, promoteWinner, getEffectiveIvrRemaining, formatIvrQuotaForEdit, isIvrUnlimited, setIvrRemaining } from '../../Api';
+import { updateMatchLiveState } from '../../services/matchFirebase';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import { getFinalWinnerSide, resolveMatchRules } from '../../domain/matchRules.js';
 import EditGridLocale from './EditGridLocale';
 import { EDIT_POINT_TYPES } from './editPointTypes';
 import EditSideScoreRow from './EditSideScoreRow';
 import AvoidingPenaltyPopup from './AvoidingPenaltyPopup';
+
+const EMPTY_MATCH_RULES = Object.freeze({});
 
 const Edit = ({
     visible,
@@ -104,7 +106,7 @@ const Edit = ({
         setAvoidingSide(null);
     };
 
-    const matchRules = matchData?.config?.rules || {};
+    const matchRules = matchData?.config?.rules || EMPTY_MATCH_RULES;
     const getSideIvrRemaining = (side) =>
         getEffectiveIvrRemaining(matchData?.stats, side, eventSettings, matchRules);
 
@@ -124,7 +126,7 @@ const Edit = ({
     }, [
         matchData,
         eventSettings,
-        matchRules,
+        matchData?.config?.rules,
         ivrQuotaFocused,
         matchData?.stats?.blue?.ivrRemaining,
         matchData?.stats?.red?.ivrRemaining,
@@ -236,13 +238,11 @@ const Edit = ({
         }
 
         if (eventName && matchId) {
-            const configRef = ref(database, `events/${eventName}/matches/${matchId}/config`);
-            get(configRef).then((snapshot) => {
-                if (!snapshot.exists()) return;
-                const config = snapshot.val();
+            // Prefer in-memory / flat config from matchData (Stage 5+).
+            const config = matchData?.config;
+            if (config) {
                 const defaultMatchSec = config.rules?.roundDuration || 90;
                 const defaultRestSec = config.rules?.restDuration || 60;
-
                 if (activePhase === 'ROUND') {
                     setRestMin(Math.floor(defaultRestSec / 60));
                     setRestSec(defaultRestSec % 60);
@@ -250,7 +250,7 @@ const Edit = ({
                     setMatchMin(Math.floor(defaultMatchSec / 60));
                     setMatchSec(defaultMatchSec % 60);
                 }
-            });
+            }
         }
     }, [visible, eventName, matchId, matchData]);
 
@@ -258,8 +258,6 @@ const Edit = ({
         if (!eventName || !matchId) return;
 
         const totalSeconds = parseInt(newMin, 10) * 60 + parseInt(newSec, 10);
-        const stateRef = ref(database, `events/${eventName}/matches/${matchId}/state`);
-
         const updates = {
             timer: totalSeconds,
             isPaused: true,
@@ -267,18 +265,12 @@ const Edit = ({
             isFinished: totalSeconds === 0,
         };
 
-        get(stateRef).then(snapshot => {
-            if (snapshot.exists()) {
-                const stateData = snapshot.val();
-                const currentPhase = stateData.phase || 'ROUND';
-
-                if (timeType === 'match' && currentPhase === 'ROUND') {
-                    update(stateRef, updates);
-                } else if (timeType === 'rest' && currentPhase === 'REST') {
-                    update(stateRef, updates);
-                }
-            }
-        });
+        const currentPhase = matchData?.state?.phase || 'ROUND';
+        if (timeType === 'match' && currentPhase === 'ROUND') {
+            updateMatchLiveState(database, eventName, matchId, updates);
+        } else if (timeType === 'rest' && currentPhase === 'REST') {
+            updateMatchLiveState(database, eventName, matchId, updates);
+        }
     };
 
     const handleMatchMinChange = (value) => {

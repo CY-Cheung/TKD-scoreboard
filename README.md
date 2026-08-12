@@ -6,7 +6,8 @@
 現場大螢幕、主裁面板、邊裁手機遙控同一個 Event／Court 即時同步。唔使裝 App：掃 QR，部手機就係計分手掣。
 
 > Live demo（GitHub Pages）：[`https://cy-cheung.github.io/TKD-scoreboard/`](https://cy-cheung.github.io/TKD-scoreboard/)  
-> 多裝置同步、資料庫 schema、搶位細節 → [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md)
+> 多裝置同步、資料庫 schema、搶位細節 → [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md)  
+> RTDB 扁平化（已完成）→ [`docs/FIREBASE_FLATTENING_PLAN.md`](docs/FIREBASE_FLATTENING_PLAN.md)
 
 ---
 
@@ -142,6 +143,7 @@ npm run lint
 | Doc | Content |
 |-----|---------|
 | [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md) | 多裝置、schema、同步 |
+| [`docs/FIREBASE_FLATTENING_PLAN.md`](docs/FIREBASE_FLATTENING_PLAN.md) | RTDB 扁平化（完成） |
 | [`TODO_WT2026.md`](TODO_WT2026.md) | WT 2026 規格（IVR／Technical Card 等） |
 | [`package.json`](package.json) | Dependencies & scripts |
 

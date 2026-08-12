@@ -1,16 +1,15 @@
 # Test Plan（測試計劃）
 
 **Product:** Taekwondo Cloud Scoring System  
-**Runner (current on `main`):** **無** — `package.json` 未有 `test` script  
-**Baseline at doc time:** **0** automated tests on `main`  
+**Runner (current):** Vitest — `npm test`  
+**Baseline at doc time:** 150+ unit tests across `src/domain`／`src/services`／Pages helpers  
 **Document status:** Reverse-engineered gaps + forward-looking plan  
-**Last reviewed against code:** 2026-08-10
+**Last reviewed against code:** 2026-08-12
 
-> **Codebase baseline:** `main` @ 分析當日。Google Auth 同 Event／Court session 現時同喺 `AuthContext`。計分邏輯主要喺 `src/Api.js`（尚未拆 `src/domain/`）。**未有** `npm test`／Vitest。平行 refactor 分支可能另有結構 — 唔當作已合入 `main`。  
+> **Codebase baseline:** flat RTDB schema；計分／席位單元測試已存在。整合（emulator／真機）仍多數人手。Schema → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 > **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
 
-> **`[待確認]`** = 計劃建議但尚未實作／未自動化嘅項目。  
-> 平行 refactor 分支或已引入 Vitest；**合入前唔好當 `main` 已有 77 tests**。
+> **`[待確認]`** = 計劃建議但尚未實作／未自動化嘅項目。
 
 ---
 
@@ -27,39 +26,39 @@
 
 | Layer | Tooling（現況／建議） | Scope |
 |-------|----------------------|-------|
-| **Unit** | Vitest／Jest（**建議新增**） | 先抽純函式：score／vote／round／IVR |
+| **Unit** | Vitest（`npm test`） | score／vote／round／IVR／paths／seat helpers |
 | **Component** | Testing Library | `[待確認]` 未見正式 RTL setup |
 | **Integration** | Firebase emulator **或** 契約測試 | `[待確認]` 未見 emulator CI |
-| **E2E / Manual smoke** | 人手 checklist（本文件 §6） | 真實 Google／RTDB／多機 |
+| **E2E / Manual smoke** | 人手 checklist（本文件 §6） | 真實 Google／flat RTDB／多機 |
 
 ---
 
 ## 3. Current automated coverage map（現有自動化）
 
-| Area | Status on `main` |
-|------|------------------|
-| Unit / component / e2e | **None**（無 test files、無 `npm test`） |
-| Manual | 依賴開發者現場同 PR checklist |
+| Area | Status |
+|------|--------|
+| Unit（domain／services／helpers） | **有** — `npm test`（Vitest；score／round／seat／paths 等） |
+| Component／E2E | 未見正式 RTL／Playwright CI |
+| Manual | 現場同 PR checklist（§6） |
 
-**建議最先自動化嘅純邏輯（而家仍嵌喺 `Api.js`／頁面）：**
+**已覆蓋／持續擴充嘅純邏輯：**
 
-| Area | Suggested extract／test focus |
-|------|-------------------------------|
+| Area | Focus |
+|------|--------|
 | Score math | weights `[1,2,3,4,6]` + opponent gamjeom |
-| Score transaction | vote window、unique `deviceId`、PUN／PTG、REST abort |
-| Round transaction | REST vs PTF；保留 `ivrRemaining` |
+| Score／round transactions | vote window、PUN／PTG、REST／PTF |
 | IVR helpers | unlimited／cap／`projectIvrRemaining` |
+| Court／match paths | flat `courts`／`matches/config`／`matchLive`／`matchIndex` |
+| Seat grab helpers | claim／stale／bare string deviceId |
 | PDF／event create | multi-day split naming |
-| Controller params | URL／hash／sessionStorage fallback |
-| Announcement timing | 3000ms TC／IVR |
 
-**高風險仍未自動化：**
+**高風險仍多數人手：**
 
-- `Controller.jsx` seat grab + 400ms delay + `onDisconnect`
-- Screen timer `requestAnimationFrame` + REST → `startNextRound`
+- `Controller.jsx` seat grab + `onDisconnect`（真機）
+- Screen timer rAF + REST → `startNextRound`
 - TC／IVR multi-tab finalize races
-- `promoteWinner`
-- `database.rules.json` rule tests
+- `promoteWinner`（flat config）
+- `database.rules.json`（需 Console／emulator 驗證）
 
 ---
 
@@ -78,7 +77,7 @@
 | UT-S07 | Declare round winner（未達 roundsToWin） | REST、`restDuration`、reset points／gamjeom、保留 `ivrRemaining` |
 | UT-S08 | Declare至 `roundsToWin` | `winReason=PTF`、`isFinished`、phase ROUND |
 
-**Status on `main`:** **未自動化** — 以上為目標案例。
+**Status:** 目標案例多數已有 Vitest 覆蓋（`src/domain`／helpers）；以下仍作回歸清單。
 
 ### 4.2 Scoring — Edge Cases
 
@@ -116,9 +115,9 @@
 
 **Happy Path**
 
-1. Seed match + court `refereeMode=multiple`；J1／J2 已入席。  
-2. J1 按 Body(+2)；RTDB `votes` 長度 1；`pointsStat` 未變。  
-3. 500ms 內 J2 按同一 Body；`pointsStat[1]++`；Screen `recentScores` 出現。  
+1. Seed match + court `refereeMode=multiple`；J1／J2 已入席（flat `courts/.../referees`）。  
+2. J1 按 Body(+2)；`matchLive/.../votes` 長度 1；`pointsStat` 未變。  
+3. 500ms 內 J2 按同一 Body；`matchLive` `pointsStat[1]++`；Screen `recentScores` 出現。  
 4. Screen 顯示分數同步。
 
 **Edge Cases**
@@ -134,7 +133,7 @@
 
 **Happy Path**
 
-1. 空席；裝置 A 進 Controller → 佔 J1；RTDB 有 `deviceId`。  
+1. 空席；裝置 A 進 Controller → 佔 J1；flat `courts/.../referees/J1` 有 `deviceId`。  
 2. 裝置 B → J2；C → J3。  
 3. A 關閉分頁／離線 → `onDisconnect` 清 J1；新裝置可再搶 J1。
 

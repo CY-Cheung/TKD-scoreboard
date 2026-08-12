@@ -1,11 +1,18 @@
 // src/Api.js
-import { ref, runTransaction, update, get, onValue } from "firebase/database";
+import { ref, update, get, onValue } from "firebase/database";
 import { database } from './firebase';
 import { applyScoreAndCheckRules } from './domain/scoreTransaction.js';
 import {
     applyDeclareRoundWinner,
     applyStartNextRound,
 } from './domain/roundTransaction.js';
+import {
+    updateMatchLiveState,
+    updateMatchLiveStatsSide,
+    updateMatchConfigCompetitors,
+    runMatchLiveTransaction,
+    fetchMatchConfigForRules,
+} from './services/matchFirebase.js';
 
 let globalServerTimeOffset = 0;
 const offsetRef = ref(database, ".info/serverTimeOffset");
@@ -27,42 +34,55 @@ export {
     applyScoreAndCheckRules,
 } from './domain/scoreTransaction.js';
 
+/**
+ * Apply a score/vote transaction.
+ * @returns {Promise<{ committed: boolean, scored: boolean }>}
+ *   scored=true only when points were actually applied (not vote-only / aborted).
+ */
 export const updateScoreAndCheckRules = (eventName, matchId, side, type, index, delta, courtId = null, deviceId = null, seatName = null, mode = 'single') => {
-    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
+    const meta = { scored: false };
 
-    runTransaction(matchRef, (matchData) => {
-        // voteNow uses server offset; pauseNow stays wall-clock (legacy quirk).
+    return runMatchLiveTransaction(database, eventName, matchId, (matchData) => {
+        // voteNow uses server offset; pauseNow stays wall-clock (existing quirk).
         return applyScoreAndCheckRules(
             matchData,
             { side, type, index, delta, courtId, deviceId, seatName, mode },
             {
                 voteNow: Date.now() + globalServerTimeOffset,
                 pauseNow: Date.now(),
-            }
+            },
+            meta
         );
     })
-    .catch((err) => console.error("Transaction failed:", err));
+    .then((result) => ({
+        committed: Boolean(result?.committed),
+        scored: Boolean(result?.committed && meta.scored),
+    }))
+    .catch((err) => {
+        console.error("Transaction failed:", err);
+        return { committed: false, scored: false };
+    });
 };
 
 export const declareRoundWinner = (eventName, matchId, winnerSide) => {
-    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
-
-    runTransaction(matchRef, (matchData) =>
+    runMatchLiveTransaction(database, eventName, matchId, (matchData) =>
         applyDeclareRoundWinner(matchData, winnerSide, Date.now())
     );
 };
 
 export const startNextRound = (eventName, matchId) => {
-    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
-    runTransaction(matchRef, (matchData) => applyStartNextRound(matchData));
+    runMatchLiveTransaction(database, eventName, matchId, (matchData) =>
+        applyStartNextRound(matchData)
+    );
 };
 
 export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
-    const matchRoot = `events/${eventName}/matches`;
-
     try {
-        const snapshot = await get(ref(database, `${matchRoot}/${currentMatchId}/config`));
-        const config = snapshot.val();
+        const config = await fetchMatchConfigForRules(
+            database,
+            eventName,
+            currentMatchId
+        );
         if (!config) throw new Error("Match config not found");
 
         const winnerData = config.competitors[winnerSide];
@@ -72,15 +92,18 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
             throw new Error("此場次未設定下一場比賽路徑 (Next Match ID/Slot missing)");
         }
 
-        const targetPath = `${matchRoot}/${nextMatchId}/config/competitors/${nextMatchSlot}`;
-        
-        await update(ref(database, targetPath), {
-            name: winnerData.name,
-            affiliatedClub: winnerData.affiliatedClub || ""
-        });
+        await updateMatchConfigCompetitors(
+            database,
+            eventName,
+            nextMatchId,
+            nextMatchSlot,
+            {
+                name: winnerData.name,
+                affiliatedClub: winnerData.affiliatedClub || ""
+            }
+        );
 
-        // ALSO update the current match's state to record the winner!
-        await update(ref(database, `${matchRoot}/${currentMatchId}/state`), {
+        await updateMatchLiveState(database, eventName, currentMatchId, {
             winnerSide: winnerSide
         });
 
@@ -93,8 +116,7 @@ export const promoteWinner = async (eventName, currentMatchId, winnerSide) => {
 };
 
 export const startTechCardAnnouncement = (eventName, matchId, { side, decision }) => {
-    const stateRef = ref(database, `events/${eventName}/matches/${matchId}/state`);
-    return update(stateRef, {
+    return updateMatchLiveState(database, eventName, matchId, {
         techCardAnnouncement: {
             side,
             decision,
@@ -104,10 +126,9 @@ export const startTechCardAnnouncement = (eventName, matchId, { side, decision }
 };
 
 export const finalizeTechCardAnnouncement = async (eventName, matchId) => {
-    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
     let payload = null;
 
-    const result = await runTransaction(matchRef, (matchData) => {
+    const result = await runMatchLiveTransaction(database, eventName, matchId, (matchData) => {
         if (!matchData?.state?.techCardAnnouncement) return undefined;
 
         const ann = matchData.state.techCardAnnouncement;
@@ -124,8 +145,7 @@ export const finalizeTechCardAnnouncement = async (eventName, matchId) => {
 };
 
 export const startKyeShi = (eventName, matchId, durationSeconds = 60) => {
-    const stateRef = ref(database, `events/${eventName}/matches/${matchId}/state`);
-    return update(stateRef, {
+    return updateMatchLiveState(database, eventName, matchId, {
         kyeShi: {
             startedAt: Date.now(),
             duration: durationSeconds,
@@ -134,8 +154,7 @@ export const startKyeShi = (eventName, matchId, durationSeconds = 60) => {
 };
 
 export const stopKyeShi = (eventName, matchId) => {
-    const stateRef = ref(database, `events/${eventName}/matches/${matchId}/state`);
-    return update(stateRef, { kyeShi: null });
+    return updateMatchLiveState(database, eventName, matchId, { kyeShi: null });
 };
 
 const isIvrQuotaEmpty = (value) => value === null || value === undefined || value === "";
@@ -219,17 +238,19 @@ export const projectIvrRemaining = (current, decision) => {
 };
 
 export const setIvrRemaining = (eventName, matchId, side, value) => {
-    const statsRef = ref(database, `events/${eventName}/matches/${matchId}/stats/${side}`);
     if (value === null || value === undefined || value === "") {
-        return update(statsRef, { ivrRemaining: IVR_UNLIMITED });
+        return updateMatchLiveStatsSide(database, eventName, matchId, side, {
+            ivrRemaining: IVR_UNLIMITED,
+        });
     }
     const next = Math.max(0, Math.floor(Number(value) || 0));
-    return update(statsRef, { ivrRemaining: next });
+    return updateMatchLiveStatsSide(database, eventName, matchId, side, {
+        ivrRemaining: next,
+    });
 };
 
 export const startIvrAnnouncement = (eventName, matchId, { side, decision }) => {
-    const stateRef = ref(database, `events/${eventName}/matches/${matchId}/state`);
-    return update(stateRef, {
+    return updateMatchLiveState(database, eventName, matchId, {
         ivrAnnouncement: {
             side,
             decision,
@@ -239,9 +260,7 @@ export const startIvrAnnouncement = (eventName, matchId, { side, decision }) => 
 };
 
 export const finalizeIvrAnnouncement = async (eventName, matchId, eventSettings = {}) => {
-    const matchRef = ref(database, `events/${eventName}/matches/${matchId}`);
-
-    await runTransaction(matchRef, (matchData) => {
+    await runMatchLiveTransaction(database, eventName, matchId, (matchData) => {
         if (!matchData?.state?.ivrAnnouncement) return undefined;
 
         const ann = matchData.state.ivrAnnouncement;

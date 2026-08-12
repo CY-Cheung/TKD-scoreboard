@@ -43,7 +43,7 @@ describe("resolveMatchTimerFrame", () => {
     ).toEqual({ displayTime: 0, continueRaf: false, onExpire: null });
   });
 
-  it("allows finished REST to keep ticking (legacy: only blocks non-REST finished)", () => {
+  it("allows finished REST to keep ticking (only blocks non-REST finished)", () => {
     const frame = resolveMatchTimerFrame(
       {
         isFinished: true,
@@ -166,7 +166,7 @@ describe("toggle patches", () => {
     });
   });
 
-  it("preserves legacy: lastStartTime 0 is treated as missing (|| now)", () => {
+  it("preserves lastStartTime 0 as missing (|| now)", () => {
     // elapsed becomes 0 → timer unchanged
     expect(
       buildTimerPausePatch({ timer: 3, lastStartTime: 0 }, 10_000)
@@ -177,7 +177,7 @@ describe("toggle patches", () => {
     });
   });
 
-  it("buildRoundExpiredStatePatch matches legacy Screen update", () => {
+  it("buildRoundExpiredStatePatch matches Screen update", () => {
     expect(buildRoundExpiredStatePatch()).toEqual({
       isFinished: true,
       isPaused: true,

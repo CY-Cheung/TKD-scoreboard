@@ -1,8 +1,9 @@
 # TKD-scoreboard 多裝置實時互動設計文件
 (TKD-scoreboard Multi-device Real-time Interaction Design Document)
 
-> **文件狀態**：反映 **2026-08** 源碼現況（`src/`、`database.rules.json`）。  
+> **文件狀態**：反映 **2026-08-12** 源碼現況（flat RTDB：`courts`／`matches/…/config`／`matchLive`）。  
 > 標有 **〔計劃中〕** 嘅功能尚未實作。  
+> Schema 細節 §3；扁平化紀錄 → [`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。  
 > **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
 
 ---
@@ -24,7 +25,7 @@
 - **Atomic Transaction（原子事務）搶位**：`Controller.jsx` 對每個席位獨立 `runTransaction()`
 - **onDisconnect Cleanup（斷線清理）**：離線時 `remove()` 席位節點
 - **Valid Point Voting（有效得分投票）**：Multiple Mode 下 2+ 裁判 **1 秒內**（`VOTE_WINDOW_MS = 1000`）同意先加分
-- **Court-level Match Binding（場地綁定比賽）**：`courts/{courtId}/currentMatchId` 驅動 Screen／Controller
+- **Court-level Match Binding（場地綁定比賽）**：`courts/{eventId}/{courtId}/currentMatchId` 驅動 Screen／Controller
 - **Technical Card Announcement Sync（技術卡公告同步）**：`state.techCardAnnouncement` 廣播 Step 2 glass card 到同一 Match 嘅所有 Screen；3 秒後 `finalizeTechCardAnnouncement` 原子清除（Reject 延遲 Gam-jeom +1）
 
 **〔計劃中，未實作〕**：
@@ -55,48 +56,58 @@
 
 ---
 
-> **扁平化計劃（未實作）：** 見 [`docs/FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)；  
-> 新 path rules 骨架（未部署）：`database.rules.flattened.skeleton.json`。
+> **扁平化：** 已完成 — 見 [`docs/FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)；  
+> production rules：`database.rules.json`（flat courts／matches／matchLive）。
 
 ## 3. 資料庫 Schema (現行結構)
 
 ```
-events/{eventId}/
-├── EventName, createdBy, createdByEmail, settings/
-│   └── setupPassword, maxPointGap, maxGamjeom, roundDuration, restDuration
-├── courts/{courtId}/
-│   ├── name
-│   ├── currentMatchId          ← 此 Court 正在進行的 Match
-│   ├── config/
-│   │   └── refereeMode         ← "single" | "multiple"
-│   └── referees/
-│       ├── J1                  ← { deviceId, deviceName } 或節點不存在（空位）
-│       ├── J2
-│       └── J3
-└── matches/{matchId}/
-    ├── config/
-    │   ├── matchId, competitors.{red,blue}, rules
-    │   └── nextMatchId, nextMatchSlot   ← 晉級路徑
-    ├── state/
-    │   ├── timer, isPaused, lastStartTime, phase ("ROUND"|"REST")
-    │   ├── currentRound, isFinished, winReason, winnerSide
-    │   ├── dominantSide
-    │   └── techCardAnnouncement   ← Technical Card Step 2 公告（見 §4.1）
-    └── stats/
-        ├── red/blue: pointsStat[5], gamjeom, gamjeomAvoiding
-        ├── roundWins, roundScores
-        ├── votes[]              ← Multiple Mode 待確認投票
-        └── recentScores[]       ← 大螢幕得分紀錄
+eventIndex/{eventId}/                 ← 賽事列表摘要
+events/{eventId}/                     ← 只 meta + settings
+├── EventName, createdBy, createdByEmail, matchDate?
+└── settings/
+    └── setupPassword, maxPointGap, maxGamjeom, roundDuration, restDuration, ivrQuota?
+
+courts/{eventId}/{courtId}/
+├── name
+├── currentMatchId                    ← 此 Court 正在進行的 Match
+├── config/
+│   └── refereeMode                   ← "single" | "multiple"
+└── referees/
+    ├── J1                            ← { deviceId, deviceName, lastSeen } 或節點不存在
+    ├── J2
+    └── J3
+
+matches/{eventId}/{matchId}/config/   ← 靜態賽程
+├── matchId, competitors.{red,blue}, rules
+└── nextMatchId, nextMatchSlot
+
+matchIndex/{eventId}/{matchId}/       ← 對陣表摘要（輕）
+
+matchLive/{eventId}/{matchId}/        ← 即時計分／計時（primary）
+├── state/
+│   ├── timer, isPaused, lastStartTime, phase ("ROUND"|"REST")
+│   ├── currentRound, isFinished, winReason, winnerSide
+│   ├── dominantSide
+│   ├── techCardAnnouncement          ← Technical Card Step 2（見 §4.1）
+│   └── ivrAnnouncement?              ← IVR Step 2
+├── stats/
+│   ├── red/blue: pointsStat[5], gamjeom, gamjeomAvoiding, ivrRemaining?
+│   ├── roundWins, roundScores
+├── votes[]                           ← Multiple Mode 待確認投票
+├── recentScores[]                    ← 大螢幕得分紀錄
+├── providedCourtId?, providedDeviceId?
+└── updatedAt
 ```
 
-### 3.1 裁判席位（現行，非舊版 token schema）
+### 3.1 裁判席位（現行）
 
 空位 = **節點不存在**（`null`），唔再用 `status: "vacant"`：
 
 ```json
 "referees": {
-  "J1": { "deviceId": "abc123xyz", "deviceName": "iPhone" },
-  "J3": { "deviceId": "def456uvw", "deviceName": "Android" }
+  "J1": { "deviceId": "abc123xyz", "deviceName": "iPhone", "lastSeen": 1723276800000 },
+  "J3": { "deviceId": "def456uvw", "deviceName": "Android", "lastSeen": 1723276805000 }
 }
 ```
 
@@ -153,7 +164,7 @@ Step 2 glass card 同步用；由主裁 Screen 寫入，所有訂閱同一 Match
 ### Phase B — 載入比賽
 
 1. Admin 去 `/import`（DataImport）
-2. 新增或選擇 Match → **Load** 寫入 `courts/{courtId}/currentMatchId`
+2. 新增或選擇 Match → **Load** 寫入 `courts/{eventId}/{courtId}/currentMatchId`
 3. Screen 同 Controller 經 `onValue` 自動載入該 Match
 
 ### Phase C — 開波
@@ -168,8 +179,8 @@ Step 2 glass card 同步用；由主裁 Screen 寫入，所有訂閱同一 Match
 ```
 Controller.handleScore()
   → Api.updateScoreAndCheckRules(event, matchId, side, "pointsStat", index, 1, courtId, deviceId, seat, mode)
-  → runTransaction(matchRef)
-  → Screen onValue 更新 UI + vote log
+  → runTransaction(matchLive/{event}/{match})
+  → Screen onValue(flat config + matchLive) 更新 UI + vote log
 ```
 
 **Single Mode**：一次按鈕即加分。  
@@ -180,10 +191,10 @@ Controller.handleScore()
 ```
 Edit.jsx（主裁）Accept/Reject
   → Api.startTechCardAnnouncement(event, matchId, { side, decision })
-  → update state.techCardAnnouncement { side, decision, startedAt }
-  → 所有 Screen onValue(matchRef) 顯示 TechnicalCardAnnouncement（3 秒，startedAt 同步倒數）
+  → update matchLive/…/state.techCardAnnouncement { side, decision, startedAt }
+  → 所有 Screen onValue(match view) 顯示 TechnicalCardAnnouncement（3 秒，startedAt 同步倒數）
   → 任一 Screen 倒數完 → Api.finalizeTechCardAnnouncement(event, matchId)
-  → runTransaction 刪除 techCardAnnouncement
+  → runTransaction(matchLive) 刪除 techCardAnnouncement
   → Reject：updateScoreAndCheckRules(..., 'gamjeom', null, 1)
 ```
 
@@ -235,9 +246,10 @@ Edit.jsx（主裁）Accept/Reject
 
 | 路徑 | 寫入條件（摘要） |
 |------|------------------|
-| `events/{eventId}` | 已登入 + 為 `createdBy` 或 `coAdmins` |
-| `events/.../referees/{slot}` | 已登入 **或** 搶位／斷線（`null`） |
-| `events/.../matches/{matchId}` | 已登入 **或** Transaction 帶 `providedDeviceId` 且匹配 J1/J2/J3 席位 |
+| `events/{eventId}` | 已登入 + 為 `createdBy` 或 `coAdmins`；root write **唔可以**帶 `courts`／`matches` |
+| `courts/.../referees/{slot}` | 已登入 **或** 同 `deviceId` 搶位／斷線（`null`）；寫入要有 `deviceId` |
+| `matchLive/.../{matchId}` | 已登入 **或** 已有 live 節點且 Transaction 帶 `providedDeviceId` 匹配 flat J1/J2/J3 |
+| `matches/.../config`、`matchIndex` | 已登入 owner／coAdmin（或 orphan 清理） |
 
 Controller 計分時 `Api.js` 會暫寫 `providedCourtId`、`providedDeviceId` 供 rules 驗證。  
 Screen `Edit` 面板不傳 deviceId，依賴 Admin 已登入 Google。

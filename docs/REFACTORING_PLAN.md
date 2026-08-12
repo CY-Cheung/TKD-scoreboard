@@ -1,259 +1,172 @@
 # Refactoring Plan — TKD Scoreboard
 
-> **Status:** Phase 2 Waves 0–8 complete (planned P0 extracts done; smoke/PR still open).  
-> **Branch:** `cursor/clean-code-refactor-8215`  
-> **Base:** `main` @ `84fb26e`  
-> **Completed:**  
+> **Status:** Phase 2 Waves 0–8 **complete**. Firebase RTDB flatten **complete**（另軌；見 [`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)）。  
+> **Clean-code branch（歷史）：** `cursor/clean-code-refactor-8215`  
+> **Flatten stack tip：** `cursor/firebase-docs-prd-system-8215` 等（PR #19–#26+）  
+> **Completed waves：**  
 > - Wave 0: Vitest + `npm test`  
 > - Wave 1: `defaultRules` / `scoreMath` / `matchRules` → `Api` / `Screen` / `Edit`  
 > - Wave 2: `matchFactory` / `eventCreation` → `CourtSetup` / `DataImport` / `pdfParser`  
 > - Wave 3: Controller score-pad/params; Edit grid pieces; DecisionFlow Confirm + announcement timing  
-> - Wave 4: Screen `formatTime` / `voteLogUtils` / `VoteLogRows` (timer rAF / Firebase listeners unchanged)  
-> - Wave 5: `AuthContext` (Google only) + `EventSessionContext` (event/court); `AUTH_SESSION_KEY` workaround preserved  
-> - Wave 6: `scoreTransaction` / `roundTransaction` pure bodies; `Api` thin Firebase wrappers (voteNow vs pauseNow clocks preserved)  
-> - Wave 7: Screen `matchTimer` pure frame/toggle helpers; rAF + Firebase I/O stay in `Screen.jsx`  
-> - Wave 8: Controller `seatGrab` helpers (J1→J3 order, 400ms delay const, claim tx, kick-out); Firebase orchestration stays in page
+> - Wave 4: Screen `formatTime` / `voteLogUtils` / `VoteLogRows`（timer rAF / Firebase listeners 仍喺 page）  
+> - Wave 5: `AuthContext`（Google）+ `EventSessionContext`（event/court）  
+> - Wave 6: `scoreTransaction` / `roundTransaction` pure bodies；`Api` thin wrappers（**voteNow vs pauseNow** 兩套 clock 保留 — 唔係 RTDB dual-write）  
+> - Wave 7: Screen `matchTimer` pure helpers；rAF + Firebase I/O 留喺 `Screen.jsx`  
+> - Wave 8: Controller `seatGrab` helpers；Firebase orchestration 留喺 page  
 
-This document is the Phase 1 deliverable for a Clean Code / complexity-reduction refactor. Phase 2 (test-driven execution) must not start without approval.
+本文係 Clean Code 計劃 + 完成紀錄。可選後續見 §10。
 
 ---
 
-## 0. Baseline facts
+## 0. Baseline facts（2026-08-12）
 
 | Item | Status |
 |------|--------|
-| Source size | ~29 JS/JSX files under `src`, ~6.9k LOC |
-| Unit tests | **0** test/spec files |
-| `package.json` scripts | `dev` / `build` / `lint` / `preview` / deploy — **no `test`** |
-| Test runners | No Vitest / Jest / Testing Library |
-| Complexity metric | Decision-point heuristic (`if` / `for` / `case` / ternary / `&&` `\|\|`) for **file-level CC ranking** — not ESLint’s exact cyclomatic score, but sufficient to identify hotspots |
-
-**Phase 2 prerequisite:** Add Vitest (and preferably Testing Library for components) plus an `npm test` script before changing any module under test.
+| Source | ~88 JS/JSX under `src`（含 tests） |
+| Unit tests | **25** files · **157** tests · `npm test`（Vitest） |
+| `package.json` scripts | `dev` / `build` / `lint` / `preview` / `test` / deploy |
+| RTDB layout | Flat：`eventIndex`／slim `events`／`courts`／`matches/…/config`／`matchIndex`／`matchLive` |
+| Complexity metric（歷史） | Decision-point heuristic 用嚟排 Phase 1 hotspots |
 
 ---
 
-## 1. Top 5 highest-complexity files
+## 1. Phase 1 hotspot inventory（歷史快照）
 
-| Rank | File | ~LOC | ~File CC | Primary code smells |
-|------|------|------|----------|---------------------|
-| **1** | `src/Pages/Screen/Screen.jsx` | ~787 | **~157** | God component; ~11 `useEffect`s; timer rAF + Firebase listeners + vote UI + announcement orchestration; score/final-rule hardcodes duplicated vs `Api.js` |
-| **2** | `src/Api.js` | ~447 | **~97** | Overloaded domain facade; long `updateScoreAndCheckRules` transaction; magic defaults (15 / 5 / 90 / 60 / 2); score weights `[1,2,3,4,6]`; IVR / TC / promotion mixed in one file |
-| **3** | `src/Pages/DataImport/DataImport.jsx` | ~912 | **~89** | God page; ~34 `useState`s; Create Event + PDF + match CRUD + bracket; highly duplicated with CourtSetup |
-| **4** | `src/Pages/CourtSetup/CourtSetup.jsx` | ~821 | **~76** | Auth gate + court session login + Create Event / PDF (~same as DataImport) + delete event; Google Auth coupled with court session |
-| **5** | `src/Pages/Controller/Controller.jsx` | ~430 | **~76** | Seat-grab `runTransaction` + deep-link params + duplicated score-pad JSX; `sessionStorage` dual-track |
+以下 LOC／CC 係 **2026-08-10** 掃描數字，留作對照；而家頁面仍偏大，但 domain／services 已抽走。
 
-### Wave 2 candidates (after Top 5)
+| Rank | File（當時） | ~LOC | Primary smells（當時） |
+|------|--------------|------|------------------------|
+| 1 | `Screen.jsx` | ~787 | God component；timer + listeners + vote UI |
+| 2 | `Api.js` | ~447 | 長 transaction；defaults／weights／IVR／TC 混一檔 |
+| 3 | `DataImport.jsx` | ~912 | Create Event + PDF + CRUD + bracket |
+| 4 | `CourtSetup.jsx` | ~821 | Auth + session + Create Event／PDF 重複 |
+| 5 | `Controller.jsx` | ~430 | Seat grab + score pad 重複 |
 
-- `src/Pages/Screen/Edit.jsx` (~654 LOC, ~CC 74) — mirrored blue/red UI
-- `src/Utils/pdfParser.js` — geometry magic numbers; third copy of default rules
-- IVR / Technical Card Confirm + Announcement pairs — near-duplicate chrome
-- `src/Context/AuthContext.jsx` — Context Split (Google Auth vs event/court session)
+### 當時 Wave 2 候選
+
+- `Edit.jsx` — mirrored blue/red UI  
+- `pdfParser.js` — defaults 第三份  
+- IVR／TC Confirm + Announcement 近似重複  
+- `AuthContext` — Google vs event session 耦合  
 
 ---
 
-## 2. Cross-cutting smell map
+## 2. Cross-cutting map（目標架構 — 已大致落地）
 
 ```mermaid
 flowchart TB
-  subgraph P0_Risk [P0 behaviour-sensitive — freeze semantics until tests exist]
-    API[Api.js transactions]
-    TIMER[Screen timer rAF]
-    SEAT[Controller seat grab]
+  subgraph UI [Pages — orchestration]
+    Screen
+    Controller
+    CourtSetup
+    DataImport
   end
-  subgraph DRY [Largest DRY debt]
-    DI[DataImport create/PDF]
-    CS[CourtSetup create/PDF]
-    DI --> EVT[eventCreation Facade]
-    CS --> EVT
-    RULES[defaultRules — three hardcode sites]
-    PDF[pdfParser defaults]
-    API2[Api defaults]
-    DI --> RULES
-    CS --> RULES
-    PDF --> RULES
-    API2 --> RULES
+  subgraph Domain [src/domain — pure]
+    scoreMath
+    matchRules
+    scoreTransaction
+    roundTransaction
+    defaultRules
   end
-  subgraph SCORE [Score math duplication]
-    API3[Api getScoreValue]
-    SCR[Screen calculateScore / dominant / isFinal]
-    API3 --> MATH[domain/scoreMath + matchRules]
-    SCR --> MATH
+  subgraph Services [src/services — RTDB I/O]
+    courtFirebase
+    matchFirebase
+    eventCreation
+    matchFactory
   end
+  subgraph Facade [Api.js]
+    ApiThin[Thin wrappers + re-exports]
+  end
+  Screen --> Domain
+  Screen --> Services
+  Controller --> Domain
+  Controller --> Services
+  ApiThin --> Domain
+  ApiThin --> Services
+  CourtSetup --> Services
+  DataImport --> Services
 ```
 
-### Risk grades (must follow during implementation)
+### Risk grades（仍適用）
 
 | Grade | Zone | Handling |
 |-------|------|----------|
-| **P0** | `Api` transactions, Screen timer, Controller seat grab | Until tests exist: extract **pure helpers / thin wrappers only** — do **not** change semantics |
-| **P1** | IVR / TC finalize side-effects, whole-event Firebase `set` | Require regression checklist before edits |
-| **P2** | UI DRY, Auth / session split | Allowed after Wave 0 tests; still need smoke checks |
-
-### Concrete smells by file (evidence)
-
-#### `Screen.jsx`
-- Local `calculateScore` duplicates `Api` score weights
-- Dominant side hardcodes `gamjeom >= 5` instead of `config.rules.maxGamjeom`
-- Final match hardcodes `roundWins === 2` instead of `roundsToWin`
-- Oversized `renderVoteRows` (pending votes + success scores + icon map + direction reverse)
-- Timer `requestAnimationFrame` + REST → `startNextRound` co-located with UI
-
-#### `Api.js`
-- `updateScoreAndCheckRules` — long `runTransaction` (vote window, multi-ref uniqueness, PTG / PUN)
-- Defaults: `maxPointGap \|\| 15`, `maxGamjeom \|\| 5`, durations, `roundsToWin \|\| 2`
-- Vote path uses server-time offset; some timer paths use bare `Date.now()` (clock inconsistency risk)
-- IVR / TC / promote helpers share the same module
-
-#### `DataImport.jsx` / `CourtSetup.jsx`
-- Near-duplicate `handleFileSelect` / `handleCreateEvent` (multi-day PDF split)
-- Magic rule defaults repeated in create + edit forms
-- Empty match document shape hardcodes `state` / `stats` / `pointsStat`
-- CourtSetup: mount `logout()` clears court session; Google auth + event session coupled in `AuthContext`
-
-#### `Controller.jsx`
-- Seat grab J1→J2→J3 + `onDisconnect` + StrictMode **400ms** delay (preserve)
-- Score pad: ten near-identical buttons
-- Param resolution: search / hash / `sessionStorage` fallbacks
+| **P0** | `Api`／`matchLive` TX、Screen timer、Controller seat | 改語義前要有測試 + smoke |
+| **P1** | IVR／TC finalize、whole-event `set`／`remove` | Regression checklist |
+| **P2** | UI DRY、page 再拆 | 允許；仍要 smoke |
 
 ---
 
-## 3. Guiding principles (Clean Code)
+## 3. Guiding principles（Clean Code）
 
-1. **Single Responsibility (SRP)** — separate UI, domain rules, and Firebase I/O.
-2. **DRY** — one source for default rules, score math, create-event flow, IVR/TC chrome.
-3. **Small steps** — refactor **one function / one thin module** at a time; run tests after each change.
-4. **Preserve edge logic** — do not delete workarounds that look redundant but are load-bearing (e.g. seat 400ms delay, vote window, last-10s avoiding penalty, Google `AUTH_SESSION_KEY`).
-5. **Circuit breaker** — if tests for a module fail **more than twice in a row**, or an unrecoverable dependency error occurs: stop, `git restore` the affected files, report cause + options.
-
----
-
-## 4. Phase 2 execution plan (after approval only)
-
-### Wave 0 — Test infrastructure (mandatory first)
-
-| Step | Work | Done when |
-|------|------|-----------|
-| 0.1 | Add Vitest (+ jsdom); optional React Testing Library | `npm test` exists |
-| 0.2 | Write unit tests for the **first** pure modules to extract | Tests green on current behaviour |
-| 0.3 | Document a short manual smoke checklist for P0 paths | Checklist reviewed |
-
-**No P0 semantic edits before Wave 0 is green.**
-
-### Wave 1 — Low-risk domain extraction (recommended first code batch)
-
-| Step | Target | Pattern | Test focus |
-|------|--------|---------|------------|
-| 1.1 | `src/domain/defaultRules.js` | Extract Module | Single source of defaults |
-| 1.2 | `src/domain/scoreMath.js` (`getScoreValue`) | Extract Module | Weights 1 / 2 / 3 / 4 / 6 |
-| 1.3 | `src/domain/matchRules.js` (dominant / final / resolve) | Strategy / Extract Module | Read `maxGamjeom` / `roundsToWin` from config; remove Screen hardcodes `>= 5` / `=== 2` |
-| 1.4 | Wire `Api.js` + `Screen.jsx` to domain modules | Thin Facade | Behaviour unchanged; public Api exports kept where possible |
-
-### Wave 2 — Create Event DRY
-
-| Step | Target | Pattern |
-|------|--------|---------|
-| 2.1 | `src/services/eventCreation.js` (form / PDF / multi-day split) | Facade |
-| 2.2 | `src/services/matchFactory.js` (empty match shape) | Extract Module |
-| 2.3 | Optional shared Create Event form component | Extract Component |
-| 2.4 | Point `CourtSetup` + `DataImport` at Facade | Delete duplication |
-
-### Wave 3 — Controller / Edit readability (avoid seat / scoring semantics)
-
-| Step | Target | Pattern |
-|------|--------|---------|
-| 3.1 | Controller: params / device / score-pad config | Extract Module / Component |
-| 3.2 | Edit: point types, side row, avoiding popup | Extract Component |
-| 3.3 | Shared IVR / TC Confirm + Announcement shells | Extract Component (Template Method) |
-
-### Wave 4 — Screen structure (still avoid timer semantic changes)
-
-| Step | Target | Pattern |
-|------|--------|---------|
-| 4.1 | Vote log pure helpers + presentational rows | Extract Component |
-| 4.2 | Optional: toasts / side history presentational | Extract Component |
-| 4.3 | **Defer** `useMatchTimer` mega-hook unless timer unit/integration tests exist | — |
-
-### Wave 5 — Auth vs EventSession (behaviour-sensitive; last)
-
-| Step | Target | Pattern |
-|------|--------|---------|
-| 5.1 | `AuthContext` = Google only | Context Split |
-| 5.2 | `EventSessionContext` = event / court + `sessionStorage` | Context Split |
-| 5.3 | Manual checklist: Court Setup login, return clears session, QR deep-link | Regression |
-
-### Wave 6 — Scoring / round transaction pure extract (P0 helpers)
-
-| Step | Target | Pattern |
-|------|--------|---------|
-| 6.1 | `domain/scoreTransaction.js` + tests | Extract Method / Pure Domain — vote window, PUN/PTG, gamjeom |
-| 6.2 | `domain/roundTransaction.js` + tests | Extract Method — declare winner / start next round |
-| 6.3 | `Api.js` wrappers keep `runTransaction` + dual clocks | Facade — no semantic change |
-
-### Wave 7 — Screen timer rAF pure extract (P0 helpers)
-
-| Step | Target | Pattern |
-|------|--------|---------|
-| 7.1 | `Pages/Screen/matchTimer.js` + tests | Extract Method — frame resolve, pause/resume patches, ROUND expire patch |
-| 7.2 | `Screen.jsx` rAF loop calls `resolveMatchTimerFrame` | Facade — keep `requestAnimationFrame` + Firebase side effects in page |
-| 7.3 | Preserve REST → `startNextRound`; ROUND → finalize state | Regression |
-
-### Wave 8 — Controller seat grab pure extract (P0 helpers)
-
-| Step | Target | Pattern |
-|------|--------|---------|
-| 8.1 | `Pages/Controller/seatGrab.js` + tests | Extract Module — seat order, 400ms const, claim tx, kick detection |
-| 8.2 | `Controller.jsx` uses helpers; keeps `runTransaction` / `onDisconnect` / delay | Facade — no semantic change |
-| 8.3 | Preserve Admin non-seat path + unmount clear | Regression |
-
-### Explicitly deferred (until strong tests)
-
-- ~~Rewriting internals of `updateScoreAndCheckRules` transactions~~ → Wave 6 extracted pure bodies; Firebase wiring unchanged
-- ~~Rewriting Screen timer rAF state machine~~ → Wave 7 extracted pure decisions; rAF loop shell unchanged
-- ~~Rewriting Controller seat grab / `onDisconnect` order or delays~~ → Wave 8 extracted helpers; order/delay/`onDisconnect` orchestration unchanged
+1. **SRP** — UI／domain／Firebase I/O 分開。  
+2. **DRY** — defaults、score math、create-event 單一來源。  
+3. **Small steps** — 一次一個薄模組；每次改完跑 `npm test`。  
+4. **Preserve edge logic** — 400ms seat delay、vote window、last-10s avoiding、`AUTH_SESSION_KEY` 等。  
+5. **Circuit breaker** — 同一模組連續 fail >2 → stop、`git restore`、報告。
 
 ---
 
-## 5. Per-file intended end state
+## 4. Phase 2 waves（已完成）
 
-| File | Intended direction |
-|------|--------------------|
-| `Screen.jsx` | Orchestration shell: listeners + timer stay; score/rules → domain; vote UI → component |
-| `Api.js` | Thin facade re-exporting domain/services; keep stable public names |
-| `DataImport.jsx` | Page orchestration only; creation/PDF → services |
-| `CourtSetup.jsx` | Same shared services; auth/session split in Wave 5 |
-| `Controller.jsx` | UI/params extracted; seat grab left semantically identical |
+詳細步驟保留作歷史；狀態一律 **Done**。
+
+| Wave | Summary | Status |
+|------|---------|--------|
+| 0 | Vitest + `npm test` | Done |
+| 1 | `domain/defaultRules`／`scoreMath`／`matchRules` | Done |
+| 2 | `eventCreation`／`matchFactory` | Done |
+| 3 | Controller／Edit／DecisionFlow UI extracts | Done |
+| 4 | Screen vote log／formatTime | Done |
+| 5 | Auth vs EventSession split | Done |
+| 6 | score／round transaction pure extract | Done |
+| 7 | `matchTimer` pure extract | Done |
+| 8 | `seatGrab` pure extract | Done |
+
+**Explicitly deferred（仍有效）：** 唔好無測試下重寫 `matchLive` TX 語義、timer rAF 狀態機、seat `onDisconnect` 次序／delay。
+
+---
+
+## 5. Per-file end state（而家）
+
+| File | Direction |
+|------|-----------|
+| `Screen.jsx` | Orchestration：listeners + rAF；rules／timer decisions → domain／`matchTimer` |
+| `Api.js` | Thin facade → domain + `matchFirebase`（`updateMatchLive*`） |
+| `DataImport.jsx`／`CourtSetup.jsx` | 用 `eventCreation`／`matchFactory`／flat services |
+| `Controller.jsx` | `seatGrab` + flat `courts/.../referees`；score pad 已抽 |
+| `services/*` | Flat paths only（無 `legacy*` helpers） |
 
 ---
 
 ## 6. Success criteria
 
-- [ ] `npm test` green
-- [ ] `npm run build` green
-- [ ] Top 5 files show clear LOC / decision-density reduction
-- [ ] Scoring, match finalization, seat grab, PDF create-event behaviour verified unchanged (tests + smoke checklist)
-- [ ] No silent deletion of known edge-case workarounds
+- [x] `npm test` green（157 passing @ 2026-08-12）  
+- [x] `npm run build` green（Pages deploy 常用）  
+- [x] Domain／services 抽離；Top 頁面仍可再瘦（可選）  
+- [x] Scoring／seat／PDF create 行為有單元測試 + 現場 smoke  
+- [x] 已知 edge workaround 保留  
+- [x] RTDB flatten complete（production export verified）
 
 ---
 
 ## 7. Circuit breaker procedure
 
-1. On **> 2 consecutive test failures** for the module under edit, or unrecoverable dependency errors:
-2. **Stop** further edits to that module.
-3. `git restore` the affected files (or revert the last commit on that slice).
-4. Report: failure signature, suspected cause, recommended next options (narrower extract / more tests / abandon slice).
+1. 同一模組 **> 2** 連續 test fail，或不可恢復依賴錯誤 → **Stop**。  
+2. `git restore` 受影響檔（或 revert 該 slice）。  
+3. 報告：failure signature、原因、下一步選項。
 
 ---
 
-## 8. Approval gate
+## 8. Approval gate（歷史）
+
+Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
 
 | Option | Meaning |
 |--------|---------|
-| Approve full plan | Start Phase 2 at Wave 0 |
-| Approve Wave 0 + Wave 1 only | Domain extract first; defer Create Event / UI / Auth |
-| Reorder waves | User specifies new priority |
-| Reject / rewrite | Do not modify business code |
-
-**Until one of the approve options is given, do not modify application source under `src/` for this refactor.**
+| Approve optional Wave 9+ | 見 §10 |
+| Narrow slice | 用戶指定檔案／行為 |
+| Hold | 唔再動 `src/` |
 
 ---
 
@@ -261,7 +174,40 @@ flowchart TB
 
 | Date | Change |
 |------|--------|
-| 2026-08-10 | Phase 1 plan written from full-repo complexity scan; no `src/` changes |
-| 2026-08-10 | Wave 6: score/round transaction pure extract + 24 new unit tests |
-| 2026-08-11 | Wave 7: Screen matchTimer pure extract (rAF decisions + toggle patches) |
-| 2026-08-11 | Wave 8: Controller seatGrab helpers (400ms / J1–J3 / kick-out) |
+| 2026-08-10 | Phase 1 plan；Wave 6 score/round extract |
+| 2026-08-11 | Wave 7 matchTimer；Wave 8 seatGrab |
+| 2026-08-12 | Mark Waves 0–8 complete；baseline → Vitest 157；RTDB flatten complete；clarify voteNow/pauseNow ≠ dual-write |
+
+---
+
+## 10. Optional next waves（未開）
+
+| Wave | Idea | Notes |
+|------|------|-------|
+| 9 | 再拆 `Screen.jsx`／`DataImport.jsx`／`CourtSetup.jsx` 體積 | **進行中**（第一批 UI extracts 已落地） |
+| 10 | Component tests（RTL）／Firebase emulator CI | 補整合缺口 |
+| 11 | Rules unit tests（`database.rules.json`） | 配合 #20 publish |
+| — | Merge flatten PR stack → `main` | 產品／docs 已對齊 |
+
+### Wave 9 progress（2026-08-12）
+
+已抽（行為不變；P0 TX／rAF／seat 未動）：
+
+| Extract | From |
+|---------|------|
+| `ScreenUnconfigured`／`PlayerNameCell`／`ScreenIvrStatus`／`SideRoundHistory`／`ScreenToasts`／`getTimeoutStyle` | `Screen.jsx` |
+| `parseName` + test | `DataImport.jsx` |
+| `CreateEventModal` | `CourtSetup.jsx` |
+| `MatchConfigForm`／`MatchesList`／`BracketView`／`matchListUtils`／`MatchActionButtons` | `DataImport.jsx`（Create Event modal 已刪） |
+| `pdfImportFlow`／`persistCreatedEvents`／`matchFormHelpers`／`MatchActionButtons` | DataImport + CourtSetup shared create／PDF |
+| `BrandSplitLayout`／`BrandSplitHero`／`BrandSplitUserBadge` | Home + CourtSetup 共用左半；page 只 render 右半 |
+| `HomeRightPanel`／`parseEventHeading` | `Home.jsx` |
+| `CourtSetupSessionForm` | `CourtSetup.jsx`（取代 page-local hero） |
+| `ScreenCenterTimer`／`ScreenRoundWins`／`ScreenBottomBar`／`ScreenEventTopBar`／`ScreenTopNames`／`ScreenMiddleBoard`／`ScreenOverlayStack` | `Screen.jsx` |
+
+可選下一刀：合 flatten／Wave 9 PR stack → `main`。
+
+（DataImport Create Event modal／死入口已刪；建立賽事只喺 CourtSetup。）
+
+Schema／多裝置真相來源：[`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
+扁平化檔案軌跡：[`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。

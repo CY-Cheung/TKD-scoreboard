@@ -9,7 +9,7 @@ import {
 } from "./matchFactory.js";
 
 describe("createStoredMatchRules", () => {
-  it("uses legacy defaults without roundsToWin", () => {
+  it("uses defaults without roundsToWin", () => {
     expect(createStoredMatchRules()).toEqual({
       maxPointGap: 15,
       maxGamjeom: 5,
@@ -25,7 +25,7 @@ describe("createStoredMatchRules", () => {
 });
 
 describe("createInitialMatchState / Stats", () => {
-  it("matches legacy empty match state shape", () => {
+  it("matches empty match state shape", () => {
     expect(createInitialMatchState(90)).toMatchObject({
       isStarted: false,
       isPaused: true,
@@ -37,7 +37,7 @@ describe("createInitialMatchState / Stats", () => {
     });
   });
 
-  it("matches legacy empty stats shape", () => {
+  it("matches empty stats shape", () => {
     expect(createInitialMatchStats()).toEqual({
       roundWins: { red: 0, blue: 0 },
       blue: { pointsStat: [0, 0, 0, 0, 0], gamjeom: 0 },

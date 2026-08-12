@@ -44,7 +44,7 @@ export function listFromEventIndex(indexVal) {
 }
 
 /**
- * Map full /events tree → UI list rows (legacy / backfill source).
+ * Map full /events tree → UI list rows (fallback when eventIndex is empty).
  */
 export function listFromEventsTree(eventsVal) {
   if (!eventsVal || typeof eventsVal !== "object") return [];

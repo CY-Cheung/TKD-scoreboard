@@ -7,7 +7,7 @@ describe("getScoreValue", () => {
     expect(getScoreValue({}, {})).toBe(0);
   });
 
-  it("applies legacy weights 1/2/3/4/6 on pointsStat", () => {
+  it("applies weights 1/2/3/4/6 on pointsStat", () => {
     const stats = { pointsStat: [1, 1, 1, 1, 1] };
     // 1+2+3+4+6 = 16
     expect(getScoreValue(stats, {})).toBe(16);

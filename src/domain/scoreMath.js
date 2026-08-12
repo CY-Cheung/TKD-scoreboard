@@ -3,7 +3,7 @@ import { POINT_WEIGHTS } from "./defaultRules.js";
 /**
  * Total display / comparison score for one side:
  * weighted pointsStat + opponent gamjeom + opponent gamjeomAvoiding.
- * Preserves legacy Api.getScoreValue / Screen.calculateScore behaviour.
+ * Preserves original Api.getScoreValue / Screen.calculateScore behaviour.
  */
 export function getScoreValue(stats, opponentStats) {
   const p = stats?.pointsStat || [0, 0, 0, 0, 0];

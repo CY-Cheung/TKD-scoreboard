@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ref, onValue, set, onDisconnect, runTransaction } from "firebase/database";
 import { database } from "../../firebase";
@@ -13,18 +13,21 @@ import {
     ADMIN_SEAT,
     REFEREE_SEAT_ORDER,
     SEAT_GRAB_STRICT_MODE_DELAY_MS,
+    SEAT_HEARTBEAT_INTERVAL_MS,
     applySeatClaimTransaction,
     buildSeatDevicePayload,
     createAdminDeviceId,
     createRefereeDeviceId,
+    extractSeatDeviceId,
     isAdminSeat,
-    legacyRefereeSeatPath,
     refereeSeatPath,
     shouldKickFromSeat,
 } from "./seatGrab";
+import { armScoreHaptic, shouldVibrateForRecentScores, triggerScoreHaptic } from "./scoreHaptic";
 import {
-    subscribePreferFlatCourt,
+    subscribeCourt,
 } from "../../services/courtFirebase";
+import { subscribeMatchView } from "../../services/matchFirebase";
 import ControllerScorePad from "./ControllerScorePad";
 import "./Controller.css";
 
@@ -47,10 +50,14 @@ function Controller() {
     const [deviceId, setDeviceId] = useState("");
     const [mySeat, setMySeat] = useState(null);
     const [isFull, setIsFull] = useState(false);
+    const [seatGrabError, setSeatGrabError] = useState(null);
+    const [seatGrabPending, setSeatGrabPending] = useState(false);
     const [matchData, setMatchData] = useState(null);
     const [lastAction, setLastAction] = useState(null); // { side: 'red'|'blue', text: '...' }
     const [isConnected, setIsConnected] = useState(false);
     const [refereeMode, setRefereeMode] = useState('single');
+    // undefined = not seeded yet; null/string = last haptic'd recentScores key
+    const lastRecentScoreHapticKeyRef = useRef(undefined);
 
     // Sync state + EventSession when URL / QR deep-link params change
     useEffect(() => {
@@ -71,7 +78,7 @@ function Controller() {
     // Listen to refereeMode (prefer flat courts path)
     useEffect(() => {
         if (!eventId || !courtId) return;
-        return subscribePreferFlatCourt(
+        return subscribeCourt(
             database,
             eventId,
             courtId,
@@ -96,6 +103,7 @@ function Controller() {
         
         if (user) {
             setMySeat(ADMIN_SEAT);
+            setSeatGrabPending(false);
             // Admin also needs a deviceId for the scoring API
             setDeviceId(createAdminDeviceId());
             return;
@@ -104,18 +112,83 @@ function Controller() {
         const newDeviceId = createRefereeDeviceId();
         setDeviceId(newDeviceId);
         setIsFull(false);
+        setSeatGrabError(null);
+        setSeatGrabPending(true);
         let grabbedSeat = null;
+        let lastGrabError = null;
+        let flatSeatRef = null;
+        let heartbeatId = null;
+        let connectedUnsub = null;
+        let presenceActive = false;
 
         let isMounted = true;
-        const trySeat = async (seatName) => {
-            if (!isMounted) return false;
-            const seatRef = ref(
+
+        const clearSeatPaths = () => {
+            // Stop heartbeats BEFORE nulling the seat so an in-flight
+            // update({ lastSeen }) cannot recreate a deviceId-less ghost.
+            presenceActive = false;
+            if (heartbeatId) {
+                clearInterval(heartbeatId);
+                heartbeatId = null;
+            }
+            if (!grabbedSeat) return;
+            const seatToClear = grabbedSeat;
+            grabbedSeat = null;
+            const flatPath = refereeSeatPath(eventId, courtId, seatToClear);
+            set(ref(database, flatPath), null).catch(() => {});
+        };
+
+        const registerDisconnectHandlers = () => {
+            if (!flatSeatRef || !presenceActive) return;
+            onDisconnect(flatSeatRef).remove().catch(() => {});
+        };
+
+        const startPresence = (seatName) => {
+            flatSeatRef = ref(
                 database,
                 refereeSeatPath(eventId, courtId, seatName)
             );
-            const legacySeatRef = ref(
+            presenceActive = true;
+
+            // Re-arm onDisconnect whenever Firebase reconnects (mobile browsers).
+            const connectedRef = ref(database, ".info/connected");
+            connectedUnsub = onValue(connectedRef, (snap) => {
+                if (snap.val() === true) {
+                    registerDisconnectHandlers();
+                }
+            });
+
+            registerDisconnectHandlers();
+
+            heartbeatId = setInterval(() => {
+                if (!isMounted || !presenceActive || !grabbedSeat) return;
+                // Always write full seat payload (deviceId required by rules).
+                // Abort if we no longer own the seat or presence stopped.
+                runTransaction(flatSeatRef, (current) => {
+                    if (!presenceActive) return;
+                    if (current != null && extractSeatDeviceId(current) !== newDeviceId) {
+                        return;
+                    }
+                    return buildSeatDevicePayload(
+                        newDeviceId,
+                        getDeviceName(),
+                        Date.now()
+                    );
+                }).catch(() => {});
+            }, SEAT_HEARTBEAT_INTERVAL_MS);
+
+            // pagehide/beforeunload often fire when the phone closes the tab;
+            // React effect cleanup frequently does NOT run in that case.
+            window.addEventListener("pagehide", clearSeatPaths);
+            window.addEventListener("beforeunload", clearSeatPaths);
+        };
+
+        const trySeat = async (seatName) => {
+            if (!isMounted) return false;
+            // Claim on flat courts path only.
+            const flatRefForClaim = ref(
                 database,
-                legacyRefereeSeatPath(eventId, courtId, seatName)
+                refereeSeatPath(eventId, courtId, seatName)
             );
             try {
                 const deviceData = buildSeatDevicePayload(
@@ -123,26 +196,25 @@ function Controller() {
                     getDeviceName()
                 );
 
-                // Canonical claim on flat path; mirror to legacy for dual-write.
-                const result = await runTransaction(seatRef, (currentData) =>
+                const result = await runTransaction(flatRefForClaim, (currentData) =>
                     applySeatClaimTransaction(currentData, deviceData)
                 );
 
                 if (result.committed) {
                     if (!isMounted) {
-                        set(seatRef, null);
-                        set(legacySeatRef, null).catch(() => {});
+                        set(flatRefForClaim, null).catch(() => {});
                         return false;
                     }
-                    set(legacySeatRef, deviceData).catch(() => {});
-                    onDisconnect(seatRef).remove();
-                    onDisconnect(legacySeatRef).remove();
                     setMySeat(seatName);
+                    setSeatGrabError(null);
                     grabbedSeat = seatName;
+                    startPresence(seatName);
                     return true;
                 }
                 return false;
             } catch (e) {
+                lastGrabError = e?.code || e?.message || String(e);
+                console.error("Seat grab failed:", seatName, lastGrabError);
                 return false;
             }
         };
@@ -155,31 +227,31 @@ function Controller() {
             if (!isMounted) return;
 
             for (const seatName of REFEREE_SEAT_ORDER) {
-                if (await trySeat(seatName)) return;
+                if (await trySeat(seatName)) {
+                    if (isMounted) setSeatGrabPending(false);
+                    return;
+                }
             }
-            if (isMounted) setIsFull(true);
+            if (!isMounted) return;
+            setSeatGrabPending(false);
+            if (lastGrabError) {
+                setSeatGrabError(lastGrabError);
+                setIsFull(false);
+            } else {
+                setIsFull(true);
+            }
         };
 
         grabSeat();
 
         return () => {
             isMounted = false;
-            if (grabbedSeat) {
-                set(
-                    ref(
-                        database,
-                        refereeSeatPath(eventId, courtId, grabbedSeat)
-                    ),
-                    null
-                ).catch(() => {});
-                set(
-                    ref(
-                        database,
-                        legacyRefereeSeatPath(eventId, courtId, grabbedSeat)
-                    ),
-                    null
-                ).catch(() => {});
-            }
+            setSeatGrabPending(false);
+            if (heartbeatId) clearInterval(heartbeatId);
+            if (connectedUnsub) connectedUnsub();
+            window.removeEventListener("pagehide", clearSeatPaths);
+            window.removeEventListener("beforeunload", clearSeatPaths);
+            clearSeatPaths();
         };
     }, [eventId, courtId, user]);
 
@@ -189,6 +261,7 @@ function Controller() {
         if (!eventId || !courtId || !mySeat || !deviceId) return;
         if (isAdminSeat(mySeat)) return;
 
+        // Stage 5b: kick listener watches flat seat (claim source of truth).
         const seatRef = ref(
             database,
             refereeSeatPath(eventId, courtId, mySeat)
@@ -212,7 +285,7 @@ function Controller() {
             return;
         }
 
-        return subscribePreferFlatCourt(
+        return subscribeCourt(
             database,
             eventId,
             courtId,
@@ -225,20 +298,30 @@ function Controller() {
         );
     }, [eventId, courtId]);
 
-    // Listen to matchData
+    // Listen to matchData (config + matchLive)
     useEffect(() => {
         if (!eventId || !currentMatchId) {
             setMatchData(null);
+            lastRecentScoreHapticKeyRef.current = undefined;
             return;
         }
 
-        const matchRef = ref(database, `events/${eventId}/matches/${currentMatchId}`);
-        const unsubscribe = onValue(matchRef, (snapshot) => {
-            setMatchData(snapshot.val());
-        });
-
-        return () => unsubscribe();
+        lastRecentScoreHapticKeyRef.current = undefined;
+        return subscribeMatchView(database, eventId, currentMatchId, setMatchData);
     }, [currentMatchId, eventId]);
+
+    // Shared score haptic: every Controller vibrates when recentScores gains a new entry
+    // (covers multi-judge consensus within 1000ms — including phones that only voted).
+    useEffect(() => {
+        const { vibrate, nextKey } = shouldVibrateForRecentScores(
+            matchData?.recentScores,
+            lastRecentScoreHapticKeyRef.current
+        );
+        lastRecentScoreHapticKeyRef.current = nextKey;
+        if (vibrate) {
+            triggerScoreHaptic();
+        }
+    }, [matchData?.recentScores]);
 
     const handleScore = (side, index, label) => {
         if (!eventId || !currentMatchId) return;
@@ -246,21 +329,34 @@ function Controller() {
         // Block remote input when timer is not running
         const isCurrentlyPaused = matchData?.state?.isPaused ?? true;
         if (isCurrentlyPaused) return;
+        if (matchData?.state?.phase === "REST") return;
 
-        // Mobile haptic vibration feedback
-        if (navigator.vibrate) {
-            navigator.vibrate([70]);
-        }
+        // Arm Vibration API inside the click gesture so Samsung WebViews still
+        // accept a pulse when recentScores arrives shortly after (shared haptic).
+        armScoreHaptic();
 
-        // Call scoring API (+1 point increment for selected point index)
-        updateScoreAndCheckRules(eventId, currentMatchId, side, "pointsStat", index, 1, courtId, deviceId, mySeat, refereeMode);
-
-        const actionObj = { side, text: `${side.toUpperCase()} ${label}` };
-        setLastAction(actionObj);
-
-        setTimeout(() => {
-            setLastAction((prev) => (prev?.text === actionObj.text ? null : prev));
-        }, 1800);
+        // Call scoring API (+1 point increment for selected point index).
+        // Haptic is broadcast via recentScores listener (all Controllers), not here —
+        // so multi-mode late consensus still vibrates every phone.
+        updateScoreAndCheckRules(
+            eventId,
+            currentMatchId,
+            side,
+            "pointsStat",
+            index,
+            1,
+            courtId,
+            deviceId,
+            mySeat,
+            refereeMode
+        ).then(({ scored }) => {
+            if (!scored) return;
+            const actionObj = { side, text: `${side.toUpperCase()} ${label}` };
+            setLastAction(actionObj);
+            setTimeout(() => {
+                setLastAction((prev) => (prev?.text === actionObj.text ? null : prev));
+            }, 1800);
+        });
     };
 
     const redName = matchData?.config?.competitors?.red?.name || "Hong (Red)";
@@ -268,6 +364,26 @@ function Controller() {
     const matchNo = matchData?.config?.matchId || currentMatchId || "N/A";
     const currentRound = matchData?.state?.currentRound || 1;
     const isPaused = matchData?.state?.isPaused ?? true;
+
+    if (seatGrabPending && !mySeat && !user) {
+        return (
+            <div className="controller" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white', padding: '20px', textAlign: 'center' }}>
+                <h1>Connecting…</h1>
+                <p>正在搶裁判席位（J1–J3）…</p>
+            </div>
+        );
+    }
+
+    if (seatGrabError) {
+        return (
+            <div className="controller" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white', padding: '20px', textAlign: 'center' }}>
+                <h1 style={{ color: '#ff3b30' }}>Seat Grab Failed</h1>
+                <p>搶位失敗。請確認 Firebase rules 已 publish，並重新掃 QR。</p>
+                <p style={{ opacity: 0.7, fontSize: '0.9rem', wordBreak: 'break-all' }}>{seatGrabError}</p>
+                <Button text="Retry (重試)" onClick={() => window.location.reload()} variant="yellow" />
+            </div>
+        );
+    }
 
     if (isFull) {
         return (
