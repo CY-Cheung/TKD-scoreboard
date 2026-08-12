@@ -492,7 +492,6 @@ function CourtSetup() {
                 <select
                   id="event-select"
                   className="datalist-input"
-                  style={{ padding: '0 0.62cqi', fontSize: '0.85cqi', height: '2.34cqi', boxSizing: 'border-box', width: '100%' }}
                   value={selectedEvent}
                   onChange={(e) => setSelectedEvent(e.target.value)}
                   required
@@ -507,11 +506,11 @@ function CourtSetup() {
                   ))}
                 </select>
 
-                <div style={{ display: 'flex', gap: '0.52cqi', marginTop: '0.52cqi' }}>
-                  <Button type="button" onClick={() => setShowCreateModal(true)} fontSize="0.77cqi" angle={120} icon={<FolderPlus size="0.83cqi" />} style={{ flex: 1, whiteSpace: 'nowrap' }}>
+                <div className="cs-event-actions">
+                  <Button type="button" onClick={() => setShowCreateModal(true)} fontSize="1.05cqi" angle={120} icon={<FolderPlus size="1.1cqi" />} style={{ flex: 1, whiteSpace: 'nowrap', padding: '0.65cqi 0.9cqi' }}>
                     <StableLocaleText as="span" locale={locale} visible={visible} en="Create Event" zh="新增賽事" />
                   </Button>
-                  <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} fontSize="0.77cqi" angle={350} icon={<Trash size="0.83cqi" />} style={{ flex: 1, whiteSpace: 'nowrap' }}>
+                  <Button type="button" onClick={promptDeleteEvent} disabled={!selectedEvent} fontSize="1.05cqi" angle={350} icon={<Trash size="1.1cqi" />} style={{ flex: 1, whiteSpace: 'nowrap', padding: '0.65cqi 0.9cqi' }}>
                     <StableLocaleText as="span" locale={locale} visible={visible} en="Delete Event" zh="刪除賽事" />
                   </Button>
                 </div>
@@ -552,7 +551,6 @@ function CourtSetup() {
                   <select
                     id="court-select"
                     className="datalist-input cs-court-select"
-                    style={{ padding: '0 0.62cqi', fontSize: '0.85cqi', height: '2.34cqi', boxSizing: 'border-box' }}
                     value={courtId}
                     onChange={(e) => setCourtId(e.target.value)}
                     disabled={!selectedEvent || courtOptions.length === 0}
@@ -565,7 +563,7 @@ function CourtSetup() {
                       <option key={court} value={court}>{court}</option>
                     ))}
                   </select>
-                  <Button type="submit" fontSize="0.85cqi" angle={30} disabled={!selectedEvent || !courtId} icon={<CheckCircle size="0.83cqi" />} style={{ whiteSpace: 'nowrap', padding: '0.52cqi 1.2cqi', margin: 0, flex: 1 }}>
+                  <Button type="submit" fontSize="1.1cqi" angle={30} disabled={!selectedEvent || !courtId} icon={<CheckCircle size="1.15cqi" />} style={{ whiteSpace: 'nowrap', padding: '0.7cqi 1.35cqi', margin: 0, flex: 1 }}>
                     <StableLocaleText as="span" locale={locale} visible={visible} en="Confirm Settings" zh="確認設定" />
                   </Button>
                 </div>

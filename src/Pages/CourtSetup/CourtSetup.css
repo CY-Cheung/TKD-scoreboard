@@ -84,7 +84,8 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 6cqi;
+    /* Tighter to card edge so controls can read larger */
+    padding: 2.6cqi 3cqi;
 }
 
 @keyframes fadeUp {
@@ -126,14 +127,15 @@
 .cs-form {
     display: flex;
     flex-direction: column;
-    gap: 1.04cqi;
+    gap: 1.35cqi;
     animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
+    width: 100%;
 }
 
 .cs-form p {
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.79cqi;
+    font-size: 1.05cqi;
 }
 
 .form-group {
@@ -146,23 +148,23 @@
 .cs-form-label {
     display: grid;
     width: 100%;
-    margin-bottom: 0.6cqi;
-    font-size: 1.12cqi;
+    margin-bottom: 0.45cqi;
+    font-size: 1.35cqi;
     color: rgba(255, 255, 255, 0.9);
-    font-weight: 400;
+    font-weight: 600;
 }
 
 .datalist-input, 
 .form-group input[type="password"] {
     width: 100%;
-    padding: 0 1cqi;
-    height: 3cqi;
+    padding: 0 1.1cqi;
+    height: 3.4cqi;
     box-sizing: border-box;
     background-color: rgba(0, 0, 0, 0.3);
     border: 0.1cqi solid rgba(255, 255, 255, 0.2);
     border-radius: 0.6cqi;
     color: white;
-    font-size: 1.2cqi;
+    font-size: 1.35cqi;
     font-family: 'Outfit', sans-serif;
     transition: all 0.3s ease;
 }
@@ -192,7 +194,14 @@
 .cs-court-confirm-row {
     display: flex;
     align-items: center;
-    gap: 0.52cqi;
+    gap: 0.7cqi;
+    width: 100%;
+}
+
+.cs-event-actions {
+    display: flex;
+    gap: 0.7cqi;
+    margin-top: 0.7cqi;
     width: 100%;
 }
 
@@ -215,11 +224,11 @@
 
 .cs-error-message {
     color: #ff4757;
-    font-size: 0.75cqi;
+    font-size: 1.05cqi;
     margin: 0.26cqi 0;
     text-align: left;
     background: rgba(255, 71, 87, 0.1);
-    padding: 0.42cqi 0.62cqi;
+    padding: 0.55cqi 0.75cqi;
     border-radius: 0.42cqi;
     border-left: 0.16cqi solid #ff4757;
 }
@@ -408,11 +417,16 @@
 }
 
 
-/* FORCED UNIFICATION */
-.datalist-input, .form-group input[type="password"] {
-    height: 2.6cqi !important;
-    padding: 0 0.8cqi !important;
-    line-height: 2.6cqi !important;
+/* FORCED UNIFICATION — right-panel controls read larger */
+.cs-right-panel .datalist-input,
+.cs-right-panel .form-group input[type="password"] {
+    height: 3.4cqi !important;
+    padding: 0 1.1cqi !important;
+    line-height: 3.4cqi !important;
     box-sizing: border-box !important;
-    font-size: 1cqi !important;
+    font-size: 1.35cqi !important;
+}
+
+.cs-right-panel .cs-form-label {
+    font-size: 1.35cqi;
 }
