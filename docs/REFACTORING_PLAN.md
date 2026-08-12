@@ -198,8 +198,9 @@ Phase 2 已執行完畢。新一轮大改前仍建議明確批准範圍。
 | `ScreenUnconfigured`／`PlayerNameCell`／`ScreenIvrStatus`／`SideRoundHistory`／`ScreenToasts`／`getTimeoutStyle` | `Screen.jsx`（~697→~637） |
 | `parseName` + test | `DataImport.jsx` |
 | `CreateEventModal` | `CourtSetup.jsx`（~821→~696） |
+| `MatchConfigForm`／`MatchesList`／`BracketView`／`CreateEventModal`／`matchListUtils` + tests | `DataImport.jsx`（~843→~573） |
 
-可選下一刀：`DataImport` `MatchesList`／`MatchConfigForm`；CourtSetup hero panel。
+可選下一刀：CourtSetup hero panel；再拆 DataImport handlers／PDF create flow。
 
 Schema／多裝置真相來源：[`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 扁平化檔案軌跡：[`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。

@@ -7,10 +7,9 @@ import Button from '../../Components/Button/Button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
 import { useEventSession } from '../../Context/EventSessionContext';
-import { PlusCircle, Trash, FolderPlus, ExclamationTriangle, FileEarmarkArrowUp, FileEarmarkPdf, CheckCircleFill, Calendar3, Funnel, House, XCircle, CheckCircle, Display, Diagram3, X, ArrowLeft } from 'react-bootstrap-icons';
+import { PlusCircle, House, Display } from 'react-bootstrap-icons';
 import { parseHktkdaPdfFile } from '../../Utils/pdfParser';
 import { appendIvrQuotaToSettings, appendIvrQuotaToRules, formatIvrQuotaForInput } from '../../Api';
-import TournamentBracket from '../../Components/TournamentBracket/TournamentBracket';
 import { StableLocaleText, useAlternatingLocale } from '../../Components/AlternatingLocale/AlternatingLocale';
 import {
     buildCourtsMap,
@@ -33,6 +32,14 @@ import {
     fetchMatchesForEvent,
 } from '../../services/matchFirebase';
 import { parseName } from './parseName';
+import {
+    listAvailableMatchDates,
+    filterMatchIdsByDate,
+} from './matchListUtils';
+import MatchConfigForm from './MatchConfigForm';
+import MatchesList from './MatchesList';
+import BracketView from './BracketView';
+import CreateEventModal from './CreateEventModal';
 
 const DataImport = () => {
     const navigate = useNavigate();
@@ -124,17 +131,13 @@ const DataImport = () => {
     }, [eventName]);
 
     // Extract available unique dates from currentMatches
-    const availableDates = Array.from(new Set(
-        Object.values(currentMatches)
-            .map(m => m.config?.matchDate)
-            .filter(Boolean)
-    ));
+    const availableDates = listAvailableMatchDates(currentMatches);
 
     // Filter match IDs by selected date
-    const filteredMatchIds = Object.keys(currentMatches).filter(mId => {
-        if (selectedDateFilter === 'all') return true;
-        return currentMatches[mId]?.config?.matchDate === selectedDateFilter;
-    });
+    const filteredMatchIds = filterMatchIdsByDate(
+        currentMatches,
+        selectedDateFilter
+    );
 
     // PDF File Upload Handler
     const handleFileSelect = async (e) => {
@@ -439,402 +442,129 @@ const DataImport = () => {
             }
         }
     };
+    const eventDisplayName =
+        eventsList.find((e) => e.id === eventName)?.displayName ||
+        eventName ||
+        'Event';
+
     return (
         <div className="di-container aurora-bg" onDoubleClick={toggleFullScreen}>
             <div className="di-content-wrapper glass-card">
-
-                
                 {showBracketModal ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
-                        <div style={{ padding: '0.52cqi 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.78cqi' }}>
-                                <Button 
-                                    onClick={() => { setShowBracketModal(false); setBracketZoom(1); }}
-                                    icon={<ArrowLeft size="0.83cqi" />}
-                                    fontSize="0.77cqi"
-                                    angle={180}
-                                >
-                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Back" zh="返回" />
-                                </Button>
-                                <h2 style={{ margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.52cqi', fontSize: '1.19cqi' }}>
-                                    <Diagram3 size="1.66cqi" color="#FFFF00" /> {eventsList.find(e => e.id === eventName)?.displayName || eventName || 'Event'}
-                                </h2>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.52cqi' }}>
-                                <Button onClick={() => setBracketZoom(z => Math.max(0.1, z - 0.1))} text="-" angle={0} style={{ padding: '2px 0.52cqi', minWidth: '2.08cqi' }} fontSize="0.8cqi" />
-                                <span style={{ color: '#fff', minWidth: '2.6cqi', textAlign: 'center', fontWeight: 'bold', fontSize: '0.8cqi' }}>{Math.round(bracketZoom * 100)}%</span>
-                                <Button onClick={() => setBracketZoom(z => Math.min(3, z + 0.1))} text="+" angle={180} style={{ padding: '2px 0.52cqi', minWidth: '2.08cqi' }} fontSize="0.8cqi" />
-                                <Button onClick={() => setBracketZoom(1)} angle={90} style={{ padding: '0.21cqi 0.78cqi', marginLeft: '0.52cqi' }} fontSize="0.77cqi">
-                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Reset" zh="重置" />
-                                </Button>
-                            </div>
-                        </div>
-                        <div style={{ flex: 1, overflow: 'auto', padding: '1.04cqi 0' }}>
-                            {Object.keys(currentMatches).length > 0 ? (
-                                <div style={{ zoom: bracketZoom }}>
-                                    <TournamentBracket matches={currentMatches} />
-                                </div>
-                            ) : (
-                                <div style={{ color: '#ccc', textAlign: 'center', marginTop: '2.6cqi' }}>
-                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="No matches available to display bracket." zh="沒有可顯示的賽程表。" />
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <BracketView
+                        locale={locale}
+                        localeVisible={localeVisible}
+                        eventTitle={eventDisplayName}
+                        currentMatches={currentMatches}
+                        bracketZoom={bracketZoom}
+                        setBracketZoom={setBracketZoom}
+                        onBack={() => {
+                            setShowBracketModal(false);
+                            setBracketZoom(1);
+                        }}
+                    />
                 ) : (
                     <div className="di-form-and-list-container">
+                        <div className="di-form-section">
+                            <StableLocaleText
+                                as="h2"
+                                locale={locale}
+                                visible={localeVisible}
+                                className="di-page-title"
+                                en="Manage Match"
+                                zh="管理賽事"
+                            />
 
-                    <div className="di-form-section">
-                        <StableLocaleText
-                            as="h2"
-                            locale={locale}
-                            visible={localeVisible}
-                            className="di-page-title"
-                            en="Manage Match"
-                            zh="管理賽事"
-                        />
+                            <MatchConfigForm
+                                locale={locale}
+                                localeVisible={localeVisible}
+                                currentMatches={currentMatches}
+                                matchId={matchId}
+                                setMatchId={setMatchId}
+                                nextMatchId={nextMatchId}
+                                setNextMatchId={setNextMatchId}
+                                nextMatchSlot={nextMatchSlot}
+                                setNextMatchSlot={setNextMatchSlot}
+                                roundDuration={roundDuration}
+                                setRoundDuration={setRoundDuration}
+                                restDuration={restDuration}
+                                setRestDuration={setRestDuration}
+                                maxPointGap={maxPointGap}
+                                setMaxPointGap={setMaxPointGap}
+                                maxGamjeom={maxGamjeom}
+                                setMaxGamjeom={setMaxGamjeom}
+                                ivrQuota={ivrQuota}
+                                setIvrQuota={setIvrQuota}
+                                blueName={blueName}
+                                setBlueName={setBlueName}
+                                blueAffiliatedClub={blueAffiliatedClub}
+                                setBlueAffiliatedClub={setBlueAffiliatedClub}
+                                bluePreviousMatch={bluePreviousMatch}
+                                setBluePreviousMatch={setBluePreviousMatch}
+                                redName={redName}
+                                setRedName={setRedName}
+                                redAffiliatedClub={redAffiliatedClub}
+                                setRedAffiliatedClub={setRedAffiliatedClub}
+                                redPreviousMatch={redPreviousMatch}
+                                setRedPreviousMatch={setRedPreviousMatch}
+                            />
 
-                        {/* Match Configuration Form */}
-                        <div className="match-form">
-                            <fieldset>
-                                <legend>
-                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Match Configuration" zh="比賽設定" />
-                                </legend>
-                                <div className="di-config-rows">
-                                    <div className="fieldset-content">
-                                        <div className="form-group">
-                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Match ID" zh="比賽編號" />
-                                            <input list="match-ids" type="text" value={matchId} onChange={e => setMatchId(e.target.value)} placeholder="A1001" />
-                                            <datalist id="match-ids">
-                                                {Object.keys(currentMatches).map(mId => (
-                                                    <option key={mId} value={mId} />
-                                                ))}
-                                            </datalist>
-                                        </div>
-                                        <div className="form-group">
-                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Next Match ID" zh="下一場比賽編號" />
-                                            <input type="text" value={nextMatchId} onChange={e => setNextMatchId(e.target.value)} placeholder={locale === 'en' ? 'e.g. A2001 (optional)' : '例如: A2001（選填）'} />
-                                        </div>
-                                        <div className="form-group">
-                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Next Match Slot" zh="下一場席位" />
-                                            <select value={nextMatchSlot || ''} onChange={e => setNextMatchSlot(e.target.value)}>
-                                                <option value="">{locale === 'en' ? '(optional)' : '（選填）'}</option>
-                                                <option value="blue">{locale === 'en' ? 'Blue' : '藍方'}</option>
-                                                <option value="red">{locale === 'en' ? 'Red' : '紅方'}</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="fieldset-content">
-                                        <div className="form-group">
-                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Round Duration (sec)" zh="回合秒數" />
-                                            <input type="number" value={roundDuration} onChange={e => setRoundDuration(e.target.value)} />
-                                        </div>
-                                        <div className="form-group">
-                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Rest Duration (sec)" zh="休息秒數" />
-                                            <input type="number" value={restDuration} onChange={e => setRestDuration(e.target.value)} />
-                                        </div>
-                                    </div>
-                                    <div className="fieldset-content">
-                                        <div className="form-group">
-                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Point Gap" zh="分差" />
-                                            <input type="number" value={maxPointGap} onChange={e => setMaxPointGap(e.target.value)} />
-                                        </div>
-                                        <div className="form-group">
-                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Max Gam-jeom" zh="犯規上限" />
-                                            <input type="number" value={maxGamjeom} onChange={e => setMaxGamjeom(e.target.value)} />
-                                        </div>
-                                        <div className="form-group">
-                                            <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="IVR Quota" zh="IVR 配額" />
-                                            <input type="number" min="1" placeholder={locale === 'en' ? 'Empty = unlimited' : '留空 = 無限'} value={ivrQuota} onChange={e => setIvrQuota(e.target.value)} />
-                                        </div>
-                                    </div>
-                                </div>
-                            </fieldset>
-
-                            <fieldset className="competitor-group blue">
-                                <legend>
-                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Blue Competitor" zh="藍方選手" />
-                                </legend>
-                                <div className="fieldset-content">
-                                    <div className="form-group">
-                                        <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Name" zh="姓名" />
-                                        <input type="text" value={blueName} onChange={e => setBlueName(e.target.value)} placeholder={locale === 'en' ? 'Blue player name' : '藍方選手姓名'} />
-                                    </div>
-                                    <div className="form-group">
-                                        <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Affiliated Club" zh="屬會" />
-                                        <input type="text" value={blueAffiliatedClub} onChange={e => setBlueAffiliatedClub(e.target.value)} placeholder={locale === 'en' ? 'Club (optional)' : '屬會（選填）'} />
-                                    </div>
-                                    <div className="form-group">
-                                        <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Source Match ID" zh="來源比賽編號" />
-                                        <input type="text" value={bluePreviousMatch} onChange={e => setBluePreviousMatch(e.target.value)} placeholder={locale === 'en' ? 'Source match (optional)' : '來源比賽（選填）'} />
-                                    </div>
-                                </div>
-                            </fieldset>
-                            
-                            <fieldset className="competitor-group red">
-                                <legend>
-                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Red Competitor" zh="紅方選手" />
-                                </legend>
-                                <div className="fieldset-content">
-                                    <div className="form-group">
-                                        <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Name" zh="姓名" />
-                                        <input type="text" value={redName} onChange={e => setRedName(e.target.value)} placeholder={locale === 'en' ? 'Red player name' : '紅方選手姓名'} />
-                                    </div>
-                                    <div className="form-group">
-                                        <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Affiliated Club" zh="屬會" />
-                                        <input type="text" value={redAffiliatedClub} onChange={e => setRedAffiliatedClub(e.target.value)} placeholder={locale === 'en' ? 'Club (optional)' : '屬會（選填）'} />
-                                    </div>
-                                    <div className="form-group">
-                                        <StableLocaleText as="label" locale={locale} visible={localeVisible} className="di-field-label" en="Source Match ID" zh="來源比賽編號" />
-                                        <input type="text" value={redPreviousMatch} onChange={e => setRedPreviousMatch(e.target.value)} placeholder={locale === 'en' ? 'Source match (optional)' : '來源比賽（選填）'} />
-                                    </div>
-                                </div>
-                            </fieldset>
-                        </div>
-                        
-                        <div className="di-action-buttons">
-                            <Button angle={260} onClick={handleAddMatch} icon={<PlusCircle size="1.15cqi" />} fontSize="1.05cqi" style={{ flex: 1, whiteSpace: "nowrap", padding: "0.55cqi 0.35cqi" }}>
-                                <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Add Match" zh="新增比賽" />
-                            </Button>
-                            <Button angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size="1.15cqi" />} fontSize="1.05cqi" style={{ flex: 1, whiteSpace: "nowrap", padding: "0.55cqi 0.35cqi" }}>
-                                <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Load" zh="載入" />
-                            </Button>
-                            <Button angle={150} onClick={() => navigate('/home')} icon={<House size="1.15cqi" />} fontSize="1.05cqi" style={{ flex: 1, whiteSpace: "nowrap", padding: "0.55cqi 0.35cqi" }}>
-                                <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Home" zh="主頁" />
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className="di-matches-section">
-                        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: '0.42cqi', borderBottom: '1px solid rgba(255,255,255,0.15)', paddingBottom: '0.31cqi' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                {(() => {
-                                    const rawName = eventsList.find(e => e.id === eventName)?.displayName || eventName || 'Event';
-                                    const dayMatch = rawName.match(/^(.*?)\s*(\(Day\s+\d+\))\s*(\(.*\))$/);
-                                    return <h3 style={{ margin: 0, border: 'none', padding: 0, color: '#fff', fontSize: '1.19cqi' }}>{dayMatch ? dayMatch[1] : rawName}</h3>;
-                                })()}
-                                {availableDates.length > 1 && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.21cqi' }}>
-                                        <Funnel size="0.62cqi" color="#FFFF00" />
-                                        <select 
-                                            value={selectedDateFilter} 
-                                            onChange={e => setSelectedDateFilter(e.target.value)}
-                                            style={{ 
-                                                padding: '2px 0.31cqi', 
-                                                borderRadius: '0.21cqi', 
-                                                border: '1px solid rgba(255,255,0,0.5)', 
-                                                backgroundColor: '#111', 
-                                                color: '#FFFF00', 
-                                                fontSize: '0.68cqi' 
-                                            }}
-                                        >
-                                            <option value="all">{locale === 'en' ? '📅 All Dates' : '📅 所有日期'}</option>
-                                            {availableDates.map(dStr => (
-                                                <option key={dStr} value={dStr}>📅 {dStr}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.21cqi' }}>
-                                {(() => {
-                                    const rawName = eventsList.find(e => e.id === eventName)?.displayName || eventName || 'Event';
-                                    const dayMatch = rawName.match(/^(.*?)\s*(\(Day\s+\d+\))\s*(\(.*\))$/);
-                                    if (dayMatch) {
-                                        return <span style={{ fontSize: '1cqi', color: '#ccc' }}>{dayMatch[2].replace(/[()]/g, '')} - {dayMatch[3].replace(/[()]/g, '')}</span>;
-                                    }
-                                    return <span />;
-                                })()}
-                                <Button 
-                                    icon={<Diagram3 size="0.83cqi" />} 
-                                    onClick={() => setShowBracketModal(true)}
-                                    fontSize="0.81cqi"
-                                    style={{ padding: '0.31cqi 0.62cqi' }}
-                                >
-                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Bracket" zh="賽程表" />
+                            <div className="di-action-buttons">
+                                <Button angle={260} onClick={handleAddMatch} icon={<PlusCircle size="1.15cqi" />} fontSize="1.05cqi" style={{ flex: 1, whiteSpace: "nowrap", padding: "0.55cqi 0.35cqi" }}>
+                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Add Match" zh="新增比賽" />
+                                </Button>
+                                <Button angle={40} onClick={selectedMatchId ? handleLoadMatch : null} disabled={!selectedMatchId} icon={<Display size="1.15cqi" />} fontSize="1.05cqi" style={{ flex: 1, whiteSpace: "nowrap", padding: "0.55cqi 0.35cqi" }}>
+                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Load" zh="載入" />
+                                </Button>
+                                <Button angle={150} onClick={() => navigate('/home')} icon={<House size="1.15cqi" />} fontSize="1.05cqi" style={{ flex: 1, whiteSpace: "nowrap", padding: "0.55cqi 0.35cqi" }}>
+                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Home" zh="主頁" />
                                 </Button>
                             </div>
                         </div>
-                        <div className="matches-list">
-                            <ul>
-                                {filteredMatchIds.map(mId => {
-                                    const blue = currentMatches[mId].config.competitors.blue;
-                                    const red = currentMatches[mId].config.competitors.red;
-                                    const matchDate = currentMatches[mId].config.matchDate;
 
-                                    const getDisplayText = (competitor) => {
-                                        if (!competitor.name && !competitor.affiliatedClub && competitor.previousMatch) {
-                                            return `${competitor.previousMatch} Winner`;
-                                        }
-                                        if (competitor.affiliatedClub) {
-                                            return `${competitor.name} (${competitor.affiliatedClub})`;
-                                        }
-                                        return competitor.name || '';
-                                    };
-
-                                    const isSelected = selectedMatchId === mId;
-
-                                    return (
-                                        <li key={mId} className={`match-row${isSelected ? ' is-selected' : ''}`}>
-                                            <div
-                                                className={`match-row-main${isSelected ? ' selected' : ''}`}
-                                                onClick={() => setSelectedMatchId(isSelected ? null : mId)}
-                                            >
-                                                <div className="match-row-text">
-                                                    <strong style={{ color: '#fff', marginRight: '0.21cqi' }}>{mId}:</strong>
-                                                    <span style={{ color: '#3399ff' }}>{getDisplayText(blue)}</span>
-                                                    <span style={{ color: '#fff', margin: '0 0.5cqi', fontSize: '1cqi' }}>VS</span>
-                                                    <span style={{ color: '#ff3b30' }}>{getDisplayText(red)}</span>
-                                                </div>
-                                            </div>
-                                            <div className="match-row-delete">
-                                                <Button
-                                                    angle={350}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        promptDeleteMatch();
-                                                    }}
-                                                    icon={<Trash size="0.83cqi" />}
-                                                    style={{ whiteSpace: 'nowrap', padding: '0.35cqi 0.55cqi', fontSize: '0.72cqi', margin: 0, backgroundColor: '#ff3b30' }}
-                                                >
-                                                    <StableLocaleText as="span" locale={locale} visible={localeVisible} en="Delete" zh="刪除" />
-                                                </Button>
-                                            </div>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </div>
+                        <MatchesList
+                            locale={locale}
+                            localeVisible={localeVisible}
+                            eventDisplayName={eventDisplayName}
+                            availableDates={availableDates}
+                            selectedDateFilter={selectedDateFilter}
+                            onDateFilterChange={setSelectedDateFilter}
+                            onOpenBracket={() => setShowBracketModal(true)}
+                            filteredMatchIds={filteredMatchIds}
+                            currentMatches={currentMatches}
+                            selectedMatchId={selectedMatchId}
+                            onSelectMatch={setSelectedMatchId}
+                            onDeleteMatch={promptDeleteMatch}
+                        />
                     </div>
-                </div>
                 )}
             </div>
 
-            {/* --- Create Event Modal Overlay --- */}
             {showCreateEventModal && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-                    zIndex: 1000,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}>
-                    <div style={{
-                        backgroundColor: '#222',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '0.62cqi',
-                        padding: '1.3cqi',
-                        width: '90%',
-                        maxWidth: '23.4cqi',
-                        color: '#fff',
-                        boxShadow: '0 0.42cqi 1.66cqi rgba(0,0,0,0.5)'
-                    }}>
-                        <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.42cqi', color: '#FFFF00' }}>
-                            <FolderPlus size="1.25cqi" /> Create New Event
-                        </h3>
-                        <form onSubmit={handleCreateEvent} style={{ display: 'flex', flexDirection: 'column', gap: '0.78cqi' }}>
-                            <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.78cqi', borderRadius: '0.42cqi', display: 'flex', flexDirection: 'column', gap: '0.52cqi', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.52cqi' }}>
-                                    <FileEarmarkPdf size="1.25cqi" color="#FFFF00" />
-                                    <span style={{ color: '#fff', fontWeight: 'bold' }}>上傳 PDF 自動建立 (Optional)</span>
-                                </div>
-                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.68cqi' }}>上傳對陣表即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。</div>
-                                <input 
-                                    type="file" 
-                                    ref={fileInputRef} 
-                                    accept="application/pdf"
-                                    style={{ display: 'none' }}
-                                    onChange={handleFileSelect}
-                                />
-                                <Button 
-                                    type="button"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={isParsingPdf}
-                                    text={isParsingPdf ? 'Parsing...' : 'Select PDF'}
-                                    icon={<FileEarmarkArrowUp size="0.83cqi" />}
-                                    fontSize="0.77cqi"
-                                    angle={60}
-                                />
-                                {pdfParseResult && (
-                                    <div style={{ color: '#4CAF50', fontSize: '0.72cqi', marginTop: '0.26cqi' }}>
-                                        ✅ 成功解析：{pdfParseResult.matchCount} 場比賽
-                                        {pdfParseResult.datesList?.length > 1 && ` (包含 ${pdfParseResult.datesList.length} 個日期，將自動分拆為多個賽事)`}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="form-group">
-                                <label style={{ color: '#ccc' }}>Event ID (賽事識別碼)</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="例如: TKD2026 (不可重複)" 
-                                    value={newEventId}
-                                    onChange={e => setNewEventId(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label style={{ color: '#ccc' }}>Event Name (賽事全稱)</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="例如: 2026 全港跆拳道錦標賽" 
-                                    value={newEventName}
-                                    onChange={e => setNewEventName(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label style={{ color: '#ccc' }}>Setup Password (設定密碼)</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="例如: BCB2026" 
-                                    value={newSetupPassword}
-                                    onChange={e => setNewSetupPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.52cqi' }}>
-                                <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Point Gap (分差)</label>
-                                    <input type="number" value={newMaxPointGap} onChange={e => setNewMaxPointGap(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
-                                </div>
-                                <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Max Gam-jeom (犯規上限)</label>
-                                    <input type="number" value={newMaxGamjeom} onChange={e => setNewMaxGamjeom(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
-                                </div>
-                                <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Round Time (回合秒數)</label>
-                                    <input type="number" value={newRoundDuration} onChange={e => setNewRoundDuration(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
-                                </div>
-                                <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>Rest Time (休息秒數)</label>
-                                    <input type="number" value={newRestDuration} onChange={e => setNewRestDuration(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
-                                </div>
-                                <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label style={{ color: '#ccc', fontSize: '0.72cqi' }}>IVR Quota (留空=無限)</label>
-                                    <input type="number" min="1" placeholder="留空 = 無限" value={newIvrQuota} onChange={e => setNewIvrQuota(e.target.value)} style={{ width: '100%', padding: '0.42cqi', borderRadius: '0.21cqi', border: '1px solid #555', backgroundColor: '#333', color: '#fff' }} />
-                                </div>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.52cqi', marginTop: '0.52cqi' }}>
-                                <Button 
-                                    onClick={() => setShowCreateEventModal(false)}
-                                    text="Cancel (取消)"
-                                    fontSize="0.77cqi"
-                                    angle={0}
-                                    icon={<XCircle size="0.83cqi" />}
-                                />
-                                <Button 
-                                    type="submit"
-                                    text="Confirm (確認)"
-                                    fontSize="0.77cqi"
-                                    angle={60}
-                                    icon={<CheckCircle size="0.83cqi" />}
-                                />
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                <CreateEventModal
+                    fileInputRef={fileInputRef}
+                    isParsingPdf={isParsingPdf}
+                    pdfParseResult={pdfParseResult}
+                    newEventId={newEventId}
+                    setNewEventId={setNewEventId}
+                    newEventName={newEventName}
+                    setNewEventName={setNewEventName}
+                    newSetupPassword={newSetupPassword}
+                    setNewSetupPassword={setNewSetupPassword}
+                    newMaxPointGap={newMaxPointGap}
+                    setNewMaxPointGap={setNewMaxPointGap}
+                    newMaxGamjeom={newMaxGamjeom}
+                    setNewMaxGamjeom={setNewMaxGamjeom}
+                    newRoundDuration={newRoundDuration}
+                    setNewRoundDuration={setNewRoundDuration}
+                    newRestDuration={newRestDuration}
+                    setNewRestDuration={setNewRestDuration}
+                    newIvrQuota={newIvrQuota}
+                    setNewIvrQuota={setNewIvrQuota}
+                    onFileSelect={handleFileSelect}
+                    onSubmit={handleCreateEvent}
+                    onCancel={() => setShowCreateEventModal(false)}
+                />
             )}
         </div>
     );
