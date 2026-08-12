@@ -74,7 +74,6 @@ Publish：Firebase Console → Rules，或 `firebase deploy --only database`。
 
 ## 7. Removed cleanup UI
 
-Court Setup 維護掣已全部刪除（nested-strip／Clean Orphan Data）；production 已乾淨。  
-`src/services/orphanCleanup.js` 仍保留作程式庫／測試用，唔再掛 UI。
+Court Setup 維護掣同 orphanCleanup service／tests 已全部刪除（nested-strip／Clean Orphan Data／scan-delete helpers）；production 已乾淨。刪 Event 仍會清齊 flat trees（courts／matches／matchIndex／matchLive）。
 
 Runtime／註解已唔再將 nested RTDB path 叫 legacy；seat 亦改稱 bare string deviceId。

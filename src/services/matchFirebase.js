@@ -112,7 +112,7 @@ export async function removeMatchFlatArtifacts(database, eventId, matchId) {
   }
 }
 
-/** Remove top-level match trees for a whole event (orphan cleanup). */
+/** Remove top-level match trees for a whole event (event delete). */
 export async function removeMatchFlatArtifactsForEvent(database, eventId) {
   const tasks = [
     () => removeMatchLiveForEvent(database, eventId),
