@@ -7,7 +7,8 @@ import {
 
 /**
  * Center column: MATCH + mode/judge in a Screen-sized .game-timer + ROUND.
- * Yellow box height comes from a hidden .timer-font "0:00" (same as Screen).
+ * Yellow box matches Screen timer: same .game-timer.timer-font + hidden "0:00"
+ * sizer (Inter metrics; Mode/Judge overlay stays Controller Arial).
  */
 export default function ControllerCenterPanel({
   currentRound,
@@ -25,10 +26,10 @@ export default function ControllerCenterPanel({
           <div className="match-number">{matchNo}</div>
         </div>
         <div className="timer">
-          <div className="game-timer ctrl-center-seat-stack">
-            <div className="timer-font ctrl-timer-height-ref" aria-hidden="true">
+          <div className="game-timer timer-font ctrl-center-seat-stack">
+            <span className="ctrl-timer-height-ref" aria-hidden="true">
               0:00
-            </div>
+            </span>
             <div className="ctrl-center-seat-fore">
               <div className="ctrl-center-mode">
                 {formatControllerModeLabel(refereeMode)}
