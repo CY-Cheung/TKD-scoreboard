@@ -44,13 +44,12 @@ body:has(.controller) {
 	position: relative;
 }
 
-/* Top bar — Back + Live only (over names) */
+/* Top bar — Back + Live only (overlay; no Screen name strip) */
 .ctrl-top-bar {
 	position: absolute;
 	top: 0;
 	left: 0;
 	width: 100%;
-	height: calc(var(--screen-height) * 2 / 11);
 	box-sizing: border-box;
 	display: flex;
 	justify-content: space-between;
@@ -96,7 +95,7 @@ body:has(.controller) {
 /* Action toast */
 .ctrl-action-banner {
 	position: absolute;
-	top: calc(var(--screen-height) * 2 / 11 + 0.4cqi);
+	top: 3.2cqi;
 	left: 50%;
 	transform: translateX(-50%);
 	padding: 0.45cqi 1.1cqi;
@@ -119,11 +118,11 @@ body:has(.controller) {
 	border: 1px solid #6666ff;
 }
 
-/* Middle row = Screen widths, taller for touch (9/11) */
+/* Full-height 5-col row; widths only match Screen (no top name strip) */
 .ctrl-middle {
 	display: flex;
 	width: var(--screen-width);
-	height: calc(var(--screen-height) * 9 / 11);
+	height: var(--screen-height);
 }
 
 /* log = 19/150 — outer 1/4/6 columns */
@@ -237,6 +236,40 @@ body:has(.controller) {
 	font-weight: 600;
 	color: #c8c8c8;
 	margin-top: 0.25cqi;
+}
+
+.ctrl-center-names {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35cqi;
+	width: 100%;
+	max-width: 100%;
+	margin-bottom: 0.2cqi;
+	font-size: 1.5cqi;
+	font-weight: 700;
+	overflow: hidden;
+}
+
+.ctrl-center-name-red,
+.ctrl-center-name-blue {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 45%;
+}
+
+.ctrl-center-name-red {
+	color: #ff6666;
+}
+
+.ctrl-center-name-blue {
+	color: #6666ff;
+}
+
+.ctrl-center-name-sep {
+	color: #888888;
+	flex-shrink: 0;
 }
 
 @keyframes ctrlPopIn {

@@ -34,7 +34,6 @@ import {
 import { subscribeMatchView } from "../../services/matchFirebase";
 import ControllerScorePad from "./ControllerScorePad";
 import ControllerTopBar from "./ControllerTopBar";
-import ControllerNamesBar from "./ControllerNamesBar";
 import ControllerCenterPanel from "./ControllerCenterPanel";
 import {
     ControllerConnectingScreen,
@@ -405,13 +404,10 @@ function Controller() {
                     </div>
                 )}
 
-                <ControllerNamesBar
-                    redName={summary.redName}
-                    blueName={summary.blueName}
-                />
-
                 <ControllerScorePad onScore={handleScore}>
                     <ControllerCenterPanel
+                        redName={summary.redName}
+                        blueName={summary.blueName}
                         redScore={summary.redScore}
                         blueScore={summary.blueScore}
                         currentRound={summary.currentRound}

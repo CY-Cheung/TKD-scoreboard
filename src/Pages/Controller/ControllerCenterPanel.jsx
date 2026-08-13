@@ -2,10 +2,12 @@ import React from "react";
 import { formatRefereeModeBadge } from "./controllerMatchView";
 
 /**
- * Screen-like match-info middle: MATCH + number, then scores
- * (replaces timer + timeout). Display only.
+ * Center info column (Screen match-info width): MATCH + scores
+ * instead of timer/timeout. Names stay here (no Screen top-name strip).
  */
 export default function ControllerCenterPanel({
+  redName,
+  blueName,
   redScore = 0,
   blueScore = 0,
   currentRound,
@@ -30,6 +32,15 @@ export default function ControllerCenterPanel({
           </span>
         </div>
         <div className="ctrl-center-status">
+          <div className="ctrl-center-names">
+            <span className="ctrl-center-name-red" title={redName}>
+              {redName}
+            </span>
+            <span className="ctrl-center-name-sep">·</span>
+            <span className="ctrl-center-name-blue" title={blueName}>
+              {blueName}
+            </span>
+          </div>
           <div>
             R{currentRound} • {isPaused ? "PAUSED" : "LIVE"}
           </div>

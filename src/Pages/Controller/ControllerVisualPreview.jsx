@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import ControllerTopBar from "./ControllerTopBar";
-import ControllerNamesBar from "./ControllerNamesBar";
 import ControllerScorePad from "./ControllerScorePad";
 import ControllerCenterPanel from "./ControllerCenterPanel";
 import "./Controller.css";
@@ -35,10 +34,10 @@ export default function ControllerVisualPreview() {
           </div>
         )}
 
-        <ControllerNamesBar redName="Hong (Red)" blueName="Chung (Blue)" />
-
         <ControllerScorePad onScore={handleScore}>
           <ControllerCenterPanel
+            redName="Hong (Red)"
+            blueName="Chung (Blue)"
             redScore={12}
             blueScore={9}
             currentRound={2}
