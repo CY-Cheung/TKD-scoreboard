@@ -32,6 +32,13 @@ export default function ControllerCenterPanel({
               {formatControllerJudgeLabel(mySeat, isConnected)}
             </div>
           </div>
+          {/* Invisible twin of Screen .time-out — keeps .game-timer the same flex height */}
+          <div
+            className="time-out match-font ctrl-timeout-spacer"
+            aria-hidden="true"
+          >
+            Time out
+          </div>
         </div>
       </div>
 
