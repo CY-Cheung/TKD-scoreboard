@@ -20,19 +20,8 @@ onValue(offsetRef, (snap) => {
   globalServerTimeOffset = snap.val() || 0;
 });
 
-// Re-export pure scoring helpers for callers that already import from Api.
-export { getScoreValue } from './domain/scoreMath.js';
-export {
-    resetSideStatsForNextRound,
-    resolveMatchRules,
-    determineDominantSide,
-    getFinalWinnerSide,
-    isMatchFinal,
-} from './domain/matchRules.js';
-export {
-    VOTE_WINDOW_MS,
-    applyScoreAndCheckRules,
-} from './domain/scoreTransaction.js';
+// Vote window constant still imported by Screen vote UI via Api.
+export { VOTE_WINDOW_MS } from './domain/scoreTransaction.js';
 
 /**
  * Apply a score/vote transaction.
@@ -198,14 +187,6 @@ export const appendIvrQuotaToRules = (rules, ivrQuotaInput) => {
     }
     return rules;
 };
-
-export const buildIvrQuotaUpdate = (ivrQuotaInput) => {
-    const parsed = parseIvrQuotaInput(ivrQuotaInput);
-    return { ivrQuota: parsed !== null ? parsed : null };
-};
-
-export const isIvrWtMode = (eventSettings = {}, matchRules = {}) =>
-    isIvrUnlimited(eventSettings?.ivrQuota) && isIvrUnlimited(matchRules?.ivrQuota);
 
 export const resolveIvrQuotaCap = (eventSettings = {}, matchRules = {}) => {
     const matchQ = matchRules?.ivrQuota;

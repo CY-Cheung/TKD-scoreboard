@@ -32,16 +32,6 @@ export function matchIndexRoot(eventId) {
   return `matchIndex/${eventId}`;
 }
 
-export const MATCH_LIVE_KEYS = Object.freeze([
-  "state",
-  "stats",
-  "votes",
-  "recentScores",
-  "providedCourtId",
-  "providedDeviceId",
-  "updatedAt",
-]);
-
 /** Pull live fields from a match document (or live node). */
 export function extractMatchLivePayload(matchData, now = Date.now()) {
   // Always include updatedAt so matchLive/{event}/{match} materializes in Console

@@ -4,10 +4,9 @@
  * stay orchestrated in Controller.jsx.
  */
 
-import {
-  flatRefereeSeatPath,
-  refereeSeatPath,
-} from "../../services/courtPaths.js";
+import { refereeSeatPath } from "../../services/courtPaths.js";
+
+export { refereeSeatPath };
 
 export const REFEREE_SEAT_ORDER = Object.freeze(["J1", "J2", "J3"]);
 
@@ -28,11 +27,6 @@ export const SEAT_HEARTBEAT_INTERVAL_MS = 5_000;
 export const SEAT_STALE_MS = 20_000;
 
 export const ADMIN_SEAT = "Admin";
-
-export {
-  flatRefereeSeatPath,
-  refereeSeatPath,
-};
 
 export function isAdminSeat(seatName) {
   return seatName === ADMIN_SEAT;

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import useControllerShellSize from "./useControllerShellSize";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ref, onValue, set, onDisconnect, runTransaction } from "firebase/database";
 import { database } from "../../firebase";
@@ -7,6 +6,7 @@ import { updateScoreAndCheckRules } from "../../Api";
 import { useAuth } from "../../Context/AuthContext";
 import { useEventSession } from "../../Context/EventSessionContext";
 import { requestFullscreen } from "../../Utils/requestFullscreen";
+import useBrowserShellSize from "../../Utils/useBrowserShellSize";
 import { getDeviceName, resolveControllerParam } from "./controllerParams";
 import {
     ADMIN_SEAT,
@@ -69,7 +69,7 @@ function Controller() {
     // undefined = not seeded yet; null/string = last haptic'd recentScores key
     const lastRecentScoreHapticKeyRef = useRef(undefined);
     const shellRef = useRef(null);
-    useControllerShellSize(shellRef);
+    useBrowserShellSize(shellRef, { mode: "landscape" });
 
     // Sync state + EventSession when URL / QR deep-link params change
     useEffect(() => {
