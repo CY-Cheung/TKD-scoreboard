@@ -162,22 +162,26 @@
 }
 
 .ctrl-score-btn.red-btn:active {
-	background: var(--ctrl-red-deep) !important;
-	border-color: var(--ctrl-yellow) !important;
+	background:
+		linear-gradient(var(--ctrl-red-deep), var(--ctrl-red-deep)) padding-box,
+		linear-gradient(135deg, var(--ctrl-yellow), #aa8800) border-box !important;
 	color: var(--ctrl-yellow) !important;
 }
 
 .ctrl-score-btn.blue-btn {
-	background: var(--ctrl-blue) !important;
-	border: 2px solid #3333cc !important;
+	background:
+		linear-gradient(var(--ctrl-blue), var(--ctrl-blue)) padding-box,
+		linear-gradient(135deg, #3333cc, #000066) border-box !important;
+	border: 0.15cqi solid transparent !important;
 	color: #ffffff !important;
 	text-shadow: none;
 	box-shadow: none !important;
 }
 
 .ctrl-score-btn.blue-btn:active {
-	background: var(--ctrl-blue-deep) !important;
-	border-color: var(--ctrl-yellow) !important;
+	background:
+		linear-gradient(var(--ctrl-blue-deep), var(--ctrl-blue-deep)) padding-box,
+		linear-gradient(135deg, var(--ctrl-yellow), #aa8800) border-box !important;
 	color: var(--ctrl-yellow) !important;
 }
 
