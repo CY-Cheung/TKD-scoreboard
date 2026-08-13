@@ -247,13 +247,13 @@ body:has(.controller) {
 	font-weight: 900;
 }
 
-/* Mode + Judge stacked where Screen timer / former scores sat */
-.ctrl-center-seat-stack {
+/* Mode on top, Judge N below (override .game-timer default row) */
+.game-timer.ctrl-center-seat-stack {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 0.6cqi;
+	gap: 0.8cqi;
 	width: 100%;
 	color: var(--yellow-primary, #ffff00);
 	padding: 0.8cqi 0.5cqi;
@@ -261,20 +261,24 @@ body:has(.controller) {
 }
 
 .ctrl-center-mode {
+	order: 1;
 	font-size: 3.2cqi;
 	font-weight: 800;
 	letter-spacing: 0.12cqi;
 	text-transform: uppercase;
 	line-height: 1.05;
 	text-align: center;
+	width: 100%;
 }
 
 .ctrl-center-judge {
+	order: 2;
 	font-size: 4.2cqi;
 	font-weight: 900;
 	letter-spacing: 0.06cqi;
 	line-height: 1.05;
 	text-align: center;
+	width: 100%;
 	color: var(--yellow-primary, #ffff00);
 }
 
