@@ -3,9 +3,9 @@
 **Product:** Taekwondo Cloud Scoring System  
 **Architecture style:** Frontend-only SPA + Firebase BaaS（Backend as a Service）  
 **Document status:** Reverse-engineered from source  
-**Last reviewed against code:** 2026-08-12
+**Last reviewed against code:** 2026-08-13
 
-> **Codebase baseline:** flat RTDB schema（`eventIndex`／slim `events`／`courts`／`matches/…/config`／`matchIndex`／`matchLive`）。計分／席位細節以 `src/` 同 [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md) 為準。扁平化紀錄 → [`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。  
+> **Codebase baseline:** flat RTDB schema（`eventIndex`／slim `events`／`courts`／`matches/…/config`／`matchIndex`／`matchLive`）。計分／席位細節以 `src/` 同 [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md) 為準。扁平化歷史 → [`archive/FIREBASE_FLATTENING_PLAN.md`](./archive/FIREBASE_FLATTENING_PLAN.md)。  
 > **用語：** Technical Card 中文一律「技術卡」；文中 **TC** = Technical Card（技術卡）。雙語標籤用 `English（中文）`。
 
 > 標 **`[待確認]`** = 未能由程式完全證實。  
@@ -59,9 +59,12 @@ flowchart TB
 
   subgraph AppShell["React app shell"]
     AuthCtx["AuthContext Google"]
+    EventSess["EventSessionContext"]
     PopupCtx["PopupContext toasts"]
     Api["Api.js scoring + IVR/TC facade"]
-    Utils["Utils/pdfParser.js"]
+    Domain["domain/ pure helpers"]
+    Services["services/ RTDB I/O"]
+    Utils["Utils/pdfParser + browserShellSize"]
   end
 
   subgraph Firebase["Firebase project tkd-react-app"]
@@ -76,13 +79,19 @@ flowchart TB
 
   Landing --> AuthCtx
   Setup --> AuthCtx
+  Setup --> EventSess
   Home --> AuthCtx
+  Home --> EventSess
   Import --> Api
-  Import --> Utils
+  Import --> Services
   Screen --> Api
   Ctrl --> Api
+  Api --> Domain
+  Api --> Services
+  Services --> RTDB
   Api --> RTDB
-  Utils --> Import
+  Setup --> Utils
+  Setup --> Services
   AuthCtx --> FAuth
   Ctrl --> RTDB
   Screen --> RTDB
@@ -148,11 +157,11 @@ src/
 
 | Page | Reads session | Writes Firebase（典型） | Notes |
 |------|---------------|-------------------------|-------|
-| CourtSetup | Clears event session on mount | Create／delete events；courts map | Requires Google user |
+| CourtSetup | Clears event session on mount | Create／delete events；courts map；PDF | Requires Google user；**唯一**建 Event 入口 |
 | Home | event + court | Mostly navigation／QR | — |
-| DataImport | event + court | Match CRUD、Load `currentMatchId`、bracket | Large page |
-| Screen | event + court | Timer、listeners、announcements | Hosts Edit |
-| Controller | session **or** URL `event`/`court` | Seat grab、score transactions | QR params 可寫入／補齊 `AuthContext` session |
+| DataImport | event + court | Match CRUD、Load `currentMatchId`、bracket | **唔**建 Event／PDF |
+| Screen | event + court | Timer、listeners、announcements | Hosts Edit；shell `screen-2x1` |
+| Controller | session **or** URL `event`/`court` | Seat grab、score transactions | QR params 可寫入／補齊 `EventSessionContext`；shell `landscape` |
 
 ---
 
@@ -168,8 +177,18 @@ src/
 | `/import` | DataImport | `ProtectedRoute` |
 | `*` | → `/` | — |
 
-**Session keys**（`sessionStorage`）：`selectedEvent`、`selectedCourt`、`selectedEventName`。  
+**Session keys**（`sessionStorage`，經 `EventSessionContext`）：`selectedEvent`、`selectedCourt`、`selectedEventName`。  
 無 event/court session → `/`（Landing）；已登入用戶會由 Landing 自動轉去 `/court-setup`。
+
+### 5.1 Browser shell sizing
+
+| Page | Hook mode | Behaviour |
+|------|-----------|-----------|
+| Screen | `"screen-2x1"` | 喺 browser **content box**（`innerWidth`／`innerHeight`）內 fit 2:1 |
+| Controller | `"landscape"` | 跟裝置 landscape 比例；cache landscape aspect，避免 portrait URL-bar 扭曲 |
+| App root | `useBrowserViewportCssVars` | 設 `:root --browser-width/height` |
+
+**唔用** `dvw`／`dvh` 做 max／min ratio shell。Helpers：`src/Utils/browserShellSize.js`、`useBrowserShellSize.js`。
 
 ---
 
@@ -189,7 +208,7 @@ events/{eventId}/                     ← meta + settings only
 └── settings/
     ├── setupPassword
     ├── maxPointGap, maxGamjeom, roundDuration, restDuration
-    └── ivrQuota?                     ← empty ⇒ WT unlimited
+    └── ivrQuota?                     ← empty ⇒ IVR_UNLIMITED (-1)
 
 courts/{eventId}/{courtId}/
 ├── name, currentMatchId
@@ -288,3 +307,4 @@ flowchart LR
 | Date | Change |
 |------|--------|
 | 2026-08-10 | Initial system design from repository reverse engineering |
+| 2026-08-13 | EventSession；browser shell；Create Event 只 CourtSetup；archive flatten plan |

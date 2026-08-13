@@ -1,6 +1,6 @@
 /**
  * Match path helpers — flat RTDB layout.
- * @see docs/FIREBASE_FLATTENING_PLAN.md
+ * @see docs/FIREBASE_MULTI_DEVICE_DESIGN.md
  */
 
 /** Live-only tree: matchLive/{eventId}/{matchId} */

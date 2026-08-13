@@ -1,6 +1,6 @@
 /**
  * eventIndex helpers — Stage 1 RTDB flattening (list metadata only).
- * @see docs/FIREBASE_FLATTENING_PLAN.md
+ * @see docs/FIREBASE_MULTI_DEVICE_DESIGN.md
  */
 
 export function resolveEventDisplayName(eventLike, fallbackId = "") {

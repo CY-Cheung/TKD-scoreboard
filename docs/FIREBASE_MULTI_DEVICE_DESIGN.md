@@ -1,9 +1,9 @@
 # TKD-scoreboard 多裝置實時互動設計文件
 (TKD-scoreboard Multi-device Real-time Interaction Design Document)
 
-> **文件狀態**：反映 **2026-08-12** 源碼現況（flat RTDB：`courts`／`matches/…/config`／`matchLive`）。  
+> **文件狀態**：反映 **2026-08-13** 源碼現況（flat RTDB：`courts`／`matches/…/config`／`matchLive`）。  
 > 標有 **〔計劃中〕** 嘅功能尚未實作。  
-> Schema 細節 §3；扁平化紀錄 → [`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。  
+> Schema 細節 §3；扁平化歷史紀錄 → [`archive/FIREBASE_FLATTENING_PLAN.md`](./archive/FIREBASE_FLATTENING_PLAN.md)。  
 > **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
 
 ---
@@ -28,6 +28,7 @@
 - **Court-level Match Binding（場地綁定比賽）**：`courts/{eventId}/{courtId}/currentMatchId` 驅動 Screen／Controller  
 - **One match → one court（約束）**：`matchLive/{event}/{matchId}` 係 **每場一份**（唔按 Court）。同一 `matchId` 唔應同時出現喺兩個 Court 嘅 `currentMatchId`；否則兩場大螢幕／邊裁會共用分數同計時。Load Match（`loadMatchToCourt`）若偵測到其他 Court 已綁定會拒絕。同一 Court 重複 Load 同一場則允許。
 - **Technical Card Announcement Sync（技術卡公告同步）**：`state.techCardAnnouncement` 廣播 Step 2 glass card 到同一 Match 嘅所有 Screen；3 秒後 `finalizeTechCardAnnouncement` 原子清除（Reject 延遲 Gam-jeom +1）
+- **IVR Announcement Sync（錄影重播挑戰同步）**：`state.ivrAnnouncement` + `stats.{side}.ivrRemaining`；空配額 = `IVR_UNLIMITED = -1`（Accept 保留無限；Reject → 0）
 
 **〔計劃中，未實作〕**：
 
@@ -39,25 +40,34 @@
 ## 2. 應用路由同 Session (工作階段)
 
 ```
-/court-setup     → 需已 Google 登入（否則導回 Landing）；建立／選擇 Event、選 Court
-/                → Home 導航（需 session）
+/                → Landing（產品介紹、Google 登入）
+/court-setup     → 需已 Google 登入（否則導回 Landing）；建立／選擇 Event、選 Court、PDF 建賽
+/home            → Home 導航（需 event+court session）
 /screen          → 大螢幕計分（需 session）
 /controller      → 裁判遙控（需 session 或 URL query）
-/import          → 管理後台（需 session）
+/import          → Manage Match（需 session；Match CRUD／Load／Bracket；**唔**建立 Event）
 ```
 
-**Session** 存於 `sessionStorage`：`selectedEvent`、`selectedCourt`、`selectedEventName`。  
-由 `AuthContext.login()` 寫入；`ProtectedRoute` 檢查 session、storage 或 `?event=&court=` query。
+**兩層身份（唔好混用）**：
+
+| Context | 職責 | 儲存 |
+|---------|------|------|
+| `AuthContext` | **只** Google Auth（sign-in／sign-out／`user`） | Firebase Auth + `AUTH_SESSION_KEY` workaround |
+| `EventSessionContext` | Event／Court 工作階段 | `sessionStorage`：`selectedEvent`、`selectedCourt`、`selectedEventName` |
+
+`ProtectedRoute` 檢查 event+court session、或 `?event=&court=` query。  
+**無 session → 導向 `/`（Landing）**（唔係 `/court-setup`）。已 Google 登入用戶喺 Landing 會自動轉去 `/court-setup`。
 
 **Authentication (認證)**：
 
-- **Google OAuth**：建立／刪除 Event、Admin 操作
+- **Google OAuth**：建立／刪除 Event、Admin 操作（Landing CTA）
 - **Setup Password**：非 Event 建立者進入 Court 時需輸入
 - **未登入裁判**：可經 QR Code 進入 Controller，靠 `deviceId` 席位寫入 match
+- **Create Event／PDF 匯入**：只喺 **CourtSetup**；DataImport 只做 Match CRUD／Load／Bracket／match `ivrQuota`
 
 ---
 
-> **扁平化：** 已完成 — 見 [`docs/FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)；  
+> **扁平化：** 已完成 — 歷史紀錄見 [`docs/archive/FIREBASE_FLATTENING_PLAN.md`](./archive/FIREBASE_FLATTENING_PLAN.md)；  
 > production rules：`database.rules.json`（flat courts／matches／matchLive）。
 
 ## 3. 資料庫 Schema (現行結構)
@@ -152,6 +162,21 @@ Step 2 glass card 同步用；由主裁 Screen 寫入，所有訂閱同一 Match
 
 清除：`finalizeTechCardAnnouncement` 以 `runTransaction` 刪除節點；若 `decision === "reject"` 再呼叫 `updateScoreAndCheckRules(..., 'gamjeom', null, 1)`。多 Screen 同時 finalize 時只有首個 transaction 成功，避免重複加分。
 
+### 3.4 IVR 配額欄位
+
+| 路徑 | 說明 |
+|------|------|
+| `events/.../settings.ivrQuota` | 賽事預設；**留空／缺省** → 無限（`IVR_UNLIMITED = -1`） |
+| `matches/.../config/rules.ivrQuota` | Match override；留空 → 繼承 Event |
+| `matchLive/.../stats.{side}.ivrRemaining` | 即時剩餘；`-1` = 無限 |
+
+**規則摘要**（詳見 [`TODO_WT2026.md`](../TODO_WT2026.md)）：
+
+| 模式 | Accept | Reject |
+|------|--------|--------|
+| 無限（`-1`／留空） | 保持 `-1` | → `0` |
+| 已設定 `N ≥ 1` | `N → N−1` | → `0` |
+
 ---
 
 ## 4. 端到端運作流程 (End-to-End Flow)
@@ -159,8 +184,8 @@ Step 2 glass card 同步用；由主裁 Screen 寫入，所有訂閱同一 Match
 ### Phase A — 賽事建立
 
 1. 管理員喺 Landing Google 登入 → 自動去 `/court-setup`
-2. 建立 Event（可上傳 **HKTKDA PDF**，`pdfParser.js` 解析；多日自動拆子 Event）
-3. 揀 Event + Court → 寫入 session → 進 Home
+2. 建立 Event（可上傳 **HKTKDA PDF**，`pdfParser.js` 解析；多日自動拆子 Event）— **只喺 CourtSetup**
+3. 揀 Event + Court → `EventSessionContext` 寫入 session → 進 Home
 
 ### Phase B — 載入比賽
 
@@ -185,6 +210,7 @@ Step 2 glass card 同步用；由主裁 Screen 寫入，所有訂閱同一 Match
 Controller.handleScore()
   → Api.updateScoreAndCheckRules(event, matchId, side, "pointsStat", index, 1, courtId, deviceId, seat, mode)
   → runTransaction(matchLive/{event}/{match})
+  → returns Promise<{ committed, scored }>
   → Screen onValue(flat config + matchLive) 更新 UI + vote log
 ```
 
@@ -205,7 +231,18 @@ Edit.jsx（主裁）Accept/Reject
 
 * **Step 1**（確認 popup）只喺操作 Screen 嘅 Edit 底欄顯示，**唔寫** Firebase。
 * **Step 2**（glass card）必須喺 Screen 層 `createPortal(document.body)`，確保觀眾可見。
-* 詳細 UI spec → [`TODO_WT2026.md`](../TODO_WT2026.md#technical-card已實作)
+* 詳細 UI spec → [`TODO_WT2026.md`](../TODO_WT2026.md#technical-card技術卡)
+
+### Phase D.2 — IVR 公告同步
+
+```
+Edit.jsx Accept/Reject
+  → Api.startIvrAnnouncement → state.ivrAnnouncement
+  → 所有 Screen 顯示 IVRAnnouncement（3 秒）
+  → finalizeIvrAnnouncement → transaction 清公告 + projectIvrRemaining
+```
+
+詳細 → [`TODO_WT2026.md`](../TODO_WT2026.md#ivr-ui-flow-spec)
 
 ### Phase E — 回合／晉級
 
@@ -219,15 +256,19 @@ Edit.jsx（主裁）Accept/Reject
 
 | 檔案 | 職責 |
 |------|------|
-| `src/Api.js` | 計分 Transaction、回合、晉級；`VOTE_WINDOW_MS`；Technical Card 公告 API |
-| `src/Pages/CourtSetup/CourtSetup.jsx` | Event/Court 建立、session 登入 |
-| `src/Pages/DataImport/DataImport.jsx` | Match CRUD、Load to Court、Bracket |
-| `src/Pages/Screen/Screen.jsx` | 大螢幕、計時、dominance、vote log |
-| `src/Pages/Screen/Edit.jsx` | 主裁面板：手動改分、判勝、Kye-shi、Technical Card Step 1 |
-| `src/Pages/Controller/Controller.jsx` | 搶位、遙控得分 |
-| `src/Components/QRCodeDisplay/` | QR、裁判狀態、single/multiple 切換（`QRCodeDisplay.jsx` + Status／Mode panels） |
-| `src/Components/TechnicalCardFlow/` | Technical Card Step 1 確認 + Step 2 公告 glass card |
-| `src/Context/AuthContext.jsx` | Google Auth |
+| `src/Api.js` | 計分 Transaction、回合、晉級；`VOTE_WINDOW_MS`；Technical Card／IVR 公告 API |
+| `src/domain/` | 純計分／規則 helpers（無 Firebase I/O） |
+| `src/services/` | RTDB path helpers + court／match I/O |
+| `src/Pages/CourtSetup/CourtSetup.jsx` | Event/Court 建立、PDF、寫入 event session |
+| `src/Pages/DataImport/DataImport.jsx` | Match CRUD、Load to Court、Bracket、match `ivrQuota` |
+| `src/Pages/Screen/Screen.jsx` | 大螢幕、計時、dominance、vote log；`useBrowserShellSize("screen-2x1")` |
+| `src/Pages/Screen/Edit.jsx` | 主裁面板：手動改分、判勝、Kye-shi、Technical Card／IVR Step 1 |
+| `src/Pages/Controller/Controller.jsx` | 搶位、遙控得分；無 top bar；`useBrowserShellSize("landscape")` |
+| `src/Utils/browserShellSize.js` | Browser **content-box**（`innerWidth`／`innerHeight`）shell fit；唔用 `dvw`／`dvh` |
+| `src/Components/QRCodeDisplay/` | QR、裁判狀態、single/multiple 切換 |
+| `src/Components/TechnicalCardFlow/` | Technical Card Step 1 確認 + Step 2 公告 |
+| `src/Components/IVRFlow/` | IVR Step 1 確認 + Step 2 公告 |
+| `src/Context/AuthContext.jsx` | Google Auth only |
 | `src/Context/EventSessionContext.jsx` | Event／Court session（sessionStorage） |
 | `database.rules.json` | Firebase Security Rules |
 
@@ -241,6 +282,7 @@ Edit.jsx（主裁）Accept/Reject
 4. 監聽自己席位；若 `deviceId` 被取代則踢出
 5. **Google 登入 Admin**：顯示 `Admin` 標籤，**不佔** Firebase 席位；計分靠 `auth != null` rules 路徑
 6. React StrictMode：400ms delay 避免 double-mount 搶位競態
+7. **UI shell**：無 competitor name strip／無 Back top bar；score pad 填滿；Mode／Judge 黃盒；viewport 跟裝置 **landscape browser aspect**（由 content box 量度，cache landscape 比例避免 portrait URL-bar 扭曲）
 
 **滿額**：三席皆佔 → 顯示 "Court is Full"。
 
@@ -268,6 +310,7 @@ Screen `Edit` 面板不傳 deviceId，依賴 Admin 已登入 Google。
 - **主計分畫面**：**無**常駐 Referee Badge（〔計劃中〕可加）
 - **斷線 Toast**：裁判離線時 Screen 彈出警告
 - **Auto-downgrade**：連線裁判 < 2 時自動切回 `single` mode
+- **Shell**：`useBrowserShellSize("screen-2x1")` — 喺 browser content box 內 fit **2:1**
 
 ---
 
@@ -282,7 +325,8 @@ Screen `Edit` 面板不傳 deviceId，依賴 Admin 已登入 Google。
 | 計時暫停 | Controller 禁畀分 |
 | REST 階段 | `Api.js` 拒絕改分 |
 | Multiple + 只有 1 裁判 | QR 面板 disable multiple；若已開會被 Screen 自動降級 |
-| Technical Card flow 進行中 | Firebase 有 `techCardAnnouncement` 時禁止重複觸發；finalize 用 transaction 防雙重加分 |
+| Technical Card／IVR flow 進行中 | Firebase 有公告時禁止重複觸發；finalize 用 transaction 防雙重副作用 |
+| IVR 無限配額 Reject | `ivrRemaining` 由 `-1` → `0` |
 
 ---
 
@@ -293,7 +337,8 @@ Screen `Edit` 面板不傳 deviceId，依賴 Admin 已登入 Google。
 1. **`localStorage` (`tkd_judge_session`)** — refresh 後恢復席位
 2. **`hostStatus: online/offline`** — Screen heartbeat + Controller 警示
 3. **大螢幕常駐 Referee Badge**
-4. **IVR (Instant Video Replay)** — 見 [`TODO_WT2026.md`](../TODO_WT2026.md)
+
+（IVR／Technical Card **已實作** — 見 `TODO_WT2026.md`。）
 
 ---
 
@@ -302,10 +347,11 @@ Screen `Edit` 面板不傳 deviceId，依賴 Admin 已登入 Google。
 ```javascript
 // src/Api.js
 export const VOTE_WINDOW_MS = 1000;  // Multiple Mode 有效得分投票窗口
+export const IVR_UNLIMITED = -1;     // 空配額／無限
 ```
 
 ---
 
 *文件建立：2026-07-30*  
-*最後更新：2026-08-11（Technical Card／技術卡 用語統一；Firebase 同步、schema §3.3）*  
+*最後更新：2026-08-13（對齊 Auth vs EventSession、ProtectedRoute→Landing、IVR 已實作／unlimited `-1`、Controller landscape shell、Create Event 只喺 CourtSetup）*  
 *專案：TKD-scoreboard*

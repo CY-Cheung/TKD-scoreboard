@@ -1,6 +1,6 @@
 /**
  * Court path helpers — flat RTDB courts tree.
- * @see docs/FIREBASE_FLATTENING_PLAN.md
+ * @see docs/FIREBASE_MULTI_DEVICE_DESIGN.md
  */
 
 /** Top-level court tree: courts/{eventId}/{courtId}/… */

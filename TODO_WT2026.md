@@ -143,18 +143,20 @@ Quota 存於 `stats.{red|blue}.ivrRemaining`；上限由 **Event 預設 + Match 
 
 | 層級 | 欄位 | 說明 |
 |------|------|------|
-| Event | `settings.ivrQuota` | 賽事預設；**留空** = 用 WT 模式 |
-| Match | `config.rules.ivrQuota` | 可 override Event；**留空** = 繼承 Event（若 Event 都留空 → WT 模式） |
+| Event | `settings.ivrQuota` | 賽事預設；**留空** = 無限（`IVR_UNLIMITED = -1`） |
+| Match | `config.rules.ivrQuota` | 可 override Event；**留空** = 繼承 Event（若 Event 都留空 → 無限） |
 
-**「留空」** = 欄位唔填（`null` / undefined），**唔係** `0`。
+**「留空」** = 欄位唔填（`null` / undefined），**唔係** `0`。儲存／執行時用 `IVR_UNLIMITED = -1` 表示無限。
 
-#### 模式 A — WT 模式（Event 同 Match 都留空）
+#### 模式 A — 無限（Event 同 Match 都留空 → `-1`）
 
 | 項目 | 規則 |
 |------|------|
-| 起始 quota | **1** / side / contest |
-| **Accept**（appeal 成功） | **唔扣** — 保留 appeal 權（對應 WT §6） |
-| **Reject**（不成功） | **扣 1**（例如 1 → 0） |
+| 起始 quota | **無限**（`ivrRemaining = -1`） |
+| **Accept**（appeal 成功） | **保持無限**（`-1`） |
+| **Reject**（不成功） | **歸零**（`-1` → `0`） |
+
+> 舊文件曾寫「WT 模式起始 1、Reject 扣 1」；**現行程式**係無限 `-1`。若要嚴格 WT「每場 1 次」，請喺 Event／Match 明確設 `ivrQuota = 1`。
 
 #### 模式 B — 已設定 `ivrQuota = N`（N ≥ 1，Event 或 Match 任一層有值）
 
@@ -165,7 +167,7 @@ Quota 存於 `stats.{red|blue}.ivrRemaining`；上限由 **Event 預設 + Match 
 | **Reject** | **直接歸零**（剩餘 quota 全部失效 → **0**） |
 
 **例子（N = 2）**：Accept → 1；Reject → 0。  
-**例子（N = 1，有設定）**：Accept → 0；Reject → 0。（與 WT 模式不同：WT 模式 Accept 會保留 1。）
+**例子（N = 1）**：Accept → 0；Reject → 0。
 
 #### Quota = 0 時
 
@@ -245,11 +247,11 @@ Step 1：確認 popup（Edit 底欄內，同 avoiding / Technical Card）
 | `{SideWord}` | `"Blue"` \| `"Red"` |
 | `{Remaining}` | finalize 後預期剩餘 quota（同 transaction 邏輯） |
 
-**`{Remaining}` 計算**（`current` = `stats.{side}.ivrRemaining`）：
+**`{Remaining}` 計算**（`current` = `stats.{side}.ivrRemaining`；`projectIvrRemaining`）：
 
 | 模式 | Accept | Reject |
 |------|--------|--------|
-| **WT**（Event + Match 都留空） | `current`（唔扣） | `max(0, current − 1)` |
+| **無限**（`-1`／留空） | `-1`（保持無限） | `0` |
 | **Configured N** | `max(0, current − 1)` | `0` |
 
 ##### Accept — 2 或 3 行
@@ -277,9 +279,9 @@ Step 1：確認 popup（Edit 底欄內，同 avoiding / Technical Card）
 
 | 場景 | 右半顯示 |
 |------|----------|
-| Blue Accept（WT，quota 仍 1） | `Request Accepted` → ○ → `Return card to` **Blue** `Coach` |
+| Blue Accept（無限，仍 `-1`） | `Request Accepted` → ○ → `Return card to` **Blue** `Coach` |
 | Red Accept（N=1→0） | `Request Accepted` → ○（**無** Return card 行） |
-| Blue Reject（WT，1→0） | `Request Rejected` → ✕ |
+| Blue Reject（無限 → 0） | `Request Rejected` → ✕ |
 | Red Reject（N=2→0） | `Request Rejected` → ✕ |
 
 #### Step 1 ↔ Step 2 用語對照
@@ -295,7 +297,7 @@ Step 1：確認 popup（Edit 底欄內，同 avoiding / Technical Card）
 #### 實作備註
 
 * `IVRAnnouncement.jsx` props：`visible`, `side`, `decision`, `startedAt`, `ivrRemaining`, `ivrWtMode`, `onComplete`。
-* `projectIvrRemaining(current, decision, wtMode)` 同 finalize transaction 共用；Accept Row 3 用 `{Remaining} > 0` 判斷。
+* `projectIvrRemaining(current, decision)` 同 finalize transaction 共用；Accept Row 3 用「仍有剩餘／無限」判斷（`isIvrUnlimited` 或 `> 0`）。
 * **唔改分數**；quota 更新只喺 `finalizeIvrAnnouncement` transaction 內進行。
 
 ---
@@ -311,7 +313,7 @@ matchLive/{eventId}/{matchId}/stats/
   blue.ivrRemaining: number
 
 events/{eventId}/settings/
-  ivrQuota: number | null     ← 留空 = WT 模式
+  ivrQuota: number | null     ← 留空 = 無限 (-1)
 
 matches/{eventId}/{matchId}/config/rules/
   ivrQuota: number | null     ← 留空 = 繼承 Event
@@ -323,10 +325,9 @@ matches/{eventId}/{matchId}/config/rules/
 
 | 位置 | 欄位 | 說明 |
 |------|------|------|
-| `CourtSetup.jsx` | Event `settings.ivrQuota`（建立 + **編輯**） | 建立 modal 可設；選中賽事後建立者可 Save |
-| `DataImport.jsx` | Match `config.rules.ivrQuota`（Rules 區） | 全局 quota；留空 = WT |
-| `DataImport.jsx` | Event `settings.ivrQuota`（**僅**建立賽事 modal） | 同 CourtSetup |
-| `Api.js` | lazy init `ivrRemaining` | 首次 IVR 或顯示時按 Event/Match 規則推算 |
+| `CourtSetup.jsx` | Event `settings.ivrQuota`（建立 + **編輯**） | 建立 modal 可設；選中賽事後建立者可 Save；**唯一**建 Event／PDF 入口 |
+| `DataImport.jsx` | Match `config.rules.ivrQuota`（Rules 區） | match override；留空 = 繼承 Event／無限 |
+| `Api.js` | lazy init `ivrRemaining` | 首次 IVR 或顯示時按 Event/Match 規則推算（`IVR_UNLIMITED`） |
 
 ---
 
@@ -338,14 +339,14 @@ matches/{eventId}/{matchId}/config/rules/
 | `src/Components/IVRFlow/IVRAnnouncement.jsx` | Step 2（3 秒 glass card） |
 | `src/Pages/Screen/Edit.jsx` | IVR 按鈕、Step 1、`onIvrConfirm` |
 | `src/Pages/Screen/Screen.jsx` | 訂閱 `ivrAnnouncement`、bottom icon 顯示、掛載 Step 2 |
-| `src/Api.js` | `resolveIvrQuota`、`resolveIvrRemaining`、`startIvrAnnouncement`、`finalizeIvrAnnouncement` |
+| `src/Api.js` | `resolveIvrQuotaCap`、`getEffectiveIvrRemaining`、`projectIvrRemaining`、`startIvrAnnouncement`、`finalizeIvrAnnouncement` |
 
 ---
 
 ### 驗收清單 (Acceptance Checklist)
 
 - [x] Blue / Red IVR 按鈕可開啟 Step 1（Edit 底欄；quota > 0；同 Technical Card 三按鈕）
-- [x] **WT 模式**（留空）：Accept 不扣 quota；Reject 扣 1
+- [x] **無限模式**（留空／`-1`）：Accept 保持無限；Reject → 0
 - [x] **設定 N=2**：Accept → 1；Reject → 0
 - [x] **設定 N=1**：Accept → 0；Reject → 0
 - [x] Quota = 0：按鈕 disabled + 大螢幕 icon hide/dim
@@ -366,4 +367,5 @@ matches/{eventId}/{matchId}/config/rules/
 
 *備忘錄建立：2026-08-08*  
 *Technical Card（技術卡）完成：2026-08-10（Firebase 多 Screen 同步、3 秒、Reject 四行 layout）；用語於 2026-08-11 統一為「技術卡」*  
-*IVR Spec 更新：2026-08-10（Video Replay 標題、Accept 2–3 行 conditional Return card、Reject 2 行）*
+*IVR Spec 更新：2026-08-10（Video Replay 標題、Accept 2–3 行 conditional Return card、Reject 2 行）*  
+*IVR Spec 對齊程式：2026-08-13（留空 = `IVR_UNLIMITED = -1`；Accept 保持無限；Reject → 0；Create Event 只喺 CourtSetup）*

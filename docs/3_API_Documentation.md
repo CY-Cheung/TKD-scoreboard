@@ -2,9 +2,9 @@
 
 **Product:** Taekwondo Cloud Scoring System  
 **Document status:** Reverse-engineered from source  
-**Last reviewed against code:** 2026-08-12
+**Last reviewed against code:** 2026-08-13
 
-> **Codebase baseline:** flat RTDB；`src/Api.js` + `src/domain/` + `src/services/`；`npm test`（Vitest）。Canonical paths → §3；多裝置 → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
+> **Codebase baseline:** flat RTDB；`src/Api.js` + `src/domain/` + `src/services/`；`npm test` ≈ **263**。Canonical paths → §3；多裝置 → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 > **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
 
 ---
@@ -64,7 +64,9 @@ https://cy-cheung.github.io/TKD-scoreboard/controller?event=<eventId>&court=cour
 ## 2. Application facade — `src/Api.js`
 
 呢啲係 **JavaScript function API**（畀 React 頁面呼叫），唔係 HTTP。  
-除非另有說明，成功路徑多數 **無 return value**（fire-and-forget `runTransaction`／`update`）；錯誤見 `.catch`／`throw`。
+多數 Firebase write 回傳 Promise；部分 round helpers 仍係 fire-and-forget。錯誤見 `.catch`／`throw`。
+
+**Services layer：** path helpers 同 court／match I/O 喺 `src/services/`（例：`courtPaths`、`loadMatchToCourt`、`persistCreatedEvents`）；`Api.js` 係計分／回合／TC／IVR facade。
 
 ### 2.1 Scoring & rounds
 
@@ -75,8 +77,7 @@ https://cy-cheung.github.io/TKD-scoreboard/controller?event=<eventId>&court=cour
 | **Kind** | Firebase `runTransaction` on `matchLive/{eventName}/{matchId}` |
 | **Parameters** | `eventName`, `matchId`, `side` (`red`\|`blue`), `type` (`pointsStat`\|`gamjeom`\|`gamjeomAvoiding`), `index` (pointsStat 0–4 或 gamjeom 時可 `null`), `delta` (number), `courtId?`, `deviceId?`, `seatName?`, `mode` (`single`\|`multiple`, default `single`) |
 | **Side effects** | 更新 `stats`、可能更新 `votes`／`recentScores`、`state.winReason`／`dominantSide`／timer pause（PUN／PTG）；REST phase 時 abort |
-| **Return** | `undefined`（promise 未暴露畀 caller；內部 `.catch` log） |
-| **Errors** | Console `"Transaction failed:"` |
+| **Return** | `Promise<{ committed: boolean, scored: boolean }>`（transaction fail → `{ committed: false, scored: false }`；console `"Transaction failed:"`） |
 
 #### `declareRoundWinner`
 
@@ -264,7 +265,7 @@ Firebase 拒絕非法寫入時，SDK Promise **reject**（permission denied）�
 
 | Channel | Purpose |
 |---------|---------|
-| `sessionStorage` | `selectedEvent`, `selectedCourt`, `selectedEventName`, Google auth workaround key |
+| `sessionStorage` | Event session（`EventSessionContext`：`selectedEvent`／`selectedCourt`／`selectedEventName`）；Google auth workaround key（`AuthContext`） |
 | QR payload | URL string to `/controller?event=&court=` |
 | Keyboard shortcuts on Screen | `Space`／`E`／`Q`／`K`／`\` — 本地 UI，非網絡 API |
 
@@ -285,3 +286,4 @@ Firebase 拒絕非法寫入時，SDK Promise **reject**（permission denied）�
 | Date | Change |
 |------|--------|
 | 2026-08-10 | Initial API doc: SPA routes + Api.js + RTDB paths; no REST invented |
+| 2026-08-13 | `updateScoreAndCheckRules` → `{ committed, scored }`；services layer；EventSession |

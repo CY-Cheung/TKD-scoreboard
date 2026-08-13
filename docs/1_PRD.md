@@ -4,9 +4,9 @@
 **Scope:** Kyorugi（搏擊）現場雲端計分  
 **Repo:** `CY-Cheung/TKD-scoreboard`  
 **Document status:** Reverse-engineered from source（`README.md`、`src/`、`database.rules.json`）  
-**Last reviewed against code:** 2026-08-12
+**Last reviewed against code:** 2026-08-13
 
-> **Codebase baseline:** flat RTDB（`courts`／`matches/…/config`／`matchLive`／`matchIndex`／`eventIndex`）；計分有 `src/domain/` + `src/services/`；`npm test`（Vitest）已接入。Schema 細節 → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)；扁平化 → [`FIREBASE_FLATTENING_PLAN.md`](./FIREBASE_FLATTENING_PLAN.md)。  
+> **Codebase baseline:** flat RTDB（`courts`／`matches/…/config`／`matchLive`／`matchIndex`／`eventIndex`）；計分有 `src/domain/` + `src/services/`；`npm test` ≈ **263**；`npm run test:rules` ≈ **11**。Schema 細節 → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)；扁平化歷史 → [`archive/FIREBASE_FLATTENING_PLAN.md`](./archive/FIREBASE_FLATTENING_PLAN.md)。  
 > **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
 
 > 凡標 **`[待確認]`** 者：程式碼或文件未能完全證實，請勿當已上線功能。
@@ -67,7 +67,7 @@
 | ID | As a… | I want to… | So that… |
 |----|-------|------------|----------|
 | US-10 | Admin | 手動新增／編輯 Match（選手、規則、IVR quota） | 靈活管理對陣 |
-| US-11 | Admin | 匯入 HKTKDA 格式 PDF 對陣表 | 大量場次一次建立 |
+| US-11 | Admin | 喺 Court Setup 匯入 HKTKDA 格式 PDF 對陣表 | 大量場次一次建立 |
 | US-12 | Admin | 多日 PDF 自動拆成子 Event | 每日比賽資料分開 |
 | US-13 | Admin | Load Match 到某個 Court 嘅 `currentMatchId` | Screen／Controller 跟住該場；若該 Match 已綁其他 Court → 拒絕（見 Multi-Court 約束） |
 | US-14 | Admin | 喺 Tournament Bracket 睇晉級樹並 Promote Winner | 勝者寫入下一場 |
@@ -117,11 +117,11 @@
 
 | Area | Feature | Primary UI | Domain／API touchpoints |
 |------|---------|------------|-------------------------|
-| Auth | Google sign-in／sign-out | Landing, CourtSetup, Home | `AuthContext` |
-| Session | Event + Court `sessionStorage` | CourtSetup → Protected routes | `AuthContext`（`login`／`logout`／`session`） |
-| Event | Create／list／delete Event | CourtSetup, DataImport | 頁面內邏輯 + Firebase `set`／`update` |
+| Auth | Google sign-in／sign-out | Landing, CourtSetup, Home | `AuthContext`（Google only） |
+| Session | Event + Court `sessionStorage` | CourtSetup → Protected routes | `EventSessionContext` |
+| Event | Create／list／delete Event | **CourtSetup only**（建／PDF）；刪除亦喺 CourtSetup | `services/persistCreatedEvents` 等 |
 | Event | Setup password gate | CourtSetup | `settings.setupPassword` |
-| PDF | HKTKDA parse + multi-day split | CourtSetup, DataImport | `Utils/pdfParser.js` + 頁面流程 |
+| PDF | HKTKDA parse + multi-day split | **CourtSetup only** | `Utils/pdfParser.js` + create-event flow |
 | Match | CRUD、Rules、IVR quota、Load | DataImport (`/import`) | flat `matches/…/config` + `matchLive` + `loadMatchToCourt`（拒跨 Court 重綁） |
 | Bracket | Tournament tree + Promote | DataImport, Edit | `promoteWinner` |
 | Screen | Scoreboard、timer、vote log、QR | `/screen` | listeners + `Api` |
@@ -143,7 +143,8 @@
 | Vote window（Multiple） | `VOTE_WINDOW_MS = 1000` |
 | Announcement duration（TC／IVR） | 3000 ms |
 | Kye-shi default | 60 seconds |
-| Courts per event create | 1–12（CourtSetup）；DataImport create path 見程式 → `[待確認]` 是否永遠只建 `court1` 抑或可選 |
+| Courts per event create | 1–12（**CourtSetup only**；DataImport 唔建 Event） |
+| IVR empty quota | `IVR_UNLIMITED = -1`；Accept 保持無限；Reject → 0 |
 
 ---
 
@@ -196,10 +197,10 @@ Landing（Google）
 
 ---
 
-## 8. Out-of-scope smells tracked elsewhere
+## 8. Related docs
 
-結構／複雜度重構若有平行分支計劃，唔屬本 PRD 功能範圍 → `[待確認]` 合入進度。  
-多裝置同步細節見 `docs/FIREBASE_MULTI_DEVICE_DESIGN.md`。
+多裝置同步細節見 [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
+已完成嘅 flatten／refactor 歷史計劃見 [`archive/`](./archive/)。
 
 ---
 
@@ -208,3 +209,4 @@ Landing（Google）
 | Date | Change |
 |------|--------|
 | 2026-08-10 | Initial PRD reverse-engineered from repository |
+| 2026-08-13 | Auth vs EventSession；Create Event／PDF 只喺 CourtSetup；IVR unlimited；test baseline 263 |

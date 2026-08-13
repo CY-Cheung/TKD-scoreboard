@@ -3,7 +3,7 @@
 **系統名稱：** 跆拳道雲端計分系統（Taekwondo Cloud Scoring System）  
 **適用比賽：** Kyorugi（搏擊）  
 **線上示範：** [https://cy-cheung.github.io/TKD-scoreboard/](https://cy-cheung.github.io/TKD-scoreboard/)  
-**文件日期：** 2026-08-12
+**文件日期：** 2026-08-13
 
 > **Codebase baseline:** flat RTDB 雲端同步；操作步驟以現行 Pages UI 為準。技術細節 → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 > **用語：** Technical Card 中文一律「技術卡」（同畫面 `Edit` 嘅「技術卡」一致）。
@@ -87,7 +87,8 @@
    - **Unload（卸載）：** 清走呢個 Court 嘅 `currentMatchId`（唔刪比賽資料）。換場或要釋放 Match 俾其他 Court Load 時用。  
 3. **日期篩選**（如有）：縮短列表。  
 4. **Tournament Bracket（淘汰樹）**：睇晉級路徑；完場後可喺主裁面板 **Promote Winner（晉級勝者）**。  
-5. 亦可喺呢頁建立賽事／匯入 PDF（同 Court Setup 類似）。若兩個入口選項唔完全一樣，以畫面上實際有嘅掣為準 → `[待確認]` 差異細節。
+
+> **建立賽事／匯入 PDF** 只喺 **Court Setup**，唔喺 Manage Match 頁。
 
 ---
 
@@ -157,10 +158,11 @@
 2. 確認 **Accept** 或 **Reject**。  
 3. 大螢幕顯示約 3 秒公告。  
 4. 系統會更新該方 **IVR 剩餘次數**：  
-   - 若賽事設為「無限／WT 模式」（輸入留空一類），規則同畫面顯示以系統為準。  
+   - **留空／無限**：Accept 後仍然無限；Reject 後變 **0**。  
+   - **已設定數字 N**：Accept 減 1；Reject 直接歸零。  
    - 配額係 **成場比賽共用**，換回合一般**唔會**重置。
 
-具體扣法同顯示文案請以現場畫面同賽會規則為準；若同最新 WT 條文有出入 → `[待確認]`。
+具體顯示文案請以現場畫面同賽會規則為準；若同最新 WT 條文有出入 → `[待確認]`。
 
 ---
 
@@ -175,7 +177,7 @@
 
 ### 10.2 得分掣
 
-掣大致對應：
+畫面無 top bar／選手名條；中間有 Mode／Judge 黃盒同回合資訊。掣大致對應：
 
 | 掣 | 分數 |
 |----|------|
@@ -190,7 +192,8 @@
 - **計時暫停（Paused）時通常唔可以畀分。**  
 - **Gam-jeom 唔喺邊裁遙控度按**；交俾主裁 Edit。  
 - **Single mode**：一按就加。  
-- **Multiple mode**：要大約 **1 秒內**有 **兩個唔同裝置** 撳同一類型得分，先算有效分。
+- **Multiple mode**：要大約 **1 秒內**有 **兩個唔同裝置** 撳同一類型得分，先算有效分。  
+- 請用 **橫向（landscape）** 握機；畫面會跟瀏覽器可視區域比例縮放。
 
 斷線或關閉分頁後，席位應會自動釋放，其他手機可再搶。
 
@@ -258,3 +261,4 @@ A：而家呢套系統定位係 **Kyorugi（搏擊）**；品勢功能未見。
 |------|------|
 | 2026-08-10 | 初版：由介面同程式反向整理嘅粵語操作指南 |
 | 2026-08-11 | 用語統一：Technical Card 中文一律「技術卡」 |
+| 2026-08-13 | Manage Match 唔再建立賽事；IVR 無限／Reject→0；Controller landscape UI |

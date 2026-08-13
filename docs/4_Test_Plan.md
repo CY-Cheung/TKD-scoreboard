@@ -2,9 +2,9 @@
 
 **Product:** Taekwondo Cloud Scoring System  
 **Runner (current):** Vitest — `npm test`；Rules — `npm run test:rules`  
-**Baseline at doc time:** **213** unit／component tests（`npm test`）；**11** rules tests（emulator）  
-**Document status:** Aligned with Waves 9–11 on `main`  
-**Last reviewed against code:** 2026-08-12
+**Baseline at doc time:** **263** unit／component tests（`npm test`）；**11** rules tests（emulator）  
+**Document status:** Aligned with current `main`（post hygiene／docs cleanup）  
+**Last reviewed against code:** 2026-08-13
 
 > **Codebase baseline:** flat RTDB schema；unit + RTL component tests + RTDB rules emulator CI。真機／多 tab 整合仍多數人手。Schema → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 > **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
@@ -18,7 +18,7 @@
 1. **鎖定核心 Business Logic**：計分權重、投票窗口、PUN／PTG／PTF、回合 REST、IVR 配額投影。  
 2. **防止 refactor 回歸**：domain／services 抽離後行為不變。  
 3. **補齊高風險整合缺口**：Firebase transaction、搶席、`onDisconnect`、多 Screen 公告 — 目前多數仍靠人手。  
-4. **Circuit breaker（同 refactor 計劃）**：同一模組連續失敗 >2 次 → 停手、restore、報告。
+4. **Circuit breaker（開發習慣）**：同一模組連續失敗 >2 次 → 停手、restore、報告。（歷史 refactor 計劃 → [`archive/REFACTORING_PLAN.md`](./archive/REFACTORING_PLAN.md)）
 
 ---
 
@@ -256,4 +256,4 @@ Workflow：`.github/workflows/ci.yml`（`unit` + `rules` jobs）。
 |------|--------|
 | 2026-08-10 | Initial test plan：`main` 零自動化；列出目標案例同風險缺口 |
 | 2026-08-12 | Align Waves 9–11：RTL、rules emulator CI、213 unit tests baseline |
-| 2026-08-13 | Controller extracts／preview 已合入；P1 改為 IVR → `domain/` + UT-E10 |
+| 2026-08-13 | Baseline 升至 **263** unit；refactor 計劃封存；P1 可選：IVR helpers → `domain/` + UT-E10 |
