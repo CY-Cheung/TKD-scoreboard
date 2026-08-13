@@ -33,7 +33,7 @@
 | Data | Firebase Realtime Database | same | Live sync + transactions |
 | PDF | `pdfjs-dist` | `^3.11.174` | HKTKDA drawsheet parse |
 | QR | `qrcode.react` | `^4.2.0` | Controller deep-link |
-| Motion / FX | `gsap`, `ogl` | — | Landing／視覺效果 |
+| Motion / FX | `gsap` | — | TargetCursor／視覺效果 |
 | Test | Vitest | `^2.x`（見 `package.json`） | Unit tests：`npm test` |
 | Deploy | `gh-pages` | `^6.3.0` | GitHub Pages；`base: '/TKD-scoreboard/'` |
 | Style | Vanilla CSS | — | Per-page CSS；glass／aurora patterns |
@@ -58,7 +58,7 @@ flowchart TB
   end
 
   subgraph AppShell["React app shell"]
-    AuthCtx["AuthContext Google + event/court session"]
+    AuthCtx["AuthContext Google"]
     PopupCtx["PopupContext toasts"]
     Api["Api.js scoring + IVR/TC facade"]
     Utils["Utils/pdfParser.js"]

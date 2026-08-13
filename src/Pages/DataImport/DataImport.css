@@ -151,59 +151,6 @@
     transform: none;
 }
 
-/* PDF Upload Zone Styles (Pure Yellow #FFFF00) */
-.pdf-upload-box {
-    border: 0.104cqi dashed rgba(255, 255, 0, 0.4);
-    background-color: rgba(255, 255, 0, 0.05);
-    border-radius: 0.417cqi;
-    padding: 0.625cqi 0.833cqi;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.781cqi;
-    transition: border-color 0.3s ease, background-color 0.3s ease;
-}
-
-.pdf-upload-box:hover {
-    border-color: #FFFF00 !important;
-    background-color: rgba(255, 255, 0, 0.1);
-}
-
-.pdf-preview-table-wrapper {
-    max-height: 19.791cqi;
-    overflow-y: auto;
-    border: 0.052cqi solid rgba(255, 255, 255, 0.15);
-    border-radius: 0.417cqi;
-    margin-top: 0.781cqi;
-}
-
-.pdf-preview-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.733cqi;
-    color: #ddd;
-    text-align: left;
-}
-
-.pdf-preview-table th {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 0.521cqi 0.625cqi;
-    position: sticky;
-    top: 0;
-    color: #FFFF00; /* Pure Yellow #FFFF00 */
-    font-weight: bold;
-    border-bottom: 0.052cqi solid rgba(255, 255, 255, 0.2);
-}
-
-.pdf-preview-table td {
-    padding: 0.417cqi 0.625cqi;
-    border-bottom: 0.052cqi solid rgba(255, 255, 255, 0.08);
-}
-
-.pdf-preview-table tr:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
 /* --- 2x2 Grid for the 4 Fieldsets --- */
 .match-form {
     display: flex;

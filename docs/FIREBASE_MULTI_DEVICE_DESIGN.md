@@ -227,7 +227,8 @@ Edit.jsx（主裁）Accept/Reject
 | `src/Pages/Controller/Controller.jsx` | 搶位、遙控得分 |
 | `src/Components/QRCodeDisplay/` | QR、裁判狀態、single/multiple 切換（`QRCodeDisplay.jsx` + Status／Mode panels） |
 | `src/Components/TechnicalCardFlow/` | Technical Card Step 1 確認 + Step 2 公告 glass card |
-| `src/Context/AuthContext.jsx` | Google Auth + Court session |
+| `src/Context/AuthContext.jsx` | Google Auth |
+| `src/Context/EventSessionContext.jsx` | Event／Court session（sessionStorage） |
 | `database.rules.json` | Firebase Security Rules |
 
 ---
