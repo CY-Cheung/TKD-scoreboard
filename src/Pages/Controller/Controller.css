@@ -149,9 +149,13 @@ body:has(.controller) {
 	display: flex;
 	flex-direction: column;
 	width: calc(var(--screen-width) * 34 / 150);
+	max-width: calc(var(--screen-width) * 34 / 150);
 	height: 100%;
 	box-sizing: border-box;
 	background: #000000;
+	overflow: hidden;
+	min-width: 0;
+	flex-shrink: 0;
 }
 
 /* Exact Screen match-info heights (of full --screen-height) */
@@ -213,23 +217,34 @@ body:has(.controller) {
 
 /*
  * Mode on top, Judge N below.
- * Screen timer box height is driven by .timer-font (9cqi); lock the same.
+ * Yellow box size = Screen .game-timer sized by hidden .timer-font "0:00".
  */
 .game-timer.ctrl-center-seat-stack {
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	flex: 2 1 0;
+	color: var(--yellow-primary, #ffff00);
+	box-sizing: content-box; /* match Screen default box model for border */
+}
+
+.ctrl-timer-height-ref {
+	visibility: hidden;
+	pointer-events: none;
+	user-select: none;
+}
+
+.ctrl-center-seat-fore {
+	position: absolute;
+	inset: 0;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	gap: 0.5cqi;
-	width: 100%;
-	flex: 2 1 0;
-	/* Same visual box as Screen countdown cell */
-	height: 9cqi;
-	min-height: 9cqi;
-	max-height: 9cqi;
-	color: var(--yellow-primary, #ffff00);
-	box-sizing: border-box;
-	overflow: hidden;
 }
 
 .ctrl-timeout-spacer {
@@ -239,7 +254,6 @@ body:has(.controller) {
 }
 
 .ctrl-center-mode {
-	order: 1;
 	font-size: 3.2cqi;
 	font-weight: 800;
 	letter-spacing: 0.12cqi;
@@ -250,7 +264,6 @@ body:has(.controller) {
 }
 
 .ctrl-center-judge {
-	order: 2;
 	font-size: 4.2cqi;
 	font-weight: 900;
 	letter-spacing: 0.06cqi;
