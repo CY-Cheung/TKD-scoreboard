@@ -225,7 +225,7 @@ Edit.jsx（主裁）Accept/Reject
 | `src/Pages/Screen/Screen.jsx` | 大螢幕、計時、dominance、vote log |
 | `src/Pages/Screen/Edit.jsx` | 主裁面板：手動改分、判勝、Kye-shi、Technical Card Step 1 |
 | `src/Pages/Controller/Controller.jsx` | 搶位、遙控得分 |
-| `src/Components/QRCodeDisplay/QRCodeDisplay.jsx` | QR、裁判狀態、single/multiple 切換 |
+| `src/Components/QRCodeDisplay/` | QR、裁判狀態、single/multiple 切換（`QRCodeDisplay.jsx` + Status／Mode panels） |
 | `src/Components/TechnicalCardFlow/` | Technical Card Step 1 確認 + Step 2 公告 glass card |
 | `src/Context/AuthContext.jsx` | Google Auth + Court session |
 | `database.rules.json` | Firebase Security Rules |
