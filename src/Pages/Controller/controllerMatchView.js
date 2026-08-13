@@ -72,18 +72,6 @@ export function parseScoreActionLabel(label = "") {
   return { points, name: m[2].trim() };
 }
 
-/** @param {unknown} user */
-export function resolveControllerBackPath(user) {
-  return user ? "/home" : "/court-setup";
-}
-
-/**
- * @param {"single" | "multiple" | string} refereeMode
- */
-export function formatRefereeModeBadge(refereeMode) {
-  return refereeMode === "multiple" ? "👥 Multi" : "👤 Single";
-}
-
 /** Center-column mode label (no emoji). */
 export function formatControllerModeLabel(refereeMode) {
   return refereeMode === "multiple" ? "MULTIPLE" : "SINGLE";

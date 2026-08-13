@@ -2,8 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   canAcceptScoreInput,
   buildControllerMatchSummary,
-  resolveControllerBackPath,
-  formatRefereeModeBadge,
   formatControllerModeLabel,
   formatControllerJudgeLabel,
   buildScoreActionFeedback,
@@ -92,17 +90,7 @@ describe("parseScoreActionLabel", () => {
   });
 });
 
-describe("nav / badges / feedback", () => {
-  it("resolveControllerBackPath", () => {
-    expect(resolveControllerBackPath({ uid: "x" })).toBe("/home");
-    expect(resolveControllerBackPath(null)).toBe("/court-setup");
-  });
-
-  it("formatRefereeModeBadge", () => {
-    expect(formatRefereeModeBadge("multiple")).toContain("Multi");
-    expect(formatRefereeModeBadge("single")).toContain("Single");
-  });
-
+describe("labels / feedback", () => {
   it("formatControllerModeLabel / formatControllerJudgeLabel", () => {
     expect(formatControllerModeLabel("single")).toBe("SINGLE");
     expect(formatControllerModeLabel("multiple")).toBe("MULTIPLE");

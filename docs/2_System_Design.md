@@ -128,7 +128,11 @@ src/
 │   └── PopupContext.jsx
 ├── Pages/                  # Route-level UI
 ├── Components/             # Shared UI (QR, DecisionFlow, Bracket, …)
-└── Utils/pdfParser.js      # HKTKDA PDF parse
+└── Utils/
+    ├── pdfParser.js              # HKTKDA PDF parse
+    ├── browserShellSize.js       # browser content-box fit (no dvw/dvh)
+    ├── useBrowserShellSize.js    # Screen 2:1 / Controller landscape shell
+    └── useBrowserViewportCssVars.js
 ```
 
 ### 4.2 Dependency rules（建議邊界）
@@ -231,7 +235,7 @@ sideScore = Σ(pointsStat[i] × weight[i]) + opponent.gamjeom + opponent.gamjeom
 | `events/{id}` | — | Auth + creator／`coAdmins`；root **禁** `courts`／`matches` children |
 | `courts/.../referees/$judgeId` | — | Auth **或** 同 `deviceId` 搶位／清 `null`（要有 `deviceId`） |
 | `matchLive/.../{matchId}` | — | Auth **或** 已有節點 + `providedDeviceId` 對應 flat J1–J3 |
-| `matches/.../config`、`matchIndex` | — | Auth owner／coAdmin（或 orphan 清理） |
+| `matches/.../config`、`matchIndex` | — | Auth owner／coAdmin（orphan cleanup UI／service 已移除） |
 
 **Implication:** 未登入邊裁可以寫 `matchLive`（經 flat 席位 device 綁定）；任何人可讀公開樹。
 

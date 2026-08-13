@@ -197,19 +197,20 @@ Waves 0–11 已執行完畢。工程整潔後續見 §10「Engineering hygiene�
 | 11 | Rules unit tests（`database.rules.json`） | **完成**（`src/rules/*` + `npm run test:rules`） |
 | — | 更大 RTL page tests／E2E | 未開；可選 |
 | — | Publish live `database.rules.json` | 需 Firebase Console／Service Account |
-| — | Controller extracts（Phase 2 後半） | 可選下一刀 |
+| — | Api IVR pure helpers → `domain/` + UT-E10 | 可選下一刀 |
 
-### Engineering hygiene（2026-08-12）
+### Engineering hygiene（2026-08-12 → 2026-08-13）
 
 | Phase | Status | Notes |
 |-------|--------|-------|
 | 0 Merge Wave 9–11 | **完成** | `#37` → `main`（`a6f0858`） |
 | 1 Docs + rules skeleton | **完成** | `4_Test_Plan.md`；skeleton ≡ `database.rules.json` |
 | 2 Screen thin extracts | **完成** | hotkeys／referee presence／scoreboard model；rAF／TX／seat I/O 仍留 page |
-| 2b Controller extracts | **完成** | match view helpers／status screens／TopBar／CenterPanel；seat grab Firebase 仍留 page |
+| 2b Controller extracts | **完成** | match view helpers／status screens／CenterPanel／ScorePad；seat grab Firebase 仍留 page |
 | 2c Edit extracts | **完成** | score／IVR／timer／winner helpers + GridHeaders／TimeBar／IvrQuotaInput |
 | 2d QRCodeDisplay extracts | **完成** | occupancy／host flags／court label helpers；Status／Mode／Host／EventHeading panels；reuse `parseEventHeading` |
-| 2e Controller Screen-style UI | **完成** | Screen 色＋硬邊分區；關 aurora；Top bar 精簡；中欄紅／藍大分；pill 鍵文案；邏輯不變 |
+| 2e Controller Screen-style UI | **完成** | `#42`：Screen 色＋硬邊分區；**無 top bar**；中欄 Mode／Judge 黃框；pill 鍵；邏輯不變 |
+| 2f Browser content-box sizing | **完成** | 全專案唔再用 `dvw`/`dvh` max/min；Screen 2:1／Controller landscape 由 `innerWidth`/`innerHeight`；`#43` 刪 `/controller-preview` |
 | 3 Optional RTL | 未開 | |
 
 ### Wave 9 progress（2026-08-12）

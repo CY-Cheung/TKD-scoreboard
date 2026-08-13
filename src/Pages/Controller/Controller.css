@@ -48,7 +48,7 @@ body:has(.controller) {
 	height: var(--screen-height);
 }
 
-/* Score columns fill the 2:1 pad */
+/* Score columns fill the landscape-aspect pad */
 .ctrl-stage {
 	display: flex;
 	flex-direction: column;

@@ -254,7 +254,7 @@ Edit.jsx（主裁）Accept/Reject
 | `events/{eventId}` | 已登入 + 為 `createdBy` 或 `coAdmins`；root write **唔可以**帶 `courts`／`matches` |
 | `courts/.../referees/{slot}` | 已登入 **或** 同 `deviceId` 搶位／斷線（`null`）；寫入要有 `deviceId` |
 | `matchLive/.../{matchId}` | 已登入 **或** 已有 live 節點且 Transaction 帶 `providedDeviceId` 匹配 flat J1/J2/J3 |
-| `matches/.../config`、`matchIndex` | 已登入 owner／coAdmin（或 orphan 清理） |
+| `matches/.../config`、`matchIndex` | 已登入 owner／coAdmin（orphan cleanup UI／service 已移除） |
 
 Controller 計分時 `Api.js` 會暫寫 `providedCourtId`、`providedDeviceId` 供 rules 驗證。  
 Screen `Edit` 面板不傳 deviceId，依賴 Admin 已登入 Google。

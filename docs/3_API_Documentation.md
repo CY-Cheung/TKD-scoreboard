@@ -192,7 +192,7 @@ Firebase-backed：
 
 - `VOTE_WINDOW_MS`
 - `IVR_UNLIMITED` 同 IVR helper 函數（見 §2.4）
-- `getScoreValue`／`resetSideStatsForNextRound` 喺 **`main` 為 Api 內部函式**（未必 export）→ 以檔案實際 `export` 為準
+- `getScoreValue` 由 `Api.js` re-export（`domain/scoreMath.js`）；`resetSideStatsForNextRound` 以檔案實際 `export` 為準
 
 ---
 
