@@ -353,5 +353,5 @@ export const IVR_UNLIMITED = -1;     // 空配額／無限
 ---
 
 *文件建立：2026-07-30*  
-*最後更新：2026-08-13（對齊 Auth vs EventSession、ProtectedRoute→Landing、IVR 已實作／unlimited `-1`、Controller landscape shell、Create Event 只喺 CourtSetup）*  
+*最後更新：2026-08-13（對齊 Auth vs EventSession、ProtectedRoute→Landing、IVR 已實作／unlimited `-1`、Controller landscape shell、Create Event 只喺 CourtSetup；docs 1–4 已封存，入口見 README）*  
 *專案：TKD-scoreboard*

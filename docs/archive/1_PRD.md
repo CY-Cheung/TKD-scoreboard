@@ -1,15 +1,9 @@
 # Product Requirements Document (產品需求文件)
 
-**Product:** Taekwondo Cloud Scoring System（跆拳道雲端計分系統）  
-**Scope:** Kyorugi（搏擊）現場雲端計分  
-**Repo:** `CY-Cheung/TKD-scoreboard`  
-**Document status:** Reverse-engineered from source（`README.md`、`src/`、`database.rules.json`）  
-**Last reviewed against code:** 2026-08-13
-
-> **Codebase baseline:** flat RTDB（`courts`／`matches/…/config`／`matchLive`／`matchIndex`／`eventIndex`）；計分有 `src/domain/` + `src/services/`；`npm test` ≈ **263**；`npm run test:rules` ≈ **11**。Schema 細節 → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)；扁平化歷史 → [`archive/FIREBASE_FLATTENING_PLAN.md`](./archive/FIREBASE_FLATTENING_PLAN.md)。  
-> **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
-
-> 凡標 **`[待確認]`** 者：程式碼或文件未能完全證實，請勿當已上線功能。
+> **ARCHIVED（已封存）** — 2026-08-13  
+> 產品入口同功能摘要已併入 [`../../README.md`](../../README.md)。  
+> 現行技術真相 → [`../FIREBASE_MULTI_DEVICE_DESIGN.md`](../FIREBASE_MULTI_DEVICE_DESIGN.md)；現場操作 → [`../5_User_Manual.md`](../5_User_Manual.md)。  
+> 本檔只保留歷史 PRD 全文，**唔再**當產品文件維護。
 
 ---
 

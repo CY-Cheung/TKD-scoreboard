@@ -247,11 +247,10 @@ A：而家呢套系統定位係 **Kyorugi（搏擊）**；品勢功能未見。
 
 | 文件 | 內容 |
 |------|------|
-| `docs/1_PRD.md` | 產品目標同用戶故事 |
-| `docs/2_System_Design.md` | 架構同資料庫 |
-| `docs/3_API_Documentation.md` | 路由同程式介面 |
-| `docs/4_Test_Plan.md` | 測試計劃 |
-| `docs/FIREBASE_MULTI_DEVICE_DESIGN.md` | 多裝置同步細節 |
+| [`README.md`](../README.md) | 產品入口、角色、開賽、路由 |
+| [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md) | Schema、多裝置同步（canonical） |
+| [`TODO_WT2026.md`](../TODO_WT2026.md) | WT 2026 Spec（IVR／Technical Card；已全部完成） |
+| [`archive/`](./archive/) | 歷史 PRD／System Design／API／Test Plan 封存 |
 
 ---
 
@@ -262,3 +261,4 @@ A：而家呢套系統定位係 **Kyorugi（搏擊）**；品勢功能未見。
 | 2026-08-10 | 初版：由介面同程式反向整理嘅粵語操作指南 |
 | 2026-08-11 | 用語統一：Technical Card 中文一律「技術卡」 |
 | 2026-08-13 | Manage Match 唔再建立賽事；IVR 無限／Reject→0；Controller landscape UI |
+| 2026-08-13 | 中整合：docs 1–4 封存；相關連結改指 README／Multi-device |

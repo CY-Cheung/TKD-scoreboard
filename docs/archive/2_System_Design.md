@@ -1,15 +1,9 @@
 # System Design（系統設計）
 
-**Product:** Taekwondo Cloud Scoring System  
-**Architecture style:** Frontend-only SPA + Firebase BaaS（Backend as a Service）  
-**Document status:** Reverse-engineered from source  
-**Last reviewed against code:** 2026-08-13
-
-> **Codebase baseline:** flat RTDB schema（`eventIndex`／slim `events`／`courts`／`matches/…/config`／`matchIndex`／`matchLive`）。計分／席位細節以 `src/` 同 [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md) 為準。扁平化歷史 → [`archive/FIREBASE_FLATTENING_PLAN.md`](./archive/FIREBASE_FLATTENING_PLAN.md)。  
-> **用語：** Technical Card 中文一律「技術卡」；文中 **TC** = Technical Card（技術卡）。雙語標籤用 `English（中文）`。
-
-> 標 **`[待確認]`** = 未能由程式完全證實。  
-> 若同 [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md) 衝突，**以現行 `src/` 為準**。
+> **ARCHIVED（已封存）** — 2026-08-13  
+> 架構／路由／stack 摘要已併入 [`../../README.md`](../../README.md)。  
+> Schema／多裝置 canonical → [`../FIREBASE_MULTI_DEVICE_DESIGN.md`](../FIREBASE_MULTI_DEVICE_DESIGN.md)。  
+> 本檔只保留歷史系統設計全文，**唔再**當產品文件維護。
 
 ---
 

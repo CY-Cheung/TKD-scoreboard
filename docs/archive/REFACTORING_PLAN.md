@@ -1,7 +1,7 @@
 # Refactoring Plan（重構計劃）
 
 > **ARCHIVED（已封存）** — 2026-08-13  
-> Waves 9–11 等同相關重構已合入 `main`。現行架構請睇 [`../2_System_Design.md`](../2_System_Design.md) 同 [`../FIREBASE_MULTI_DEVICE_DESIGN.md`](../FIREBASE_MULTI_DEVICE_DESIGN.md)。  
+> Waves 9–11 等同相關重構已合入 `main`。現行架構請睇 [`../../README.md`](../../README.md) 同 [`../FIREBASE_MULTI_DEVICE_DESIGN.md`](../FIREBASE_MULTI_DEVICE_DESIGN.md)。  
 > 本檔只保留歷史計劃，**唔再**當產品文件維護。
 
 ---

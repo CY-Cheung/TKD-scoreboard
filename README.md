@@ -5,8 +5,9 @@
 
 現場大螢幕、主裁面板、邊裁手機遙控同一個 Event／Court 即時同步。唔使裝 App：掃 QR，部手機就係計分手掣。
 
-> Live demo（GitHub Pages）：[`https://cy-cheung.github.io/TKD-scoreboard/`](https://cy-cheung.github.io/TKD-scoreboard/)  
-> 多裝置同步、資料庫 schema、搶位細節 → [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md)
+> Live demo：[`https://cy-cheung.github.io/TKD-scoreboard/`](https://cy-cheung.github.io/TKD-scoreboard/)  
+> 現場操作詳情 → [`docs/5_User_Manual.md`](docs/5_User_Manual.md)  
+> Schema／多裝置 → [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md)
 
 ---
 
@@ -19,59 +20,72 @@
 | **One Account** | Sign in with Google to create and run your event. | Google 登入即可開賽，無須安裝軟件。 |
 | **Multi-Court** | Load a match per court — screens and phones stay aligned. | 多個 Court 同步作賽，Load 邊場跟邊場。 |
 
-**亦已支援**
+**亦已支援：** Technical Card（技術卡）、IVR（留空配額 = 無限 `-1`）、HKTKDA PDF（Court Setup）、Tournament Bracket、Chi／Eng fade。
 
-- **Technical Card（技術卡）**：主裁於 Edit 確認 → Firebase 同步公告到同一場地所有 Screen（3 秒；Reject 延遲 Gam-jeom +1）
-- **IVR（Instant Video Replay）**：挑戰卡流程、配額（留空 = 無限 `IVR_UNLIMITED = -1`）、多 Screen 公告
-- **HKTKDA PDF 匯入**：喺 **Court Setup** 解析對陣表 → Match／選手
-- **Tournament Bracket**：晉級路徑、Promote Winner
-- **中英交替 UI**：關鍵頁面 Chi／Eng fade（`AlternatingLocale`）
-
-> **用語：** 中文一律用「技術卡」對譯 Technical Card（唔用「技術警告牌」「技術牌」）。英文專有名詞保留 `Technical Card`；雙語標籤格式：`English（中文）`。
+> **用語：** Technical Card 中文一律「技術卡」。雙語標籤：`English（中文）`。
 
 ---
 
-## How it works（點樣運作）
+## Who uses it（角色）
 
-### 現場流程
+| Persona | 裝置 | 要 Google？ | 主要工作 |
+|---------|------|-------------|----------|
+| Event Admin | 筆電／平板 | 要 | 建 Event、PDF、Manage Match、Load |
+| Court Operator | 接大螢幕電腦 | Session | 計時、QR、開 Screen |
+| Centre Referee | 同 Screen（Edit） | Session | 改分、判勝、TC／IVR、Promote |
+| Corner Judge J1–J3 | 手機瀏覽器 | **唔使** | 掃 QR 搶席、按得分 |
+
+---
+
+## Five-minute start（五分鐘開賽）
+
+1. 打開網站 → **Google 登入**（Landing）。  
+2. **Court Setup**：建／揀 Event（可上傳 HKTKDA PDF）→ 揀 Court。  
+3. **Home** → **Manage Match**：新增或揀場 → **Load**。  
+4. 開 **Scoreboard**；`Space` 計時；`Q` 出 QR。  
+5. 邊裁掃碼入 **Controller** 搶 J1–J3 → 按得分。  
+6. 主裁按 `E` 開 Edit：Gam-jeom、判勝、Technical Card、IVR、Promote Winner。
+
+詳步同 FAQ → [`docs/5_User_Manual.md`](docs/5_User_Manual.md)。
 
 ```
-Landing（Google）→ Court Setup（Event / Court / PDF）→ Home
-  → Data Import（Load Match）→ Screen 開波（Space 計時，Q 出 QR）
-  → Controller 掃碼搶 J1–J3 → Firebase 同步計分
-  → Edit 判勝 / REST / Technical Card / IVR → Promote Winner
+Landing → Court Setup（Event / Court / PDF）→ Home
+  → Manage Match（Load）→ Screen（Space / Q / E）
+  → Controller 掃碼計分 → Edit 完場／晉級
 ```
 
-### Routes（路由）
+---
+
+## Routes（路由）
 
 | Path | Page | Access |
 |------|------|--------|
-| `/` | **Landing** — 產品介紹、Google 登入 | Public |
-| `/court-setup` | **Court Setup** — 建 Event、揀 Court、PDF | Google 登入 |
-| `/home` | **Home** — 導航、QR、場地資訊 | Session（event + court） |
-| `/screen` | **Screen** — 大螢幕計分；`E` 開 Edit | Session |
-| `/controller` | **Controller** — 邊裁遙控（可 `?event=&court=` 直入） | Session 或 URL params |
-| `/import` | **Manage Match** — Match CRUD、Rules、Load、Bracket | Session |
+| `/` | Landing — 產品介紹、Google 登入 | Public |
+| `/court-setup` | Court Setup — 建 Event、Court、PDF | Google |
+| `/home` | Home — 導航、QR | Session |
+| `/screen` | Screen — 大螢幕；`E` = Edit | Session |
+| `/controller` | Controller — 邊裁（可 `?event=&court=`） | Session 或 URL |
+| `/import` | Manage Match — CRUD／Load／Bracket（**唔**建 Event） | Session |
 
-**Session**：Court Setup 成功後由 `EventSessionContext` 將 `{ eventId, courtId }` 寫入 `sessionStorage`；`ProtectedRoute` 守護 `/home`、`/screen`、`/controller`、`/import`。  
-**無 session → `/`（Landing）**。已 Google 登入會由 Landing 自動去 `/court-setup`。
-
-**Auth vs Session**
+**Session**：`EventSessionContext` 寫 `sessionStorage`（`selectedEvent`／`selectedCourt`／`selectedEventName`）。  
+`ProtectedRoute` 無 session → **`/`（Landing）**。已 Google 登入會由 Landing 轉去 `/court-setup`。
 
 | Context | 職責 |
 |---------|------|
 | `AuthContext` | Google 登入／登出 only |
-| `EventSessionContext` | Event／Court `sessionStorage` |
+| `EventSessionContext` | Event／Court session |
 
-**計分**（`src/Api.js`）
+---
 
-- Single Mode：一按即加  
-- Multiple Mode：`votes` + `VOTE_WINDOW_MS = 1000`（約 1 秒內同分先加）  
-- Controller 六掣 → `pointsStat[0–4]` → +1 / +2 / +3 / +4 / +6；另有 Gam-jeom  
-- 自動 PTG／PUN；REST 期間禁改分；IVR 配額屬 **match-scoped**（換回合唔會重置）  
-- `updateScoreAndCheckRules` → `Promise<{ committed, scored }>`
+## Scoring & seats（計分同搶位）
 
-**搶位**（`Controller.jsx`）：`runTransaction` 佔 J1→J3 → `onDisconnect().remove()`；Paused 禁畀分；已 Google 登入嘅 Admin 唔佔邊裁席。UI：無 top bar；landscape browser-aspect shell。
+- **Single**：一按即加；**Multiple**：`VOTE_WINDOW_MS = 1000` 內 ≥2 唔同 `deviceId` 同意先加  
+- 掣 → `pointsStat[0–4]` → +1／+2／+3／+4／+6；Gam-jeom 喺 Edit  
+- 自動 PTG／PUN；REST 禁改分；IVR 配額 **match-scoped**  
+- `updateScoreAndCheckRules` → `Promise<{ committed, scored }>`  
+- 搶位：`runTransaction` J1→J3 + `onDisconnect().remove()`；Paused 禁畀分；Google Admin 唔佔席  
+- Controller：無 top bar；landscape browser content-box shell  
+- Screen：`useBrowserShellSize("screen-2x1")`
 
 ---
 
@@ -80,22 +94,21 @@ Landing（Google）→ Court Setup（Event / Court / PDF）→ Home
 | Layer | Choice |
 |-------|--------|
 | UI | React 19, Vite 5, React Router 7 |
-| Data / Auth | Firebase Realtime Database + Google Auth（**冇自建 backend**） |
-| Style | Vanilla CSS, glassmorphism, `cqi` container queries |
-| PDF | pdfjs-dist（HKTKDA 對陣表） |
+| Data / Auth | Firebase RTDB + Google Auth（**無**自建 backend） |
+| Style | Vanilla CSS, `cqi` |
+| PDF | pdfjs-dist |
 | Motion | `gsap` |
 | Deploy | GitHub Pages · `base: '/TKD-scoreboard/'` |
-
-核心檔：計分 → `src/Api.js` + `src/domain/`；Firebase paths → `src/services/`；init → `src/firebase.js`。
+| Test | Vitest — `npm test`（263）；rules — `npm run test:rules`（11） |
 
 ```bash
 npm install
-npm run dev          # 本地開發（--host）
-npm run build        # 產出 dist/（並複製 404.html 畀 Pages）
-npm run deploy       # gh-pages 上架
+npm run dev          # --host
+npm run build        # dist/ + 404.html
+npm run deploy
 npm run lint
-npm test             # Vitest unit／component（263）
-npm run test:rules   # RTDB rules emulator（11）
+npm test
+npm run test:rules
 ```
 
 ---
@@ -104,70 +117,41 @@ npm run test:rules   # RTDB rules emulator（11）
 
 | Path | Role |
 |------|------|
-| `src/App.jsx` | Routes + basename |
-| `src/Api.js` | 計分、回合、勝負、Technical Card、IVR |
-| `src/firebase.js` | Firebase init |
-| `src/Context/AuthContext.jsx` | Google auth only |
-| `src/Context/EventSessionContext.jsx` | Event／court session（sessionStorage） |
-| `src/Context/PopupContext.jsx` | Toast / Confirm modal |
-| `src/Pages/Landing/` | Marketing + Google 登入入口 |
-| `src/Pages/CourtSetup/` | Event／Court、PDF 建立賽事 |
-| `src/Pages/Home/` | 賽事主選單、QR |
-| `src/Pages/Screen/` | 大螢幕 + `Edit.jsx` 主裁底欄 |
-| `src/Pages/Controller/` | 邊裁搶位、遙控（無 top bar；landscape shell） |
-| `src/Pages/DataImport/` | Manage Match、Rules、Bracket（唔建 Event） |
-| `src/domain/` | 純計分／規則 helpers（如 `scoreMath`） |
-| `src/services/` | RTDB path helpers + court／match I/O |
-| `src/Components/QRCodeDisplay/` | QR、裁判模式（helpers + Status／Mode／Host panels） |
-| `src/Components/TechnicalCardFlow/` | Technical Card 確認 + 公告 |
-| `src/Components/IVRFlow/` | IVR 確認 + 公告 |
-| `src/Components/AlternatingLocale/` | Chi／Eng fade |
-| `src/Components/TournamentBracket/` | 淘汰樹 |
-| `src/Utils/pdfParser.js` | HKTKDA PDF |
-| `src/Utils/browserShellSize.js` | Browser content-box shell fit（Screen 2:1／Controller landscape） |
-| `src/constants/landingFeatures.js` | Landing／Home 文案 |
-| `database.rules.json` | RTDB 安全規則 |
+| `src/App.jsx` | Routes |
+| `src/Api.js` | 計分、回合、TC、IVR |
+| `src/domain/` / `src/services/` | 純邏輯／RTDB I/O |
+| `src/Context/` | Auth、EventSession、Popup |
+| `src/Pages/` | Landing、CourtSetup、Home、Screen、Controller、DataImport |
+| `src/Components/` | QR、TechnicalCardFlow、IVRFlow、Bracket、AlternatingLocale |
+| `src/Utils/browserShellSize.js` | Screen 2:1／Controller landscape |
+| `database.rules.json` | RTDB rules |
 
-**改 UI**：一頁／一元件配一 CSS；共用 `.aurora-bg`、`.glass-card`。**唔好改 `dist/`**。
+**改 UI**：一頁一 CSS；**唔好改 `dist/`**。改 schema 要齊 Screen、Controller、`Api.js`、rules。
 
----
-
-## For agents & developers（開發／AI）
-
-加功能優先改 `src/Pages`／`src/Components`。改 Firebase schema 要同時對齊 Screen、Controller、`Api.js`、rules。
+### Debug map
 
 | Symptom | Start here |
 |---------|------------|
-| 分數／規則錯 | `Api.js`、`src/domain/` |
-| 大屏 ⟷ 手機唔同步 | `Screen.jsx` + `Controller.jsx` |
+| 分數／規則 | `Api.js`、`domain/` |
+| 唔同步 | `Screen.jsx` + `Controller.jsx` |
 | 搶位／斷線 | `Controller.jsx` |
-| QR／裁判人數 | `QRCodeDisplay/` |
-| Technical Card | `TechnicalCardFlow/`、`Api.js`、`Screen.jsx`、`Edit.jsx` |
-| IVR | `IVRFlow/`、`Api.js`、`Edit.jsx` |
-| PDF／建賽 | `CourtSetup.jsx`、`pdfParser.js`、`services/persistCreatedEvents.js` |
-| Match／Load／Bracket | `DataImport.jsx` |
-| Event 建刪／登入流向 | `Landing.jsx`、`CourtSetup.jsx`、`AuthContext`、`EventSessionContext` |
-| Chi／Eng fade | `AlternatingLocale/` |
-| Viewport shell | `browserShellSize.js`、`useBrowserShellSize.js` |
+| TC／IVR | `*Flow/`、`Edit.jsx`、`Api.js` |
+| PDF／建賽 | `CourtSetup`、`persistCreatedEvents` |
+| Match／Load | `DataImport.jsx` |
 
 ---
 
-## Security & docs（安全同文件）
+## Docs（文件）
 
-- **Court-level locking**：坐正 J1–J3 嘅 `deviceId` 先可以改分；Admin 靠 Google；Event 靠建立者。詳見 `database.rules.json`。
-- **Auth**：Landing 負責 Google 登入；Court Setup 需要已登入 user；Home Logout 會清 Google 並返 Landing。
+| Doc | 用途 |
+|-----|------|
+| **本 README** | 產品入口、角色、開賽、路由、技術摘要 |
+| [`docs/5_User_Manual.md`](docs/5_User_Manual.md) | 現場操作指南（粵語） |
+| [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md) | Schema、搶位、同步（**canonical**） |
+| [`TODO_WT2026.md`](TODO_WT2026.md) | WT 2026 Spec（**全部完成**；IVR／TC 行為參考） |
+| [`docs/archive/`](docs/archive/) | 歷史封存：PRD、System Design、API、Test Plan、flatten／refactor 計劃 |
 
-| Doc | Content |
-|-----|---------|
-| [`docs/1_PRD.md`](docs/1_PRD.md) | 產品需求 |
-| [`docs/2_System_Design.md`](docs/2_System_Design.md) | 系統架構 |
-| [`docs/3_API_Documentation.md`](docs/3_API_Documentation.md) | 路由／Api.js／RTDB paths |
-| [`docs/4_Test_Plan.md`](docs/4_Test_Plan.md) | 測試計劃 |
-| [`docs/5_User_Manual.md`](docs/5_User_Manual.md) | 現場操作指南 |
-| [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md) | 多裝置、schema、同步（canonical） |
-| [`docs/archive/`](docs/archive/) | 已完成計劃（flatten／refactor）歷史封存 |
-| [`TODO_WT2026.md`](TODO_WT2026.md) | WT 2026 規格（IVR／Technical Card 等） |
-| [`package.json`](package.json) | Dependencies & scripts |
+**Security：** J1–J3 `deviceId` 先可改分；Admin 靠 Google；Event 靠建立者 — 見 `database.rules.json`。
 
 ---
 

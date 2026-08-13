@@ -1,11 +1,8 @@
 # API Documentation（介面文件）
 
-**Product:** Taekwondo Cloud Scoring System  
-**Document status:** Reverse-engineered from source  
-**Last reviewed against code:** 2026-08-13
-
-> **Codebase baseline:** flat RTDB；`src/Api.js` + `src/domain/` + `src/services/`；`npm test` ≈ **263**。Canonical paths → §3；多裝置 → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
-> **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
+> **ARCHIVED（已封存）** — 2026-08-13  
+> 路由同 `Api.js` 摘要見 [`../../README.md`](../../README.md)；RTDB paths → [`../FIREBASE_MULTI_DEVICE_DESIGN.md`](../FIREBASE_MULTI_DEVICE_DESIGN.md)。  
+> 本檔只保留歷史 API 全文，**唔再**當產品文件維護。
 
 ---
 

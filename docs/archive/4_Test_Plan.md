@@ -1,15 +1,8 @@
 # Test Plan（測試計劃）
 
-**Product:** Taekwondo Cloud Scoring System  
-**Runner (current):** Vitest — `npm test`；Rules — `npm run test:rules`  
-**Baseline at doc time:** **263** unit／component tests（`npm test`）；**11** rules tests（emulator）  
-**Document status:** Aligned with current `main`（post hygiene／docs cleanup）  
-**Last reviewed against code:** 2026-08-13
-
-> **Codebase baseline:** flat RTDB schema；unit + RTL component tests + RTDB rules emulator CI。真機／多 tab 整合仍多數人手。Schema → [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md)。  
-> **用語：** Technical Card 中文一律「技術卡」；雙語標籤用 `English（中文）`。
-
-> **`[待確認]`** = 計劃建議但尚未實作／未自動化嘅項目。
+> **ARCHIVED（已封存）** — 2026-08-13  
+> 現行測試入口：`npm test`／`npm run test:rules`（見 [`../../README.md`](../../README.md)）。  
+> 本檔只保留歷史測試計劃同案例清單，**唔再**當產品文件維護。
 
 ---
 
