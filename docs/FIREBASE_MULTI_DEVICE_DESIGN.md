@@ -170,12 +170,14 @@ Step 2 glass card 同步用；由主裁 Screen 寫入，所有訂閱同一 Match
 | `matches/.../config/rules.ivrQuota` | Match override；留空 → 繼承 Event |
 | `matchLive/.../stats.{side}.ivrRemaining` | 即時剩餘；`-1` = 無限 |
 
-**規則摘要**（詳見 [`TODO_WT2026.md`](../TODO_WT2026.md)）：
+**規則摘要**：
 
 | 模式 | Accept | Reject |
 |------|--------|--------|
 | 無限（`-1`／留空） | 保持 `-1` | → `0` |
 | 已設定 `N ≥ 1` | `N → N−1` | → `0` |
+
+Create Event／Event `ivrQuota` 只喺 **CourtSetup**；Match override 喺 DataImport Rules。Edit 可即時改 `stats.{side}.ivrRemaining`（空 = 無限）。
 
 ---
 
@@ -231,18 +233,18 @@ Edit.jsx（主裁）Accept/Reject
 
 * **Step 1**（確認 popup）只喺操作 Screen 嘅 Edit 底欄顯示，**唔寫** Firebase。
 * **Step 2**（glass card）必須喺 Screen 層 `createPortal(document.body)`，確保觀眾可見。
-* 詳細 UI spec → [`TODO_WT2026.md`](../TODO_WT2026.md#technical-card技術卡)
+* Accept：公告完分數不變；Reject：finalize 後先 +1 Gam-jeom。現場操作 → [`5_User_Manual.md`](./5_User_Manual.md)。
 
 ### Phase D.2 — IVR 公告同步
 
 ```
 Edit.jsx Accept/Reject
   → Api.startIvrAnnouncement → state.ivrAnnouncement
-  → 所有 Screen 顯示 IVRAnnouncement（3 秒）
+  → 所有 Screen 顯示 IVRAnnouncement（3 秒；左半標題 Video Replay）
   → finalizeIvrAnnouncement → transaction 清公告 + projectIvrRemaining
 ```
 
-詳細 → [`TODO_WT2026.md`](../TODO_WT2026.md#ivr-ui-flow-spec)
+* 配額規則見 §3.4；唔改比賽分數。現場操作 → [`5_User_Manual.md`](./5_User_Manual.md)。
 
 ### Phase E — 回合／晉級
 
@@ -338,7 +340,7 @@ Screen `Edit` 面板不傳 deviceId，依賴 Admin 已登入 Google。
 2. **`hostStatus: online/offline`** — Screen heartbeat + Controller 警示
 3. **大螢幕常駐 Referee Badge**
 
-（IVR／Technical Card **已實作** — 見 `TODO_WT2026.md`。）
+（IVR／Technical Card **已實作** — 見 §3.3、§3.4、§4.1／D.2。）
 
 ---
 

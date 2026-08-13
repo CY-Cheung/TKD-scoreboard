@@ -147,8 +147,7 @@ npm run test:rules
 |-----|------|
 | **本 README** | 產品入口、角色、開賽、路由、技術摘要 |
 | [`docs/5_User_Manual.md`](docs/5_User_Manual.md) | 現場操作指南（粵語） |
-| [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md) | Schema、搶位、同步（**canonical**） |
-| [`TODO_WT2026.md`](TODO_WT2026.md) | WT 2026 Spec（**全部完成**；IVR／TC 行為參考） |
+| [`docs/FIREBASE_MULTI_DEVICE_DESIGN.md`](docs/FIREBASE_MULTI_DEVICE_DESIGN.md) | Schema、搶位、同步、TC／IVR（**canonical**） |
 | [`docs/archive/`](docs/archive/) | 歷史封存：PRD、System Design、API、Test Plan、flatten／refactor 計劃 |
 
 **Security：** J1–J3 `deviceId` 先可改分；Admin 靠 Google；Event 靠建立者 — 見 `database.rules.json`。

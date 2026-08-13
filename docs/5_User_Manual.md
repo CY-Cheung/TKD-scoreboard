@@ -248,8 +248,7 @@ A：而家呢套系統定位係 **Kyorugi（搏擊）**；品勢功能未見。
 | 文件 | 內容 |
 |------|------|
 | [`README.md`](../README.md) | 產品入口、角色、開賽、路由 |
-| [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md) | Schema、多裝置同步（canonical） |
-| [`TODO_WT2026.md`](../TODO_WT2026.md) | WT 2026 Spec（IVR／Technical Card；已全部完成） |
+| [`FIREBASE_MULTI_DEVICE_DESIGN.md`](./FIREBASE_MULTI_DEVICE_DESIGN.md) | Schema、多裝置同步、TC／IVR（canonical） |
 | [`archive/`](./archive/) | 歷史 PRD／System Design／API／Test Plan 封存 |
 
 ---
