@@ -1,0 +1,275 @@
+/* Controller — full 2:1 like Screen; title bar = Screen top (2/11) */
+
+@import "../Screen/Screen.css";
+
+*, *::before, *::after {
+	box-sizing: border-box;
+}
+
+html:has(.controller),
+body:has(.controller) {
+	background: #000000;
+}
+
+/*
+ * Same outer geometry as .screen:
+ * title bar = Screen .top (2/11)
+ * score pad = Screen midbottom (9/11 = middle + bottom)
+ */
+.controller {
+	--screen-width: min(100dvw, 200dvh);
+	--screen-height: min(100dvh, 50dvw);
+
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	aspect-ratio: 2 / 1;
+	width: var(--screen-width);
+	height: var(--screen-height);
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background-color: #000000;
+	overflow: hidden;
+	user-select: none;
+	box-sizing: border-box;
+	font-family: Arial, "Helvetica Neue", Helvetica, "Microsoft JhengHei",
+		"PingFang TC", "Noto Sans TC", sans-serif;
+	color: #ffffff;
+}
+
+.ctrl-shell {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	width: var(--screen-width);
+	height: var(--screen-height);
+}
+
+/* Score columns region = Screen middle + bottom */
+.ctrl-stage {
+	display: flex;
+	flex-direction: column;
+	width: var(--screen-width);
+	height: calc(var(--screen-height) * 9 / 11);
+	position: relative;
+	background-color: #000000;
+	overflow: hidden;
+	flex-shrink: 0;
+}
+
+/* Title bar inside 2:1 — same height as Screen .top */
+.ctrl-top-bar {
+	position: relative;
+	width: var(--screen-width);
+	height: calc(var(--screen-height) * 2 / 11);
+	flex-shrink: 0;
+	box-sizing: border-box;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.8cqi;
+	padding: 0 calc(var(--screen-width) * 0.02);
+	z-index: 100;
+	color: rgba(255, 255, 255, 0.75);
+	background: #000000;
+	pointer-events: none;
+}
+
+.ctrl-top-bar .ctrl-back-btn,
+.ctrl-top-bar .ctrl-conn-status,
+.ctrl-top-bar .ctrl-top-bar-center {
+	pointer-events: auto;
+}
+
+.ctrl-back-btn {
+	flex-shrink: 0;
+}
+
+.ctrl-top-bar-center {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+}
+
+.ctrl-top-judge {
+	font-size: calc(var(--screen-width) * 0.018);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.85);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+}
+
+.ctrl-conn-status {
+	font-size: calc(var(--screen-width) * 0.016);
+	font-weight: 700;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.conn-connected {
+	color: #4ade80;
+	display: flex;
+	align-items: center;
+	gap: 0.3cqi;
+}
+
+.conn-disconnected {
+	color: #f87171;
+	display: flex;
+	align-items: center;
+	gap: 0.3cqi;
+}
+
+/* Action toast — inside 2:1 stage */
+.ctrl-action-banner {
+	position: absolute;
+	top: 0.6cqi;
+	left: 50%;
+	transform: translateX(-50%);
+	padding: 0.45cqi 1.1cqi;
+	border-radius: 999px;
+	font-weight: 800;
+	font-size: 1.1cqi;
+	z-index: 90;
+	color: #ffffff;
+	animation: ctrlPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	white-space: nowrap;
+}
+
+.ctrl-action-banner.red-banner {
+	background: var(--red-primary, #aa0000);
+	border: 1px solid #ff6666;
+}
+
+.ctrl-action-banner.blue-banner {
+	background: var(--blue-primary, #0000aa);
+	border: 1px solid #6666ff;
+}
+
+/* 5-col row fills Screen midbottom height (9/11) */
+.ctrl-middle {
+	display: flex;
+	width: var(--screen-width);
+	height: 100%;
+}
+
+.ctrl-col-log {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: stretch;
+	width: calc(var(--screen-width) * 19 / 150);
+	height: 100%;
+	padding: 0.45cqi;
+	box-sizing: border-box;
+	gap: 0.55cqi;
+}
+
+.ctrl-col-score {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: stretch;
+	width: calc(var(--screen-width) * 39 / 150);
+	height: 100%;
+	padding: 0.45cqi;
+	box-sizing: border-box;
+	gap: 0.55cqi;
+}
+
+/* Full-height center = Screen match-info middle (7) + bottom ROUND (2) */
+.ctrl-col-info {
+	display: flex;
+	flex-direction: column;
+	width: calc(var(--screen-width) * 34 / 150);
+	height: 100%;
+	box-sizing: border-box;
+	background: #000000;
+}
+
+.ctrl-col-info .match-info-middle {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	flex: 7 1 0;
+	height: auto;
+	min-height: 0;
+}
+
+.ctrl-col-info .match-info-bottom {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	flex: 2 1 0;
+	height: auto;
+	min-height: 0;
+	justify-content: center;
+	align-items: center;
+	transform: none;
+}
+
+/* Height follows label content — do not stretch to fill the column */
+.ctrl-col-log > button,
+.ctrl-col-score > button,
+.ctrl-score-btn {
+	height: auto;
+	width: 100%;
+	flex: 0 0 auto;
+}
+
+.ctrl-score-btn {
+	white-space: normal !important;
+	margin: 0 !important;
+	padding: 0.7cqi 0.55cqi !important;
+}
+
+.ctrl-score-btn-inner {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.2cqi;
+	line-height: 1.05;
+}
+
+.ctrl-score-btn-name {
+	font-size: 0.72em;
+	font-weight: 700;
+	opacity: 0.95;
+}
+
+.ctrl-score-btn-points {
+	font-size: 1.15em;
+	font-weight: 900;
+}
+
+.ctrl-center-scoreboard {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-evenly;
+	gap: 0.5cqi;
+	width: 100%;
+	color: var(--yellow-primary, #ffff00);
+}
+
+.ctrl-center-score {
+	flex: 1;
+	text-align: center;
+	min-width: 0;
+}
+
+@keyframes ctrlPopIn {
+	from { transform: translate(-50%, -0.4cqi); opacity: 0; }
+	to { transform: translate(-50%, 0); opacity: 1; }
+}
