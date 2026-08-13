@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import useControllerShellSize from "./useControllerShellSize";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ref, onValue, set, onDisconnect, runTransaction } from "firebase/database";
 import { database } from "../../firebase";
@@ -67,6 +68,8 @@ function Controller() {
     const [refereeMode, setRefereeMode] = useState('single');
     // undefined = not seeded yet; null/string = last haptic'd recentScores key
     const lastRecentScoreHapticKeyRef = useRef(undefined);
+    const shellRef = useRef(null);
+    useControllerShellSize(shellRef);
 
     // Sync state + EventSession when URL / QR deep-link params change
     useEffect(() => {
@@ -389,7 +392,11 @@ function Controller() {
     }
 
     return (
-        <div className="controller" onClick={requestFullscreen}>
+        <div
+            ref={shellRef}
+            className="controller"
+            onClick={requestFullscreen}
+        >
             <div className="ctrl-shell">
                 <div className="ctrl-stage">
                     {lastAction && (

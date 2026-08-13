@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import ControllerScorePad from "./ControllerScorePad";
 import ControllerCenterPanel from "./ControllerCenterPanel";
+import useControllerShellSize from "./useControllerShellSize";
 import "./Controller.css";
 
 /**
@@ -9,6 +10,8 @@ import "./Controller.css";
  */
 export default function ControllerVisualPreview() {
   const [lastAction, setLastAction] = useState(null);
+  const shellRef = useRef(null);
+  useControllerShellSize(shellRef);
 
   const handleScore = (side, _index, label) => {
     const text = `${side.toUpperCase()} ${label}`;
@@ -19,7 +22,7 @@ export default function ControllerVisualPreview() {
   };
 
   return (
-    <div className="controller">
+    <div ref={shellRef} className="controller">
       <div className="ctrl-shell">
         <div className="ctrl-stage">
           {lastAction && (
