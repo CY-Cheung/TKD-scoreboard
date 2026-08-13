@@ -32,7 +32,6 @@ import {
 } from "../../services/courtFirebase";
 import { subscribeMatchView } from "../../services/matchFirebase";
 import ControllerScorePad from "./ControllerScorePad";
-import ControllerTopBar from "./ControllerTopBar";
 import ControllerCenterPanel from "./ControllerCenterPanel";
 import {
     ControllerConnectingScreen,
@@ -392,12 +391,6 @@ function Controller() {
     return (
         <div className="controller" onClick={requestFullscreen}>
             <div className="ctrl-shell">
-                <ControllerTopBar
-                    redCompetitor={summary.redCompetitor}
-                    blueCompetitor={summary.blueCompetitor}
-                    isResting={summary.isResting}
-                />
-
                 <div className="ctrl-stage">
                     {lastAction && (
                         <div className={`ctrl-action-banner ${lastAction.side === "red" ? "red-banner" : "blue-banner"}`}>

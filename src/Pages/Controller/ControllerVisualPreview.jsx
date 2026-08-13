@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import ControllerTopBar from "./ControllerTopBar";
 import ControllerScorePad from "./ControllerScorePad";
 import ControllerCenterPanel from "./ControllerCenterPanel";
 import "./Controller.css";
@@ -22,12 +21,6 @@ export default function ControllerVisualPreview() {
   return (
     <div className="controller">
       <div className="ctrl-shell">
-        <ControllerTopBar
-          redCompetitor={{ name: "Hong", affiliatedClub: "Red Club" }}
-          blueCompetitor={{ name: "Chung", affiliatedClub: "Blue Club" }}
-          isResting={false}
-        />
-
         <div className="ctrl-stage">
           {lastAction && (
             <div

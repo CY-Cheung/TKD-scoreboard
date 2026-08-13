@@ -1,4 +1,4 @@
-/* Controller — full 2:1 like Screen; title bar = Screen top (2/11) */
+/* Controller — full 2:1 pad fills the monitor (no top bar) */
 
 @import "../Screen/Screen.css";
 
@@ -12,9 +12,8 @@ body:has(.controller) {
 }
 
 /*
- * Same outer geometry as .screen:
- * title bar = Screen .top (2/11)
- * score pad = Screen midbottom (9/11 = middle + bottom)
+ * Outer geometry stays 2:1 like Screen, but the score pad uses the full
+ * monitor height (no Screen .top / competitor name strip).
  */
 .controller {
 	--screen-width: min(100dvw, 200dvh);
@@ -49,19 +48,17 @@ body:has(.controller) {
 	height: var(--screen-height);
 }
 
-/* Score columns region = Screen middle + bottom */
+/* Score columns fill the entire 2:1 monitor */
 .ctrl-stage {
 	display: flex;
 	flex-direction: column;
 	width: var(--screen-width);
-	height: calc(var(--screen-height) * 9 / 11);
+	height: var(--screen-height);
 	position: relative;
 	background-color: #000000;
 	overflow: hidden;
 	flex-shrink: 0;
 }
-
-/* Title bar = Screen .top (imported); no Back button */
 
 /* Action toast — inside 2:1 stage */
 .ctrl-action-banner {
@@ -89,7 +86,7 @@ body:has(.controller) {
 	border: 0.05cqi solid #6666ff;
 }
 
-/* 5-col row fills Screen midbottom height (9/11) */
+/* 5-col row fills full monitor height */
 .ctrl-middle {
 	display: flex;
 	width: var(--screen-width);
@@ -134,13 +131,16 @@ body:has(.controller) {
 	flex-shrink: 0;
 }
 
-/* Exact Screen match-info heights (of full --screen-height) */
+/*
+ * Center MATCH/timer vs ROUND — keep former midbottom 7:2 ratio,
+ * now stretched across the full monitor height (7/9 + 2/9).
+ */
 .ctrl-col-info .match-info-middle {
 	display: flex;
 	flex-direction: column;
 	width: 100%;
 	flex: none;
-	height: calc(var(--screen-height) * 7 / 11);
+	height: calc(var(--screen-height) * 7 / 9);
 	min-height: 0;
 }
 
@@ -149,7 +149,7 @@ body:has(.controller) {
 	flex-direction: column;
 	width: 100%;
 	flex: none;
-	height: calc(var(--screen-height) * 2 / 11);
+	height: calc(var(--screen-height) * 2 / 9);
 	min-height: 0;
 	justify-content: center;
 	align-items: center;
