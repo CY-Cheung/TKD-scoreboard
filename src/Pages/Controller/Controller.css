@@ -163,21 +163,25 @@ body:has(.controller) {
 .ctrl-col-log {
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
+	align-items: stretch;
 	width: calc(var(--screen-width) * 19 / 150);
 	height: 100%;
 	padding: 0.45cqi;
 	box-sizing: border-box;
-	gap: 0.45cqi;
+	gap: 0.55cqi;
 }
 
 .ctrl-col-score {
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
+	align-items: stretch;
 	width: calc(var(--screen-width) * 39 / 150);
 	height: 100%;
 	padding: 0.45cqi;
 	box-sizing: border-box;
-	gap: 0.45cqi;
+	gap: 0.55cqi;
 }
 
 /* Full-height center = Screen match-info middle (7) + bottom ROUND (2) */
