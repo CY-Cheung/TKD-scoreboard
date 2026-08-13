@@ -1,9 +1,8 @@
 # Firebase RTDB Flattening Plan（扁平化計劃）
 
-> **Status:** Flatten **complete** in production（export verified）  
-> App／product docs／Refactoring Plan 已對齊 flat schema + Vitest／rules CI baseline。  
-> Flatten + Wave 9–11 已合入 `main`。  
-> **Rules：** repo 真相係 `database.rules.json`；`database.rules.flattened.skeleton.json` 必須同其保持一致（文件／對照用）。Live Console 需 Publish 核對。
+> **ARCHIVED（已封存）** — 2026-08-13  
+> 扁平化 **已完成**；現行 schema／多裝置真相請睇 [`../FIREBASE_MULTI_DEVICE_DESIGN.md`](../FIREBASE_MULTI_DEVICE_DESIGN.md)。  
+> 本檔只保留歷史遷移紀錄，**唔再**當產品文件維護。
 
 ---
 
