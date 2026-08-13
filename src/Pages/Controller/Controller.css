@@ -1,4 +1,4 @@
-/* Controller — same 2:1 geometry as Screen (no top bar inside the pad) */
+/* Controller — landscape aspect of the device, both orientations (no top bar) */
 
 @import "../Screen/Screen.css";
 
@@ -12,24 +12,32 @@ body:has(.controller) {
 }
 
 /*
- * Same outer fit as .screen:
- *   --screen-width:  min(100dvw, 200dvh)
- *   --screen-height: min(100dvh, 50dvw)
- * Portrait: use full width, height follows 2:1.
- * Landscape wider than 2:1: use full height, width follows 2:1.
+ * Always use the device's *landscape* aspect ratio (unknown until runtime).
+ *   long  = max(dvw, dvh)  — landscape width
+ *   short = min(dvw, dvh)  — landscape height
+ * Landscape: fill the monitor.
+ * Portrait: use full current width; height = width × (short/long).
  */
 .controller {
-	--screen-width: min(100dvw, 200dvh);
-	--screen-height: min(100dvh, 50dvw);
+	--land-long: max(100dvw, 100dvh);
+	--land-short: min(100dvw, 100dvh);
+	--screen-width: min(
+		100dvw,
+		calc(100dvh * var(--land-long) / var(--land-short))
+	);
+	--screen-height: min(
+		100dvh,
+		calc(100dvw * var(--land-short) / var(--land-long))
+	);
 	container-type: inline-size;
 
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	aspect-ratio: 2 / 1;
 	width: var(--screen-width);
 	height: var(--screen-height);
+	aspect-ratio: var(--land-long) / var(--land-short);
 	position: fixed;
 	top: 50%;
 	left: 50%;
