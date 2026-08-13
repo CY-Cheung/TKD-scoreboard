@@ -35,8 +35,7 @@ body:has(.controller) {
 	overflow: hidden;
 	user-select: none;
 	box-sizing: border-box;
-	font-family: Arial, "Helvetica Neue", Helvetica, "Microsoft JhengHei",
-		"PingFang TC", "Noto Sans TC", sans-serif;
+	font-family: var(--app-font);
 	color: #ffffff;
 }
 
@@ -214,9 +213,8 @@ body:has(.controller) {
 
 /*
  * Mode on top, Judge N below.
- * Height must match Screen .game-timer.timer-font "0:00". Screen uses Inter
- * (index.css); Controller shell is Arial — Arial's normal line-box is shorter,
- * so the sizer uses the Screen font stack. Overlay keeps Controller Arial.
+ * Height must match Screen .game-timer.timer-font "0:00".
+ * Project-wide Arial (--app-font) so sizer + overlay share the same metrics.
  */
 .game-timer.ctrl-center-seat-stack {
 	position: relative;
@@ -224,9 +222,7 @@ body:has(.controller) {
 	max-width: 100%;
 	min-width: 0;
 	box-sizing: border-box;
-	/* Screen typeface metrics for the "0:00" height sizer */
-	font-family: Inter, "Segoe UI", "Microsoft JhengHei UI", "Microsoft JhengHei",
-		"PingFang TC", "Noto Sans TC", sans-serif;
+	font-family: var(--app-font);
 	/* hide sizer glyphs; labels re-color in .ctrl-center-seat-fore */
 	color: transparent;
 	/* Content-sized like Screen timer; parent .timer centers it vertically */
@@ -251,8 +247,7 @@ body:has(.controller) {
 	box-sizing: border-box;
 	overflow: hidden;
 	color: var(--yellow-primary, #ffff00);
-	font-family: Arial, "Helvetica Neue", Helvetica, "Microsoft JhengHei",
-		"PingFang TC", "Noto Sans TC", sans-serif;
+	font-family: var(--app-font);
 }
 
 .ctrl-center-mode {

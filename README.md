@@ -93,7 +93,7 @@ Landing → Court Setup（Event / Court / PDF）→ Home
 |-------|--------|
 | UI | React 19, Vite 5, React Router 7 |
 | Data / Auth | Firebase RTDB + Google Auth（**無**自建 backend） |
-| Style | Vanilla CSS, `cqi` |
+| Style | Vanilla CSS, `cqi`, Arial（`--app-font`） |
 | PDF | pdfjs-dist |
 | Motion | `gsap` |
 | Deploy | GitHub Pages · `base: '/TKD-scoreboard/'` |

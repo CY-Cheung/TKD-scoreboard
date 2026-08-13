@@ -130,7 +130,7 @@
   color: #fff;
   font-size: 1.5cqi;
   outline: none;
-  font-family: monospace;
+  font-family: var(--app-font);
   transition: border-color 0.2s;
 }
 
