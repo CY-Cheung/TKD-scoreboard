@@ -1,4 +1,4 @@
-/* Controller — Screen 2:1 shell + column widths; Home-style pill buttons */
+/* Controller — bar above 2:1 stage (no overlap); Screen column widths */
 
 @import "../Screen/Screen.css";
 
@@ -6,27 +6,26 @@
 	box-sizing: border-box;
 }
 
-/* Letterbox outside the forced 2:1 stage */
 html:has(.controller),
 body:has(.controller) {
 	background: #000000;
 }
 
+/*
+ * Full-viewport letterbox host. The 2:1 stage is .ctrl-stage only;
+ * the info bar sits above it in .ctrl-shell (no overlap).
+ */
 .controller {
-	--screen-width: min(100dvw, 200dvh);
-	--screen-height: min(100dvh, 50dvw);
+	--ctrl-bar-height: clamp(2.4rem, 6dvh, 3.4rem);
+	--screen-width: min(100dvw, calc((100dvh - var(--ctrl-bar-height)) * 2));
+	--screen-height: calc(var(--screen-width) / 2);
 
+	position: fixed;
+	inset: 0;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	aspect-ratio: 2 / 1;
-	width: var(--screen-width);
-	height: var(--screen-height);
-	position: fixed;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
 	background-color: #000000;
 	overflow: hidden;
 	user-select: none;
@@ -36,39 +35,43 @@ body:has(.controller) {
 	color: #ffffff;
 }
 
+.ctrl-shell {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	width: var(--screen-width);
+	max-width: 100dvw;
+}
+
+/* 2:1 scoreboard only */
 .ctrl-stage {
 	display: flex;
 	flex-direction: column;
 	width: var(--screen-width);
 	height: var(--screen-height);
+	aspect-ratio: 2 / 1;
 	position: relative;
+	background-color: #000000;
+	overflow: hidden;
 }
 
-/*
- * Top info bar — flush to the top edge of the 2:1 stage.
- * (Screen's bottom:100% letterbox placement is often clipped when the
- * stage already fills the viewport height.)
- */
+/* Top info bar — directly above the 2:1 stage, in normal flow */
 .ctrl-top-bar {
-	position: absolute;
-	top: 0;
-	left: 0;
+	position: relative;
+	top: auto;
+	left: auto;
 	width: 100%;
+	height: var(--ctrl-bar-height);
+	flex-shrink: 0;
 	box-sizing: border-box;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	gap: 0.8cqi;
-	padding:
-		calc(var(--screen-height) * 0.012) calc(var(--screen-width) * 0.02);
+	padding: 0 calc(var(--screen-width) * 0.02);
 	z-index: 100;
-	color: rgba(255, 255, 255, 0.7);
-	background: linear-gradient(
-		180deg,
-		rgba(0, 0, 0, 0.72) 0%,
-		rgba(0, 0, 0, 0.35) 70%,
-		rgba(0, 0, 0, 0) 100%
-	);
+	color: rgba(255, 255, 255, 0.75);
+	background: transparent;
 	pointer-events: none;
 }
 
@@ -124,7 +127,7 @@ body:has(.controller) {
 	gap: 0.3cqi;
 }
 
-/* Action toast — inside stage, under floating top bar */
+/* Action toast — inside 2:1 stage */
 .ctrl-action-banner {
 	position: absolute;
 	top: 0.6cqi;
@@ -150,14 +153,13 @@ body:has(.controller) {
 	border: 1px solid #6666ff;
 }
 
-/* Full-height 5-col row; widths only match Screen (no top name strip) */
+/* Full-height 5-col row inside 2:1 stage */
 .ctrl-middle {
 	display: flex;
 	width: var(--screen-width);
 	height: var(--screen-height);
 }
 
-/* log = 19/150 — outer 1/4/6 columns */
 .ctrl-col-log {
 	display: flex;
 	flex-direction: column;
@@ -168,7 +170,6 @@ body:has(.controller) {
 	gap: 0.45cqi;
 }
 
-/* score = 39/150 — mid 2/3 columns */
 .ctrl-col-score {
 	display: flex;
 	flex-direction: column;
@@ -179,7 +180,6 @@ body:has(.controller) {
 	gap: 0.45cqi;
 }
 
-/* match-info = 34/150 */
 .controller .match-info-middle.ctrl-col-info {
 	display: flex;
 	flex-direction: column;
@@ -197,7 +197,6 @@ body:has(.controller) {
 	flex: 1;
 }
 
-/* Home-style Button: keep dark fill + gradient border; allow 2-line label */
 .ctrl-score-btn {
 	white-space: normal !important;
 	margin: 0.15cqi !important;
@@ -224,7 +223,6 @@ body:has(.controller) {
 	font-weight: 900;
 }
 
-/* Center: Screen MATCH + scores in timer slot (no timeout) */
 .ctrl-center-scoreboard {
 	display: flex;
 	flex-direction: row;
@@ -241,10 +239,7 @@ body:has(.controller) {
 	min-width: 0;
 }
 
-.ctrl-center-score--red {
-	color: var(--yellow-primary, #ffff00);
-}
-
+.ctrl-center-score--red,
 .ctrl-center-score--blue {
 	color: var(--yellow-primary, #ffff00);
 }

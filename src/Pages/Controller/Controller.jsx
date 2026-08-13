@@ -392,7 +392,7 @@ function Controller() {
 
     return (
         <div className="controller" onClick={requestFullscreen}>
-            <div className="ctrl-stage">
+            <div className="ctrl-shell">
                 <ControllerTopBar
                     isConnected={isConnected}
                     mySeat={mySeat}
@@ -400,21 +400,23 @@ function Controller() {
                     onBack={() => navigate(resolveControllerBackPath(user))}
                 />
 
-                {lastAction && (
-                    <div className={`ctrl-action-banner ${lastAction.side === "red" ? "red-banner" : "blue-banner"}`}>
-                        {lastAction.text}
-                    </div>
-                )}
+                <div className="ctrl-stage">
+                    {lastAction && (
+                        <div className={`ctrl-action-banner ${lastAction.side === "red" ? "red-banner" : "blue-banner"}`}>
+                            {lastAction.text}
+                        </div>
+                    )}
 
-                <ControllerScorePad onScore={handleScore}>
-                    <ControllerCenterPanel
-                        redScore={summary.redScore}
-                        blueScore={summary.blueScore}
-                        currentRound={summary.currentRound}
-                        isPaused={summary.isPaused}
-                        matchNo={summary.matchNo}
-                    />
-                </ControllerScorePad>
+                    <ControllerScorePad onScore={handleScore}>
+                        <ControllerCenterPanel
+                            redScore={summary.redScore}
+                            blueScore={summary.blueScore}
+                            currentRound={summary.currentRound}
+                            isPaused={summary.isPaused}
+                            matchNo={summary.matchNo}
+                        />
+                    </ControllerScorePad>
+                </div>
             </div>
         </div>
     );

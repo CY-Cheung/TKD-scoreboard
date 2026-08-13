@@ -21,7 +21,7 @@ export default function ControllerVisualPreview() {
 
   return (
     <div className="controller">
-      <div className="ctrl-stage">
+      <div className="ctrl-shell">
         <ControllerTopBar
           isConnected={true}
           mySeat="J1"
@@ -29,25 +29,27 @@ export default function ControllerVisualPreview() {
           onBack={() => {}}
         />
 
-        {lastAction && (
-          <div
-            className={`ctrl-action-banner ${
-              lastAction.side === "red" ? "red-banner" : "blue-banner"
-            }`}
-          >
-            {lastAction.text}
-          </div>
-        )}
+        <div className="ctrl-stage">
+          {lastAction && (
+            <div
+              className={`ctrl-action-banner ${
+                lastAction.side === "red" ? "red-banner" : "blue-banner"
+              }`}
+            >
+              {lastAction.text}
+            </div>
+          )}
 
-        <ControllerScorePad onScore={handleScore}>
-          <ControllerCenterPanel
-            redScore={12}
-            blueScore={9}
-            currentRound={2}
-            isPaused={false}
-            matchNo="42"
-          />
-        </ControllerScorePad>
+          <ControllerScorePad onScore={handleScore}>
+            <ControllerCenterPanel
+              redScore={12}
+              blueScore={9}
+              currentRound={2}
+              isPaused={false}
+              matchNo="42"
+            />
+          </ControllerScorePad>
+        </div>
       </div>
     </div>
   );
