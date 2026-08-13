@@ -29,7 +29,7 @@ function AvoidingPenaltyPopup({
         justifyContent: "center",
         alignItems: "center",
         zIndex: 2000,
-        backdropFilter: "blur(5px)",
+        backdropFilter: "blur(0.25cqi)",
       }}
     >
       <div
@@ -40,7 +40,7 @@ function AvoidingPenaltyPopup({
           flexDirection: "column",
           alignItems: "center",
           gap: "2cqi",
-          border: "2px solid rgba(255, 255, 255, 0.2)",
+          border: "0.1cqi solid rgba(255, 255, 255, 0.2)",
           borderRadius: "2cqi",
           background: "rgba(30, 30, 40, 0.85)",
         }}
@@ -53,7 +53,7 @@ function AvoidingPenaltyPopup({
             margin: 0,
             fontSize: "2.2cqi",
             color: "white",
-            textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+            textShadow: "0 0.1cqi 0.2cqi rgba(0,0,0,0.5)",
           }}
           en={isAdd ? "Penalty in last 10s" : "Remove Penalty"}
           zh={isAdd ? "最後 10 秒犯規" : "移除犯規"}

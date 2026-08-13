@@ -12,12 +12,15 @@ export function ControllerConnectingScreen() {
         justifyContent: "center",
         alignItems: "center",
         color: "white",
-        padding: "20px",
+        padding: "2cqi",
         textAlign: "center",
+        gap: "1cqi",
       }}
     >
-      <h1>Connecting…</h1>
-      <p>正在搶裁判席位（J1–J3）…</p>
+      <h1 style={{ fontSize: "3cqi", margin: 0 }}>Connecting…</h1>
+      <p style={{ fontSize: "1.6cqi", margin: 0 }}>
+        正在搶裁判席位（J1–J3）…
+      </p>
     </div>
   );
 }
@@ -32,17 +35,29 @@ export function ControllerSeatGrabErrorScreen({ error, onRetry }) {
         justifyContent: "center",
         alignItems: "center",
         color: "white",
-        padding: "20px",
+        padding: "2cqi",
         textAlign: "center",
+        gap: "1cqi",
       }}
     >
-      <h1 style={{ color: "var(--red-primary, #aa0000)" }}>Seat Grab Failed</h1>
-      <p>搶位失敗。請確認 Firebase rules 已 publish，並重新掃 QR。</p>
+      <h1
+        style={{
+          color: "var(--red-primary, #aa0000)",
+          fontSize: "3cqi",
+          margin: 0,
+        }}
+      >
+        Seat Grab Failed
+      </h1>
+      <p style={{ fontSize: "1.6cqi", margin: 0 }}>
+        搶位失敗。請確認 Firebase rules 已 publish，並重新掃 QR。
+      </p>
       <p
         style={{
           opacity: 0.7,
-          fontSize: "0.9rem",
+          fontSize: "1.4cqi",
           wordBreak: "break-all",
+          margin: 0,
         }}
       >
         {error}
@@ -62,12 +77,23 @@ export function ControllerCourtFullScreen({ onBack }) {
         justifyContent: "center",
         alignItems: "center",
         color: "white",
-        padding: "20px",
+        padding: "2cqi",
         textAlign: "center",
+        gap: "1cqi",
       }}
     >
-      <h1 style={{ color: "var(--red-primary, #aa0000)" }}>Court is Full</h1>
-      <p>There are already 3 referees connected to this court.</p>
+      <h1
+        style={{
+          color: "var(--red-primary, #aa0000)",
+          fontSize: "3cqi",
+          margin: 0,
+        }}
+      >
+        Court is Full
+      </h1>
+      <p style={{ fontSize: "1.6cqi", margin: 0 }}>
+        There are already 3 referees connected to this court.
+      </p>
       <Button text="Back (返回)" onClick={onBack} variant="orange" />
     </div>
   );

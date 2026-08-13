@@ -4,8 +4,8 @@ import { Wifi, WifiOff, ArrowLeft } from "react-bootstrap-icons";
 import { formatRefereeModeBadge } from "./controllerMatchView";
 
 /**
- * Floating top info bar (Screen event-name bar style):
- * Back · Judge seat · Live/Offline — sits above the 2:1 stage.
+ * Title bar inside 2:1 (Screen top height):
+ * Back · Judge seat · Live/Offline
  */
 export default function ControllerTopBar({
   isConnected,
@@ -36,11 +36,11 @@ export default function ControllerTopBar({
       <div className="ctrl-conn-status">
         {isConnected ? (
           <span className="conn-connected">
-            <Wifi size={14} /> Live
+            <Wifi size="1.4cqi" /> Live
           </span>
         ) : (
           <span className="conn-disconnected">
-            <WifiOff size={14} /> Offline
+            <WifiOff size="1.4cqi" /> Offline
           </span>
         )}
       </div>

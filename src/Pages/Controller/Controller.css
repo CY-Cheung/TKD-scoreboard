@@ -19,6 +19,7 @@ body:has(.controller) {
 .controller {
 	--screen-width: min(100dvw, 200dvh);
 	--screen-height: min(100dvh, 50dvw);
+	container-type: inline-size;
 
 	display: flex;
 	flex-direction: column;
@@ -71,7 +72,7 @@ body:has(.controller) {
 	justify-content: space-between;
 	align-items: center;
 	gap: 0.8cqi;
-	padding: 0 calc(var(--screen-width) * 0.02);
+	padding: 0 2cqi; /* was width * 0.02 */
 	z-index: 100;
 	color: rgba(255, 255, 255, 0.75);
 	background: #000000;
@@ -98,9 +99,9 @@ body:has(.controller) {
 }
 
 .ctrl-top-judge {
-	font-size: calc(var(--screen-width) * 0.018);
+	font-size: 1.8cqi; /* was width * 0.018 */
 	font-weight: 600;
-	letter-spacing: 0.08em;
+	letter-spacing: 0.14cqi; /* was 0.08em at 1.8cqi */
 	text-transform: uppercase;
 	color: rgba(255, 255, 255, 0.85);
 	white-space: nowrap;
@@ -110,10 +111,15 @@ body:has(.controller) {
 }
 
 .ctrl-conn-status {
-	font-size: calc(var(--screen-width) * 0.016);
+	font-size: 1.6cqi; /* was width * 0.016 */
 	font-weight: 700;
 	white-space: nowrap;
 	flex-shrink: 0;
+}
+
+.ctrl-conn-status svg {
+	width: 1.4cqi;
+	height: 1.4cqi;
 }
 
 .conn-connected {
@@ -137,7 +143,7 @@ body:has(.controller) {
 	left: 50%;
 	transform: translateX(-50%);
 	padding: 0.45cqi 1.1cqi;
-	border-radius: 999px;
+	border-radius: 999cqi;
 	font-weight: 800;
 	font-size: 1.1cqi;
 	z-index: 90;
@@ -148,12 +154,12 @@ body:has(.controller) {
 
 .ctrl-action-banner.red-banner {
 	background: var(--red-primary, #aa0000);
-	border: 1px solid #ff6666;
+	border: 0.05cqi solid #ff6666;
 }
 
 .ctrl-action-banner.blue-banner {
 	background: var(--blue-primary, #0000aa);
-	border: 1px solid #6666ff;
+	border: 0.05cqi solid #6666ff;
 }
 
 /* 5-col row fills Screen midbottom height (9/11) */
@@ -243,13 +249,13 @@ body:has(.controller) {
 }
 
 .ctrl-score-btn-name {
-	font-size: 0.72em;
+	font-size: 1.58cqi; /* was 0.72em at Button 2.2cqi */
 	font-weight: 700;
 	opacity: 0.95;
 }
 
 .ctrl-score-btn-points {
-	font-size: 1.55em;
+	font-size: 3.41cqi; /* was 1.55em at Button 2.2cqi */
 	font-weight: 900;
 }
 
