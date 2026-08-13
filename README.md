@@ -73,7 +73,7 @@ Landing（Google）→ Court Setup（Event / Court）→ Home
 |-------|--------|
 | UI | React 19, Vite 5, React Router 7 |
 | Data / Auth | Firebase Realtime Database + Google Auth（**冇自建 backend**） |
-| Style | Vanilla CSS, glassmorphism, `cqi` container queries, Inter |
+| Style | Vanilla CSS, glassmorphism, `cqi` container queries, Arial |
 | PDF | pdfjs-dist（HKTKDA 對陣表） |
 | Deploy | GitHub Pages · `base: '/TKD-scoreboard/'` |
 
