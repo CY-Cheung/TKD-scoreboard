@@ -25,3 +25,7 @@ dist-ssr
 
 # Local tooling leftovers
 ngrok.exe
+
+# Large local dumps / design refs (not app runtime)
+docs/*-rtdb-export.json
+docs/Landing Page Idea*
