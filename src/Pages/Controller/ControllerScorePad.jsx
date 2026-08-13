@@ -4,8 +4,8 @@ import { CONTROLLER_SCORE_COLUMNS } from "./controllerScoreActions";
 import { parseScoreActionLabel } from "./controllerMatchView";
 
 /**
- * Presentational score columns for Controller.
- * Center match panel stays between red and blue columns.
+ * Presentational score columns for Controller (Screen middle widths).
+ * Center match panel is passed as children between red and blue columns.
  */
 function ControllerScorePad({ onScore, children }) {
   const redColumns = CONTROLLER_SCORE_COLUMNS.filter((col) => col.side === "red");
@@ -18,7 +18,7 @@ function ControllerScorePad({ onScore, children }) {
         return (
           <Button
             key={`${column.side}-${action.index}`}
-            className={`ctrl-score-btn ${column.side}-btn`}
+            className="ctrl-score-btn"
             angle={column.angle}
             fontSize="2.2cqi"
             onClick={(e) => {
@@ -37,11 +37,11 @@ function ControllerScorePad({ onScore, children }) {
   );
 
   return (
-    <>
+    <div className="ctrl-middle">
       {redColumns.map(renderColumn)}
       {children}
       {blueColumns.map(renderColumn)}
-    </>
+    </div>
   );
 }
 

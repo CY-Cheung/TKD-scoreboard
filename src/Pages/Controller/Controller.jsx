@@ -34,6 +34,7 @@ import {
 import { subscribeMatchView } from "../../services/matchFirebase";
 import ControllerScorePad from "./ControllerScorePad";
 import ControllerTopBar from "./ControllerTopBar";
+import ControllerNamesBar from "./ControllerNamesBar";
 import ControllerCenterPanel from "./ControllerCenterPanel";
 import {
     ControllerConnectingScreen,
@@ -392,32 +393,35 @@ function Controller() {
 
     return (
         <div className="controller" onClick={requestFullscreen}>
-            <ControllerTopBar
-                isConnected={isConnected}
-                onBack={() => navigate(resolveControllerBackPath(user))}
-            />
+            <div className="ctrl-stage">
+                <ControllerTopBar
+                    isConnected={isConnected}
+                    onBack={() => navigate(resolveControllerBackPath(user))}
+                />
 
-            {lastAction && (
-                <div className={`ctrl-action-banner ${lastAction.side === "red" ? "red-banner" : "blue-banner"}`}>
-                    {lastAction.text}
-                </div>
-            )}
+                {lastAction && (
+                    <div className={`ctrl-action-banner ${lastAction.side === "red" ? "red-banner" : "blue-banner"}`}>
+                        {lastAction.text}
+                    </div>
+                )}
 
-            <ControllerScorePad onScore={handleScore}>
-                <ControllerCenterPanel
+                <ControllerNamesBar
                     redName={summary.redName}
                     blueName={summary.blueName}
-                    redScore={summary.redScore}
-                    blueScore={summary.blueScore}
-                    currentRound={summary.currentRound}
-                    isPaused={summary.isPaused}
-                    refereeMode={refereeMode}
-                    mySeat={mySeat}
-                    eventLabel={eventName || eventId || "No Event"}
-                    courtId={courtId}
-                    matchNo={summary.matchNo}
                 />
-            </ControllerScorePad>
+
+                <ControllerScorePad onScore={handleScore}>
+                    <ControllerCenterPanel
+                        redScore={summary.redScore}
+                        blueScore={summary.blueScore}
+                        currentRound={summary.currentRound}
+                        isPaused={summary.isPaused}
+                        refereeMode={refereeMode}
+                        mySeat={mySeat}
+                        matchNo={summary.matchNo}
+                    />
+                </ControllerScorePad>
+            </div>
         </div>
     );
 }

@@ -2,51 +2,39 @@ import React from "react";
 import { formatRefereeModeBadge } from "./controllerMatchView";
 
 /**
- * Center info column: names, big red/blue scores (Screen-like),
- * round/status, judge/mode, court/match meta. Display only.
+ * Screen-like match-info middle: MATCH + number, then scores
+ * (replaces timer + timeout). Display only.
  */
 export default function ControllerCenterPanel({
-  redName,
-  blueName,
   redScore = 0,
   blueScore = 0,
   currentRound,
   isPaused,
   refereeMode,
   mySeat,
-  eventLabel,
-  courtId,
   matchNo,
 }) {
   return (
-    <div className="col center-col">
-      <div className="center-match-stack">
-        <div className="center-names-row">
-          <div className="competitor-side red-side-text" title={redName}>
-            {redName}
-          </div>
-          <div className="competitor-side blue-side-text" title={blueName}>
-            {blueName}
-          </div>
+    <div className="match-info-middle ctrl-col-info">
+      <div className="match">
+        <div className="match-font">MATCH</div>
+        <div className="match-number">{matchNo}</div>
+      </div>
+      <div className="timer">
+        <div className="game-timer timer-font ctrl-center-scoreboard">
+          <span className="ctrl-center-score ctrl-center-score--red">
+            {redScore}
+          </span>
+          <span className="ctrl-center-score ctrl-center-score--blue">
+            {blueScore}
+          </span>
         </div>
-
-        <div className="center-scores-row">
-          <div className="center-score-box red-score-box">{redScore}</div>
-          <div className="center-score-box blue-score-box">{blueScore}</div>
-        </div>
-
-        <div className="center-status-block">
-          <div className="center-status-line">
+        <div className="ctrl-center-status">
+          <div>
             R{currentRound} • {isPaused ? "PAUSED" : "LIVE"}
           </div>
-          <div className="center-status-line center-judge-line">
+          <div className="ctrl-center-status-sub">
             {formatRefereeModeBadge(refereeMode)} • {mySeat || "..."}
-          </div>
-          <div className="center-meta-line" title={eventLabel || ""}>
-            {eventLabel || "No Event"}
-          </div>
-          <div className="center-meta-line">
-            {courtId || "No Court"} · Match #{matchNo}
           </div>
         </div>
       </div>
