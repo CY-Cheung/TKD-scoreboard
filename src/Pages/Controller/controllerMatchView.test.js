@@ -32,9 +32,12 @@ describe("buildControllerMatchSummary", () => {
     expect(buildControllerMatchSummary(null, "M1")).toEqual({
       redName: DEFAULT_RED_NAME,
       blueName: "Chung (Blue)",
+      redCompetitor: { name: DEFAULT_RED_NAME },
+      blueCompetitor: { name: "Chung (Blue)" },
       matchNo: "M1",
       currentRound: 1,
       isPaused: true,
+      isResting: false,
       redScore: 0,
       blueScore: 0,
       roundWins: { red: 0, blue: 0 },
@@ -47,11 +50,11 @@ describe("buildControllerMatchSummary", () => {
         config: {
           matchId: "42",
           competitors: {
-            red: { name: "A" },
+            red: { name: "A", affiliatedClub: "RC" },
             blue: { name: "B" },
           },
         },
-        state: { currentRound: 3, isPaused: false },
+        state: { currentRound: 3, isPaused: false, phase: "REST" },
         stats: {
           red: { pointsStat: [1, 1, 0, 0, 0] },
           blue: { pointsStat: [0, 0, 1, 0, 0] },
@@ -63,9 +66,12 @@ describe("buildControllerMatchSummary", () => {
     expect(summary).toEqual({
       redName: "A",
       blueName: "B",
+      redCompetitor: { name: "A", affiliatedClub: "RC" },
+      blueCompetitor: { name: "B" },
       matchNo: "42",
       currentRound: 3,
       isPaused: false,
+      isResting: true,
       redScore: 3,
       blueScore: 3,
       roundWins: { red: 1, blue: 1 },

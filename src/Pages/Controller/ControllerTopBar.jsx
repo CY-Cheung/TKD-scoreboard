@@ -1,25 +1,22 @@
 import React from "react";
-import Button from "../../Components/Button/Button";
-import { ArrowLeft } from "react-bootstrap-icons";
+import ScreenTopNames from "../Screen/ScreenTopNames";
 
 /**
- * Title bar inside 2:1 (Screen top height): Back only.
- * Mode / judge live in the center column.
+ * Title bar inside 2:1 — same as Screen top name strip (no Back).
+ * direction stays "row" (Controller score columns are fixed L→R).
  */
-export default function ControllerTopBar({ onBack }) {
+export default function ControllerTopBar({
+  redCompetitor,
+  blueCompetitor,
+  isResting = false,
+  direction = "row",
+}) {
   return (
-    <div className="ctrl-top-bar">
-      <Button
-        className="ctrl-back-btn"
-        onClick={(e) => {
-          e.stopPropagation();
-          onBack();
-        }}
-        aria-label="Back"
-        icon={<ArrowLeft size={"1.2cqi"} />}
-        fontSize="0.95cqi"
-        angle={180}
-      />
-    </div>
+    <ScreenTopNames
+      direction={direction}
+      isResting={isResting}
+      redCompetitor={redCompetitor}
+      blueCompetitor={blueCompetitor}
+    />
   );
 }

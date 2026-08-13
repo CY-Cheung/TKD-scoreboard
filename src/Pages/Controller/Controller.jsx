@@ -25,7 +25,6 @@ import { armScoreHaptic, shouldVibrateForRecentScores, triggerScoreHaptic } from
 import {
     canAcceptScoreInput,
     buildControllerMatchSummary,
-    resolveControllerBackPath,
     buildScoreActionFeedback,
 } from "./controllerMatchView";
 import {
@@ -394,7 +393,9 @@ function Controller() {
         <div className="controller" onClick={requestFullscreen}>
             <div className="ctrl-shell">
                 <ControllerTopBar
-                    onBack={() => navigate(resolveControllerBackPath(user))}
+                    redCompetitor={summary.redCompetitor}
+                    blueCompetitor={summary.blueCompetitor}
+                    isResting={summary.isResting}
                 />
 
                 <div className="ctrl-stage">

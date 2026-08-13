@@ -22,7 +22,11 @@ export default function ControllerVisualPreview() {
   return (
     <div className="controller">
       <div className="ctrl-shell">
-        <ControllerTopBar onBack={() => {}} />
+        <ControllerTopBar
+          redCompetitor={{ name: "Hong", affiliatedClub: "Red Club" }}
+          blueCompetitor={{ name: "Chung", affiliatedClub: "Blue Club" }}
+          isResting={false}
+        />
 
         <div className="ctrl-stage">
           {lastAction && (

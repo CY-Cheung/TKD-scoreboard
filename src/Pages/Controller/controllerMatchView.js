@@ -34,12 +34,22 @@ export function buildControllerMatchSummary(matchData, currentMatchId) {
           blue: roundWinsRaw.blue || 0,
         }
       : { red: 0, blue: 0 };
+  const redCompetitor = matchData?.config?.competitors?.red || {
+    name: DEFAULT_RED_NAME,
+  };
+  const blueCompetitor = matchData?.config?.competitors?.blue || {
+    name: DEFAULT_BLUE_NAME,
+  };
   return {
-    redName: matchData?.config?.competitors?.red?.name || DEFAULT_RED_NAME,
-    blueName: matchData?.config?.competitors?.blue?.name || DEFAULT_BLUE_NAME,
+    redName: redCompetitor.name || DEFAULT_RED_NAME,
+    blueName: blueCompetitor.name || DEFAULT_BLUE_NAME,
+    /** Same shape as ScreenTopNames / PlayerNameCell. */
+    redCompetitor,
+    blueCompetitor,
     matchNo: matchData?.config?.matchId || currentMatchId || "N/A",
     currentRound: matchData?.state?.currentRound || 1,
     isPaused: matchData?.state?.isPaused ?? true,
+    isResting: matchData?.state?.phase === "REST",
     /** Same totals as Screen scoreboard (display only). */
     redScore: getScoreValue(redStats, blueStats),
     blueScore: getScoreValue(blueStats, redStats),

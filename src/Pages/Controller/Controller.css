@@ -61,31 +61,7 @@ body:has(.controller) {
 	flex-shrink: 0;
 }
 
-/* Title bar inside 2:1 — same height as Screen .top */
-.ctrl-top-bar {
-	position: relative;
-	width: var(--screen-width);
-	height: calc(var(--screen-height) * 2 / 11);
-	flex-shrink: 0;
-	box-sizing: border-box;
-	display: flex;
-	justify-content: flex-start;
-	align-items: center;
-	gap: 0.8cqi;
-	padding: 0 2cqi;
-	z-index: 100;
-	color: rgba(255, 255, 255, 0.75);
-	background: #000000;
-	pointer-events: none;
-}
-
-.ctrl-top-bar .ctrl-back-btn {
-	pointer-events: auto;
-}
-
-.ctrl-back-btn {
-	flex-shrink: 0;
-}
+/* Title bar = Screen .top (imported); no Back button */
 
 /* Action toast — inside 2:1 stage */
 .ctrl-action-banner {
