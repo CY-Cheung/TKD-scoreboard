@@ -36,7 +36,7 @@ export function ControllerSeatGrabErrorScreen({ error, onRetry }) {
         textAlign: "center",
       }}
     >
-      <h1 style={{ color: "#ff3b30" }}>Seat Grab Failed</h1>
+      <h1 style={{ color: "var(--red-primary, #aa0000)" }}>Seat Grab Failed</h1>
       <p>搶位失敗。請確認 Firebase rules 已 publish，並重新掃 QR。</p>
       <p
         style={{
@@ -66,7 +66,7 @@ export function ControllerCourtFullScreen({ onBack }) {
         textAlign: "center",
       }}
     >
-      <h1 style={{ color: "#ff3b30" }}>Court is Full</h1>
+      <h1 style={{ color: "var(--red-primary, #aa0000)" }}>Court is Full</h1>
       <p>There are already 3 referees connected to this court.</p>
       <Button text="Back (返回)" onClick={onBack} variant="orange" />
     </div>

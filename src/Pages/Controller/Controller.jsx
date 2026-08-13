@@ -391,12 +391,8 @@ function Controller() {
     }
 
     return (
-        <div className="controller aurora-bg" onClick={requestFullscreen}>
+        <div className="controller" onClick={requestFullscreen}>
             <ControllerTopBar
-                eventLabel={eventName || eventId || "No Event"}
-                courtId={courtId}
-                matchNo={summary.matchNo}
-                mySeat={mySeat}
                 isConnected={isConnected}
                 onBack={() => navigate(resolveControllerBackPath(user))}
             />
@@ -411,10 +407,15 @@ function Controller() {
                 <ControllerCenterPanel
                     redName={summary.redName}
                     blueName={summary.blueName}
+                    redScore={summary.redScore}
+                    blueScore={summary.blueScore}
                     currentRound={summary.currentRound}
                     isPaused={summary.isPaused}
                     refereeMode={refereeMode}
                     mySeat={mySeat}
+                    eventLabel={eventName || eventId || "No Event"}
+                    courtId={courtId}
+                    matchNo={summary.matchNo}
                 />
             </ControllerScorePad>
         </div>

@@ -2,15 +2,8 @@ import React from "react";
 import Button from "../../Components/Button/Button";
 import { Wifi, WifiOff, ArrowLeft } from "react-bootstrap-icons";
 
-/** Top banner: back, event/court/match badges, connection. */
-export default function ControllerTopBar({
-  eventLabel,
-  courtId,
-  matchNo,
-  mySeat,
-  isConnected,
-  onBack,
-}) {
+/** Minimal top bar: Back + Live/Offline only. */
+export default function ControllerTopBar({ isConnected, onBack }) {
   return (
     <div className="ctrl-top-bar">
       <Button
@@ -24,19 +17,6 @@ export default function ControllerTopBar({
         fontSize="1cqi"
         angle={180}
       />
-      <div className="ctrl-info-badges">
-        <span className="ctrl-badge">{eventLabel}</span>
-        <span className="ctrl-badge court">{courtId || "No Court"}</span>
-        <span className="ctrl-badge match">Match #{matchNo}</span>
-        {mySeat && (
-          <span
-            className="ctrl-badge"
-            style={{ backgroundColor: "#ffcc00", color: "black" }}
-          >
-            {mySeat}
-          </span>
-        )}
-      </div>
       <div className="ctrl-conn-status">
         {isConnected ? (
           <span className="conn-connected">

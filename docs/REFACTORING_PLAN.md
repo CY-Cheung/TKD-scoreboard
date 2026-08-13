@@ -209,6 +209,7 @@ Waves 0–11 已執行完畢。工程整潔後續見 §10「Engineering hygiene�
 | 2b Controller extracts | **完成** | match view helpers／status screens／TopBar／CenterPanel；seat grab Firebase 仍留 page |
 | 2c Edit extracts | **完成** | score／IVR／timer／winner helpers + GridHeaders／TimeBar／IvrQuotaInput |
 | 2d QRCodeDisplay extracts | **完成** | occupancy／host flags／court label helpers；Status／Mode／Host／EventHeading panels；reuse `parseEventHeading` |
+| 2e Controller Screen-style UI | **完成** | Screen 色＋硬邊分區；關 aurora；Top bar 精簡；中欄紅／藍大分；pill 鍵文案；邏輯不變 |
 | 3 Optional RTL | 未開 | |
 
 ### Wave 9 progress（2026-08-12）

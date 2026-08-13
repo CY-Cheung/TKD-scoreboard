@@ -5,6 +5,7 @@ import {
   resolveControllerBackPath,
   formatRefereeModeBadge,
   buildScoreActionFeedback,
+  parseScoreActionLabel,
   DEFAULT_RED_NAME,
 } from "./controllerMatchView.js";
 
@@ -32,10 +33,12 @@ describe("buildControllerMatchSummary", () => {
       matchNo: "M1",
       currentRound: 1,
       isPaused: true,
+      redScore: 0,
+      blueScore: 0,
     });
   });
 
-  it("reads config and state", () => {
+  it("reads config, state, and Screen-style totals", () => {
     const summary = buildControllerMatchSummary(
       {
         config: {
@@ -46,6 +49,10 @@ describe("buildControllerMatchSummary", () => {
           },
         },
         state: { currentRound: 3, isPaused: false },
+        stats: {
+          red: { pointsStat: [1, 1, 0, 0, 0] },
+          blue: { pointsStat: [0, 0, 1, 0, 0] },
+        },
       },
       "ignored"
     );
@@ -55,6 +62,21 @@ describe("buildControllerMatchSummary", () => {
       matchNo: "42",
       currentRound: 3,
       isPaused: false,
+      redScore: 3,
+      blueScore: 3,
+    });
+  });
+});
+
+describe("parseScoreActionLabel", () => {
+  it("splits points and action name", () => {
+    expect(parseScoreActionLabel("+6 Turn Head")).toEqual({
+      points: "+6",
+      name: "Turn Head",
+    });
+    expect(parseScoreActionLabel("+2 Body")).toEqual({
+      points: "+2",
+      name: "Body",
     });
   });
 });

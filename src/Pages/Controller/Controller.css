@@ -1,10 +1,18 @@
-/* Controller.css - Restored 5-column layout with responsive top header */
+/* Controller — Screen colors + hard zones; keep 5-col + pill Button */
 
 *, *::before, *::after {
 	box-sizing: border-box;
 }
 
 .controller {
+	--ctrl-red: var(--red-primary, #aa0000);
+	--ctrl-blue: var(--blue-primary, #0000aa);
+	--ctrl-red-deep: var(--red-secondary, #660000);
+	--ctrl-blue-deep: var(--blue-secondary, #000066);
+	--ctrl-yellow: var(--yellow-primary, #ffff00);
+	--ctrl-bg: #0a0a12;
+	--ctrl-panel: #14141c;
+
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -12,13 +20,23 @@
 	width: 100dvw;
 	max-width: 100cqi;
 	position: relative;
-	background-color: #0f172a;
+	/* Dark solid + subtle vertical wash (no aurora) */
+	background-color: var(--ctrl-bg);
+	background-image: linear-gradient(
+		180deg,
+		#12121a 0%,
+		#0a0a12 55%,
+		#08080e 100%
+	);
 	overflow: hidden;
 	user-select: none;
 	box-sizing: border-box;
+	font-family: Arial, "Helvetica Neue", Helvetica, "Microsoft JhengHei",
+		"PingFang TC", "Noto Sans TC", sans-serif;
+	color: #ffffff;
 }
 
-/* Top Status Bar Banner - Strictly bounded to 100% width */
+/* Top Status Bar — Back + connection only */
 .ctrl-top-bar {
 	position: absolute;
 	top: 0;
@@ -26,11 +44,9 @@
 	width: 100%;
 	max-width: 100cqi;
 	box-sizing: border-box;
-	height: 4cqi; /* Thickened from 2.083cqi */
-	background-color: rgba(255, 255, 255, 0.03);
-	backdrop-filter: blur(0.781cqi);
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	box-shadow: 0 0.208cqi 1.562cqi rgba(0, 0, 0, 0.1);
+	height: 4cqi;
+	background-color: rgba(0, 0, 0, 0.45);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
@@ -40,49 +56,12 @@
 }
 
 .ctrl-back-btn {
-	background: transparent;
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	color: #94a3b8;
-	padding: 0.3cqi 0.6cqi;
-	border-radius: 0.5cqi;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
 	flex-shrink: 0;
 }
 
-.ctrl-info-badges {
-	display: flex;
-	gap: 0.6cqi;
-	align-items: center;
-	flex-shrink: 1;
-}
-
-.ctrl-badge {
-	background: rgba(255, 255, 255, 0.05);
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	box-shadow: 0 0 0.521cqi rgba(255, 255, 255, 0.05);
-	color: #cbd5e1;
-	font-size: 1.1cqi;
-	padding: 0.2cqi 0.6cqi;
-	border-radius: 0.4cqi;
-	font-weight: 600;
-	white-space: nowrap;
-}
-
-.ctrl-badge.court {
-	background: rgba(2, 132, 199, 0.4);
-	color: #38bdf8;
-}
-
-.ctrl-badge.match {
-	background: rgba(217, 119, 6, 0.4);
-	color: #fbbf24;
-}
-
 .ctrl-conn-status {
-	font-size: 1cqi;
-	font-weight: 600;
+	font-size: 1.1cqi;
+	font-weight: 700;
 	white-space: nowrap;
 	flex-shrink: 0;
 }
@@ -91,44 +70,40 @@
 	color: #4ade80;
 	display: flex;
 	align-items: center;
-	gap: 0.208cqi;
+	gap: 0.3cqi;
 }
 
 .conn-disconnected {
 	color: #f87171;
 	display: flex;
 	align-items: center;
-	gap: 0.208cqi;
+	gap: 0.3cqi;
 }
 
-/* Action Toast Banner with Side Color */
+/* Action Toast Banner */
 .ctrl-action-banner {
 	position: absolute;
-	top: 3.125cqi;
+	top: 4.4cqi;
 	left: 50%;
 	transform: translateX(-50%);
-	padding: 0.417cqi 1.042cqi;
-	border-radius: 0.625cqi;
+	padding: 0.45cqi 1.1cqi;
+	border-radius: 999px;
 	font-weight: 800;
-	font-size: 0.833cqi;
-	box-shadow: 0 0.417cqi 1.667cqi rgba(0, 0, 0, 0.5);
+	font-size: 0.9cqi;
 	z-index: 100;
 	color: #ffffff;
 	animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 	white-space: nowrap;
-	backdrop-filter: blur(0.521cqi);
 }
 
 .ctrl-action-banner.red-banner {
-	background: rgba(220, 38, 38, 0.4);
-	border: 1px solid rgba(248, 113, 113, 0.8);
-	box-shadow: 0 0 1.042cqi rgba(220, 38, 38, 0.6);
+	background: var(--ctrl-red);
+	border: 1px solid #ff6666;
 }
 
 .ctrl-action-banner.blue-banner {
-	background: rgba(37, 99, 235, 0.4);
-	border: 1px solid rgba(96, 165, 250, 0.8);
-	box-shadow: 0 0 1.042cqi rgba(37, 99, 235, 0.6);
+	background: var(--ctrl-blue);
+	border: 1px solid #6666ff;
 }
 
 .col {
@@ -138,52 +113,128 @@
 	justify-content: center;
 	height: 100dvh;
 	width: 20dvw;
-	padding: 4.5cqi 0.521cqi 0.521cqi 0.521cqi; /* Increased top padding from 2.604cqi to 4.5cqi */
+	padding: 4.5cqi 0.55cqi 0.55cqi 0.55cqi;
 	box-sizing: border-box;
-	gap: 0.521cqi;
+	gap: 0.55cqi;
 }
 
+/* Hard red / blue zones (poomsae-like partitions) */
 .col.red-col {
-	background: rgba(255, 0, 80, 0.05);
-	border-right: 1px solid rgba(255, 0, 80, 0.2);
+	background: linear-gradient(
+		180deg,
+		rgba(170, 0, 0, 0.28) 0%,
+		rgba(102, 0, 0, 0.18) 100%
+	);
+	border-right: 2px solid var(--ctrl-red);
 }
 
 .col.blue-col {
-	background: rgba(0, 150, 255, 0.05);
-	border-left: 1px solid rgba(0, 150, 255, 0.2);
+	background: linear-gradient(
+		180deg,
+		rgba(0, 0, 170, 0.28) 0%,
+		rgba(0, 0, 102, 0.18) 100%
+	);
+	border-left: 2px solid var(--ctrl-blue);
 }
 
-.col > button, .neon-btn {
+.col > button,
+.ctrl-score-btn {
 	height: 100%;
 	width: 100%;
 	flex: 1;
 }
 
-/* Center Info Panel Column (Horizontal Layout) */
+/* Score pills — Screen solid colors, keep pill shape from Button */
+.ctrl-score-btn {
+	white-space: normal !important;
+	margin: 0.2cqi !important;
+	padding: 0.4cqi 0.5cqi !important;
+}
+
+.ctrl-score-btn.red-btn {
+	background:
+		linear-gradient(var(--ctrl-red), var(--ctrl-red)) padding-box,
+		linear-gradient(135deg, #cc3333, #660000) border-box !important;
+	border: 0.15cqi solid transparent !important;
+	color: #ffffff !important;
+	text-shadow: none;
+	box-shadow: none !important;
+}
+
+.ctrl-score-btn.red-btn:active {
+	background: var(--ctrl-red-deep) !important;
+	border-color: var(--ctrl-yellow) !important;
+	color: var(--ctrl-yellow) !important;
+}
+
+.ctrl-score-btn.blue-btn {
+	background: var(--ctrl-blue) !important;
+	border: 2px solid #3333cc !important;
+	color: #ffffff !important;
+	text-shadow: none;
+	box-shadow: none !important;
+}
+
+.ctrl-score-btn.blue-btn:active {
+	background: var(--ctrl-blue-deep) !important;
+	border-color: var(--ctrl-yellow) !important;
+	color: var(--ctrl-yellow) !important;
+}
+
+.ctrl-score-btn-inner {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25cqi;
+	line-height: 1.05;
+}
+
+.ctrl-score-btn-name {
+	font-size: 0.72em;
+	font-weight: 700;
+	opacity: 0.95;
+}
+
+.ctrl-score-btn-points {
+	font-size: 1.15em;
+	font-weight: 900;
+}
+
+/* Center info column */
 .col.center-col {
-	background: rgba(0, 0, 0, 0.3);
-	border-left: 1px solid rgba(255, 255, 255, 0.15);
-	border-right: 1px solid rgba(255, 255, 255, 0.15);
+	background: var(--ctrl-panel);
+	border-left: 2px solid rgba(255, 255, 255, 0.2);
+	border-right: 2px solid rgba(255, 255, 255, 0.2);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding-inline: 0.312cqi;
-	backdrop-filter: blur(0.521cqi);
+	padding-inline: 0.45cqi;
 }
 
-.center-match-details-horizontal {
+.center-match-stack {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: center;
+	width: 100%;
+	gap: 0.85cqi;
+	overflow: hidden;
+}
+
+.center-names-row,
+.center-scores-row {
 	display: flex;
 	flex-direction: row;
-	align-items: center;
+	align-items: stretch;
 	justify-content: space-between;
+	gap: 0.4cqi;
 	width: 100%;
-	gap: 0.208cqi;
-	overflow: hidden;
 }
 
 .competitor-side {
 	flex: 1;
-	font-size: 1.1cqi;
+	font-size: 1.15cqi;
 	font-weight: 800;
 	text-align: center;
 	white-space: nowrap;
@@ -192,73 +243,62 @@
 }
 
 .red-side-text {
-	color: #f87171;
+	color: #ff6666;
 }
 
 .blue-side-text {
-	color: #60a5fa;
+	color: #6666ff;
 }
 
-.center-vs-box {
+.center-score-box {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 8cqi;
+	background: #1a1a22;
+	border: 2px solid rgba(255, 255, 255, 0.25);
+	color: var(--ctrl-yellow);
+	font-size: 5.5cqi;
+	font-weight: 900;
+	line-height: 1;
+}
+
+.center-score-box.red-score-box {
+	border-color: var(--ctrl-red);
+}
+
+.center-score-box.blue-score-box {
+	border-color: var(--ctrl-blue);
+}
+
+.center-status-block {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center;
-	gap: 0.104cqi;
-	flex-shrink: 0;
+	gap: 0.35cqi;
+	text-align: center;
 }
 
-.vs-badge {
-	font-size: 1.1cqi;
-	font-weight: 900;
-	color: #fbbf24;
-	letter-spacing: 1px;
-	text-shadow: 0 0 0.521cqi rgba(251, 191, 36, 0.8);
+.center-status-line {
+	font-size: 1.15cqi;
+	font-weight: 800;
+	color: #f0f0f0;
 }
 
-.round-pill {
-	font-size: 0.75cqi;
-	background: rgba(255, 255, 255, 0.05);
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	box-shadow: 0 0 0.417cqi rgba(255, 255, 255, 0.1);
-	color: #e2e8f0;
-	padding: 0.208cqi 0.417cqi;
-	border-radius: 0.625cqi;
+.center-judge-line {
+	color: var(--ctrl-yellow);
+	font-size: 1.25cqi;
+}
+
+.center-meta-line {
+	font-size: 0.95cqi;
 	font-weight: 600;
+	color: #b0b0b0;
 	white-space: nowrap;
-}
-
-/* Neon Button Custom Styles */
-.neon-btn.red-btn {
-	background: rgba(30, 0, 10, 0.6) !important;
-	border: 1px solid rgba(255, 0, 80, 0.4) !important;
-	color: #ff3b30 !important;
-	text-shadow: 0 0 0.417cqi rgba(255, 59, 48, 0.6);
-	box-shadow: inset 0 0 0.781cqi rgba(255, 0, 80, 0.1), 0 0.208cqi 0.781cqi rgba(0, 0, 0, 0.3) !important;
-}
-
-.neon-btn.red-btn:active {
-	background: rgba(255, 0, 80, 0.3) !important;
-	border-color: #ff3b30 !important;
-	box-shadow: inset 0 0 1.042cqi rgba(255, 0, 80, 0.5), 0 0 1.042cqi rgba(255, 0, 80, 0.6) !important;
-	color: #ffffff !important;
-	text-shadow: 0 0 0.521cqi #ffffff;
-}
-
-.neon-btn.blue-btn {
-	background: rgba(0, 10, 30, 0.6) !important;
-	border: 1px solid rgba(0, 150, 255, 0.4) !important;
-	color: #38bdf8 !important;
-	text-shadow: 0 0 0.417cqi rgba(56, 189, 248, 0.6);
-	box-shadow: inset 0 0 0.781cqi rgba(0, 150, 255, 0.1), 0 0.208cqi 0.781cqi rgba(0, 0, 0, 0.3) !important;
-}
-
-.neon-btn.blue-btn:active {
-	background: rgba(0, 150, 255, 0.3) !important;
-	border-color: #38bdf8 !important;
-	box-shadow: inset 0 0 1.042cqi rgba(0, 150, 255, 0.5), 0 0 1.042cqi rgba(0, 150, 255, 0.6) !important;
-	color: #ffffff !important;
-	text-shadow: 0 0 0.521cqi #ffffff;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
 }
 
 @keyframes popIn {
@@ -271,21 +311,21 @@
 		padding: 0 0.417cqi;
 		height: 1.875cqi;
 	}
-	.ctrl-badge {
-		font-size: 0.542cqi;
-		padding: 1px 0.208cqi;
-		max-width: 3.646cqi;
-	}
 	.ctrl-conn-status {
 		font-size: 0.583cqi;
 	}
 	.competitor-side {
-		font-size: 0.625cqi;
+		font-size: 0.7cqi;
 	}
-	.vs-badge {
-		font-size: 0.667cqi;
+	.center-score-box {
+		font-size: 3.2cqi;
+		min-height: 4.5cqi;
 	}
-	.round-pill {
-		font-size: 0.5cqi;
+	.center-status-line,
+	.center-judge-line {
+		font-size: 0.7cqi;
+	}
+	.center-meta-line {
+		font-size: 0.55cqi;
 	}
 }
