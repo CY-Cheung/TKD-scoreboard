@@ -69,59 +69,22 @@ body:has(.controller) {
 	flex-shrink: 0;
 	box-sizing: border-box;
 	display: flex;
-	justify-content: space-between;
+	justify-content: flex-start;
 	align-items: center;
 	gap: 0.8cqi;
-	padding: 0 2cqi; /* was width * 0.02 */
+	padding: 0 2cqi;
 	z-index: 100;
 	color: rgba(255, 255, 255, 0.75);
 	background: #000000;
 	pointer-events: none;
 }
 
-.ctrl-top-bar .ctrl-back-btn,
-.ctrl-top-bar .ctrl-conn-status,
-.ctrl-top-bar .ctrl-top-bar-center {
+.ctrl-top-bar .ctrl-back-btn {
 	pointer-events: auto;
 }
 
 .ctrl-back-btn {
 	flex-shrink: 0;
-}
-
-.ctrl-top-bar-center {
-	flex: 1;
-	min-width: 0;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	text-align: center;
-}
-
-.ctrl-conn-status {
-	font-size: 1.6cqi; /* was width * 0.016 */
-	font-weight: 700;
-	white-space: nowrap;
-	flex-shrink: 0;
-}
-
-.ctrl-conn-status svg {
-	width: 1.4cqi;
-	height: 1.4cqi;
-}
-
-.conn-connected {
-	color: #4ade80;
-	display: flex;
-	align-items: center;
-	gap: 0.3cqi;
-}
-
-.conn-disconnected {
-	color: #f87171;
-	display: flex;
-	align-items: center;
-	gap: 0.3cqi;
 }
 
 /* Action toast — inside 2:1 stage */

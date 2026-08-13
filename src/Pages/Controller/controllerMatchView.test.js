@@ -103,7 +103,8 @@ describe("nav / badges / feedback", () => {
     expect(formatControllerJudgeLabel("J1")).toBe("Judge 1");
     expect(formatControllerJudgeLabel("J3")).toBe("Judge 3");
     expect(formatControllerJudgeLabel("Admin")).toBe("Admin");
-    expect(formatControllerJudgeLabel(null)).toBe("Judge …");
+    expect(formatControllerJudgeLabel(null)).toBe("Judge -");
+    expect(formatControllerJudgeLabel("J1", false)).toBe("Judge -");
   });
 
   it("buildScoreActionFeedback", () => {

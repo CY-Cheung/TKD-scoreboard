@@ -14,6 +14,7 @@ export default function ControllerCenterPanel({
   roundWins = { red: 0, blue: 0 },
   refereeMode = "single",
   mySeat,
+  isConnected = true,
 }) {
   return (
     <div className="ctrl-col-info">
@@ -28,7 +29,7 @@ export default function ControllerCenterPanel({
               {formatControllerModeLabel(refereeMode)}
             </div>
             <div className="ctrl-center-judge">
-              {formatControllerJudgeLabel(mySeat)}
+              {formatControllerJudgeLabel(mySeat, isConnected)}
             </div>
           </div>
         </div>

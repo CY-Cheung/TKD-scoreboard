@@ -22,7 +22,7 @@ export default function ControllerVisualPreview() {
   return (
     <div className="controller">
       <div className="ctrl-shell">
-        <ControllerTopBar isConnected={true} onBack={() => {}} />
+        <ControllerTopBar onBack={() => {}} />
 
         <div className="ctrl-stage">
           {lastAction && (
@@ -42,6 +42,7 @@ export default function ControllerVisualPreview() {
               roundWins={{ red: 1, blue: 0 }}
               refereeMode="single"
               mySeat="J1"
+              isConnected={true}
             />
           </ControllerScorePad>
         </div>

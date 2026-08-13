@@ -81,10 +81,12 @@ export function formatControllerModeLabel(refereeMode) {
 
 /**
  * Center-column judge label: J1 → Judge 1, Admin → Admin.
+ * When disconnected (or no seat), show "Judge -".
  * @param {string | null | undefined} seat
+ * @param {boolean} [isConnected=true]
  */
-export function formatControllerJudgeLabel(seat) {
-  if (!seat) return "Judge …";
+export function formatControllerJudgeLabel(seat, isConnected = true) {
+  if (!isConnected || !seat) return "Judge -";
   const m = String(seat).match(/^J([1-3])$/i);
   if (m) return `Judge ${m[1]}`;
   if (String(seat).toLowerCase() === "admin") return "Admin";

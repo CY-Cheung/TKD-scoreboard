@@ -394,7 +394,6 @@ function Controller() {
         <div className="controller" onClick={requestFullscreen}>
             <div className="ctrl-shell">
                 <ControllerTopBar
-                    isConnected={isConnected}
                     onBack={() => navigate(resolveControllerBackPath(user))}
                 />
 
@@ -412,6 +411,7 @@ function Controller() {
                             roundWins={summary.roundWins}
                             refereeMode={refereeMode}
                             mySeat={mySeat}
+                            isConnected={isConnected}
                         />
                     </ControllerScorePad>
                 </div>
