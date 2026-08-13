@@ -155,8 +155,6 @@ Pure／local helpers（**無**网络 I/O）：
 | `formatIvrQuotaForInput(value)` | stored quota | `string` |
 | `appendIvrQuotaToSettings(settings, ivrQuotaInput)` | object + input | mutated `settings` |
 | `appendIvrQuotaToRules(rules, ivrQuotaInput)` | object + input | mutated `rules` |
-| `buildIvrQuotaUpdate(ivrQuotaInput)` | input | `{ ivrQuota: number\|null }` |
-| `isIvrWtMode(eventSettings, matchRules)` | settings | `boolean` |
 | `resolveIvrQuotaCap(eventSettings, matchRules)` | settings | number or `IVR_UNLIMITED` (-1) |
 | `getEffectiveIvrRemaining(stats, side, eventSettings, matchRules)` | stats… | number |
 | `formatIvrQuotaForEdit(remaining)` | remaining | `string` |
@@ -190,9 +188,9 @@ Firebase-backed：
 
 ### 2.5 Other exports from `Api.js`
 
-- `VOTE_WINDOW_MS`
+- `VOTE_WINDOW_MS`（re-export from `domain/scoreTransaction.js`）
 - `IVR_UNLIMITED` 同 IVR helper 函數（見 §2.4）
-- `getScoreValue` 由 `Api.js` re-export（`domain/scoreMath.js`）；`resetSideStatsForNextRound` 以檔案實際 `export` 為準
+- Pure scoring helpers live under `src/domain/`（唔再經 `Api.js` re-export）
 
 ---
 

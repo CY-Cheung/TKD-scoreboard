@@ -136,7 +136,7 @@ export async function fetchMatchConfigForRules(database, eventId, matchId) {
 
 /**
  * Pure helper for matchLive TX view:
- * inject config for rules, commit only MATCH_LIVE_KEYS.
+ * inject config for rules, commit only live payload fields.
  * @returns {object|undefined} payload to write at matchLive path
  */
 export function buildMatchLiveTransactionCommit(

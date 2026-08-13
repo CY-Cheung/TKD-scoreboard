@@ -1,7 +1,7 @@
 import { getScoreValue } from "./scoreMath.js";
 import { DEFAULT_MATCH_RULES, resolveMatchRules } from "./defaultRules.js";
 
-export { resolveMatchRules, DEFAULT_MATCH_RULES };
+export { resolveMatchRules };
 
 /**
  * Clear round-scoped scoring; keep match-scoped fields such as IVR remaining.

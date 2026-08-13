@@ -8,7 +8,7 @@ import {
 
 const EventSessionContext = createContext(null);
 
-export { hasStoredEventSession, readStoredEventSession };
+export { hasStoredEventSession };
 
 export function useEventSession() {
   return useContext(EventSessionContext);
