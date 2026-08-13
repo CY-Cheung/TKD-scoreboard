@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { ref, onValue } from "firebase/database";
 import { database } from "../../firebase";
+import useBrowserShellSize from "../../Utils/useBrowserShellSize";
 import "./Screen.css";
 import "../../App.css";
 import { startNextRound, startTechCardAnnouncement, finalizeTechCardAnnouncement, startKyeShi, stopKyeShi, startIvrAnnouncement, finalizeIvrAnnouncement } from "../../Api";
@@ -53,6 +54,8 @@ const EMPTY_MATCH_RULES = Object.freeze({});
 
 function Screen() {
     const { session } = useEventSession();
+    const shellRef = useRef(null);
+    useBrowserShellSize(shellRef, { mode: "screen-2x1" });
     const [matchData, setMatchData] = useState(null);
     const [direction, setDirection] = useState("row");
     const [showEdit, setShowEdit] = useState(false);
@@ -378,7 +381,11 @@ function Screen() {
 
     return (
         <>
-            <div className="screen" onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}>
+            <div
+                ref={shellRef}
+                className="screen"
+                onClick={() => !showEdit && !showQRCode && document.documentElement.requestFullscreen()}
+            >
                 <ScreenEventTopBar eventLabel={eventName || selectedEvent || "No Event Selected"} />
 
                 <ScreenTopNames

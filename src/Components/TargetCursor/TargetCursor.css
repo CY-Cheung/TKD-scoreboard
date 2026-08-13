@@ -14,7 +14,7 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 0.5dvw;
+  width: calc(var(--browser-width) * 0.5 / 100);
   aspect-ratio: 1;
   background: #fff;
   border-radius: 50%;
@@ -26,9 +26,9 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 0.75dvw;
+  width: calc(var(--browser-width) * 0.75 / 100);
   aspect-ratio: 1;
-  border: 0.125dvw solid #fff;
+  border: calc(var(--browser-width) * 0.125 / 100) solid #fff;
   will-change: transform;
 }
 

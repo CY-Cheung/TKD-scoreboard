@@ -5,6 +5,7 @@ import { PopupProvider } from './Context/PopupContext';
 import './App.css';
 import TargetCursor from './Components/TargetCursor/TargetCursor';
 import ProtectedRoute from './Components/ProtectedRoute/ProtectedRoute';
+import useBrowserViewportCssVars from './Utils/useBrowserViewportCssVars';
 
 // Pages
 import Landing from './Pages/Landing/Landing';
@@ -16,6 +17,8 @@ import Screen from './Pages/Screen/Screen';
 import DataImport from './Pages/DataImport/DataImport';
 
 function App() {
+  useBrowserViewportCssVars();
+
   return (
     <BrowserRouter basename="/TKD-scoreboard">
       <AuthProvider>

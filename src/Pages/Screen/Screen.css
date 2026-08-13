@@ -14,15 +14,19 @@
 	background-color: var(--blue-primary);
 }
 
+/*
+ * Shell size from JS (browser innerWidth/innerHeight → --screen-*).
+ * Fixed 2:1 fit — do not use dvw/dvh max/min (URL bar skews ratio).
+ * Fallbacks below are only for first paint.
+ */
 .screen {
-	--screen-width: min(100dvw, 200dvh);
-	--screen-height: min(100dvh, 50dvw);
+	--screen-width: 100vw;
+	--screen-height: 50vw;
 	container-type: inline-size;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	aspect-ratio: 2 / 1;
 	width: var(--screen-width);
 	height: var(--screen-height);
 	position: fixed;
