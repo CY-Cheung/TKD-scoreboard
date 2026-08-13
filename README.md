@@ -13,12 +13,10 @@
 
 ## Features（功能）
 
-| | EN | 中文 |
-|--|----|------|
-| **Live Sync** | Scores update instantly on every screen and device. | 大螢幕同裁判手機即時同步。 |
-| **Scan & Score** | Scan. Your phone = score remote. | 掃一掃，手機變手掣。 |
-| **One Account** | Sign in with Google to create and run your event. | Google 登入即可開賽，無須安裝軟件。 |
-| **Multi-Court** | Load a match per court — screens and phones stay aligned. | 多個 Court 同步作賽，Load 邊場跟邊場。 |
+- **Live Sync（即時同步）** — 大螢幕同裁判手機即時同步分數同狀態。
+- **Scan & Score（掃碼即用）** — 掃 QR，手機變計分手掣。
+- **One Account（一鍵開賽）** — Google 登入即可開賽，無須安裝軟件。
+- **Multi-Court（多場地）** — 每個 Court 各自 Load 比賽；大螢幕同邊裁跟住該場。
 
 **亦已支援：** Technical Card（技術卡）、IVR（留空配額 = 無限 `-1`）、HKTKDA PDF（Court Setup）、Tournament Bracket、Chi／Eng fade。
 
