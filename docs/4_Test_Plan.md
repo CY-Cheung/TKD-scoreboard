@@ -244,7 +244,7 @@ Workflow：`.github/workflows/ci.yml`（`unit` + `rules` jobs）。
 | P0 | 加深 rules：matchLive seat device path、delete event ACL |
 | P0 | TC／IVR finalize idempotency（transaction）真機／emulator |
 | P1 | 更大 RTL page tests（可選） |
-| P1 | Controller extracts + 對應 unit tests（工程整潔 Phase 2 後半） |
+| P1 | Api IVR pure helpers → `domain/` + UT-E10 unit tests |
 | P2 | Playwright E2E smoke |
 | P2 | pdfParser fixture golden tests |
 
@@ -256,3 +256,4 @@ Workflow：`.github/workflows/ci.yml`（`unit` + `rules` jobs）。
 |------|--------|
 | 2026-08-10 | Initial test plan：`main` 零自動化；列出目標案例同風險缺口 |
 | 2026-08-12 | Align Waves 9–11：RTL、rules emulator CI、213 unit tests baseline |
+| 2026-08-13 | Controller extracts／preview 已合入；P1 改為 IVR → `domain/` + UT-E10 |

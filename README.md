@@ -102,14 +102,17 @@ npm run lint
 | `src/Pages/CourtSetup/` | Event／Court、PDF 建立賽事 |
 | `src/Pages/Home/` | 賽事主選單、QR |
 | `src/Pages/Screen/` | 大螢幕 + `Edit.jsx` 主裁底欄 |
-| `src/Pages/Controller/` | 邊裁搶位、遙控 |
+| `src/Pages/Controller/` | 邊裁搶位、遙控（無 top bar；landscape shell） |
 | `src/Pages/DataImport/` | Manage Match、Rules、Bracket |
+| `src/domain/` | 純計分／規則 helpers（如 `scoreMath`） |
+| `src/services/` | RTDB path helpers + court／match I/O |
 | `src/Components/QRCodeDisplay/` | QR、裁判模式（helpers + Status／Mode／Host panels） |
 | `src/Components/TechnicalCardFlow/` | Technical Card 確認 + 公告 |
 | `src/Components/IVRFlow/` | IVR 確認 + 公告 |
 | `src/Components/AlternatingLocale/` | Chi／Eng fade |
 | `src/Components/TournamentBracket/` | 淘汰樹 |
 | `src/Utils/pdfParser.js` | HKTKDA PDF |
+| `src/Utils/browserShellSize.js` | Browser content-box shell fit（Screen／Controller） |
 | `src/constants/landingFeatures.js` | Landing／Home 文案 |
 | `database.rules.json` | RTDB 安全規則 |
 

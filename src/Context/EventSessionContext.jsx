@@ -36,10 +36,6 @@ export function EventSessionProvider({ children }) {
       session,
       setEventSession,
       clearEventSession,
-      /** @deprecated use setEventSession */
-      login: setEventSession,
-      /** @deprecated use clearEventSession */
-      logout: clearEventSession,
     }),
     [session, setEventSession, clearEventSession]
   );
