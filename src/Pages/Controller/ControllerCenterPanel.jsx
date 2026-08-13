@@ -8,7 +8,7 @@ import {
 /**
  * Center column: MATCH + mode/judge in a Screen-sized .game-timer + ROUND.
  * Yellow box matches Screen timer: same .game-timer.timer-font + hidden "0:00"
- * sizer (Inter metrics; Mode/Judge overlay stays Controller Arial).
+ * sizer (shared Arial / --app-font metrics with Mode/Judge overlay).
  */
 export default function ControllerCenterPanel({
   currentRound,

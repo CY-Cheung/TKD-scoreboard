@@ -30,7 +30,7 @@ span.locale-slot {
     padding: 0;
     opacity: 0;
     line-height: inherit;
-    /* Inherit page font (Inter on Court Setup / Landing); keep CJK fallbacks for 中文 */
+    /* Inherit page font (Arial via --app-font); CJK uses stack fallbacks */
     font-family: inherit;
     transition: opacity 0.5s ease;
 }

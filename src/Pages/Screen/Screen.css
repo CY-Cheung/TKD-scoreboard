@@ -48,7 +48,7 @@
 	z-index: 100;
 	box-sizing: border-box;
 	color: rgba(255, 255, 255, 0.5);
-	font-family: Outfit, sans-serif;
+	font-family: var(--app-font);
 }
 
 .screen-floating-top-bar-label {
