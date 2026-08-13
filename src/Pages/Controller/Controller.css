@@ -187,7 +187,7 @@ body:has(.controller) {
 }
 
 .ctrl-score-btn-points {
-	font-size: 3.41cqi; /* was 1.55em at Button 2.2cqi */
+	font-size: 4.6cqi;
 	font-weight: 900;
 }
 
