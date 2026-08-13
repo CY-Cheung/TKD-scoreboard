@@ -1,9 +1,18 @@
 import React from "react";
 import Button from "../../Components/Button/Button";
 import { Wifi, WifiOff, ArrowLeft } from "react-bootstrap-icons";
+import { formatRefereeModeBadge } from "./controllerMatchView";
 
-/** Minimal top bar: Back + Live/Offline only. */
-export default function ControllerTopBar({ isConnected, onBack }) {
+/**
+ * Floating top info bar (Screen event-name bar style):
+ * Back · Judge seat · Live/Offline — sits above the 2:1 stage.
+ */
+export default function ControllerTopBar({
+  isConnected,
+  onBack,
+  mySeat,
+  refereeMode,
+}) {
   return (
     <div className="ctrl-top-bar">
       <Button
@@ -13,18 +22,25 @@ export default function ControllerTopBar({ isConnected, onBack }) {
           onBack();
         }}
         aria-label="Back"
-        icon={<ArrowLeft size={"1.5cqi"} />}
-        fontSize="1cqi"
+        icon={<ArrowLeft size={"1.2cqi"} />}
+        fontSize="0.95cqi"
         angle={180}
       />
+
+      <div className="ctrl-top-bar-center">
+        <span className="ctrl-top-judge">
+          {formatRefereeModeBadge(refereeMode)} · {mySeat || "..."}
+        </span>
+      </div>
+
       <div className="ctrl-conn-status">
         {isConnected ? (
           <span className="conn-connected">
-            <Wifi size={16} /> Live
+            <Wifi size={14} /> Live
           </span>
         ) : (
           <span className="conn-disconnected">
-            <WifiOff size={16} /> Offline
+            <WifiOff size={14} /> Offline
           </span>
         )}
       </div>

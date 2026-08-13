@@ -22,7 +22,12 @@ export default function ControllerVisualPreview() {
   return (
     <div className="controller">
       <div className="ctrl-stage">
-        <ControllerTopBar isConnected={true} onBack={() => {}} />
+        <ControllerTopBar
+          isConnected={true}
+          mySeat="J1"
+          refereeMode="single"
+          onBack={() => {}}
+        />
 
         {lastAction && (
           <div
@@ -40,8 +45,6 @@ export default function ControllerVisualPreview() {
             blueScore={9}
             currentRound={2}
             isPaused={false}
-            refereeMode="single"
-            mySeat="J1"
             matchNo="42"
           />
         </ControllerScorePad>

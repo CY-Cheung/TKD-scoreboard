@@ -44,23 +44,30 @@ body:has(.controller) {
 	position: relative;
 }
 
-/* Top bar — Back + Live only (overlay; no Screen name strip) */
+/*
+ * Floating top info bar — same placement idea as ScreenEventTopBar
+ * (above the 2:1 stage in the letterbox).
+ */
 .ctrl-top-bar {
 	position: absolute;
-	top: 0;
+	bottom: 100%;
 	left: 0;
 	width: 100%;
 	box-sizing: border-box;
 	display: flex;
 	justify-content: space-between;
-	align-items: flex-start;
-	padding: 0.4cqi 0.8cqi;
-	z-index: 50;
+	align-items: center;
+	gap: 0.8cqi;
+	padding:
+		calc(var(--screen-height) * 0.03) calc(var(--screen-width) * 0.03);
+	z-index: 100;
+	color: rgba(255, 255, 255, 0.55);
 	pointer-events: none;
 }
 
 .ctrl-top-bar .ctrl-back-btn,
-.ctrl-top-bar .ctrl-conn-status {
+.ctrl-top-bar .ctrl-conn-status,
+.ctrl-top-bar .ctrl-top-bar-center {
 	pointer-events: auto;
 }
 
@@ -68,14 +75,32 @@ body:has(.controller) {
 	flex-shrink: 0;
 }
 
+.ctrl-top-bar-center {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+}
+
+.ctrl-top-judge {
+	font-size: calc(var(--screen-width) * 0.018);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.55);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+}
+
 .ctrl-conn-status {
-	font-size: 1.2cqi;
+	font-size: calc(var(--screen-width) * 0.016);
 	font-weight: 700;
 	white-space: nowrap;
 	flex-shrink: 0;
-	padding: 0.35cqi 0.6cqi;
-	background: rgba(0, 0, 0, 0.55);
-	border-radius: 999px;
 }
 
 .conn-connected {
@@ -92,17 +117,17 @@ body:has(.controller) {
 	gap: 0.3cqi;
 }
 
-/* Action toast */
+/* Action toast — inside stage, under floating top bar */
 .ctrl-action-banner {
 	position: absolute;
-	top: 3.2cqi;
+	top: 0.6cqi;
 	left: 50%;
 	transform: translateX(-50%);
 	padding: 0.45cqi 1.1cqi;
 	border-radius: 999px;
 	font-weight: 800;
 	font-size: 1.1cqi;
-	z-index: 100;
+	z-index: 90;
 	color: #ffffff;
 	animation: ctrlPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 	white-space: nowrap;
@@ -226,16 +251,9 @@ body:has(.controller) {
 	color: #ffffff;
 	font-size: 2.2cqi;
 	font-weight: 800;
-	padding: 0.35cqi 0.4cqi;
+	padding: 0.45cqi 0.4cqi;
 	box-sizing: border-box;
 	text-align: center;
-}
-
-.ctrl-center-status-sub {
-	font-size: 1.6cqi;
-	font-weight: 600;
-	color: #c8c8c8;
-	margin-top: 0.25cqi;
 }
 
 @keyframes ctrlPopIn {

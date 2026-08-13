@@ -395,6 +395,8 @@ function Controller() {
             <div className="ctrl-stage">
                 <ControllerTopBar
                     isConnected={isConnected}
+                    mySeat={mySeat}
+                    refereeMode={refereeMode}
                     onBack={() => navigate(resolveControllerBackPath(user))}
                 />
 
@@ -410,8 +412,6 @@ function Controller() {
                         blueScore={summary.blueScore}
                         currentRound={summary.currentRound}
                         isPaused={summary.isPaused}
-                        refereeMode={refereeMode}
-                        mySeat={mySeat}
                         matchNo={summary.matchNo}
                     />
                 </ControllerScorePad>

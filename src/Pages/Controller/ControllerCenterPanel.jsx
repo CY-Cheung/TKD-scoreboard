@@ -1,17 +1,14 @@
 import React from "react";
-import { formatRefereeModeBadge } from "./controllerMatchView";
 
 /**
  * Center info column (Screen match-info width): MATCH + scores
- * instead of timer/timeout. No competitor names.
+ * instead of timer/timeout. Judge seat lives in the top info bar.
  */
 export default function ControllerCenterPanel({
   redScore = 0,
   blueScore = 0,
   currentRound,
   isPaused,
-  refereeMode,
-  mySeat,
   matchNo,
 }) {
   return (
@@ -30,12 +27,7 @@ export default function ControllerCenterPanel({
           </span>
         </div>
         <div className="ctrl-center-status">
-          <div>
-            R{currentRound} • {isPaused ? "PAUSED" : "LIVE"}
-          </div>
-          <div className="ctrl-center-status-sub">
-            {formatRefereeModeBadge(refereeMode)} • {mySeat || "..."}
-          </div>
+          R{currentRound} • {isPaused ? "PAUSED" : "LIVE"}
         </div>
       </div>
     </div>
