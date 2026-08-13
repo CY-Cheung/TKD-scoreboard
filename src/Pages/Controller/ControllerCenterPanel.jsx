@@ -1,35 +1,47 @@
 import React from "react";
+import ScreenRoundWins from "../Screen/ScreenRoundWins";
 
 /**
- * Center info column (Screen match-info width): MATCH + scores
- * instead of timer/timeout. Judge seat lives in the top info bar.
+ * Center column mirrors Screen match-info:
+ * MATCH + scores (in place of timer/timeout) + Screen ROUND strip.
  */
 export default function ControllerCenterPanel({
   redScore = 0,
   blueScore = 0,
   currentRound,
-  isPaused,
+  isPaused = false,
   matchNo,
+  roundWins = { red: 0, blue: 0 },
 }) {
+  const scoreColor = isPaused ? "#FFFFFF" : "var(--yellow-primary, #ffff00)";
+
   return (
-    <div className="match-info-middle ctrl-col-info">
-      <div className="match">
-        <div className="match-font">MATCH</div>
-        <div className="match-number">{matchNo}</div>
-      </div>
-      <div className="timer">
-        <div className="game-timer timer-font ctrl-center-scoreboard">
-          <span className="ctrl-center-score ctrl-center-score--red">
-            {redScore}
-          </span>
-          <span className="ctrl-center-score ctrl-center-score--blue">
-            {blueScore}
-          </span>
+    <div className="ctrl-col-info">
+      <div className="match-info-middle">
+        <div className="match">
+          <div className="match-font">MATCH</div>
+          <div className="match-number">{matchNo}</div>
         </div>
-        <div className="ctrl-center-status">
-          R{currentRound} • {isPaused ? "PAUSED" : "LIVE"}
+        <div className="timer">
+          <div
+            className="game-timer timer-font ctrl-center-scoreboard"
+            style={{ color: scoreColor }}
+          >
+            <span className="ctrl-center-score" style={{ color: scoreColor }}>
+              {redScore}
+            </span>
+            <span className="ctrl-center-score" style={{ color: scoreColor }}>
+              {blueScore}
+            </span>
+          </div>
         </div>
       </div>
+
+      <ScreenRoundWins
+        direction="row"
+        roundWins={roundWins}
+        currentRound={currentRound}
+      />
     </div>
   );
 }

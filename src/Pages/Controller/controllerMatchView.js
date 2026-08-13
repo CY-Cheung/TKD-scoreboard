@@ -26,6 +26,14 @@ export function canAcceptScoreInput(matchData) {
 export function buildControllerMatchSummary(matchData, currentMatchId) {
   const redStats = matchData?.stats?.red;
   const blueStats = matchData?.stats?.blue;
+  const roundWinsRaw = matchData?.stats?.roundWins;
+  const roundWins =
+    roundWinsRaw && typeof roundWinsRaw === "object"
+      ? {
+          red: roundWinsRaw.red || 0,
+          blue: roundWinsRaw.blue || 0,
+        }
+      : { red: 0, blue: 0 };
   return {
     redName: matchData?.config?.competitors?.red?.name || DEFAULT_RED_NAME,
     blueName: matchData?.config?.competitors?.blue?.name || DEFAULT_BLUE_NAME,
@@ -35,6 +43,8 @@ export function buildControllerMatchSummary(matchData, currentMatchId) {
     /** Same totals as Screen scoreboard (display only). */
     redScore: getScoreValue(redStats, blueStats),
     blueScore: getScoreValue(blueStats, redStats),
+    /** Same shape as ScreenRoundWins. */
+    roundWins,
   };
 }
 

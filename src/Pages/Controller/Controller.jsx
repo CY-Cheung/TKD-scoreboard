@@ -414,6 +414,7 @@ function Controller() {
                             currentRound={summary.currentRound}
                             isPaused={summary.isPaused}
                             matchNo={summary.matchNo}
+                            roundWins={summary.roundWins}
                         />
                     </ControllerScorePad>
                 </div>

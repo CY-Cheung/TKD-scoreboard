@@ -47,6 +47,7 @@ export default function ControllerVisualPreview() {
               currentRound={2}
               isPaused={false}
               matchNo="42"
+              roundWins={{ red: 1, blue: 0 }}
             />
           </ControllerScorePad>
         </div>

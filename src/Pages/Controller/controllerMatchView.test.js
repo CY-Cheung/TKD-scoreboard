@@ -35,6 +35,7 @@ describe("buildControllerMatchSummary", () => {
       isPaused: true,
       redScore: 0,
       blueScore: 0,
+      roundWins: { red: 0, blue: 0 },
     });
   });
 
@@ -52,6 +53,7 @@ describe("buildControllerMatchSummary", () => {
         stats: {
           red: { pointsStat: [1, 1, 0, 0, 0] },
           blue: { pointsStat: [0, 0, 1, 0, 0] },
+          roundWins: { red: 1, blue: 1 },
         },
       },
       "ignored"
@@ -64,6 +66,7 @@ describe("buildControllerMatchSummary", () => {
       isPaused: false,
       redScore: 3,
       blueScore: 3,
+      roundWins: { red: 1, blue: 1 },
     });
   });
 });

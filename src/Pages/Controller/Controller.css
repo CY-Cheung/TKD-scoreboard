@@ -180,13 +180,35 @@ body:has(.controller) {
 	gap: 0.45cqi;
 }
 
-.controller .match-info-middle.ctrl-col-info {
+/* Full-height center = Screen match-info middle (7) + bottom ROUND (2) */
+.ctrl-col-info {
 	display: flex;
 	flex-direction: column;
 	width: calc(var(--screen-width) * 34 / 150);
 	height: 100%;
 	box-sizing: border-box;
 	background: #000000;
+}
+
+.ctrl-col-info .match-info-middle {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	flex: 7 1 0;
+	height: auto;
+	min-height: 0;
+}
+
+.ctrl-col-info .match-info-bottom {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	flex: 2 1 0;
+	height: auto;
+	min-height: 0;
+	justify-content: center;
+	align-items: center;
+	transform: none;
 }
 
 .ctrl-col-log > button,
@@ -237,25 +259,6 @@ body:has(.controller) {
 	flex: 1;
 	text-align: center;
 	min-width: 0;
-}
-
-.ctrl-center-score--red,
-.ctrl-center-score--blue {
-	color: var(--yellow-primary, #ffff00);
-}
-
-.ctrl-center-status {
-	display: flex;
-	width: 100%;
-	justify-content: center;
-	align-items: center;
-	background-color: #111111;
-	color: #ffffff;
-	font-size: 2.2cqi;
-	font-weight: 800;
-	padding: 0.45cqi 0.4cqi;
-	box-sizing: border-box;
-	text-align: center;
 }
 
 @keyframes ctrlPopIn {
