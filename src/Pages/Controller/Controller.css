@@ -93,12 +93,13 @@ body:has(.controller) {
 	height: 100%;
 }
 
+/* Wider outer 1/4/6 columns; mid 2/3 + center give up width */
 .ctrl-col-log {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: stretch;
-	width: calc(var(--screen-width) * 19 / 150);
+	width: calc(var(--screen-width) * 25 / 150);
 	height: 100%;
 	padding: 0.45cqi;
 	box-sizing: border-box;
@@ -110,19 +111,19 @@ body:has(.controller) {
 	flex-direction: column;
 	justify-content: center;
 	align-items: stretch;
-	width: calc(var(--screen-width) * 39 / 150);
+	width: calc(var(--screen-width) * 34 / 150);
 	height: 100%;
 	padding: 0.45cqi;
 	box-sizing: border-box;
 	gap: 0.55cqi;
 }
 
-/* Full-height center = Screen match-info middle (7) + bottom ROUND (2) */
+/* Center: MATCH top, yellow vertically centered, ROUND bottom */
 .ctrl-col-info {
 	display: flex;
 	flex-direction: column;
-	width: calc(var(--screen-width) * 34 / 150);
-	max-width: calc(var(--screen-width) * 34 / 150);
+	width: calc(var(--screen-width) * 32 / 150);
+	max-width: calc(var(--screen-width) * 32 / 150);
 	height: 100%;
 	box-sizing: border-box;
 	background: #000000;
@@ -131,29 +132,44 @@ body:has(.controller) {
 	flex-shrink: 0;
 }
 
-/*
- * Center MATCH/timer vs ROUND — keep former midbottom 7:2 ratio,
- * now stretched across the full monitor height (7/9 + 2/9).
- */
 .ctrl-col-info .match-info-middle {
 	display: flex;
 	flex-direction: column;
 	width: 100%;
-	flex: none;
-	height: calc(var(--screen-height) * 7 / 9);
+	flex: 1 1 auto;
+	height: auto;
 	min-height: 0;
+}
+
+.ctrl-col-info .match-info-middle > .match {
+	flex: 0 0 auto;
+}
+
+/* Flex space between MATCH and ROUND — yellow box centered in it */
+.ctrl-col-info .match-info-middle > .timer {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: stretch;
+	min-height: 0;
+	margin-block: 0;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
 }
 
 .ctrl-col-info .match-info-bottom {
 	display: flex;
 	flex-direction: column;
 	width: 100%;
-	flex: none;
-	height: calc(var(--screen-height) * 2 / 9);
+	flex: 0 0 auto;
+	height: auto;
 	min-height: 0;
 	justify-content: center;
 	align-items: center;
 	transform: none;
+	padding-bottom: 0.6cqi;
 }
 
 /* Height follows label content — do not stretch to fill the column */
@@ -213,15 +229,8 @@ body:has(.controller) {
 		"PingFang TC", "Noto Sans TC", sans-serif;
 	/* hide sizer glyphs; labels re-color in .ctrl-center-seat-fore */
 	color: transparent;
-	/* Screen uses flex:2; keep grow but do not shrink below timer content */
-	flex: 2 0 auto;
-}
-
-.ctrl-col-info .timer {
-	width: 100%;
-	max-width: 100%;
-	min-width: 0;
-	box-sizing: border-box;
+	/* Content-sized like Screen timer; parent .timer centers it vertically */
+	flex: 0 0 auto;
 }
 
 .ctrl-timer-height-ref {
@@ -244,11 +253,6 @@ body:has(.controller) {
 	color: var(--yellow-primary, #ffff00);
 	font-family: Arial, "Helvetica Neue", Helvetica, "Microsoft JhengHei",
 		"PingFang TC", "Noto Sans TC", sans-serif;
-}
-
-.ctrl-timeout-spacer {
-	visibility: hidden;
-	pointer-events: none;
 }
 
 .ctrl-center-mode {

@@ -1,7 +1,7 @@
 /**
  * Controller score-pad layout: pointsStat index + button labels.
- * Column widths mirror Screen middle row:
- *   log (1/4/6) = 19/150, score (2/3) = 39/150, center info = 34/150.
+ * Column widths (of --screen-width / 150):
+ *   log (1/4/6) = 25, score (2/3) = 34, center info = 32.
  */
 export const CONTROLLER_SCORE_COLUMNS = [
   {

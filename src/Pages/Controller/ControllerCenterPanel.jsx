@@ -39,12 +39,6 @@ export default function ControllerCenterPanel({
               </div>
             </div>
           </div>
-          <div
-            className="time-out match-font ctrl-timeout-spacer"
-            aria-hidden="true"
-          >
-            Time out
-          </div>
         </div>
       </div>
 
