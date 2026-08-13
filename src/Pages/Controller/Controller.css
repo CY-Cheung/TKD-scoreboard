@@ -226,15 +226,28 @@ body:has(.controller) {
 	align-items: center;
 	justify-content: center;
 	width: 100%;
+	max-width: 100%;
 	flex: 2 1 0;
+	min-width: 0;
 	color: var(--yellow-primary, #ffff00);
-	box-sizing: content-box; /* match Screen default box model for border */
+	/* border-box so 0.5cqi yellow border stays inside the center column */
+	box-sizing: border-box;
+	overflow: hidden;
+}
+
+.ctrl-col-info .timer {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
 }
 
 .ctrl-timer-height-ref {
 	visibility: hidden;
 	pointer-events: none;
 	user-select: none;
+	max-width: 100%;
+	overflow: hidden;
 }
 
 .ctrl-center-seat-fore {
@@ -245,6 +258,9 @@ body:has(.controller) {
 	align-items: center;
 	justify-content: center;
 	gap: 0.5cqi;
+	max-width: 100%;
+	overflow: hidden;
+	box-sizing: border-box;
 }
 
 .ctrl-timeout-spacer {
