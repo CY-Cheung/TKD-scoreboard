@@ -186,6 +186,11 @@ body:has(.controller) {
 	opacity: 0.95;
 }
 
+/* Mid columns: +2 Body / +3 Head — larger action names */
+.ctrl-col-score .ctrl-score-btn-name {
+	font-size: 2.75cqi;
+}
+
 .ctrl-score-btn-points {
 	font-size: 4.6cqi;
 	font-weight: 900;
