@@ -102,7 +102,7 @@
     text-align: center;
     color: #ffffff;
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    border: 0.05cqi solid rgba(255, 255, 255, 0.25);
     border-radius: 0.25cqi;
     box-sizing: border-box;
 }

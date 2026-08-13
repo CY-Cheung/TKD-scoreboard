@@ -6,19 +6,10 @@ export default function PlayerNameCell({ competitor }) {
     return <div className="name-only"> </div>;
   }
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100%",
-        lineHeight: "1.2",
-      }}
-    >
-      <div style={{ fontSize: "1em" }}>{competitor.name}</div>
+    <div className="player-name-cell">
+      <div className="player-name-cell-name">{competitor.name}</div>
       {competitor.affiliatedClub && (
-        <div style={{ fontSize: "0.45em", opacity: 0.85, marginTop: "2px" }}>
+        <div className="player-name-cell-club">
           ({competitor.affiliatedClub})
         </div>
       )}

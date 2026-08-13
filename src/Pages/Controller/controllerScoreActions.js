@@ -1,12 +1,13 @@
 /**
  * Controller score-pad layout: pointsStat index + button labels.
- * Column order matches the existing Controller grid (left → right).
+ * Column widths (of --screen-width / 150):
+ *   log (1/4/6) = 25, score (2/3) = 34, center info = 32.
  */
 export const CONTROLLER_SCORE_COLUMNS = [
   {
     key: "red-high",
     side: "red",
-    className: "col red-col",
+    className: "ctrl-col-log red-bg",
     angle: 350,
     actions: [
       { index: 4, text: "Red 6", label: "+6 Turn Head" },
@@ -17,7 +18,7 @@ export const CONTROLLER_SCORE_COLUMNS = [
   {
     key: "red-mid",
     side: "red",
-    className: "col red-col",
+    className: "ctrl-col-score red-score-bg",
     angle: 350,
     actions: [
       { index: 2, text: "Red 3", label: "+3 Head" },
@@ -27,7 +28,7 @@ export const CONTROLLER_SCORE_COLUMNS = [
   {
     key: "blue-mid",
     side: "blue",
-    className: "col blue-col",
+    className: "ctrl-col-score blue-score-bg",
     angle: 210,
     actions: [
       { index: 2, text: "Blue 3", label: "+3 Head" },
@@ -37,7 +38,7 @@ export const CONTROLLER_SCORE_COLUMNS = [
   {
     key: "blue-high",
     side: "blue",
-    className: "col blue-col",
+    className: "ctrl-col-log blue-bg",
     angle: 210,
     actions: [
       { index: 4, text: "Blue 6", label: "+6 Turn Head" },

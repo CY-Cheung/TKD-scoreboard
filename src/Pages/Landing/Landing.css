@@ -4,8 +4,8 @@
     position: relative;
     box-sizing: border-box;
     width: 100%;
-    min-height: 100dvh;
-    height: 100dvh;
+    min-height: var(--browser-height);
+    height: var(--browser-height);
     /* Full-bleed marketing layout: allow vertical scroll on short/narrow viewports. */
     overflow-x: hidden;
     overflow-y: auto;

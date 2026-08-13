@@ -1,40 +1,52 @@
 import React from "react";
-import { formatRefereeModeBadge } from "./controllerMatchView";
+import ScreenRoundWins from "../Screen/ScreenRoundWins";
+import {
+  formatControllerJudgeLabel,
+  formatControllerModeLabel,
+} from "./controllerMatchView";
 
-/** Center VS / round / mode panel between score columns. */
+/**
+ * Center column: MATCH + mode/judge in a Screen-sized .game-timer + ROUND.
+ * Yellow box matches Screen timer: same .game-timer.timer-font + hidden "0:00"
+ * sizer (Inter metrics; Mode/Judge overlay stays Controller Arial).
+ */
 export default function ControllerCenterPanel({
-  redName,
-  blueName,
   currentRound,
-  isPaused,
-  refereeMode,
+  matchNo,
+  roundWins = { red: 0, blue: 0 },
+  refereeMode = "single",
   mySeat,
+  isConnected = true,
 }) {
   return (
-    <div className="col center-col">
-      <div className="center-match-details-horizontal">
-        <div className="competitor-side red-side-text">{redName}</div>
-        <div className="center-vs-box">
-          <span className="vs-badge">VS</span>
-          <span className="round-pill">
-            R{currentRound} • {isPaused ? "PAUSED" : "LIVE"}
-          </span>
-          <span
-            className="round-pill"
-            style={{
-              fontSize: "1cqi",
-              opacity: 0.8,
-              background:
-                refereeMode === "multiple"
-                  ? "rgba(255,100,0,0.4)"
-                  : "rgba(0,200,100,0.3)",
-            }}
-          >
-            {formatRefereeModeBadge(refereeMode)} • {mySeat || "..."}
-          </span>
+    <div className="ctrl-col-info">
+      <div className="match-info-middle">
+        <div className="match">
+          <div className="match-font">MATCH</div>
+          <div className="match-number">{matchNo}</div>
         </div>
-        <div className="competitor-side blue-side-text">{blueName}</div>
+        <div className="timer">
+          <div className="game-timer timer-font ctrl-center-seat-stack">
+            <span className="ctrl-timer-height-ref" aria-hidden="true">
+              0:00
+            </span>
+            <div className="ctrl-center-seat-fore">
+              <div className="ctrl-center-mode">
+                {formatControllerModeLabel(refereeMode)}
+              </div>
+              <div className="ctrl-center-judge">
+                {formatControllerJudgeLabel(mySeat, isConnected)}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <ScreenRoundWins
+        direction="row"
+        roundWins={roundWins}
+        currentRound={currentRound}
+      />
     </div>
   );
 }

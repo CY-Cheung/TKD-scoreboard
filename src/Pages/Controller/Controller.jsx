@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import useControllerShellSize from "./useControllerShellSize";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ref, onValue, set, onDisconnect, runTransaction } from "firebase/database";
 import { database } from "../../firebase";
@@ -25,7 +26,6 @@ import { armScoreHaptic, shouldVibrateForRecentScores, triggerScoreHaptic } from
 import {
     canAcceptScoreInput,
     buildControllerMatchSummary,
-    resolveControllerBackPath,
     buildScoreActionFeedback,
 } from "./controllerMatchView";
 import {
@@ -33,7 +33,6 @@ import {
 } from "../../services/courtFirebase";
 import { subscribeMatchView } from "../../services/matchFirebase";
 import ControllerScorePad from "./ControllerScorePad";
-import ControllerTopBar from "./ControllerTopBar";
 import ControllerCenterPanel from "./ControllerCenterPanel";
 import {
     ControllerConnectingScreen,
@@ -69,6 +68,8 @@ function Controller() {
     const [refereeMode, setRefereeMode] = useState('single');
     // undefined = not seeded yet; null/string = last haptic'd recentScores key
     const lastRecentScoreHapticKeyRef = useRef(undefined);
+    const shellRef = useRef(null);
+    useControllerShellSize(shellRef);
 
     // Sync state + EventSession when URL / QR deep-link params change
     useEffect(() => {
@@ -391,32 +392,31 @@ function Controller() {
     }
 
     return (
-        <div className="controller aurora-bg" onClick={requestFullscreen}>
-            <ControllerTopBar
-                eventLabel={eventName || eventId || "No Event"}
-                courtId={courtId}
-                matchNo={summary.matchNo}
-                mySeat={mySeat}
-                isConnected={isConnected}
-                onBack={() => navigate(resolveControllerBackPath(user))}
-            />
+        <div
+            ref={shellRef}
+            className="controller"
+            onClick={requestFullscreen}
+        >
+            <div className="ctrl-shell">
+                <div className="ctrl-stage">
+                    {lastAction && (
+                        <div className={`ctrl-action-banner ${lastAction.side === "red" ? "red-banner" : "blue-banner"}`}>
+                            {lastAction.text}
+                        </div>
+                    )}
 
-            {lastAction && (
-                <div className={`ctrl-action-banner ${lastAction.side === "red" ? "red-banner" : "blue-banner"}`}>
-                    {lastAction.text}
+                    <ControllerScorePad onScore={handleScore}>
+                        <ControllerCenterPanel
+                            currentRound={summary.currentRound}
+                            matchNo={summary.matchNo}
+                            roundWins={summary.roundWins}
+                            refereeMode={refereeMode}
+                            mySeat={mySeat}
+                            isConnected={isConnected}
+                        />
+                    </ControllerScorePad>
                 </div>
-            )}
-
-            <ControllerScorePad onScore={handleScore}>
-                <ControllerCenterPanel
-                    redName={summary.redName}
-                    blueName={summary.blueName}
-                    currentRound={summary.currentRound}
-                    isPaused={summary.isPaused}
-                    refereeMode={refereeMode}
-                    mySeat={mySeat}
-                />
-            </ControllerScorePad>
+            </div>
         </div>
     );
 }

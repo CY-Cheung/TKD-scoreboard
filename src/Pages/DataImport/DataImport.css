@@ -3,9 +3,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100dvw;
-    height: 100dvh;
-    padding: 2dvh 2dvw;
+    width: var(--browser-width);
+    height: var(--browser-height);
+    padding: calc(var(--browser-height) * 2 / 100) calc(var(--browser-width) * 2 / 100);
     box-sizing: border-box;
     overflow: hidden;
 }

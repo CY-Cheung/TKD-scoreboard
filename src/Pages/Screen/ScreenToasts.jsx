@@ -30,7 +30,7 @@ export default function ScreenToasts({ messages }) {
             fontWeight: "bold",
             boxShadow: "0 0.42cqi 1.25cqi rgba(0,0,0,0.5)",
             textAlign: "center",
-            border: "2px solid rgba(255,255,255,0.2)",
+            border: "0.1cqi solid rgba(255,255,255,0.2)",
           }}
         >
           {toast.text}

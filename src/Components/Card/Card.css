@@ -1,7 +1,7 @@
 .card {
 	height: auto;
 	width: calc(var(--card-width, 75) * 1cqi);
-	width: calc(var(--card-width, 75) * 1dvw);
+	width: calc(var(--card-width, 75) * var(--browser-width) / 100);
 	background: hsl(0, 0%, 5%);
 	border-radius: calc(var(--card-width, 75) / 10 * 1cqi);
 	display: flex;

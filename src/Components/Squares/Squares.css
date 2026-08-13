@@ -2,8 +2,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 100dvw;
-  height: 100dvh;
+  width: var(--browser-width);
+  height: var(--browser-height);
   z-index: 0;
   border: none;
   display: block;
