@@ -238,40 +238,6 @@ body:has(.controller) {
 	margin-top: 0.25cqi;
 }
 
-.ctrl-center-names {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.35cqi;
-	width: 100%;
-	max-width: 100%;
-	margin-bottom: 0.2cqi;
-	font-size: 1.5cqi;
-	font-weight: 700;
-	overflow: hidden;
-}
-
-.ctrl-center-name-red,
-.ctrl-center-name-blue {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	max-width: 45%;
-}
-
-.ctrl-center-name-red {
-	color: #ff6666;
-}
-
-.ctrl-center-name-blue {
-	color: #6666ff;
-}
-
-.ctrl-center-name-sep {
-	color: #888888;
-	flex-shrink: 0;
-}
-
 @keyframes ctrlPopIn {
 	from { transform: translate(-50%, -0.4cqi); opacity: 0; }
 	to { transform: translate(-50%, 0); opacity: 1; }

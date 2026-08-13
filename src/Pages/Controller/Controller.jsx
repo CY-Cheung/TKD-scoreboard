@@ -406,8 +406,6 @@ function Controller() {
 
                 <ControllerScorePad onScore={handleScore}>
                     <ControllerCenterPanel
-                        redName={summary.redName}
-                        blueName={summary.blueName}
                         redScore={summary.redScore}
                         blueScore={summary.blueScore}
                         currentRound={summary.currentRound}

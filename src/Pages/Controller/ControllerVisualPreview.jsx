@@ -36,8 +36,6 @@ export default function ControllerVisualPreview() {
 
         <ControllerScorePad onScore={handleScore}>
           <ControllerCenterPanel
-            redName="Hong (Red)"
-            blueName="Chung (Blue)"
             redScore={12}
             blueScore={9}
             currentRound={2}
