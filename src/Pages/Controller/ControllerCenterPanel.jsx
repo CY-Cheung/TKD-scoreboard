@@ -6,7 +6,8 @@ import {
 } from "./controllerMatchView";
 
 /**
- * Center column: MATCH + mode/judge (Screen timer-sized box) + ROUND.
+ * Center column: MATCH + mode/judge in a Screen-sized .game-timer + ROUND.
+ * Yellow box height comes from a hidden .timer-font "0:00" (same as Screen).
  */
 export default function ControllerCenterPanel({
   currentRound,
@@ -25,10 +26,9 @@ export default function ControllerCenterPanel({
         </div>
         <div className="timer">
           <div className="game-timer ctrl-center-seat-stack">
-            {/* Same intrinsic height driver as Screen countdown */}
-            <span className="timer-font ctrl-timer-height-ref" aria-hidden="true">
+            <div className="timer-font ctrl-timer-height-ref" aria-hidden="true">
               0:00
-            </span>
+            </div>
             <div className="ctrl-center-seat-fore">
               <div className="ctrl-center-mode">
                 {formatControllerModeLabel(refereeMode)}

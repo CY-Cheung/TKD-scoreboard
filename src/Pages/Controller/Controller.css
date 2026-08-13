@@ -217,22 +217,17 @@ body:has(.controller) {
 
 /*
  * Mode on top, Judge N below.
- * Yellow box size = Screen .game-timer sized by hidden .timer-font "0:00".
+ * Do NOT lock height — Screen .game-timer is content-sized by .timer-font
+ * (9cqi + normal line-height + 0.5cqi borders). Hidden "0:00" is the sizer.
  */
 .game-timer.ctrl-center-seat-stack {
 	position: relative;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: center;
+	/* inherit Screen .game-timer: display/flex/border/flex:2 */
 	width: 100%;
 	max-width: 100%;
-	flex: 2 1 0;
 	min-width: 0;
 	color: var(--yellow-primary, #ffff00);
-	/* border-box so 0.5cqi yellow border stays inside the center column */
 	box-sizing: border-box;
-	overflow: hidden;
 }
 
 .ctrl-col-info .timer {
@@ -246,8 +241,8 @@ body:has(.controller) {
 	visibility: hidden;
 	pointer-events: none;
 	user-select: none;
-	max-width: 100%;
-	overflow: hidden;
+	/* keep Screen .timer-font metrics (no line-height:1 override) */
+	display: block;
 }
 
 .ctrl-center-seat-fore {
@@ -259,14 +254,13 @@ body:has(.controller) {
 	justify-content: center;
 	gap: 0.5cqi;
 	max-width: 100%;
-	overflow: hidden;
 	box-sizing: border-box;
+	overflow: hidden;
 }
 
 .ctrl-timeout-spacer {
 	visibility: hidden;
 	pointer-events: none;
-	flex: 2 1 0;
 }
 
 .ctrl-center-mode {
