@@ -210,7 +210,11 @@ body:has(.controller) {
 	font-weight: 900;
 }
 
-/* Mode on top, Judge N below (override .game-timer default row) */
+/*
+ * Mode on top, Judge N below.
+ * Keep Screen .game-timer flex:2; spacer below mirrors .time-out flex:2
+ * so the yellow box height matches Screen timer.
+ */
 .game-timer.ctrl-center-seat-stack {
 	display: flex;
 	flex-direction: column;
@@ -219,8 +223,13 @@ body:has(.controller) {
 	gap: 0.8cqi;
 	width: 100%;
 	color: var(--yellow-primary, #ffff00);
-	padding: 0.8cqi 0.5cqi;
 	box-sizing: border-box;
+	/* no extra padding — Screen .game-timer has none */
+}
+
+.ctrl-timeout-spacer {
+	visibility: hidden;
+	pointer-events: none;
 }
 
 .ctrl-center-mode {
