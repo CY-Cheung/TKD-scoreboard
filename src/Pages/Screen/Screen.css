@@ -105,12 +105,6 @@
 	margin-top: 0.1cqi;
 }
 
-.midbottom {
-	display: flex;
-	width: var(--screen-width);
-	height: calc(var(--screen-height) * 9/11);
-}
-
 /* 新增：分隔出來的 Middle 區塊 */
 .middle {
 	display: flex;
@@ -146,20 +140,6 @@
 	display: none;
 }
 
-.red-score {
-	display: flex;
-	flex-direction: column;
-	width: calc(var(--screen-width) * 39/150);
-	height: calc(var(--screen-height) * 9/11);
-}
-
-.match-info {
-	display: flex;
-	flex-direction: column;
-	width: calc(var(--screen-width) * 34/150);
-	height: calc(var(--screen-height) * 9/11);
-}
-
 /* 新增：中半部分專用的 match-info */
 .match-info-middle {
 	display: flex;
@@ -177,13 +157,6 @@
 	justify-content: center;
 	align-items: center;
 	transform: translateY(-1.2cqi);
-}
-
-.blue-score {
-	display: flex;
-	flex-direction: column;
-	width: calc(var(--screen-width) * 39/150);
-	height: calc(var(--screen-height) * 9/11);
 }
 
 .blue-log {
@@ -298,24 +271,6 @@
 	width: 3.1cqi; /* was 1em at 3.1cqi */
 	height: 3.1cqi;
 	flex-shrink: 0;
-}
-
-.red-ref-log {
-	display: flex;
-	flex-direction: column;
-	width: calc(var(--screen-width) * 19/150);
-	height: calc(var(--screen-height) * 7/11);
-	align-items: center;
-	gap: 1cqi;
-}
-
-.blue-ref-log {
-	display: flex;
-	flex-direction: column;
-	width: calc(var(--screen-width) * 19/150);
-	height: calc(var(--screen-height) * 7/11);
-	align-items: center;
-	gap: 1cqi;
 }
 
 .red-gamjeom {
@@ -465,53 +420,4 @@
 	line-height: 1;
 	text-align: center;
 	min-width: 6cqi; /* was 1.2em at 5cqi */
-}
-
-.log-row {
-	--log-width: calc(var(--screen-width) * 19/150);
-	display: flex;
-	width: var(--log-width);
-}
-
-.log-icon,
-.ref-num {
-	--icon-width: calc(var(--screen-width) * 4/150 * 0.875);
-	width: calc(var(--icon-width));
-	height: calc(var(--icon-width));
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	font-size: calc(var(--icon-width) - 0.25cqi);
-	margin: 0.375cqi;
-	color: transparent;
-	font-weight: bold;
-}
-
-/* QR Code trigger button on Screen */
-.qr-trigger-btn {
-	position: absolute;
-	top: 0.521cqi;
-	right: 0.521cqi;
-	z-index: 100;
-	background: rgba(15, 23, 42, 0.85);
-	border: 0.05cqi solid rgba(255, 255, 255, 0.25);
-	color: #ffffff;
-	padding: 0.312cqi 0.729cqi;
-	border-radius: 1.042cqi;
-	display: flex;
-	align-items: center;
-	gap: 0.417cqi;
-	font-size: 1cqi;
-	font-weight: 600;
-	cursor: pointer;
-	backdrop-filter: blur(0.312cqi);
-	transition: all 0.2s ease;
-	box-shadow: 0 0.208cqi 0.625cqi rgba(0, 0, 0, 0.4);
-}
-
-.qr-trigger-btn:hover {
-	background: rgba(30, 41, 59, 0.95);
-	border-color: #38bdf8;
-	color: #38bdf8;
-	transform: scale(1.05);
 }

@@ -95,17 +95,6 @@
     max-width: 50%;
 }
 
-.cs-action-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 0.62cqi;
-    margin-top: 0.52cqi;
-}
-
-.cs-action-buttons > * {
-    width: 100%;
-}
-
 .cs-error-message {
     color: #ff4757;
     font-size: 1.05cqi;
@@ -115,28 +104,6 @@
     padding: 0.55cqi 0.75cqi;
     border-radius: 0.42cqi;
     border-left: 0.16cqi solid #ff4757;
-}
-
-/* Custom Google Button Wrapper for extra styling */
-.google-btn-wrapper {
-    position: relative;
-    margin: 1.56cqi auto;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Use native Button component but override border width to be thinner */
-.google-btn-wrapper button {
-    border-width: 0.1cqi !important; 
-    font-weight: 700 !important;
-    font-size: 0.83cqi !important;
-    padding: 0.62cqi 1.56cqi !important;
-    box-shadow: 0 0 0.78cqi rgba(0, 0, 0, 0.4) !important;
-}
-
-.google-btn-wrapper button:hover {
-    box-shadow: 0 0 1.04cqi rgba(0, 0, 0, 0.6) !important;
 }
 
 .cs-create-modal-overlay {
@@ -272,19 +239,4 @@
     justify-content: flex-end;
     gap: 0.52cqi;
     margin-top: 0.52cqi;
-}
-
-
-/* FORCED UNIFICATION — right-panel controls read larger */
-.cs-right-panel .datalist-input,
-.cs-right-panel .form-group input[type="password"] {
-    height: 3.4cqi !important;
-    padding: 0 1.1cqi !important;
-    line-height: 3.4cqi !important;
-    box-sizing: border-box !important;
-    font-size: 1.35cqi !important;
-}
-
-.cs-right-panel .cs-form-label {
-    font-size: 1.35cqi;
 }

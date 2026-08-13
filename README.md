@@ -96,7 +96,8 @@ npm run lint
 | `src/App.jsx` | Routes + basename |
 | `src/Api.js` | 計分、回合、勝負、Technical Card、IVR |
 | `src/firebase.js` | Firebase init |
-| `src/Context/AuthContext.jsx` | Google auth + event/court session |
+| `src/Context/AuthContext.jsx` | Google auth |
+| `src/Context/EventSessionContext.jsx` | Event／court session（sessionStorage） |
 | `src/Context/PopupContext.jsx` | Toast / Confirm modal |
 | `src/Pages/Landing/` | Marketing + Google 登入入口 |
 | `src/Pages/CourtSetup/` | Event／Court、PDF 建立賽事 |
