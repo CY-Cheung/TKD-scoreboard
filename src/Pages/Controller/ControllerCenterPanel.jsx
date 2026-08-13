@@ -1,20 +1,20 @@
 import React from "react";
 import ScreenRoundWins from "../Screen/ScreenRoundWins";
+import {
+  formatControllerJudgeLabel,
+  formatControllerModeLabel,
+} from "./controllerMatchView";
 
 /**
- * Center column mirrors Screen match-info:
- * MATCH + scores (in place of timer/timeout) + Screen ROUND strip.
+ * Center column: MATCH + mode/judge stack (replaces scores) + ROUND strip.
  */
 export default function ControllerCenterPanel({
-  redScore = 0,
-  blueScore = 0,
   currentRound,
-  isPaused = false,
   matchNo,
   roundWins = { red: 0, blue: 0 },
+  refereeMode = "single",
+  mySeat,
 }) {
-  const scoreColor = isPaused ? "#FFFFFF" : "var(--yellow-primary, #ffff00)";
-
   return (
     <div className="ctrl-col-info">
       <div className="match-info-middle">
@@ -23,16 +23,13 @@ export default function ControllerCenterPanel({
           <div className="match-number">{matchNo}</div>
         </div>
         <div className="timer">
-          <div
-            className="game-timer timer-font ctrl-center-scoreboard"
-            style={{ color: scoreColor }}
-          >
-            <span className="ctrl-center-score" style={{ color: scoreColor }}>
-              {redScore}
-            </span>
-            <span className="ctrl-center-score" style={{ color: scoreColor }}>
-              {blueScore}
-            </span>
+          <div className="game-timer ctrl-center-seat-stack">
+            <div className="ctrl-center-mode">
+              {formatControllerModeLabel(refereeMode)}
+            </div>
+            <div className="ctrl-center-judge">
+              {formatControllerJudgeLabel(mySeat)}
+            </div>
           </div>
         </div>
       </div>

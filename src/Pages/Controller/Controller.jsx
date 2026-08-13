@@ -395,8 +395,6 @@ function Controller() {
             <div className="ctrl-shell">
                 <ControllerTopBar
                     isConnected={isConnected}
-                    mySeat={mySeat}
-                    refereeMode={refereeMode}
                     onBack={() => navigate(resolveControllerBackPath(user))}
                 />
 
@@ -409,12 +407,11 @@ function Controller() {
 
                     <ControllerScorePad onScore={handleScore}>
                         <ControllerCenterPanel
-                            redScore={summary.redScore}
-                            blueScore={summary.blueScore}
                             currentRound={summary.currentRound}
-                            isPaused={summary.isPaused}
                             matchNo={summary.matchNo}
                             roundWins={summary.roundWins}
+                            refereeMode={refereeMode}
+                            mySeat={mySeat}
                         />
                     </ControllerScorePad>
                 </div>

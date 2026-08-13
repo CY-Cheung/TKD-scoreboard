@@ -4,6 +4,8 @@ import {
   buildControllerMatchSummary,
   resolveControllerBackPath,
   formatRefereeModeBadge,
+  formatControllerModeLabel,
+  formatControllerJudgeLabel,
   buildScoreActionFeedback,
   parseScoreActionLabel,
   DEFAULT_RED_NAME,
@@ -93,6 +95,15 @@ describe("nav / badges / feedback", () => {
   it("formatRefereeModeBadge", () => {
     expect(formatRefereeModeBadge("multiple")).toContain("Multi");
     expect(formatRefereeModeBadge("single")).toContain("Single");
+  });
+
+  it("formatControllerModeLabel / formatControllerJudgeLabel", () => {
+    expect(formatControllerModeLabel("single")).toBe("SINGLE");
+    expect(formatControllerModeLabel("multiple")).toBe("MULTIPLE");
+    expect(formatControllerJudgeLabel("J1")).toBe("Judge 1");
+    expect(formatControllerJudgeLabel("J3")).toBe("Judge 3");
+    expect(formatControllerJudgeLabel("Admin")).toBe("Admin");
+    expect(formatControllerJudgeLabel(null)).toBe("Judge …");
   });
 
   it("buildScoreActionFeedback", () => {

@@ -98,18 +98,6 @@ body:has(.controller) {
 	text-align: center;
 }
 
-.ctrl-top-judge {
-	font-size: 1.8cqi; /* was width * 0.018 */
-	font-weight: 600;
-	letter-spacing: 0.14cqi; /* was 0.08em at 1.8cqi */
-	text-transform: uppercase;
-	color: rgba(255, 255, 255, 0.85);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	max-width: 100%;
-}
-
 .ctrl-conn-status {
 	font-size: 1.6cqi; /* was width * 0.016 */
 	font-weight: 700;
@@ -259,20 +247,35 @@ body:has(.controller) {
 	font-weight: 900;
 }
 
-.ctrl-center-scoreboard {
+/* Mode + Judge stacked where Screen timer / former scores sat */
+.ctrl-center-seat-stack {
 	display: flex;
-	flex-direction: row;
+	flex-direction: column;
 	align-items: center;
-	justify-content: space-evenly;
-	gap: 0.5cqi;
+	justify-content: center;
+	gap: 0.6cqi;
 	width: 100%;
 	color: var(--yellow-primary, #ffff00);
+	padding: 0.8cqi 0.5cqi;
+	box-sizing: border-box;
 }
 
-.ctrl-center-score {
-	flex: 1;
+.ctrl-center-mode {
+	font-size: 3.2cqi;
+	font-weight: 800;
+	letter-spacing: 0.12cqi;
+	text-transform: uppercase;
+	line-height: 1.05;
 	text-align: center;
-	min-width: 0;
+}
+
+.ctrl-center-judge {
+	font-size: 4.2cqi;
+	font-weight: 900;
+	letter-spacing: 0.06cqi;
+	line-height: 1.05;
+	text-align: center;
+	color: var(--yellow-primary, #ffff00);
 }
 
 @keyframes ctrlPopIn {

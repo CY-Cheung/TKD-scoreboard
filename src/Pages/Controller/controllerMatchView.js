@@ -74,6 +74,23 @@ export function formatRefereeModeBadge(refereeMode) {
   return refereeMode === "multiple" ? "👥 Multi" : "👤 Single";
 }
 
+/** Center-column mode label (no emoji). */
+export function formatControllerModeLabel(refereeMode) {
+  return refereeMode === "multiple" ? "MULTIPLE" : "SINGLE";
+}
+
+/**
+ * Center-column judge label: J1 → Judge 1, Admin → Admin.
+ * @param {string | null | undefined} seat
+ */
+export function formatControllerJudgeLabel(seat) {
+  if (!seat) return "Judge …";
+  const m = String(seat).match(/^J([1-3])$/i);
+  if (m) return `Judge ${m[1]}`;
+  if (String(seat).toLowerCase() === "admin") return "Admin";
+  return String(seat);
+}
+
 /**
  * @param {"red" | "blue"} side
  * @param {string} label

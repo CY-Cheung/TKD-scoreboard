@@ -1,18 +1,12 @@
 import React from "react";
 import Button from "../../Components/Button/Button";
 import { Wifi, WifiOff, ArrowLeft } from "react-bootstrap-icons";
-import { formatRefereeModeBadge } from "./controllerMatchView";
 
 /**
  * Title bar inside 2:1 (Screen top height):
- * Back · Judge seat · Live/Offline
+ * Back · Live/Offline (mode/judge live in center column).
  */
-export default function ControllerTopBar({
-  isConnected,
-  onBack,
-  mySeat,
-  refereeMode,
-}) {
+export default function ControllerTopBar({ isConnected, onBack }) {
   return (
     <div className="ctrl-top-bar">
       <Button
@@ -27,11 +21,7 @@ export default function ControllerTopBar({
         angle={180}
       />
 
-      <div className="ctrl-top-bar-center">
-        <span className="ctrl-top-judge">
-          {formatRefereeModeBadge(refereeMode)} · {mySeat || "..."}
-        </span>
-      </div>
+      <div className="ctrl-top-bar-center" aria-hidden="true" />
 
       <div className="ctrl-conn-status">
         {isConnected ? (
