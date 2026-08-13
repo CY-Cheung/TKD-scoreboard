@@ -11,6 +11,7 @@ import Landing from './Pages/Landing/Landing';
 import Home from './Pages/Home/Home';
 import CourtSetup from './Pages/CourtSetup/CourtSetup';
 import Controller from './Pages/Controller/Controller';
+import ControllerVisualPreview from './Pages/Controller/ControllerVisualPreview';
 import Screen from './Pages/Screen/Screen';
 import DataImport from './Pages/DataImport/DataImport';
 
@@ -25,6 +26,8 @@ function App() {
             {/* --- Public Routes --- */}
             <Route path="/" element={<Landing />} />
             <Route path="/court-setup" element={<CourtSetup />} />
+            {/* Design-review shell (no Firebase); safe to remove after UI sign-off */}
+            <Route path="/controller-preview" element={<ControllerVisualPreview />} />
 
             {/* --- Routes that require event/court session (Protected Routes) --- */}
             <Route 
