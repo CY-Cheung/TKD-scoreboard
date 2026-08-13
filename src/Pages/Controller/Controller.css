@@ -154,12 +154,13 @@ body:has(.controller) {
 	background: #000000;
 }
 
+/* Exact Screen match-info heights (of full --screen-height) */
 .ctrl-col-info .match-info-middle {
 	display: flex;
 	flex-direction: column;
 	width: 100%;
-	flex: 7 1 0;
-	height: auto;
+	flex: none;
+	height: calc(var(--screen-height) * 7 / 11);
 	min-height: 0;
 }
 
@@ -167,8 +168,8 @@ body:has(.controller) {
 	display: flex;
 	flex-direction: column;
 	width: 100%;
-	flex: 2 1 0;
-	height: auto;
+	flex: none;
+	height: calc(var(--screen-height) * 2 / 11);
 	min-height: 0;
 	justify-content: center;
 	align-items: center;
@@ -212,24 +213,29 @@ body:has(.controller) {
 
 /*
  * Mode on top, Judge N below.
- * Keep Screen .game-timer flex:2; spacer below mirrors .time-out flex:2
- * so the yellow box height matches Screen timer.
+ * Screen timer box height is driven by .timer-font (9cqi); lock the same.
  */
 .game-timer.ctrl-center-seat-stack {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 0.8cqi;
+	gap: 0.5cqi;
 	width: 100%;
+	flex: 2 1 0;
+	/* Same visual box as Screen countdown cell */
+	height: 9cqi;
+	min-height: 9cqi;
+	max-height: 9cqi;
 	color: var(--yellow-primary, #ffff00);
 	box-sizing: border-box;
-	/* no extra padding — Screen .game-timer has none */
+	overflow: hidden;
 }
 
 .ctrl-timeout-spacer {
 	visibility: hidden;
 	pointer-events: none;
+	flex: 2 1 0;
 }
 
 .ctrl-center-mode {

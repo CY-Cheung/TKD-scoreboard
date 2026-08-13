@@ -6,7 +6,7 @@ import {
 } from "./controllerMatchView";
 
 /**
- * Center column: MATCH + mode/judge stack (replaces scores) + ROUND strip.
+ * Center column: MATCH + mode/judge (Screen timer-sized box) + ROUND.
  */
 export default function ControllerCenterPanel({
   currentRound,
@@ -25,14 +25,19 @@ export default function ControllerCenterPanel({
         </div>
         <div className="timer">
           <div className="game-timer ctrl-center-seat-stack">
-            <div className="ctrl-center-mode">
-              {formatControllerModeLabel(refereeMode)}
-            </div>
-            <div className="ctrl-center-judge">
-              {formatControllerJudgeLabel(mySeat, isConnected)}
+            {/* Same intrinsic height driver as Screen countdown */}
+            <span className="timer-font ctrl-timer-height-ref" aria-hidden="true">
+              0:00
+            </span>
+            <div className="ctrl-center-seat-fore">
+              <div className="ctrl-center-mode">
+                {formatControllerModeLabel(refereeMode)}
+              </div>
+              <div className="ctrl-center-judge">
+                {formatControllerJudgeLabel(mySeat, isConnected)}
+              </div>
             </div>
           </div>
-          {/* Invisible twin of Screen .time-out — keeps .game-timer the same flex height */}
           <div
             className="time-out match-font ctrl-timeout-spacer"
             aria-hidden="true"
