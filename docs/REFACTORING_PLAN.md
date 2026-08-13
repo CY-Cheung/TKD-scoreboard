@@ -184,6 +184,7 @@ Waves 0–11 已執行完畢。工程整潔後續見 §10「Engineering hygiene�
 | 2026-08-12 | Mark Waves 0–8 complete；baseline → Vitest 157；RTDB flatten complete；clarify voteNow/pauseNow ≠ dual-write |
 | 2026-08-12 | Waves 9–11：page pure helpers／RTL／rules emulator + CI；flatten stack already on `main` |
 | 2026-08-12 | Engineering hygiene：Test Plan／flatten docs／skeleton rules sync；Screen hotkeys／presence／scoreboard model |
+| 2026-08-13 | Engineering hygiene 2d：`QRCodeDisplay` helpers + Status／Mode／Host／EventHeading panels |
 
 ---
 
@@ -207,6 +208,7 @@ Waves 0–11 已執行完畢。工程整潔後續見 §10「Engineering hygiene�
 | 2 Screen thin extracts | **完成** | hotkeys／referee presence／scoreboard model；rAF／TX／seat I/O 仍留 page |
 | 2b Controller extracts | **完成** | match view helpers／status screens／TopBar／CenterPanel；seat grab Firebase 仍留 page |
 | 2c Edit extracts | **完成** | score／IVR／timer／winner helpers + GridHeaders／TimeBar／IvrQuotaInput |
+| 2d QRCodeDisplay extracts | **完成** | occupancy／host flags／court label helpers；Status／Mode／Host／EventHeading panels；reuse `parseEventHeading` |
 | 3 Optional RTL | 未開 | |
 
 ### Wave 9 progress（2026-08-12）
@@ -221,7 +223,8 @@ Waves 0–11 已執行完畢。工程整潔後續見 §10「Engineering hygiene�
 | `MatchConfigForm`／`MatchesList`／`BracketView`／`matchListUtils`／`MatchActionButtons` | `DataImport.jsx`（Create Event modal 已刪） |
 | `pdfImportFlow`／`persistCreatedEvents`／`matchFormHelpers`／`MatchActionButtons` | DataImport + CourtSetup shared create／PDF |
 | `BrandSplitLayout`／`BrandSplitHero`／`BrandSplitUserBadge` | Home + CourtSetup 共用左半；page 只 render 右半 |
-| `HomeRightPanel`／`parseEventHeading` | `Home.jsx` |
+| `HomeRightPanel`／`parseEventHeading` | `Home.jsx`（`QrEventHeading` 重用同一 parser） |
+| `qrRefereeView`／`qrHostFlags`／`RefereeStatusPanel`／`RefereeModeSelector`／`QrHostConfig`／`QrEventHeading` | `QRCodeDisplay.jsx`（工程整潔 Phase 2d） |
 | `CourtSetupSessionForm` | `CourtSetup.jsx`（取代 page-local hero） |
 | `ScreenCenterTimer`／`ScreenRoundWins`／`ScreenBottomBar`／`ScreenEventTopBar`／`ScreenTopNames`／`ScreenMiddleBoard`／`ScreenOverlayStack` | `Screen.jsx` |
 | `kyeShiTime`／`screenBoardColors`／`useNowTicker`／`useToastAutoDismiss` | `Screen.jsx` |

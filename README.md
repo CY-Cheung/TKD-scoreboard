@@ -104,7 +104,7 @@ npm run lint
 | `src/Pages/Screen/` | 大螢幕 + `Edit.jsx` 主裁底欄 |
 | `src/Pages/Controller/` | 邊裁搶位、遙控 |
 | `src/Pages/DataImport/` | Manage Match、Rules、Bracket |
-| `src/Components/QRCodeDisplay/` | QR、裁判模式 |
+| `src/Components/QRCodeDisplay/` | QR、裁判模式（helpers + Status／Mode／Host panels） |
 | `src/Components/TechnicalCardFlow/` | Technical Card 確認 + 公告 |
 | `src/Components/IVRFlow/` | IVR 確認 + 公告 |
 | `src/Components/AlternatingLocale/` | Chi／Eng fade |
@@ -126,7 +126,7 @@ npm run lint
 | 分數／規則錯 | `Api.js` |
 | 大屏 ⟷ 手機唔同步 | `Screen.jsx` + `Controller.jsx` |
 | 搶位／斷線 | `Controller.jsx` |
-| QR／裁判人數 | `QRCodeDisplay.jsx` |
+| QR／裁判人數 | `QRCodeDisplay/`（`QRCodeDisplay.jsx` + `qrRefereeView`／panels） |
 | Technical Card | `TechnicalCardFlow/`、`Api.js`、`Screen.jsx`、`Edit.jsx` |
 | IVR | `IVRFlow/`、`Api.js`、`Edit.jsx` |
 | PDF／Match | `DataImport.jsx`、`pdfParser.js` |
