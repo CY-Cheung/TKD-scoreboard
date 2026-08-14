@@ -1,10 +1,33 @@
 import { describe, it, expect, vi } from "vitest";
 import {
   deriveMatchFormFields,
+  deriveFormDefaultsFromEventSettings,
   buildMatchFromForm,
   applyMatchFormFields,
   clearMatchFormCompetitorFields,
+  applyEventRuleDefaultsToForm,
 } from "./matchFormHelpers.js";
+
+describe("deriveFormDefaultsFromEventSettings", () => {
+  it("uses event settings including IVR quota", () => {
+    const fields = deriveFormDefaultsFromEventSettings({
+      maxPointGap: 12,
+      maxGamjeom: 4,
+      roundDuration: 100,
+      restDuration: 45,
+      ivrQuota: 2,
+    });
+    expect(fields.maxPointGap).toBe(12);
+    expect(fields.roundDuration).toBe(100);
+    expect(fields.ivrQuota).toBe("2");
+    expect(fields.blueName).toBe("");
+  });
+
+  it("leaves IVR empty when unlimited / missing", () => {
+    expect(deriveFormDefaultsFromEventSettings({}).ivrQuota).toBe("");
+    expect(deriveFormDefaultsFromEventSettings({ ivrQuota: -1 }).ivrQuota).toBe("");
+  });
+});
 
 describe("deriveMatchFormFields", () => {
   it("maps structured competitors", () => {
@@ -29,6 +52,28 @@ describe("deriveMatchFormFields", () => {
     expect(fields.blueAffiliatedClub).toBe("HK");
     expect(fields.redName).toBe("Bob");
     expect(fields.maxPointGap).toBe(12);
+  });
+
+  it("falls back to event settings for missing IVR / rules", () => {
+    const fields = deriveMatchFormFields(
+      {
+        config: {
+          rules: {
+            maxPointGap: 15,
+            maxGamjeom: 5,
+            roundDuration: 90,
+            restDuration: 60,
+          },
+          competitors: {
+            blue: { name: "A", affiliatedClub: "" },
+            red: { name: "B", affiliatedClub: "" },
+          },
+        },
+      },
+      { ivrQuota: 3, roundDuration: 100 }
+    );
+    expect(fields.ivrQuota).toBe("3");
+    expect(fields.roundDuration).toBe(90);
   });
 
   it("parses legacy name(club) when affiliatedClub missing", () => {
@@ -110,5 +155,8 @@ describe("applyMatchFormFields / clearMatchFormCompetitorFields", () => {
     clearMatchFormCompetitorFields(setters);
     expect(setters.setMatchId).toHaveBeenCalledWith("");
     expect(setters.setBlueName).toHaveBeenCalledWith("");
+    applyEventRuleDefaultsToForm({ ivrQuota: 2, maxPointGap: 12 }, setters);
+    expect(setters.setIvrQuota).toHaveBeenCalledWith("2");
+    expect(setters.setMaxPointGap).toHaveBeenCalledWith(12);
   });
 });
