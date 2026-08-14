@@ -4,6 +4,7 @@ import {
   buildCourtsMap,
   buildEventRecords,
   formatPdfDate,
+  matchRulesFromEventSettings,
   normalizeRulesFromForm,
 } from "./eventCreation.js";
 
@@ -56,6 +57,37 @@ describe("formatPdfDate", () => {
 
   it("falls back for non-standard strings", () => {
     expect(formatPdfDate("nodate").formattedDate).toBe("nodate");
+  });
+});
+
+describe("matchRulesFromEventSettings", () => {
+  it("includes configured IVR quota on match rules", () => {
+    expect(
+      matchRulesFromEventSettings({
+        maxPointGap: 12,
+        maxGamjeom: 4,
+        roundDuration: 100,
+        restDuration: 45,
+        ivrQuota: 2,
+      })
+    ).toEqual({
+      maxPointGap: 12,
+      maxGamjeom: 4,
+      roundDuration: 100,
+      restDuration: 45,
+      ivrQuota: 2,
+    });
+  });
+
+  it("omits IVR when unlimited / empty", () => {
+    expect(
+      matchRulesFromEventSettings({
+        maxPointGap: 15,
+        maxGamjeom: 5,
+        roundDuration: 90,
+        restDuration: 60,
+      }).ivrQuota
+    ).toBeUndefined();
   });
 });
 
@@ -133,8 +165,26 @@ describe("buildEventRecords", () => {
     expect(result.records[0].data.EventName).toContain("Day 1");
     expect(result.records[0].data.matchDate).toBe("2026/08/10");
     expect(result.records[1].id).toBe("TKD_Day2_20260811");
-    // rules overlay applied
+    // rules overlay applied (incl. IVR from event settings)
     expect(pdf.dateGroups["10/08/2026"].matches.A1.config.rules.maxGamjeom).toBe(7);
+  });
+
+  it("bakes event IVR quota onto PDF match rules", () => {
+    const pdf = {
+      datesList: ["10/08/2026"],
+      matches: { A1: { config: { rules: { maxGamjeom: 5 } } } },
+    };
+    buildEventRecords({
+      eventId: "E3",
+      eventName: "IvrEvent",
+      user,
+      settings: { ...settings, ivrQuota: 2 },
+      courts: buildCourtsMap(1).courts,
+      courtCount: 1,
+      pdfParseResult: pdf,
+      now: 1,
+    });
+    expect(pdf.matches.A1.config.rules.ivrQuota).toBe(2);
   });
 
   it("builds single-day PDF event", () => {

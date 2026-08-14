@@ -72,6 +72,24 @@ export function applyRulesToPdfResult(pdfParseResult, finalRules) {
   return pdfParseResult;
 }
 
+/**
+ * Match rules baked from event settings at create/PDF import time.
+ * Includes configured IVR quota (omit when unlimited / empty).
+ */
+export function matchRulesFromEventSettings(settings = {}) {
+  const rules = createStoredMatchRules({
+    maxPointGap: settings.maxPointGap,
+    maxGamjeom: settings.maxGamjeom,
+    roundDuration: settings.roundDuration,
+    restDuration: settings.restDuration,
+  });
+  const q = settings.ivrQuota;
+  if (q !== null && q !== undefined && q !== "" && Number(q) > 0) {
+    rules.ivrQuota = Number(q);
+  }
+  return rules;
+}
+
 function baseEventMeta(user, now) {
   return {
     createdBy: user.uid,
@@ -108,13 +126,7 @@ export function buildEventRecords({
   if (pdfParseResult) {
     applyRulesToPdfResult(
       pdfParseResult,
-      // rules already baked into settings for event; matches need form rules only
-      createStoredMatchRules({
-        maxPointGap: settings.maxPointGap,
-        maxGamjeom: settings.maxGamjeom,
-        roundDuration: settings.roundDuration,
-        restDuration: settings.restDuration,
-      })
+      matchRulesFromEventSettings(settings)
     );
 
     if (pdfParseResult.datesList?.length > 1) {

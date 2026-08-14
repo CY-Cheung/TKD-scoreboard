@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { get, ref } from 'firebase/database';
 import { database } from '../../firebase';
 import { usePopup } from '../../Context/PopupContext';
 import './DataImport.css';
@@ -19,9 +20,11 @@ import {
 } from './matchListUtils';
 import {
     deriveMatchFormFields,
+    deriveFormDefaultsFromEventSettings,
     buildMatchFromForm,
     applyMatchFormFields,
     clearMatchFormCompetitorFields,
+    applyEventRuleDefaultsToForm,
 } from './matchFormHelpers';
 import MatchActionButtons from './MatchActionButtons';
 import MatchConfigForm from './MatchConfigForm';
@@ -40,6 +43,7 @@ const DataImport = () => {
     const { session } = useEventSession(); 
     const [eventsList, setEventsList] = useState([]);
     const [eventName, setEventName] = useState('');
+    const [eventSettings, setEventSettings] = useState({});
     const [currentMatches, setCurrentMatches] = useState({});
     const [selectedMatchId, setSelectedMatchId] = useState(null);
     const { showToast, showConfirm } = usePopup();
@@ -53,7 +57,7 @@ const DataImport = () => {
 
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Form state - Default Point Gap set to 15 as per new rules
+    // Form state — defaults refreshed from event settings when event changes
     const [matchId, setMatchId] = useState('');
     const [nextMatchId, setNextMatchId] = useState('');
     const [nextMatchSlot, setNextMatchSlot] = useState('');
@@ -68,6 +72,23 @@ const DataImport = () => {
     const [redName, setRedName] = useState('');
     const [redAffiliatedClub, setRedAffiliatedClub] = useState('');
     const [redPreviousMatch, setRedPreviousMatch] = useState('');
+
+    const formSetters = {
+        setMatchId,
+        setNextMatchId,
+        setNextMatchSlot,
+        setMaxPointGap,
+        setMaxGamjeom,
+        setRoundDuration,
+        setRestDuration,
+        setIvrQuota,
+        setBlueName,
+        setBlueAffiliatedClub,
+        setBluePreviousMatch,
+        setRedName,
+        setRedAffiliatedClub,
+        setRedPreviousMatch,
+    };
 
     // Fetch All Events from Firebase (prefer light eventIndex)
     const fetchEventsList = () => {
@@ -85,17 +106,37 @@ const DataImport = () => {
         fetchEventsList();
     }, [session?.eventId]);
 
-    // Fetch Matches when eventName changes (prefer flat matches + matchLive)
+    // Fetch matches + event settings when event changes; prefills from Create Event settings
     useEffect(() => {
         setSelectedMatchId(null);
         setSelectedDateFilter('all');
-        if (eventName) {
-            fetchMatchesForEvent(database, eventName)
-                .then((matches) => setCurrentMatches(matches || {}))
-                .catch(() => setCurrentMatches({}));
-        } else {
+        setMatchId('');
+
+        if (!eventName) {
             setCurrentMatches({});
+            setEventSettings({});
+            applyMatchFormFields(deriveFormDefaultsFromEventSettings({}), formSetters);
+            return;
         }
+
+        get(ref(database, `events/${eventName}/settings`))
+            .then((snap) => {
+                const settings = snap.val() || {};
+                setEventSettings(settings);
+                applyMatchFormFields(
+                    deriveFormDefaultsFromEventSettings(settings),
+                    formSetters
+                );
+            })
+            .catch((err) => {
+                console.error("Error fetching event settings:", err);
+                setEventSettings({});
+                applyMatchFormFields(deriveFormDefaultsFromEventSettings({}), formSetters);
+            });
+
+        fetchMatchesForEvent(database, eventName)
+            .then((matches) => setCurrentMatches(matches || {}))
+            .catch(() => setCurrentMatches({}));
     }, [eventName]);
 
     // Extract available unique dates from currentMatches
@@ -137,6 +178,11 @@ const DataImport = () => {
             await removeMatchFlatArtifacts(database, eventName, selectedMatchId);
             showToast(`🗑️ 場次 ${selectedMatchId} 已成功刪除！`);
             setSelectedMatchId(null);
+            setMatchId('');
+            applyMatchFormFields(
+                deriveFormDefaultsFromEventSettings(eventSettings),
+                formSetters
+            );
             
             // Remove from local state
             setCurrentMatches(prev => {
@@ -152,26 +198,15 @@ const DataImport = () => {
         }
     };
 
-    // Auto-populates the form when a match ID is entered manually
+    // Auto-populates the form when a match ID is entered / selected
     useEffect(() => {
         if (matchId && currentMatches[matchId]) {
-            applyMatchFormFields(deriveMatchFormFields(currentMatches[matchId]), {
-                setNextMatchId,
-                setNextMatchSlot,
-                setMaxPointGap,
-                setMaxGamjeom,
-                setRoundDuration,
-                setRestDuration,
-                setIvrQuota,
-                setBlueName,
-                setBlueAffiliatedClub,
-                setBluePreviousMatch,
-                setRedName,
-                setRedAffiliatedClub,
-                setRedPreviousMatch,
-            });
+            applyMatchFormFields(
+                deriveMatchFormFields(currentMatches[matchId], eventSettings),
+                formSetters
+            );
         }
-    }, [matchId, currentMatches]);
+    }, [matchId, currentMatches, eventSettings]);
 
     useEffect(() => {
         if (selectedMatchId) {
@@ -209,17 +244,9 @@ const DataImport = () => {
             showToast(`Match ${matchId} added to event ${eventName} in Firebase!`);
             setCurrentMatches(prev => ({...prev, [matchId]: newMatch}));
 
-            clearMatchFormCompetitorFields({
-                setMatchId,
-                setBlueName,
-                setBlueAffiliatedClub,
-                setRedName,
-                setRedAffiliatedClub,
-                setNextMatchId,
-                setNextMatchSlot,
-                setBluePreviousMatch,
-                setRedPreviousMatch,
-            });
+            clearMatchFormCompetitorFields(formSetters);
+            applyEventRuleDefaultsToForm(eventSettings, formSetters);
+            setSelectedMatchId(null);
 
         } catch (error) {
             console.error("Error writing to Firebase:", error);
