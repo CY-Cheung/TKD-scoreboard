@@ -66,6 +66,8 @@ const Edit = ({
     const { locale, visible: localeVisible } = useAlternatingLocale();
     const [matchMin, setMatchMin] = useState(0);
     const [matchSec, setMatchSec] = useState(0);
+    const [restMin, setRestMin] = useState(0);
+    const [restSec, setRestSec] = useState(0);
     const [showSuperiorityVote, setShowSuperiorityVote] = useState(false);
     const [showAvoidingPopup, setShowAvoidingPopup] = useState(false);
     const [techCardConfirmSide, setTechCardConfirmSide] = useState(null);
@@ -240,6 +242,8 @@ const Edit = ({
         if (!fields) return;
         setMatchMin(fields.matchMin);
         setMatchSec(fields.matchSec);
+        setRestMin(fields.restMin);
+        setRestSec(fields.restSec);
     }, [visible, eventName, matchId, matchData]);
 
     const handleTimeUpdate = (timeType, newMin, newSec) => {
@@ -260,6 +264,16 @@ const Edit = ({
     const handleMatchSecChange = (value) => {
         setMatchSec(value);
         handleTimeUpdate('match', matchMin, value);
+    };
+
+    const handleRestMinChange = (value) => {
+        setRestMin(value);
+        handleTimeUpdate('rest', value, restSec);
+    };
+
+    const handleRestSecChange = (value) => {
+        setRestSec(value);
+        handleTimeUpdate('rest', restMin, value);
     };
 
     const buttonFontSize = '2cqi';
@@ -352,10 +366,15 @@ const Edit = ({
                 locale={locale}
                 localeVisible={localeVisible}
                 matchData={matchData}
+                phase={phase}
                 matchMin={matchMin}
                 matchSec={matchSec}
+                restMin={restMin}
+                restSec={restSec}
                 onMatchMinChange={handleMatchMinChange}
                 onMatchSecChange={handleMatchSecChange}
+                onRestMinChange={handleRestMinChange}
+                onRestSecChange={handleRestSecChange}
                 onBack={() => navigate(-1)}
                 toggleDirection={toggleDirection}
                 toggleKyeShi={toggleKyeShi}
