@@ -10,15 +10,84 @@ import {
 import Button from "../../Components/Button/Button";
 import { StableLocaleText } from "../../Components/AlternatingLocale/AlternatingLocale";
 
+function TimeSelectGroup({
+  locale,
+  localeVisible,
+  titleEn,
+  titleZh,
+  minutes,
+  seconds,
+  onMinChange,
+  onSecChange,
+  disabled,
+}) {
+  return (
+    <div className="time-control-group">
+      <StableLocaleText
+        as="h2"
+        locale={locale}
+        visible={localeVisible}
+        en={titleEn}
+        zh={titleZh}
+      />
+      <div className="time-selects">
+        <select
+          value={minutes}
+          onChange={(e) => onMinChange(e.target.value)}
+          disabled={disabled}
+        >
+          {[0, 1, 2].map((min) => (
+            <option key={min} value={min}>
+              {min}
+            </option>
+          ))}
+        </select>
+        <StableLocaleText
+          as="span"
+          locale={locale}
+          visible={localeVisible}
+          className="edit-locale-label"
+          en="min"
+          zh="分"
+        />
+        <select
+          value={seconds}
+          onChange={(e) => onSecChange(e.target.value)}
+          disabled={disabled}
+        >
+          {Array.from({ length: 60 }, (_, i) => i).map((sec) => (
+            <option key={sec} value={sec}>
+              {sec}
+            </option>
+          ))}
+        </select>
+        <StableLocaleText
+          as="span"
+          locale={locale}
+          visible={localeVisible}
+          className="edit-locale-label"
+          en="sec"
+          zh="秒"
+        />
+      </div>
+    </div>
+  );
+}
+
 /** Bottom time / action bar for Edit panel. */
 export default function EditTimeBar({
   locale,
   localeVisible,
   matchData,
+  phase = "ROUND",
   matchMin,
   matchSec,
+  restMin,
+  restSec,
   onMatchMinChange,
   onMatchSecChange,
+  onRestMinChange,
+  onRestSecChange,
   onBack,
   toggleDirection,
   toggleKyeShi,
@@ -34,6 +103,9 @@ export default function EditTimeBar({
   onWinDeclaration,
   onDone,
 }) {
+  const hasMatch = Boolean(matchData);
+  const isResting = phase === "REST";
+
   return (
     <div className="time-bar">
       <Button
@@ -88,55 +160,28 @@ export default function EditTimeBar({
           }}
         />
       )}
-      <div className="time-control-group">
-        <StableLocaleText
-          as="h2"
-          locale={locale}
-          visible={localeVisible}
-          en="Match Time"
-          zh="比賽時間"
-        />
-        <div className="time-selects">
-          <select
-            value={matchMin}
-            onChange={(e) => onMatchMinChange(e.target.value)}
-            disabled={!matchData}
-          >
-            {[0, 1, 2].map((min) => (
-              <option key={min} value={min}>
-                {min}
-              </option>
-            ))}
-          </select>
-          <StableLocaleText
-            as="span"
-            locale={locale}
-            visible={localeVisible}
-            className="edit-locale-label"
-            en="min"
-            zh="分"
-          />
-          <select
-            value={matchSec}
-            onChange={(e) => onMatchSecChange(e.target.value)}
-            disabled={!matchData}
-          >
-            {Array.from({ length: 60 }, (_, i) => i).map((sec) => (
-              <option key={sec} value={sec}>
-                {sec}
-              </option>
-            ))}
-          </select>
-          <StableLocaleText
-            as="span"
-            locale={locale}
-            visible={localeVisible}
-            className="edit-locale-label"
-            en="sec"
-            zh="秒"
-          />
-        </div>
-      </div>
+      <TimeSelectGroup
+        locale={locale}
+        localeVisible={localeVisible}
+        titleEn="Match Time"
+        titleZh="比賽時間"
+        minutes={matchMin}
+        seconds={matchSec}
+        onMinChange={onMatchMinChange}
+        onSecChange={onMatchSecChange}
+        disabled={!hasMatch || isResting}
+      />
+      <TimeSelectGroup
+        locale={locale}
+        localeVisible={localeVisible}
+        titleEn="Rest Time"
+        titleZh="休息時間"
+        minutes={restMin}
+        seconds={restSec}
+        onMinChange={onRestMinChange}
+        onSecChange={onRestSecChange}
+        disabled={!hasMatch || !isResting}
+      />
 
       {setShowQRCode && (
         <Button
