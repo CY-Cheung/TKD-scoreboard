@@ -11,7 +11,7 @@ import { StableLocaleText } from "../../Components/AlternatingLocale/Alternating
 
 /**
  * Presentational Create Event overlay for CourtSetup.
- * Firebase / PDF parse handlers stay in the page.
+ * Firebase / drawsheet (PDF/CSV/JSON) parse handlers stay in the page.
  */
 export default function CreateEventModal({
   locale,
@@ -63,8 +63,8 @@ export default function CreateEventModal({
                 locale={locale}
                 visible={visible}
                 className="cs-create-modal-pdf-title"
-                en="Upload PDF (Optional)"
-                zh="上傳 PDF 自動建立（選填）"
+                en="Upload PDF / CSV / JSON (Optional)"
+                zh="上傳 PDF／CSV／JSON 自動建立（選填）"
               />
             </div>
             <StableLocaleText
@@ -72,13 +72,13 @@ export default function CreateEventModal({
               locale={locale}
               visible={visible}
               className="cs-create-modal-pdf-desc"
-              en="Upload a bracket PDF to auto-fill the event name and import athletes. Multi-day events are split into sub-events automatically."
-              zh="上傳對陣表即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。"
+              en="Upload a bracket PDF, CSV, or JSON to auto-fill the event name and import athletes. Multi-day events are split into sub-events automatically."
+              zh="上傳對陣表 PDF、CSV 或 JSON 即可自動填充賽事名稱及匯入所有選手資料。如比賽橫跨多日，系統將自動分拆為多個子賽事。"
             />
             <input
               type="file"
               ref={fileInputRef}
-              accept="application/pdf"
+              accept="application/pdf,.csv,.json,text/csv,application/json"
               style={{ display: "none" }}
               onChange={onFileSelect}
             />
@@ -96,8 +96,8 @@ export default function CreateEventModal({
                 as="span"
                 locale={locale}
                 visible={visible}
-                en={isParsingPdf ? "Parsing…" : "Select PDF"}
-                zh={isParsingPdf ? "解析中…" : "選擇 PDF"}
+                en={isParsingPdf ? "Parsing…" : "Select PDF / CSV / JSON"}
+                zh={isParsingPdf ? "解析中…" : "選擇 PDF／CSV／JSON"}
               />
             </Button>
             {pdfParseResult && (
@@ -108,7 +108,7 @@ export default function CreateEventModal({
                 className="cs-create-modal-pdf-success"
                 en={`✅ Parsed: ${pdfParseResult.matchCount} matches${
                   pdfParseResult.datesList?.length > 1
-                    ? ` (${pdfParseResult.datesList.length} dates — will split into multiple events)`
+                    ? ` (${pdfParseResult.datesList.length} dates; will split into multiple events)`
                     : ""
                 }`}
                 zh={`✅ 成功解析：${pdfParseResult.matchCount} 場比賽${

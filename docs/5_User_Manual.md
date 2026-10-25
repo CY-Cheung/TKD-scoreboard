@@ -49,7 +49,9 @@
 
 1. 你應已喺 Landing 完成 Google 登入（未登入會被帶回 Landing，唔會見到 Court Setup 登入牆）。  
 2. **建立新賽事**：填賽事名稱、規則（例如回合時間、分差上限、Gam-jeom 上限等）、setup password（如有）。  
-3. （可選）上傳 **HKTKDA** 格式對陣 **PDF**；若 PDF 含多日，系統可能拆成多個子賽事 → 細節以畫面提示為準。  
+3. （可選）上傳對陣資料：**HKTKDA PDF**，或 **CSV／JSON**（欄位見下）；若含多日 `matchDate`，系統可能拆成多個子賽事 → 細節以畫面提示為準。  
+   - CSV 標題列必填，常用欄：`matchId`（必須）、`blueName`、`blueClub`／`blueAffiliatedClub`、`redName`、`redClub`／`redAffiliatedClub`、`bluePreviousMatch`、`redPreviousMatch`、`nextMatchId`、`nextMatchSlot`（`blue`｜`red`）、`matchDate`（建議 `DD/MM/YYYY`）、`categoryTitle`、`courtCode`、`eventName`。  
+   - JSON 可為比賽陣列，或 `{ "eventName", "courtId", "matches": [...] }`／`{ "matches": { "A1001": {...} } }`。  
 4. 喺列表揀已有 Event。  
 5. 揀 **Court（場地）**。  
 6. 若你唔係建立者，可能要輸入 **setup password**。  
@@ -88,7 +90,7 @@
 3. **日期篩選**（如有）：縮短列表。  
 4. **Tournament Bracket（淘汰樹）**：睇晉級路徑；完場後可喺主裁面板 **Promote Winner（晉級勝者）**。  
 
-> **建立賽事／匯入 PDF** 只喺 **Court Setup**，唔喺 Manage Match 頁。
+> **建立賽事／匯入 PDF／CSV／JSON** 只喺 **Court Setup**，唔喺 Manage Match 頁。
 
 ---
 
