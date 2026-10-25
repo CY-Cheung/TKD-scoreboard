@@ -18,7 +18,7 @@
 - **One Account（一鍵開賽）** — Google 登入即可開賽，無須安裝軟件。
 - **Multi-Court（多場地）** — 每個 Court 各自 Load 比賽；大螢幕同邊裁跟住該場。
 
-**亦已支援：** Technical Card（技術卡）、IVR（留空配額 = 無限 `-1`）、HKTKDA PDF（Court Setup）、Tournament Bracket、Chi／Eng fade。
+**亦已支援：** Technical Card（技術卡）、IVR（留空配額 = 無限 `-1`）、HKTKDA PDF／CSV／JSON（Court Setup）、Tournament Bracket、Chi／Eng fade。
 
 > **用語：** Technical Card 中文一律「技術卡」。雙語標籤：`English（中文）`。
 
@@ -28,7 +28,7 @@
 
 | Persona | 裝置 | 要 Google？ | 主要工作 |
 |---------|------|-------------|----------|
-| Event Admin | 筆電／平板 | 要 | 建 Event、PDF、Manage Match、Load |
+| Event Admin | 筆電／平板 | 要 | 建 Event、PDF／CSV／JSON、Manage Match、Load |
 | Court Operator | 接大螢幕電腦 | Session | 計時、QR、開 Screen |
 | Centre Referee | 同 Screen（Edit） | Session | 改分、判勝、TC／IVR、Promote |
 | Corner Judge J1–J3 | 手機瀏覽器 | **唔使** | 掃 QR 搶席、按得分 |
@@ -38,7 +38,7 @@
 ## Five-minute start（五分鐘開賽）
 
 1. 打開網站 → **Google 登入**（Landing）。  
-2. **Court Setup**：建／揀 Event（可上傳 HKTKDA PDF）→ 揀 Court。  
+2. **Court Setup**：建／揀 Event（可上傳 HKTKDA PDF 或 CSV／JSON）→ 揀 Court。  
 3. **Home** → **Manage Match**：新增或揀場 → **Load**。  
 4. 開 **Scoreboard**；`Space` 計時；`Q` 出 QR。  
 5. 邊裁掃碼入 **Controller** 搶 J1–J3 → 按得分。  
@@ -47,7 +47,7 @@
 詳步同 FAQ → [`docs/5_User_Manual.md`](docs/5_User_Manual.md)。
 
 ```
-Landing → Court Setup（Event / Court / PDF）→ Home
+Landing → Court Setup（Event / Court / PDF／CSV／JSON）→ Home
   → Manage Match（Load）→ Screen（Space / Q / E）
   → Controller 掃碼計分 → Edit 完場／晉級
 ```
@@ -59,7 +59,7 @@ Landing → Court Setup（Event / Court / PDF）→ Home
 | Path | Page | Access |
 |------|------|--------|
 | `/` | Landing — 產品介紹、Google 登入 | Public |
-| `/court-setup` | Court Setup — 建 Event、Court、PDF | Google |
+| `/court-setup` | Court Setup — 建 Event、Court、PDF／CSV／JSON | Google |
 | `/home` | Home — 導航、QR | Session |
 | `/screen` | Screen — 大螢幕；`E` = Edit | Session |
 | `/controller` | Controller — 邊裁（可 `?event=&court=`） | Session 或 URL |
@@ -134,7 +134,7 @@ npm run test:rules
 | 唔同步 | `Screen.jsx` + `Controller.jsx` |
 | 搶位／斷線 | `Controller.jsx` |
 | TC／IVR | `*Flow/`、`Edit.jsx`、`Api.js` |
-| PDF／建賽 | `CourtSetup`、`persistCreatedEvents` |
+| PDF／CSV／JSON／建賽 | `CourtSetup`、`persistCreatedEvents`、`tabularImport` |
 | Match／Load | `DataImport.jsx` |
 
 ---

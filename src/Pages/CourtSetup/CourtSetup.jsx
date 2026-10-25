@@ -141,7 +141,7 @@ function CourtSetup() {
     return <Navigate to="/" replace />;
   }
 
-  // PDF File Upload Handler
+  // Drawsheet upload (PDF / CSV / JSON) -> same pdfParseResult shape
   const handleFileSelect = async (e) => {
     await runPdfFileSelect(e.target.files?.[0], {
       showToast,
